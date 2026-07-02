@@ -86,14 +86,14 @@
     <h3 class="section-title" style="font-size:28px">A melting pot of innovators and gamechangers</h3>
 
     <div class="stats-grid">
-      <div class="stat stat-pop"><div class="num">9</div><div class="lbl">Keynotes</div></div>
-      <div class="stat stat-pop"><div class="num">9</div><div class="lbl">Workshops</div></div>
-      <div class="stat stat-pop"><div class="num">32</div><div class="lbl">Sessions</div></div>
-      <div class="stat stat-pop"><div class="num">32</div><div class="lbl">Exhibits</div></div>
-      <div class="stat stat-pop"><div class="num">1,200+</div><div class="lbl">Professionals</div></div>
+      <div class="stat"><div class="num">9</div><div class="lbl">Keynotes</div></div>
+      <div class="stat"><div class="num">9</div><div class="lbl">Workshops</div></div>
+      <div class="stat"><div class="num">32</div><div class="lbl">Sessions</div></div>
+      <div class="stat"><div class="num">32</div><div class="lbl">Exhibits</div></div>
+      <div class="stat"><div class="num">1,200+</div><div class="lbl">Professionals</div></div>
     </div>
 
-    <div class="features reveal-features">
+    <div class="features reveal">
       <div class="feature" style="transition-delay:0s"><h4>Visionary Keynotes</h4><p>From global technology leaders, industry experts, and national stakeholders.</p></div>
       <div class="feature"><h4>Tech Sessions</h4><p>Featuring real-world case studies and best practices.</p></div>
       <div class="feature"><h4>Interactive Workshops</h4><p>Hands-on learning from technology experts.</p></div>
