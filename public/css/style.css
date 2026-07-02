@@ -52,7 +52,6 @@ img{max-width:100%;display:block}
   0%,100%{filter:drop-shadow(0 0 8px rgba(255,61,110,.3)) drop-shadow(0 0 20px rgba(59,91,255,.15))}
   50%{filter:drop-shadow(0 0 16px rgba(255,61,110,.6)) drop-shadow(0 0 40px rgba(59,91,255,.3))}
 }
-
 /* Reveal on scroll */
 .reveal{
   opacity:0;transform:translateY(30px);
@@ -257,6 +256,39 @@ section{padding:96px 0}
   font-size:36px;font-weight:800;color:#fff;
 }
 .stat .lbl{font-size:13px;color:var(--muted);margin-top:6px;text-transform:uppercase;letter-spacing:.08em}
+.stat-pop{
+  opacity:0;transform:scale(.8);
+  transition:opacity .5s ease,transform .5s ease;
+}
+.stat-pop.stat-done{
+  opacity:1;transform:scale(1);
+}
+
+/* Stats overlay for pop-up counting */
+.stats-overlay{
+  position:absolute;top:0;left:0;right:0;bottom:0;z-index:10;
+  background:rgba(5,13,42,.4);
+  display:flex;align-items:center;justify-content:center;
+  pointer-events:none;transition:opacity .4s ease;
+  border-radius:20px;
+}
+.stats-grid{position:relative}
+.stats-overlay.hide{opacity:0}
+.stats-overlay .overlay-card{
+  padding:40px 56px;border-radius:24px;
+  border:2px solid var(--pink);
+  background:rgba(10,26,74,.95);
+  text-align:center;
+  box-shadow:0 0 60px rgba(255,61,110,.25);
+}
+.stats-overlay .overlay-num{
+  font-size:clamp(40px,8vw,72px);font-weight:900;color:#fff;
+  transition:opacity .3s;
+}
+.stats-overlay .overlay-lbl{
+  font-size:clamp(12px,1.5vw,16px);color:var(--pink);
+  text-transform:uppercase;letter-spacing:.15em;font-weight:700;
+}
 
 /* Features */
 .features{
@@ -273,6 +305,13 @@ section{padding:96px 0}
 }
 .feature h4{font-size:17px;color:#fff;margin-bottom:8px;font-weight:700}
 .feature p{color:var(--muted);font-size:14.5px}
+
+/* Features reveal after stats */
+.reveal-features .feature{
+  opacity:0;transform:translateY(20px);
+  transition:opacity .5s ease,transform .5s ease;
+}
+.reveal-features.visible .feature{opacity:1;transform:translateY(0)}
 
 /* Why attend */
 .why{background:transparent}

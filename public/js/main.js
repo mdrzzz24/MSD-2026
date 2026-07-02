@@ -59,20 +59,90 @@ function animateCounter(el) {
   requestAnimationFrame(tick);
 }
 
-const statObserver = new IntersectionObserver(
-  (entries) => {
-    entries.forEach(entry => {
-      if (entry.isIntersecting) {
-        entry.target.querySelectorAll('.num').forEach(n => animateCounter(n));
-        statObserver.unobserve(entry.target);
-      }
-    });
-  },
-  { threshold: 0.5 }
-);
-
+// Stats card sequential pop-in animation
 const statsGrid = document.querySelector('.stats-grid');
-if (statsGrid) statObserver.observe(statsGrid);
+if (statsGrid) {
+  const statCards = statsGrid.querySelectorAll('.stat-pop');
+  let started = false;
+
+  // Build overlay inside stats-grid
+  const overlay = document.createElement('div');
+  overlay.className = 'stats-overlay hide';
+  overlay.innerHTML = '<div class="overlay-card"><div class="overlay-num">0</div><div class="overlay-lbl"></div></div>';
+  statsGrid.appendChild(overlay);
+  const overlayNum = overlay.querySelector('.overlay-num');
+  const overlayLbl = overlay.querySelector('.overlay-lbl');
+
+  function showOverlay(label) {
+    overlay.classList.remove('hide');
+    overlayNum.textContent = '0';
+    overlayLbl.textContent = label;
+  }
+  function hideOverlay() {
+    overlay.classList.add('hide');
+  }
+
+  function animateNum(el, target, hasPlus, duration, cb) {
+    const start = performance.now();
+    const tick = (now) => {
+      const p = Math.min((now - start) / duration, 1);
+      const eased = 1 - Math.pow(1 - p, 3);
+      const val = (hasPlus ? Math.round(eased * target).toLocaleString() + '+' : Math.round(eased * target).toLocaleString());
+      el.textContent = val;
+      if (p < 1) requestAnimationFrame(tick);
+      else if (cb) cb();
+    };
+    requestAnimationFrame(tick);
+  }
+
+  function animateStatCard(index) {
+    if (index >= statCards.length) {
+      // All stats done — show features
+      const features = document.querySelector('.reveal-features');
+      if (features) {
+        setTimeout(() => features.classList.add('visible'), 100);
+      }
+      return;
+    }
+    const card = statCards[index];
+    const numEl = card.querySelector('.num');
+    const lblEl = card.querySelector('.lbl');
+    const target = parseInt(numEl.textContent.replace(/[,+]/g, ''), 10);
+    const hasPlus = numEl.textContent.includes('+');
+    const lbl = lblEl.textContent;
+
+    // Step 1: Show overlay large in center
+    showOverlay(lbl);
+
+    // Step 2: Count up on overlay
+    setTimeout(() => {
+      animateNum(overlayNum, target, hasPlus, 700, () => {
+        // Step 3: Hide overlay, reveal card in grid
+        setTimeout(() => {
+          hideOverlay();
+          card.classList.add('stat-done');
+          // Step 4: Next card after delay
+          setTimeout(() => {
+            animateStatCard(index + 1);
+          }, 200);
+        }, 150);
+      });
+    }, 150);
+  }
+
+  const statObserver = new IntersectionObserver(
+    (entries) => {
+      if (!started && entries[0].isIntersecting) {
+        started = true;
+        animateStatCard(0);
+        statObserver.unobserve(entries[0].target);
+      }
+    },
+    { threshold: 0.3 }
+  );
+
+  statObserver.observe(statsGrid);
+}
 
 // Registration form
 const regForm = document.getElementById('regForm');
