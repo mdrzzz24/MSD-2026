@@ -158,7 +158,14 @@
                         @endif
 
                         @if ($registrant->processed_at)
-                            <p class="text-xs text-gray-400 text-right">Processed: {{ $registrant->processed_at->format('d M Y, H:i') }}</p>
+                            <p class="text-xs text-gray-400 text-right">
+                                Processed: {{ $registrant->processed_at->format('d M Y, H:i') }}
+                                @if ($registrant->status === 'approved' && $registrant->approver)
+                                    <br>by <strong>{{ $registrant->approver->name }}</strong>
+                                @elseif ($registrant->status === 'rejected' && $registrant->rejecter)
+                                    <br>by <strong>{{ $registrant->rejecter->name }}</strong>
+                                @endif
+                            </p>
                         @endif
                     </div>
 
@@ -272,6 +279,11 @@
                 <div class="bg-white rounded-xl border border-gray-100 shadow-sm p-4">
                     <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Processed</p>
                     <p class="text-sm font-bold text-gray-900">{{ $registrant->processed_at?->format('d M Y, H:i') ?? '—' }}</p>
+                    @if ($registrant->status === 'approved' && $registrant->approver)
+                        <p class="text-xs text-gray-500 mt-1">by {{ $registrant->approver->name }}</p>
+                    @elseif ($registrant->status === 'rejected' && $registrant->rejecter)
+                        <p class="text-xs text-gray-500 mt-1">by {{ $registrant->rejecter->name }}</p>
+                    @endif
                 </div>
             </div>
         </div>

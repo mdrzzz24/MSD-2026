@@ -38,6 +38,8 @@ class Registrant extends Authenticatable
         'referral_code_id',
         'attended_before',
         'checked_in_at',
+        'approved_by',
+        'rejected_by',
     ];
 
     protected $hidden = [
@@ -144,6 +146,22 @@ class Registrant extends Authenticatable
     {
         return $this->belongsToMany(Workshop::class, 'workshop_waitlist')
                     ->withTimestamps();
+    }
+
+    /**
+     * Admin who approved this registrant.
+     */
+    public function approver()
+    {
+        return $this->belongsTo(User::class, 'approved_by');
+    }
+
+    /**
+     * Admin who rejected this registrant.
+     */
+    public function rejecter()
+    {
+        return $this->belongsTo(User::class, 'rejected_by');
     }
 
     /**

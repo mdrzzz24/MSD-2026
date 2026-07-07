@@ -114,6 +114,7 @@ class AdminController extends Controller
 
         $registrant->update([
             'status'         => 'approved',
+            'approved_by'    => auth()->id(),
             'password'       => $plainPassword,
             'plain_password' => $plainPassword,
             'qr_token'       => Registrant::generateQrToken(),
@@ -143,6 +144,7 @@ class AdminController extends Controller
 
         $registrant->update([
             'status'       => 'rejected',
+            'rejected_by'  => auth()->id(),
             'admin_notes'  => $request->input('admin_notes'),
             'processed_at' => now(),
         ]);
@@ -277,6 +279,7 @@ class AdminController extends Controller
             $plainPassword = Str::random(10);
             $registrant->update([
                 'status'         => 'approved',
+                'approved_by'    => auth()->id(),
                 'password'       => $plainPassword,
                 'plain_password' => $plainPassword,
                 'qr_token'       => Registrant::generateQrToken(),
@@ -311,6 +314,7 @@ class AdminController extends Controller
         foreach ($registrants as $registrant) {
             $registrant->update([
                 'status'       => 'rejected',
+                'rejected_by'  => auth()->id(),
                 'admin_notes'  => $request->admin_notes,
                 'processed_at' => now(),
             ]);
