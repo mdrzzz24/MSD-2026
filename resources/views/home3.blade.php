@@ -533,6 +533,10 @@ footer {
   #register .form-grid { grid-template-columns: 1fr; }
   .ai-brain { padding: 32px 24px; }
 }
+/* ── Field errors ── */
+.field-err { display:block; font-size:11px; color:#ef4444; margin-top:2px; min-height:0; }
+.field-err:empty { display:none; }
+input.field-error, select.field-error { border-color:#ef4444 !important; }
 </style>
 </head>
 <body>
@@ -711,7 +715,7 @@ footer {
   <div class="container">
     <div class="ai-brain">
       <p class="section-eyebrow reveal-eyebrow">About</p>
-      <h2 class="section-title">Metrodata Solution Day</h2>
+      <h2 class="section-title" style="margin-top:8px">Metrodata Solution Day</h2>
       <p>
         Metrodata Solution Day (MSD) is Metrodata Group's flagship thought leadership platform where business and technology
         leaders come together to shape Indonesia's digital future.
@@ -813,12 +817,12 @@ footer {
     <div class="form-wrap">
       <form id="regForm" class="form-grid" method="POST" action="{{ route('register.submit') }}">
         @csrf
-        <div class="field"><label>First Name</label><input required name="firstName" placeholder="First Name" /></div>
-        <div class="field"><label>Last Name</label><input required name="lastName" placeholder="Last Name" /></div>
-        <div class="field"><label>Job Title</label><input required name="title" placeholder="Job Title" /></div>
-        <div class="field"><label>Company Name</label><input required name="company" placeholder="Company Name" /></div>
-        <div class="field"><label>Business Email</label><input required type="email" name="email" placeholder="Business Email" /></div>
-        <div class="field"><label>Mobile Phone</label><input required name="phone" placeholder="Mobile Phone" /></div>
+        <div class="field"><label>First Name</label><input required name="firstName" placeholder="First Name" /><span class="field-err" data-field="firstName"></span></div>
+        <div class="field"><label>Last Name</label><input required name="lastName" placeholder="Last Name" /><span class="field-err" data-field="lastName"></span></div>
+        <div class="field"><label>Job Title</label><input required name="title" placeholder="Job Title" /><span class="field-err" data-field="title"></span></div>
+        <div class="field"><label>Company Name</label><input required name="company" placeholder="Company Name" /><span class="field-err" data-field="company"></span></div>
+        <div class="field"><label>Business Email</label><input required type="email" name="email" placeholder="Business Email" /><span class="field-err" data-field="email"></span></div>
+        <div class="field"><label>Mobile Phone</label><input required name="phone" placeholder="Mobile Phone" /><span class="field-err" data-field="phone"></span></div>
         <div class="field">
           <label>Industry</label>
           <select name="industry" required>
@@ -827,6 +831,7 @@ footer {
             <option>Manufacturing</option><option>Retail</option>
             <option>Telco</option><option>Other</option>
           </select>
+          <span class="field-err" data-field="industry"></span>
         </div>
         <div class="field">
           <label>Number of Employee</label>
@@ -836,6 +841,7 @@ footer {
             <option>201 – 500</option><option>501 – 1000</option>
             <option>1000+</option>
           </select>
+          <span class="field-err" data-field="employees"></span>
         </div>
         <div class="field full gdpr-group">
           <label class="checkbox-label">

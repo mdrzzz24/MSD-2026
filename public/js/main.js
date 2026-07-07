@@ -163,7 +163,14 @@ if (regForm) {
         headers: { 'X-Requested-With': 'XMLHttpRequest' },
       });
 
-      const data = await response.json();
+      // Read body once as text, then try to parse as JSON
+      const bodyText = await response.text();
+      let data;
+      try {
+        data = JSON.parse(bodyText);
+      } catch (jsonErr) {
+        data = { errors: { server: [bodyText || 'Unknown server error'] } };
+      }
 
       if (response.ok && data.success) {
         // Show success modal
@@ -171,16 +178,30 @@ if (regForm) {
         regForm.reset();
         const gdpr = regForm.querySelector('[name="gdpr"]');
         if (gdpr) gdpr.checked = true;
+        clearFieldErrors();
       } else {
-        // Show validation errors
-        let errorMsg = '';
+        // Show field-specific errors
+        clearFieldErrors();
         for (const [field, messages] of Object.entries(data.errors || {})) {
-          errorMsg += messages.join('\n') + '\n';
+          const errEl = document.querySelector(`.field-err[data-field="${field}"]`);
+          const input = document.querySelector(`[name="${field}"]`);
+          if (errEl) {
+            errEl.textContent = messages.join(', ');
+          } else if (input) {
+            // No error span — show under the input
+            const span = document.createElement('span');
+            span.className = 'field-err';
+            span.textContent = messages.join(', ');
+            input.parentNode.appendChild(span);
+          } else {
+            // Fallback for non-field errors
+            showFormError(messages.join(', '));
+          }
+          if (input) input.classList.add('field-error');
         }
-        alert(errorMsg || 'An error occurred. Please try again.');
       }
     } catch (err) {
-      alert('A network error occurred. Please try again.');
+      showFormError('A network error occurred. Please try again.');
     } finally {
       submitBtn.disabled = false;
       submitBtn.innerHTML = originalText;
@@ -214,4 +235,26 @@ document.addEventListener('click', function(e) {
 document.addEventListener('keydown', function(e) {
   if (e.key === 'Escape') closeSuccessModal();
 });
+
+// ── Field error helpers ──
+function clearFieldErrors() {
+  document.querySelectorAll('.field-err').forEach(el => el.textContent = '');
+  document.querySelectorAll('.field-error').forEach(el => el.classList.remove('field-error'));
+}
+function showFormError(msg) {
+  let errEl = document.getElementById('formError');
+  if (!errEl) {
+    errEl = document.createElement('div');
+    errEl.id = 'formError';
+    errEl.style.cssText = 'padding:12px 16px;margin-bottom:16px;border-radius:10px;font-size:14px;background:rgba(220,38,38,.12);border:1px solid rgba(220,38,38,.25);color:#fca5a5;line-height:1.5;grid-column:1/-1;';
+    const form = document.getElementById('regForm');
+    form.insertBefore(errEl, form.firstChild);
+  }
+  errEl.textContent = msg;
+  errEl.style.display = 'block';
+}
+function hideFormError() {
+  const errEl = document.getElementById('formError');
+  if (errEl) errEl.style.display = 'none';
+}
 

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Registrant;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\ValidationException;
 
 class RegistrantAuthController extends Controller
 {
@@ -13,17 +14,24 @@ class RegistrantAuthController extends Controller
      */
     public function register(Request $request)
     {
-        $validated = $request->validate([
-            'firstName' => ['required', 'string', 'max:255'],
-            'lastName'  => ['required', 'string', 'max:255'],
-            'title'     => ['required', 'string', 'max:255'],
-            'company'   => ['required', 'string', 'max:255'],
-            'email'     => ['required', 'email', 'max:255', 'unique:registrants,email'],
-            'phone'     => ['required', 'string', 'max:50'],
-            'industry'  => ['required', 'string', 'max:255'],
-            'employees' => ['required', 'string', 'max:50'],
-            'gdpr'      => ['accepted'],
-        ]);
+        try {
+            $validated = $request->validate([
+                'firstName' => ['required', 'string', 'max:255'],
+                'lastName'  => ['required', 'string', 'max:255'],
+                'title'     => ['required', 'string', 'max:255'],
+                'company'   => ['required', 'string', 'max:255'],
+                'email'     => ['required', 'email', 'max:255', 'unique:registrants,email'],
+                'phone'     => ['required', 'string', 'max:50'],
+                'industry'  => ['required', 'string', 'max:255'],
+                'employees' => ['required', 'string', 'max:50'],
+                'gdpr'      => ['accepted'],
+            ]);
+        } catch (ValidationException $e) {
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json(['errors' => $e->errors()], 422);
+            }
+            throw $e;
+        }
 
         Registrant::create([
             'first_name' => $validated['firstName'],

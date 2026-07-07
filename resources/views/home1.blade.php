@@ -338,12 +338,12 @@
     <div class="form-wrap">
       <form id="regForm" class="form-grid" method="POST" action="{{ route('register.submit') }}">
         @csrf
-        <div class="field"><label>First Name</label><input required name="firstName" placeholder="First Name" /></div>
-        <div class="field"><label>Last Name</label><input required name="lastName" placeholder="Last Name" /></div>
-        <div class="field"><label>Job Title</label><input required name="title" placeholder="Job Title" /></div>
-        <div class="field"><label>Company Name</label><input required name="company" placeholder="Company Name" /></div>
-        <div class="field"><label>Business Email</label><input required type="email" name="email" placeholder="Business Email" /></div>
-        <div class="field"><label>Mobile Phone</label><input required name="phone" placeholder="Mobile Phone" /></div>
+        <div class="field"><label>First Name</label><input required name="firstName" placeholder="First Name" /><span class="field-err" data-field="firstName"></span></div>
+        <div class="field"><label>Last Name</label><input required name="lastName" placeholder="Last Name" /><span class="field-err" data-field="lastName"></span></div>
+        <div class="field"><label>Job Title</label><input required name="title" placeholder="Job Title" /><span class="field-err" data-field="title"></span></div>
+        <div class="field"><label>Company Name</label><input required name="company" placeholder="Company Name" /><span class="field-err" data-field="company"></span></div>
+        <div class="field"><label>Business Email</label><input required type="email" name="email" placeholder="Business Email" /><span class="field-err" data-field="email"></span></div>
+        <div class="field"><label>Mobile Phone</label><input required name="phone" placeholder="Mobile Phone" /><span class="field-err" data-field="phone"></span></div>
         <div class="field">
           <label>Industry</label>
           <select name="industry" required>
@@ -352,6 +352,7 @@
             <option>Manufacturing</option><option>Retail</option>
             <option>Telco</option><option>Other</option>
           </select>
+          <span class="field-err" data-field="industry"></span>
         </div>
         <div class="field">
           <label>Number of Employee</label>
@@ -361,6 +362,7 @@
             <option>201 – 500</option><option>501 – 1000</option>
             <option>1000+</option>
           </select>
+          <span class="field-err" data-field="employees"></span>
         </div>
         <div class="field full gdpr-group">
           <label class="checkbox-label">
@@ -395,6 +397,11 @@
 
 
 <script src="{{ asset('js/main.js') }}"></script>
+<style>
+.field-err { display:block; font-size:12px; color:#ef4444; margin-top:2px; min-height:0; }
+.field-err:empty { display:none; }
+input.field-error, select.field-error { border-color:#ef4444 !important; }
+</style>
 
 {{-- Success Modal --}}
 <div id="successModal" style="display:none; position:fixed; inset:0; z-index:9999; align-items:center; justify-content:center; background:rgba(0,0,0,0.4); backdrop-filter:blur(4px); padding:16px;">
@@ -407,10 +414,6 @@
       </div>
       <h2 style="font-size:20px; font-weight:700; color:#111827; margin-bottom:8px;">Registration Successful!</h2>
       <p style="font-size:14px; color:#6b7280; margin-bottom:20px;">Your data has been received. Please wait for confirmation from the admin via email.</p>
-      <div style="background:#fffbeb; border:1px solid #fde68a; border-radius:12px; padding:16px; font-size:14px; color:#d97706; margin-bottom:24px; text-align:left;">
-        <strong>✉️ Check your email</strong><br>
-        Once approved, you will receive an email with your login password.
-      </div>
       <button onclick="closeSuccessModal()" style="width:100%; padding:10px 0; background:#4f46e5; color:#fff; font-weight:600; font-size:14px; border:none; border-radius:12px; cursor:pointer; transition:background 0.2s;"
               onmouseover="this.style.background='#4338ca'" onmouseout="this.style.background='#4f46e5'">
         Close

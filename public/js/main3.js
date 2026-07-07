@@ -184,22 +184,39 @@ if (regForm) {
         body: formData,
         headers: { 'X-Requested-With': 'XMLHttpRequest' },
       });
-      const data = await response.json();
+
+      const bodyText = await response.text();
+      let data;
+      try {
+        data = JSON.parse(bodyText);
+      } catch (jsonErr) {
+        data = { errors: { server: [bodyText || 'Unknown server error'] } };
+      }
 
       if (response.ok && data.success) {
         showSuccessModal3();
         regForm.reset();
         const gdpr = regForm.querySelector('[name="gdpr"]');
         if (gdpr) gdpr.checked = true;
+        clearFieldErrors3();
       } else {
-        let errorMsg = '';
+        clearFieldErrors3();
         for (const [field, messages] of Object.entries(data.errors || {})) {
-          errorMsg += messages.join('\n') + '\n';
+          const errEl = document.querySelector(`.field-err[data-field="${field}"]`);
+          const input = document.querySelector(`[name="${field}"]`);
+          if (errEl) {
+            errEl.textContent = messages.join(', ');
+          } else if (input) {
+            const span = document.createElement('span');
+            span.className = 'field-err';
+            span.textContent = messages.join(', ');
+            input.parentNode.appendChild(span);
+          }
+          if (input) input.classList.add('field-error');
         }
-        alert(errorMsg || 'An error occurred. Please try again.');
       }
     } catch (err) {
-      alert('A network error occurred. Please try again.');
+      showFormError3('A network error occurred. Please try again.');
     } finally {
       submitBtn.disabled = false;
       submitBtn.innerHTML = originalText;
@@ -223,3 +240,21 @@ document.addEventListener('click', function(e) {
 document.addEventListener('keydown', function(e) {
   if (e.key === 'Escape') closeSuccessModal();
 });
+
+// ── Inline form error helpers ──
+function showFormError3(msg) {
+  let errEl = document.getElementById('formError3');
+  if (!errEl) {
+    errEl = document.createElement('div');
+    errEl.id = 'formError3';
+    errEl.style.cssText = 'padding:12px 16px;margin-bottom:16px;border-radius:10px;font-size:14px;background:rgba(220,38,38,.12);border:1px solid rgba(220,38,38,.25);color:#fca5a5;line-height:1.5;';
+    const form = document.getElementById('regForm');
+    form.parentNode.insertBefore(errEl, form);
+  }
+  errEl.textContent = msg;
+  errEl.style.display = 'block';
+}
+function clearFieldErrors3() {
+  document.querySelectorAll('.field-err').forEach(el => el.textContent = '');
+  document.querySelectorAll('.field-error').forEach(el => el.classList.remove('field-error'));
+}
