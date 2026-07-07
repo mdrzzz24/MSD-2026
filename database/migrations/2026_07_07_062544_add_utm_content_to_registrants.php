@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::table('registrants', function (Blueprint $table) {
             if (!Schema::hasColumn('registrants', 'utm_source')) {
-                $table->string('utm_source')->nullable()->after('qr_token');
+                $table->string('utm_source')->nullable()->after('checked_in_at');
             }
             if (!Schema::hasColumn('registrants', 'utm_medium')) {
                 $table->string('utm_medium')->nullable()->after('utm_source');
