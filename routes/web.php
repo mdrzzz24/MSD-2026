@@ -33,6 +33,9 @@ Route::get('/home1', function () {
 Route::get('/home2', function () {
     return view('home2');
 });
+Route::get('/home3', function () {
+    return view('home3');
+});
 
 // ── Registration form submission (public) ──
 Route::post('/register', [RegistrantAuthController::class, 'register'])->name('register.submit');
