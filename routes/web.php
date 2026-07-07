@@ -41,6 +41,10 @@ Route::get('/home3', function () {
 Route::post('/register', [RegistrantAuthController::class, 'register'])->name('register.submit');
 Route::get('/register/success', [RegistrantAuthController::class, 'success'])->name('register.success');
 
+// ── QR Scan (public) ──
+Route::get('/qr/{token}', [App\Http\Controllers\QrScanController::class, 'scan'])->name('registrant.qr-scan');
+Route::post('/qr/{token}/checkin', [App\Http\Controllers\QrScanController::class, 'checkin'])->name('registrant.qr-checkin');
+
 // ── Admin auth routes (unified — handles Admin & Registrant via role selector) ──
 Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
 Route::post('/login', [AuthController::class, 'login'])->name('login.attempt');
@@ -77,6 +81,9 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::post('/registrants/bulk-approve', [AdminController::class, 'bulkApprove'])->name('registrants.bulk-approve');
     Route::post('/registrants/bulk-reject', [AdminController::class, 'bulkReject'])->name('registrants.bulk-reject');
     Route::get('/registrants/export/csv', [AdminController::class, 'exportCsv'])->name('registrants.export-csv');
+
+    // ── Super Admin only sections ──
+    Route::middleware('super_admin')->group(function () {
 
     // Email Templates
     Route::get('/templates', [EmailTemplateController::class, 'index'])->name('templates.index');
@@ -128,4 +135,30 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::post('/floors', fn() => redirect()->route('admin.rooms.index'));
     Route::put('/floors/{floor}', fn() => redirect()->route('admin.rooms.index'));
     Route::delete('/floors/{floor}', fn() => redirect()->route('admin.rooms.index'));
+
+    });
+
+    // ── Management (UTM & Referral - all admins, scoped) ──
+    Route::prefix('management')->name('management.')->group(function () {
+        Route::get('/utm-sources', [App\Http\Controllers\AdminManagementController::class, 'utmSources'])->name('utm');
+        Route::post('/utm-links', [App\Http\Controllers\AdminManagementController::class, 'storeUtmLink'])->name('utm-links.store');
+        Route::put('/utm-links/{utmLink}', [App\Http\Controllers\AdminManagementController::class, 'updateUtmLink'])->name('utm-links.update');
+        Route::delete('/utm-links/{utmLink}', [App\Http\Controllers\AdminManagementController::class, 'destroyUtmLink'])->name('utm-links.destroy');
+        Route::get('/referral-codes', [App\Http\Controllers\AdminManagementController::class, 'referralCodes'])->name('referrals');
+        Route::post('/referral-codes', [App\Http\Controllers\AdminManagementController::class, 'storeReferralCode'])->name('referral-codes.store');
+        Route::put('/referral-codes/{referralCode}', [App\Http\Controllers\AdminManagementController::class, 'updateReferralCode'])->name('referral-codes.update');
+        Route::delete('/referral-codes/{referralCode}', [App\Http\Controllers\AdminManagementController::class, 'destroyReferralCode'])->name('referral-codes.destroy');
+
+        // QR Codes — all admins can view
+        Route::get('/qr-codes', [App\Http\Controllers\AdminManagementController::class, 'qrCodes'])->name('qr');
+
+        // Check-in, Users — super_admin only
+        Route::middleware('super_admin')->group(function () {
+            Route::get('/checkin-log', [App\Http\Controllers\AdminManagementController::class, 'checkinLog'])->name('checkin');
+            Route::get('/users', [App\Http\Controllers\AdminManagementController::class, 'users'])->name('users');
+            Route::post('/users', [App\Http\Controllers\AdminManagementController::class, 'storeUser'])->name('users.store');
+            Route::put('/users/{user}', [App\Http\Controllers\AdminManagementController::class, 'updateUser'])->name('users.update');
+            Route::delete('/users/{user}', [App\Http\Controllers\AdminManagementController::class, 'destroyUser'])->name('users.destroy');
+        });
+    });
 });

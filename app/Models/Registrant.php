@@ -29,6 +29,15 @@ class Registrant extends Authenticatable
         'processed_at',
         'password',
         'plain_password',
+        'qr_token',
+        'utm_source',
+        'utm_medium',
+        'utm_campaign',
+        'utm_content',
+        'referral_code',
+        'referral_code_id',
+        'attended_before',
+        'checked_in_at',
     ];
 
     protected $hidden = [
@@ -37,9 +46,11 @@ class Registrant extends Authenticatable
     ];
 
     protected $casts = [
-        'processed_at' => 'datetime',
-        'gdpr'         => 'boolean',
-        'password'     => 'hashed',
+        'processed_at'  => 'datetime',
+        'checked_in_at' => 'datetime',
+        'gdpr'          => 'boolean',
+        'attended_before' => 'boolean',
+        'password'      => 'hashed',
     ];
 
     /**
@@ -91,11 +102,47 @@ class Registrant extends Authenticatable
         return $this->status === 'approved';
     }
 
+    /**
+     * Generate a unique QR token.
+     */
+    public static function generateQrToken(): string
+    {
+        return strtolower(
+            substr(md5(uniqid((string) mt_rand(), true)), 0, 16)
+        );
+    }
+
+    /**
+     * Get the QR code URL (via API).
+     */
+    public function getQrCodeUrlAttribute(): string
+    {
+        $data = route('registrant.qr-scan', $this->qr_token);
+        return 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=' . urlencode($data);
+    }
+
+    /**
+     * Get the QR check-in URL.
+     */
+    public function getQrCheckinUrlAttribute(): string
+    {
+        return route('registrant.qr-scan', $this->qr_token);
+    }
+
     // ── Relationships ──
 
     public function workshops()
     {
         return $this->belongsToMany(Workshop::class, 'registrant_workshop')
+                    ->withTimestamps();
+    }
+
+    /**
+     * Workshops waiting list.
+     */
+    public function workshopWaitlists()
+    {
+        return $this->belongsToMany(Workshop::class, 'workshop_waitlist')
                     ->withTimestamps();
     }
 
@@ -108,5 +155,10 @@ class Registrant extends Authenticatable
             return "{$this->first_name} {$this->last_name}";
         }
         return $this->name ?? $this->first_name ?? $this->email;
+    }
+
+    public function referralCode()
+    {
+        return $this->belongsTo(ReferralCode::class);
     }
 }

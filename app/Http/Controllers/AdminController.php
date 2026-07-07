@@ -76,11 +76,32 @@ class AdminController extends Controller
         // Pending needing attention (older than 2 days)
         $stalePending = Registrant::pending()->where('created_at', '<', now()->subDays(2))->count();
 
+        // Check-in stats
+        $checkedInToday = Registrant::approved()->whereDate('checked_in_at', today())->count();
+        $checkedInTotal = Registrant::approved()->whereNotNull('checked_in_at')->count();
+
+        // Source tracking (all registrants)
+        $topSources = Registrant::whereNotNull('utm_source')
+            ->select('utm_source', DB::raw('COUNT(*) as total'))
+            ->groupBy('utm_source')
+            ->orderByDesc('total')
+            ->take(5)
+            ->get();
+
+        // Referral code usage (all registrants)
+        $referralCount = Registrant::whereNotNull('referral_code')
+            ->where('referral_code', '!=', '')->count();
+
+        // Workshop waitlist
+        $workshopWaitlistTotal = DB::table('workshop_waitlist')->count();
+
         return view('admin.dashboard', compact(
             'total', 'pending', 'approved', 'rejected',
             'recentRegistrants', 'chartData', 'maxDaily',
             'workshopCount', 'workshopRegistrations',
-            'todayCount', 'trend', 'stalePending'
+            'todayCount', 'trend', 'stalePending',
+            'checkedInToday', 'checkedInTotal', 'topSources',
+            'referralCount', 'workshopWaitlistTotal'
         ));
     }
 
@@ -95,6 +116,7 @@ class AdminController extends Controller
             'status'         => 'approved',
             'password'       => $plainPassword,
             'plain_password' => $plainPassword,
+            'qr_token'       => Registrant::generateQrToken(),
             'admin_notes'    => $request->input('admin_notes'),
             'processed_at'   => now(),
         ]);
@@ -257,6 +279,7 @@ class AdminController extends Controller
                 'status'         => 'approved',
                 'password'       => $plainPassword,
                 'plain_password' => $plainPassword,
+                'qr_token'       => Registrant::generateQrToken(),
                 'processed_at'   => now(),
             ]);
 

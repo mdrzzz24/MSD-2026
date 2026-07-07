@@ -332,44 +332,103 @@
                     </div>
                 </div>
 
-                {{-- Approval stats and quick overview --}}
-                <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
-                    <h3 class="text-sm font-bold text-gray-900 mb-4">Registration Overview</h3>
-                    <div class="grid grid-cols-2 gap-4">
-                        <div class="bg-emerald-50 rounded-xl p-4 text-center">
-                            <p class="text-2xl font-bold text-emerald-700">{{ $approved }}</p>
-                            <p class="text-xs text-emerald-600 mt-1">Approved</p>
-                            @if ($total > 0)
+                {{-- Approval stats, check-in, sources --}}
+                <div class="space-y-4">
+                    {{-- Registration Overview --}}
+                    <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+                        <h3 class="text-sm font-bold text-gray-900 mb-4">Registration Overview</h3>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="bg-emerald-50 rounded-xl p-4 text-center">
+                                <p class="text-2xl font-bold text-emerald-700">{{ $approved }}</p>
+                                <p class="text-xs text-emerald-600 mt-1">Approved</p>
+                                @if ($total > 0)
                                 <div class="mt-2 h-1.5 bg-emerald-200 rounded-full overflow-hidden">
                                     <div class="h-full bg-emerald-500 rounded-full" style="width: {{ $approved/max($total,1)*100 }}%"></div>
                                 </div>
-                            @endif
-                        </div>
-                        <div class="bg-amber-50 rounded-xl p-4 text-center">
-                            <p class="text-2xl font-bold text-amber-700">{{ $pending }}</p>
-                            <p class="text-xs text-amber-600 mt-1">Pending</p>
-                            @if ($total > 0)
+                                @endif
+                            </div>
+                            <div class="bg-amber-50 rounded-xl p-4 text-center">
+                                <p class="text-2xl font-bold text-amber-700">{{ $pending }}</p>
+                                <p class="text-xs text-amber-600 mt-1">Pending</p>
+                                @if ($total > 0)
                                 <div class="mt-2 h-1.5 bg-amber-200 rounded-full overflow-hidden">
                                     <div class="h-full bg-amber-400 rounded-full" style="width: {{ $pending/max($total,1)*100 }}%"></div>
                                 </div>
-                            @endif
-                        </div>
-                        <div class="bg-red-50 rounded-xl p-4 text-center">
-                            <p class="text-2xl font-bold text-red-600">{{ $rejected }}</p>
-                            <p class="text-xs text-red-500 mt-1">Rejected</p>
-                            @if ($total > 0)
+                                @endif
+                            </div>
+                            <div class="bg-red-50 rounded-xl p-4 text-center">
+                                <p class="text-2xl font-bold text-red-600">{{ $rejected }}</p>
+                                <p class="text-xs text-red-500 mt-1">Rejected</p>
+                                @if ($total > 0)
                                 <div class="mt-2 h-1.5 bg-red-200 rounded-full overflow-hidden">
                                     <div class="h-full bg-red-400 rounded-full" style="width: {{ $rejected/max($total,1)*100 }}%"></div>
                                 </div>
-                            @endif
-                        </div>
-                        <div class="bg-indigo-50 rounded-xl p-4 text-center">
-                            <p class="text-2xl font-bold text-indigo-700">{{ $workshopRegistrations }}</p>
-                            <p class="text-xs text-indigo-600 mt-1">Workshop Regs</p>
-                            @if ($workshopCount > 0)
+                                @endif
+                            </div>
+                            <div class="bg-indigo-50 rounded-xl p-4 text-center">
+                                <p class="text-2xl font-bold text-indigo-700">{{ $workshopRegistrations }}</p>
+                                <p class="text-xs text-indigo-600 mt-1">Workshop Regs</p>
+                                @if ($workshopCount > 0)
                                 <p class="text-[10px] text-indigo-400 mt-1">{{ round($workshopRegistrations/max($workshopCount,1)) }}/workshop avg</p>
-                            @endif
+                                @endif
+                            </div>
                         </div>
+                    </div>
+
+                    {{-- Check-in Stats --}}
+                    <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+                        <h3 class="text-sm font-bold text-gray-900 mb-4 flex items-center gap-2">
+                            <svg class="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                            Check-In
+                        </h3>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="bg-emerald-50 rounded-xl p-4 text-center">
+                                <p class="text-2xl font-bold text-emerald-700">{{ $checkedInToday }}</p>
+                                <p class="text-xs text-emerald-600 mt-1">Checked in today</p>
+                            </div>
+                            <div class="bg-blue-50 rounded-xl p-4 text-center">
+                                <p class="text-2xl font-bold text-blue-700">{{ $checkedInTotal }}</p>
+                                <p class="text-xs text-blue-600 mt-1">Total checked in</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    {{-- Source Tracking --}}
+                    @if ($topSources->count() > 0)
+                    <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+                        <h3 class="text-sm font-bold text-gray-900 mb-3">Top Registration Sources</h3>
+                        <div class="space-y-2.5">
+                            @foreach ($topSources as $src)
+                            <div class="flex items-center gap-3">
+                                <span class="text-xs font-medium text-gray-600 w-24 truncate">{{ $src->utm_source ?: 'Direct' }}</span>
+                                <div class="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden">
+                                    <div class="h-full bg-indigo-400 rounded-full" style="width: {{ $src->total/max($approved,1)*100 }}%"></div>
+                                </div>
+                                <span class="text-xs font-semibold text-gray-700 w-10 text-right">{{ $src->total }}</span>
+                            </div>
+                            @endforeach
+                        </div>
+                    </div>
+                    @endif
+
+                    {{-- Referral & Waitlist --}}
+                    <div class="grid grid-cols-2 gap-4">
+                        @if ($referralCount > 0)
+                        <div class="bg-white rounded-xl border border-gray-100 shadow-sm p-4">
+                            <p class="text-xs text-gray-400 uppercase tracking-wider">Referral Codes</p>
+                            <p class="text-xl font-bold text-gray-900 mt-1">{{ $referralCount }}</p>
+                            <p class="text-xs text-gray-500">registrants with referral</p>
+                        </div>
+                        @endif
+                        @if ($workshopWaitlistTotal > 0)
+                        <div class="bg-white rounded-xl border border-gray-100 shadow-sm p-4">
+                            <p class="text-xs text-gray-400 uppercase tracking-wider">Waitlist</p>
+                            <p class="text-xl font-bold text-amber-600 mt-1">{{ $workshopWaitlistTotal }}</p>
+                            <p class="text-xs text-gray-500">on workshop waitlist</p>
+                        </div>
+                        @endif
                     </div>
                 </div>
             </div>

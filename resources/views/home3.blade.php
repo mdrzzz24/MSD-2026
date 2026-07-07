@@ -413,6 +413,10 @@ section { padding: var(--section-gap) 0; }
   0%,100% { transform: scale(1); }
   50% { transform: scale(1.05); }
 }
+@keyframes fadeInUp {
+  from { opacity:0; transform:scale(0.9); }
+  to { opacity:1; transform:scale(1); }
+}
 .ai-brain > * { position: relative; z-index: 1; }
 .ai-brain .section-title { font-size: clamp(24px,3vw,36px); color: #fff; max-width: 800px; margin: 0 auto 20px; }
 .ai-brain p { color: rgba(255,255,255,.6); font-size: 16px; line-height: 1.8; max-width: 720px; margin: 0 auto; }
@@ -849,6 +853,21 @@ input.field-error, select.field-error { border-color:#ef4444 !important; }
             <span>By submitting this form, I understand Metrodata will process my personal information in accordance with their <strong>Privacy Notice</strong>. Additionally, I consent to my information being shared with <strong>Event Partners</strong> in accordance. I understand I may withdraw my consent or update my information at any time.</span>
           </label>
         </div>
+        <div class="field full" style="margin-top:4px">
+          <label class="checkbox-label">
+            <input type="checkbox" name="attended_before" value="1">
+            <span>I have attended Metrodata Solution Day <strong>before</strong>.</span>
+          </label>
+        </div>
+        <div class="field full" style="margin-top:4px">
+          <label>Referral Code (optional)</label>
+          <input name="referral_code" placeholder="Enter referral code if you have one">
+        </div>
+        {{-- UTM hidden fields --}}
+        <input type="hidden" name="utm_source" id="utm_source" value="">
+        <input type="hidden" name="utm_medium" id="utm_medium" value="">
+        <input type="hidden" name="utm_campaign" id="utm_campaign" value="">
+        <input type="hidden" name="utm_content" id="utm_content" value="">
         <div class="field full" style="margin-top:8px">
           <button type="submit" class="btn-ai">Submit Registration →</button>
         </div>
@@ -883,10 +902,10 @@ input.field-error, select.field-error { border-color:#ef4444 !important; }
         </svg>
       </div>
       <h2 style="font-size:20px; font-weight:700; color:#111827; margin-bottom:8px;">Registration Successful!</h2>
-      <p style="font-size:14px; color:#6b7280; margin-bottom:20px;">Your data has been received. Please wait for confirmation from the admin via email.</p>
+      <p style="font-size:14px; color:#6b7280; margin-bottom:12px;">Your data has been received. Please wait for confirmation from the admin via email.</p>
       <div style="background:#fffbeb; border:1px solid #fde68a; border-radius:12px; padding:16px; font-size:14px; color:#d97706; margin-bottom:24px; text-align:left;">
-        <strong>✉️ Check your email</strong><br>
-        Once approved, you will receive an email with your login password.
+        <strong>📧 Check your email after approval</strong><br>
+        Once your registration is <strong>approved</strong>, you will receive an email containing your login <strong>password</strong> to access the participant dashboard at <strong style="word-break:break-all;">{{ request()->getSchemeAndHttpHost() }}/registrant/login</strong>.
       </div>
       <button onclick="closeSuccessModal()" style="width:100%; padding:10px 0; background:#4f46e5; color:#fff; font-weight:600; font-size:14px; border:none; border-radius:12px; cursor:pointer; transition:background 0.2s;"
               onmouseover="this.style.background='#4338ca'" onmouseout="this.style.background='#4f46e5'">

@@ -370,6 +370,21 @@
             <span>By submitting this form, I understand Metrodata will process my personal information in accordance with their <strong>Privacy Notice</strong>. Additionally, I consent to my information being shared with <strong>Event Partners</strong> in accordance. I understand I may withdraw my consent or update my information at any time.</span>
           </label>
         </div>
+        <div class="field full" style="margin-top:4px">
+          <label class="checkbox-label">
+            <input type="checkbox" name="attended_before" value="1">
+            <span>I have attended Metrodata Solution Day <strong>before</strong>.</span>
+          </label>
+        </div>
+        <div class="field full" style="margin-top:4px">
+          <label>Referral Code (optional)</label>
+          <input name="referral_code" placeholder="Enter referral code if you have one">
+        </div>
+        {{-- UTM hidden fields --}}
+        <input type="hidden" name="utm_source" id="utm_source" value="">
+        <input type="hidden" name="utm_medium" id="utm_medium" value="">
+        <input type="hidden" name="utm_campaign" id="utm_campaign" value="">
+        <input type="hidden" name="utm_content" id="utm_content" value="">
         <div class="field full" style="margin-top:8px">
           <button type="submit" class="btn btn-submit">Submit Registration <span class="btn-arrow">→</span></button>
         </div>

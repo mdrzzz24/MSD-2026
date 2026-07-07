@@ -172,7 +172,7 @@ const regForm = document.getElementById('regForm');
 if (regForm) {
   regForm.addEventListener('submit', async (e) => {
     e.preventDefault();
-    const submitBtn = regForm.querySelector('.btn-submit');
+    const submitBtn = regForm.querySelector('.btn-submit, .btn-ai');
     const originalText = submitBtn.innerHTML;
     submitBtn.disabled = true;
     submitBtn.innerHTML = 'Submitting...';
@@ -240,6 +240,15 @@ document.addEventListener('click', function(e) {
 document.addEventListener('keydown', function(e) {
   if (e.key === 'Escape') closeSuccessModal();
 });
+
+// ── UTM Capture from URL ──
+(function() {
+  const params = new URLSearchParams(window.location.search);
+  ['utm_source', 'utm_medium', 'utm_campaign', 'utm_content'].forEach(name => {
+    const el = document.getElementById(name);
+    if (el && params.has(name)) el.value = params.get(name);
+  });
+})();
 
 // ── Inline form error helpers ──
 function showFormError3(msg) {

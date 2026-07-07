@@ -33,6 +33,12 @@ class Workshop extends Model
                     ->withTimestamps();
     }
 
+    public function waitlist()
+    {
+        return $this->belongsToMany(Registrant::class, 'workshop_waitlist')
+                    ->withTimestamps();
+    }
+
     public function scopeOpen($query)
     {
         return $query->where('registration_open', true);
@@ -43,6 +49,11 @@ class Workshop extends Model
         return $this->registrants()->count();
     }
 
+    public function waitlistCount(): int
+    {
+        return $this->waitlist()->count();
+    }
+
     public function isFull(): bool
     {
         return $this->capacity > 0 && $this->registrationsCount() >= $this->capacity;
@@ -51,6 +62,11 @@ class Workshop extends Model
     public function canRegister(): bool
     {
         return $this->registration_open && !$this->isFull();
+    }
+
+    public function hasAvailability(): bool
+    {
+        return $this->registration_open && ($this->capacity === 0 || $this->registrationsCount() < $this->capacity);
     }
 
     public function timeRange(): string

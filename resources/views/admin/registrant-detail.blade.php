@@ -123,6 +123,24 @@
                                 <dd class="text-sm font-medium text-gray-900">{{ $registrant->last_name ?? '—' }}</dd>
                             </div>
                             @endif
+                            @if ($registrant->referral_code)
+                            <div class="bg-gray-50 rounded-xl p-4">
+                                <dt class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Referral Code</dt>
+                                <dd class="text-sm font-medium text-gray-900 font-mono">{{ $registrant->referral_code }}</dd>
+                            </div>
+                            @endif
+                            @if ($registrant->utm_source)
+                            <div class="bg-gray-50 rounded-xl p-4">
+                                <dt class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">UTM Source</dt>
+                                <dd class="text-sm font-medium text-gray-900">{{ $registrant->utm_source }}</dd>
+                            </div>
+                            @endif
+                            @if ($registrant->attended_before)
+                            <div class="bg-gray-50 rounded-xl p-4">
+                                <dt class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Returning</dt>
+                                <dd class="text-sm font-medium text-indigo-600">Previously attended</dd>
+                            </div>
+                            @endif
                         </div>
 
                         @if ($registrant->notes)
@@ -164,6 +182,35 @@
                                             {{ $w->title }}
                                         </a>
                                     @endforeach
+                                </div>
+                            </div>
+                        </div>
+                    @endif
+
+                    {{-- QR Code --}}
+                    @if ($registrant->qr_token)
+                        <div class="border-t border-gray-100">
+                            <div class="px-6 py-4">
+                                <h3 class="text-sm font-bold text-gray-800 mb-3 flex items-center gap-2">
+                                    <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"/>
+                                    </svg>
+                                    QR Code
+                                </h3>
+                                <div class="flex items-center gap-4">
+                                    <img src="{{ $registrant->qr_code_url }}" alt="QR Code" class="w-28 h-28 rounded-lg border border-gray-200">
+                                    <div>
+                                        <p class="text-xs text-gray-500 mb-2">Scan for check-in</p>
+                                        <a href="{{ $registrant->qr_checkin_url }}" target="_blank"
+                                           class="text-xs text-indigo-600 hover:text-indigo-800 font-medium">
+                                            {{ $registrant->qr_checkin_url }}
+                                        </a>
+                                        @if ($registrant->checked_in_at)
+                                            <p class="text-xs text-emerald-600 font-semibold mt-2">
+                                                ✓ Checked in at {{ $registrant->checked_in_at->format('H:i, d M Y') }}
+                                            </p>
+                                        @endif
+                                    </div>
                                 </div>
                             </div>
                         </div>
