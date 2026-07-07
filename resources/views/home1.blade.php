@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="id">
+<html lang="en">
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -144,35 +144,131 @@
 </section>
 
 <!-- AGENDA -->
-<!-- AGENDA -->
 <section id="agenda" class="why reveal">
   <div class="container">
     <p class="section-eyebrow">Agenda</p>
     <h2 class="section-title">A full day of learning, exchange, and discovery</h2>
-    <div class="table-wrap">
-      <table>
-        <thead>
-          <tr>
-            <th>Time</th><th>Ballroom A</th><th>Ballroom B</th><th>Ballroom C</th>
-            <th>Sumatra</th><th>Java</th><th>Sulawesi</th><th>Kalimantan</th><th>Maluku</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr><td class="time">08.00 – 08.30</td><td class="full" colspan="8">Registration, Morning Refreshment, Networking & Exhibition</td></tr>
-          <tr><td class="time">08.30 – 10.30</td><td class="full" colspan="8">General Sessions</td></tr>
-          <tr><td class="time">10.30 – 12.00</td><td>—</td><td>—</td><td>—</td><td><span class="tag ws">Workshop A1</span></td><td><span class="tag ws">Workshop B1</span></td><td><span class="tag ws">Workshop C1</span></td><td>—</td><td>—</td></tr>
-          <tr><td class="time">12.00 – 13.00</td><td class="full" colspan="8">Lunch, Networking & Exhibition</td></tr>
-          <tr><td class="time">13.00 – 13.30</td><td><span class="tag plat">Platinum 1</span></td><td><span class="tag plat">Platinum 4</span></td><td><span class="tag plat">Platinum 7</span></td><td><span class="tag ws">Workshop A2</span></td><td><span class="tag ws">Workshop B2</span></td><td><span class="tag ws">Workshop C2</span></td><td><span class="tag gold">Gold A1</span></td><td><span class="tag gold">Gold B1</span></td></tr>
-          <tr><td class="time">13.35 – 14.05</td><td><span class="tag plat">Platinum 2</span></td><td><span class="tag plat">Platinum 5</span></td><td><span class="tag plat">Platinum 7</span></td><td>—</td><td>—</td><td>—</td><td><span class="tag gold">Gold A2</span></td><td><span class="tag gold">Gold B2</span></td></tr>
-          <tr><td class="time">14.10 – 14.40</td><td><span class="tag plat">Platinum 3</span></td><td><span class="tag plat">Platinum 6</span></td><td><span class="tag plat">Platinum 9</span></td><td>—</td><td>—</td><td>—</td><td><span class="tag gold">Gold A3</span></td><td><span class="tag gold">Gold B3</span></td></tr>
-          <tr><td class="time">14.40 – 15.00</td><td class="full" colspan="8">Break Session, Exhibition Booths</td></tr>
-          <tr><td class="time">15.00 – 15.30</td><td><span class="tag plat">Platinum 4</span></td><td><span class="tag plat">Platinum 1</span></td><td><span class="tag plat">Platinum 8</span></td><td><span class="tag ws">Workshop A3</span></td><td><span class="tag ws">Workshop B3</span></td><td><span class="tag ws">Workshop C3</span></td><td><span class="tag gold">Gold C1</span></td><td><span class="tag gold">Gold D1</span></td></tr>
-          <tr><td class="time">15.35 – 16.05</td><td><span class="tag plat">Platinum 5</span></td><td><span class="tag plat">Platinum 2</span></td><td><span class="tag plat">Platinum 9</span></td><td>—</td><td>—</td><td>—</td><td><span class="tag gold">Gold C2</span></td><td><span class="tag gold">Gold D2</span></td></tr>
-          <tr><td class="time">16.05 – 16.35</td><td><span class="tag plat">Platinum 6</span></td><td><span class="tag plat">Platinum 3</span></td><td><span class="tag plat">Platinum 8</span></td><td>—</td><td>—</td><td>—</td><td><span class="tag gold">Gold C3</span></td><td><span class="tag gold">Gold D3</span></td></tr>
-          <tr><td class="time">16.30 – 17.00</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td><span class="tag gold">Gold C4</span></td><td><span class="tag gold">Gold D4</span></td></tr>
-        </tbody>
-      </table>
-    </div>
+
+    @if(isset($timeSlots) && $timeSlots->isNotEmpty())
+      @php
+        $roomNames = $rooms->pluck('name')->toArray();
+        // Group rooms by floor for dynamic header
+        $floorGroups = $rooms->groupBy(fn($r) => $r->floorRelation?->name ?? 'Other');
+      @endphp
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th rowspan="2">Time</th>
+              @foreach ($floorGroups as $floorName => $floorRooms)
+                <th colspan="{{ $floorRooms->count() }}" style="background:{{ $loop->first ? '#eef2ff' : '#fefce8' }}; color:{{ $loop->first ? '#4338ca' : '#a16207' }};">{{ $floorName }}</th>
+              @endforeach
+            </tr>
+            <tr>
+              @foreach ($rooms as $rm)
+                <th>{{ $rm->name }}</th>
+              @endforeach
+            </tr>
+          </thead>
+          <tbody>
+            @php
+                $skipMap = [];
+            @endphp
+            @foreach ($timeSlots as $ts)
+              @php
+                $slotKey = $ts->start_time . '-' . $ts->end_time;
+                $items = collect($itemMap[$slotKey] ?? []);
+                $fullRow = $items->firstWhere(fn($i) => $i->isFullRow());
+                $hasPerRoom = $items->contains(fn($i) => !$i->isFullRow());
+                if ($hasPerRoom) $fullRow = null;
+              @endphp
+              <tr>
+                <td class="time">{{ $ts->label() }}</td>
+                @if ($fullRow)
+                  <td class="full" colspan="{{ $rooms->count() }}">
+                    @if ($fullRow->category)
+                      <span class="tag {{ \App\Models\AgendaItem::categoryClass($fullRow->category) }}">{{ $fullRow->title }}</span>
+                    @else
+                      {{ $fullRow->title }}
+                    @endif
+                  </td>
+                @else
+                  @php
+                    $cells = [];
+                    $colCovered = [];
+                    foreach ($roomNames as $rm) {
+                        if (isset($colCovered[$rm])) { unset($colCovered[$rm]); continue; }
+                        $item = collect($items)->firstWhere('room', $rm);
+                        if (isset($skipMap[$rm])) continue;
+
+                        if ($item) {
+                            $attrs = '';
+                            if ($item->rowspan > 1) {
+                                $attrs .= ' rowspan="' . $item->rowspan . '"';
+                                $skipMap[$rm] = $item->rowspan;
+                            }
+                            if ($item->colspan > 1) {
+                                $attrs .= ' colspan="' . $item->colspan . '"';
+                                $idx = array_search($rm, $roomNames);
+                                for ($i = 1; $i < $item->colspan; $i++) {
+                                    if (isset($roomNames[$idx + $i])) {
+                                        $colCovered[$roomNames[$idx + $i]] = true;
+                                        if ($item->rowspan > 1) {
+                                            $skipMap[$roomNames[$idx + $i]] = $item->rowspan;
+                                        }
+                                    }
+                                }
+                            }
+                            $tag = $item->category
+                                ? '<span class="tag ' . \App\Models\AgendaItem::categoryClass($item->category) . '">' . e($item->title) . '</span>'
+                                : e($item->title);
+                            $cells[] = '<td' . $attrs . '>' . $tag . '</td>';
+                        } else {
+                            $cells[] = '<td>—</td>';
+                        }
+                    }
+                  @endphp
+                  {!! implode("\n", $cells) !!}
+                @endif
+              </tr>
+              @php
+                foreach ($skipMap as $rm => $rem) {
+                    $skipMap[$rm] = $rem - 1;
+                    if ($skipMap[$rm] <= 0) unset($skipMap[$rm]);
+                }
+              @endphp
+            @endforeach
+          </tbody>
+        </table>
+      </div>
+    @else
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th rowspan="2">Time</th>
+              @php $floorGroups = $rooms->groupBy(fn($r) => $r->floorRelation?->name ?? 'Other'); @endphp
+              @foreach ($floorGroups as $floorName => $floorRooms)
+                <th colspan="{{ $floorRooms->count() }}" style="background:{{ $loop->first ? '#eef2ff' : '#fefce8' }}; color:{{ $loop->first ? '#4338ca' : '#a16207' }};">{{ $floorName }}</th>
+              @endforeach
+            </tr>
+            <tr>
+              @foreach ($rooms as $rm)
+                <th>{{ $rm->name }}</th>
+              @endforeach
+            </tr>
+          </thead>
+          <tbody>
+            @foreach ($timeSlots as $ts)
+            <tr>
+              <td class="time">{{ $ts->label() }}</td>
+              <td colspan="{{ $rooms->count() }}" class="text-center text-gray-400 py-4" style="color:var(--muted)">—</td>
+            </tr>
+            @endforeach
+          </tbody>
+        </table>
+      </div>
+    @endif
   </div>
 </section>
 
@@ -240,7 +336,8 @@
     <p class="section-eyebrow">Register</p>
     <h2 class="section-title">Registration Form</h2>
     <div class="form-wrap">
-      <form id="regForm" class="form-grid" novalidate>
+      <form id="regForm" class="form-grid" method="POST" action="{{ route('register.submit') }}">
+        @csrf
         <div class="field"><label>First Name</label><input required name="firstName" placeholder="First Name" /></div>
         <div class="field"><label>Last Name</label><input required name="lastName" placeholder="Last Name" /></div>
         <div class="field"><label>Job Title</label><input required name="title" placeholder="Job Title" /></div>
@@ -294,6 +391,33 @@
     © 2026 <strong>Metrodata Solution Day</strong> — Jakarta, 20 August 2026 · Shangri-La Hotel
   </div>
 </footer>
+
+{{-- Success Modal --}}
+<div id="successModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/40 backdrop-blur-sm p-4">
+  <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden animate-modal">
+    <div class="p-8 text-center">
+      <div class="w-16 h-16 bg-emerald-100 rounded-2xl flex items-center justify-center mx-auto mb-5">
+        <svg class="w-8 h-8 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/>
+        </svg>
+      </div>
+      <h2 class="text-xl font-bold text-gray-900 mb-2">Registration Successful!</h2>
+      <p class="text-sm text-gray-500 mb-5">Your data has been received. Please wait for confirmation from the admin via email.</p>
+      <div class="bg-amber-50 border border-amber-200 rounded-xl p-4 text-sm text-amber-700 mb-6 text-left">
+        <strong>✉️ Check your email</strong><br>
+        Once approved, you will receive an email with your login password.
+      </div>
+      <button onclick="closeSuccessModal()" class="w-full py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-xl transition text-sm">
+        Close
+      </button>
+    </div>
+  </div>
+</div>
+
+<style>
+  .animate-modal { animation: modalPop 0.3s ease-out; }
+  @keyframes modalPop { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
+</style>
 
 <script src="{{ asset('js/main.js') }}"></script>
 </body>

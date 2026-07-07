@@ -144,33 +144,76 @@ if (statsGrid) {
   statObserver.observe(statsGrid);
 }
 
-// Registration form
+// Registration form — submit to server, show modal on success
 const regForm = document.getElementById('regForm');
 if (regForm) {
-  regForm.addEventListener('submit', (e) => {
+  regForm.addEventListener('submit', async (e) => {
     e.preventDefault();
-    const data = Object.fromEntries(new FormData(e.target).entries());
 
-    if (!data.firstName || !data.email || !data.company) {
-      alert('Please fill in all required fields.');
-      return;
+    const submitBtn = regForm.querySelector('.btn-submit');
+    const originalText = submitBtn.innerHTML;
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = 'Submitting...';
+
+    try {
+      const formData = new FormData(regForm);
+      const response = await fetch(regForm.action, {
+        method: 'POST',
+        body: formData,
+        headers: { 'X-Requested-With': 'XMLHttpRequest' },
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.success) {
+        // Show success modal instead of redirect
+        showSuccessModal();
+        regForm.reset();
+        const gdpr = regForm.querySelector('[name="gdpr"]');
+        if (gdpr) gdpr.checked = true;
+      } else {
+        // Show validation errors
+        let errorMsg = '';
+        for (const [field, messages] of Object.entries(data.errors || {})) {
+          errorMsg += messages.join('\n') + '\n';
+        }
+        alert(errorMsg || 'An error occurred. Please try again.');
+      }
+    } catch (err) {
+      alert('A network error occurred. Please try again.');
+    } finally {
+      submitBtn.disabled = false;
+      submitBtn.innerHTML = originalText;
     }
-
-    if (!document.querySelector('[name="gdpr"]')?.checked) {
-      alert('Please agree to the Privacy Notice to continue.');
-      return;
-    }
-
-    alert(
-      'Thank you, ' +
-        data.firstName +
-        '! A confirmation email will be sent to ' +
-        data.email +
-        '.'
-    );
-    e.target.reset();
-    // Recheck GDPR
-    const gdpr = document.querySelector('[name="gdpr"]');
-    if (gdpr) gdpr.checked = true;
   });
 }
+
+// Success modal helpers
+function showSuccessModal() {
+  const modal = document.getElementById('successModal');
+  if (modal) {
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+  }
+}
+
+function closeSuccessModal() {
+  const modal = document.getElementById('successModal');
+  if (modal) {
+    modal.classList.add('hidden');
+    modal.classList.remove('flex');
+  }
+  // Scroll to top
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// Close modal on backdrop click
+document.addEventListener('click', function(e) {
+  const modal = document.getElementById('successModal');
+  if (modal && e.target === modal) closeSuccessModal();
+});
+
+// Close modal on Escape key
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') closeSuccessModal();
+});
