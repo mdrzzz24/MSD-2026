@@ -24,27 +24,103 @@
         }
         .animate-fade-in { animation: fadeIn 0.6s ease-out; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .login-hero {
+            background: url('{{ asset('img/background.png') }}') no-repeat center center;
+            background-size: cover;
+            position: relative;
+        }
+        .login-hero::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, rgba(5,13,42,.85), rgba(10,26,74,.65), rgba(5,13,42,.9));
+            z-index: 1;
+        }
+        .login-hero::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background-image:
+                linear-gradient(rgba(0,212,255,.04) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0,212,255,.04) 1px, transparent 1px);
+            background-size: 60px 60px;
+            z-index: 1;
+            animation: gridPulse 8s ease-in-out infinite;
+        }
+        @keyframes gridPulse {
+            0%,100% { opacity: .3; }
+            50% { opacity: .6; }
+        }
+        .ai-particle {
+            position: absolute;
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 2;
+        }
+        .ai-particle:nth-child(1) {
+            top: 15%; left: 8%;
+            width: 6px; height: 6px;
+            background: #00d4ff;
+            box-shadow: 0 0 12px #00d4ff;
+            animation: floatAI 6s ease-in-out infinite;
+        }
+        .ai-particle:nth-child(2) {
+            top: 25%; right: 12%;
+            width: 4px; height: 4px;
+            background: #a855f7;
+            box-shadow: 0 0 10px #a855f7;
+            animation: floatAI 8s ease-in-out infinite 1s;
+        }
+        .ai-particle:nth-child(3) {
+            bottom: 30%; left: 15%;
+            width: 8px; height: 8px;
+            background: #00d4ff;
+            box-shadow: 0 0 16px #00d4ff;
+            animation: floatAI 7s ease-in-out infinite 2s;
+        }
+        .ai-particle:nth-child(4) {
+            bottom: 20%; right: 20%;
+            width: 5px; height: 5px;
+            background: #a855f7;
+            box-shadow: 0 0 12px #a855f7;
+            animation: floatAI 9s ease-in-out infinite 0.5s;
+        }
+        @keyframes floatAI {
+            0%,100% { transform: translateY(0) scale(1); opacity: .6; }
+            50% { transform: translateY(-30px) scale(1.5); opacity: 1; }
+        }
+        .dot-live {
+            width: 6px; height: 6px;
+            border-radius: 50%;
+            background: #00d4ff;
+            animation: pulseLive 1.5s ease-in-out infinite;
+            display: inline-block;
+        }
+        @keyframes pulseLive {
+            0%,100% { opacity: 1; box-shadow: 0 0 6px #00d4ff; }
+            50% { opacity: .3; box-shadow: 0 0 0 #00d4ff; }
+        }
+        .login-content { position: relative; z-index: 3; }
     </style>
 </head>
 <body class="min-h-screen flex font-sans">
 
-    {{-- LEFT: Brand Panel --}}
-    <div class="hidden lg:flex lg:w-5/12 xl:w-1/2 bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-500 relative overflow-hidden items-center justify-center">
-        <div class="absolute -top-40 -left-40 w-80 h-80 bg-white/10 rounded-full"></div>
-        <div class="absolute -bottom-32 -right-32 w-96 h-96 bg-white/5 rounded-full"></div>
-        <div class="absolute top-1/3 right-10 w-6 h-6 bg-white/20 rounded-full animate-float"></div>
-        <div class="absolute bottom-1/3 left-10 w-4 h-4 bg-white/20 rounded-full animate-float" style="animation-delay: 2s;"></div>
+    {{-- LEFT: Brand Panel with MSD Hero Visual --}}
+    <div class="hidden lg:flex lg:w-5/12 xl:w-1/2 login-hero relative overflow-hidden items-center justify-center">
+        <div class="ai-particle"></div>
+        <div class="ai-particle"></div>
+        <div class="ai-particle"></div>
+        <div class="ai-particle"></div>
 
-        <div class="relative z-10 text-center px-12 animate-fade-in">
-            <div class="w-20 h-20 mx-auto mb-6 bg-white/20 backdrop-blur rounded-2xl flex items-center justify-center">
-                <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
-                          d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
-                </svg>
+        <div class="relative z-10 text-center px-12 animate-fade-in login-content">
+            <div class="mb-6">
+                <img src="{{ asset('img/logo-msd.svg') }}" alt="MSD" style="height:clamp(50px,8vw,90px);width:auto;filter:drop-shadow(0 0 20px rgba(0,212,255,.3))" class="mx-auto">
             </div>
-            <h1 class="text-3xl xl:text-4xl font-bold text-white mb-3 tracking-tight">MSD 2026</h1>
-            <p class="text-indigo-100 text-lg max-w-sm mx-auto leading-relaxed">
-                Manage registrations, review applicants, and send automated notifications.
+            <h1 class="text-3xl xl:text-4xl font-extrabold leading-tight tracking-tight mb-3" style="background:linear-gradient(135deg,#fff 50%,#00d4ff 100%);-webkit-background-clip:text;background-clip:text;color:transparent;">
+                Winning with AI
+            </h1>
+            <p class="text-[rgba(255,255,255,.7)] text-base max-w-sm mx-auto leading-relaxed">
+                Build, Run, and Scale for Measurable Impact
             </p>
         </div>
     </div>
@@ -55,13 +131,11 @@
 
             {{-- Mobile brand --}}
             <div class="lg:hidden text-center mb-8">
-                <div class="w-14 h-14 mx-auto mb-3 bg-gradient-to-br from-indigo-600 to-purple-600 rounded-2xl flex items-center justify-center">
-                    <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
-                              d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
-                    </svg>
+                <div class="w-16 h-16 mx-auto mb-3 bg-gradient-to-br from-indigo-600 to-purple-600 rounded-2xl flex items-center justify-center p-3">
+                    <img src="{{ asset('img/logo-msd.svg') }}" alt="MSD" class="w-full h-full brightness-0 invert">
                 </div>
                 <h1 class="text-xl font-bold text-gray-900">MSD 2026</h1>
+                <p class="text-xs text-gray-500 mt-1">Winning with AI</p>
             </div>
 
             {{-- Card --}}
