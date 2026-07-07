@@ -1,11 +1,6 @@
 <aside class="hidden lg:flex lg:flex-col w-64 bg-white border-r border-gray-200 fixed inset-y-0 z-40">
-    <div class="flex items-center gap-3 h-16 px-6 border-b border-gray-100">
-        <div class="w-9 h-9 bg-gradient-to-br from-indigo-600 to-purple-600 rounded-xl flex items-center justify-center flex-shrink-0">
-            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
-            </svg>
-        </div>
-        <span class="text-lg font-bold text-gray-900 tracking-tight">AdminPanel</span>
+    <div class="flex items-center justify-center h-20 px-6 border-b border-gray-200" style="background:linear-gradient(135deg, #050d2a, #0a1a4a)">
+        <img src="{{ asset('img/logo-msd.svg') }}" alt="MSD" style="height:48px;width:auto;filter:brightness(0) invert(1)">
     </div>
     <nav class="flex-1 px-3 py-6 space-y-1 overflow-y-auto">
         <p class="px-3 mb-3 text-xs font-semibold text-gray-400 uppercase tracking-widest">Menu</p>
