@@ -12,7 +12,9 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('registrants', function (Blueprint $table) {
-            //
+            if (!Schema::hasColumn('registrants', 'referral_code')) {
+                $table->string('referral_code')->nullable()->after('unique_code');
+            }
         });
     }
 
@@ -22,7 +24,9 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('registrants', function (Blueprint $table) {
-            //
+            if (Schema::hasColumn('registrants', 'referral_code')) {
+                $table->dropColumn('referral_code');
+            }
         });
     }
 };

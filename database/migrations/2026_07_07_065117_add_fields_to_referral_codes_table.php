@@ -36,7 +36,7 @@ return new class extends Migration
         // Add referral_code_id FK to registrants
         Schema::table('registrants', function (Blueprint $table) {
             if (!Schema::hasColumn('registrants', 'referral_code_id')) {
-                $table->foreignId('referral_code_id')->nullable()->constrained('referral_codes')->nullOnDelete()->after('referral_code');
+                $table->foreignId('referral_code_id')->nullable()->constrained('referral_codes')->nullOnDelete()->after('unique_code');
             }
         });
     }
