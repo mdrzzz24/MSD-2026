@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 <html>
-<head><meta charset="utf-8"></head>
+<head>
+    <link rel="icon" type="image/png" href="{{ asset('img/metrodata.png') }}">
+<meta charset="utf-8"></head>
 <body style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
     <div style="background: #fef2f2; border: 1px solid #fecaca; border-radius: 8px; padding: 30px;">
         <h2 style="color: #991b1b; margin-top: 0;">❌ Registration Rejected</h2>
