@@ -348,10 +348,13 @@ section { padding: var(--section-gap) 0; }
   width: 48px; height: 48px;
   margin: 0 auto 14px;
   display: flex; align-items: center; justify-content: center;
-  font-size: 22px;
   background: rgba(0,212,255,.08);
   border-radius: 12px;
   border: 1px solid rgba(0,212,255,.1);
+}
+.feat-card .feat-icon svg {
+  width: 24px; height: 24px;
+  color: var(--ai-cyan);
 }
 .feat-card h4 { font-size: 16px; font-weight: 700; color: #fff; margin-bottom: 6px; }
 .feat-card p { font-size: 14px; color: rgba(255,255,255,.55); line-height: 1.6; }
@@ -610,14 +613,76 @@ footer {
       <div class="stat stat-stagger"><div class="num">1,200+</div><div class="lbl">Professionals</div></div>
     </div>
 
-    <div class="feat-grid" id="featGrid">
-      <div class="feat-card" style="transition-delay:0s"><div class="feat-icon">🎯</div><h4>Visionary Keynotes</h4><p>From global technology leaders, industry experts, and national stakeholders.</p></div>
-      <div class="feat-card" style="transition-delay:0.08s"><div class="feat-icon">⚡</div><h4>Tech Sessions</h4><p>Featuring real-world case studies and best practices.</p></div>
-      <div class="feat-card" style="transition-delay:0.16s"><div class="feat-icon">🔧</div><h4>Interactive Workshops</h4><p>Hands-on learning from technology experts.</p></div>
-      <div class="feat-card" style="transition-delay:0.24s"><div class="feat-icon">💡</div><h4>Innovation Exhibits</h4><p>Showcasing the latest enterprise technologies.</p></div>
-      <div class="feat-card" style="transition-delay:0.32s"><div class="feat-icon">🤝</div><h4>Strategic Networking</h4><p>Connect with industry leaders and partners.</p></div>
-      <div class="feat-card" style="transition-delay:0.40s"><div class="feat-icon">🎁</div><h4>Exclusive Tech Offers</h4><p>Available only during the event.</p></div>
-    </div>
+        <div class="feat-grid" id="featGrid">
+      <div class="feat-card" style="transition-delay:0s">
+        <div class="feat-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M9 18h6"/>
+            <path d="M10 22h4"/>
+            <path d="M15.09 14c.18-.98.65-1.74 1.41-2.5A4.65 4.65 0 0 0 18 8 6 6 0 0 0 6 8c0 1 .23 2.23 1.5 3.5A4.61 4.61 0 0 1 8.91 14"/>
+          </svg>
+        </div>
+        <h4>Visionary Keynotes</h4>
+        <p>From global technology leaders, industry experts, and national stakeholders.</p>
+      </div>
+      <div class="feat-card" style="transition-delay:0.08s">
+        <div class="feat-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="2" y="3" width="20" height="14" rx="2"/>
+            <line x1="8" y1="21" x2="16" y2="21"/>
+            <line x1="12" y1="17" x2="12" y2="21"/>
+            <circle cx="12" cy="10" r="2"/>
+            <path d="M10 10H6"/>
+            <path d="M18 10h-4"/>
+          </svg>
+        </div>
+        <h4>Tech Sessions</h4>
+        <p>Featuring real-world case studies and best practices.</p>
+      </div>
+      <div class="feat-card" style="transition-delay:0.16s">
+        <div class="feat-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
+          </svg>
+        </div>
+        <h4>Interactive Workshops</h4>
+        <p>Hands-on learning from technology experts.</p>
+      </div>
+      <div class="feat-card" style="transition-delay:0.24s">
+        <div class="feat-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="2" y="3" width="20" height="14" rx="2"/>
+            <line x1="8" y1="21" x2="16" y2="21"/>
+            <line x1="12" y1="17" x2="12" y2="21"/>
+            <path d="M8 9l2 2 4-4"/>
+          </svg>
+        </div>
+        <h4>Innovation Exhibits</h4>
+        <p>Showcasing the latest enterprise technologies.</p>
+      </div>
+      <div class="feat-card" style="transition-delay:0.32s">
+        <div class="feat-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="18" cy="5" r="3"/>
+            <circle cx="6" cy="12" r="3"/>
+            <circle cx="18" cy="19" r="3"/>
+            <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/>
+            <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
+          </svg>
+        </div>
+        <h4>Strategic Networking</h4>
+        <p>Connect with industry leaders and partners.</p>
+      </div>
+      <div class="feat-card" style="transition-delay:0.40s">
+        <div class="feat-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+          </svg>
+        </div>
+        <h4>Exclusive Tech Offers</h4>
+        <p>Available only during the event.</p>
+      </div>
+    </div></div>
   </div>
 </section>
 
