@@ -392,22 +392,27 @@
   </div>
 </footer>
 
+
+
+<script src="{{ asset('js/main.js') }}"></script>
+
 {{-- Success Modal --}}
-<div id="successModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/40 backdrop-blur-sm p-4">
-  <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden animate-modal">
-    <div class="p-8 text-center">
-      <div class="w-16 h-16 bg-emerald-100 rounded-2xl flex items-center justify-center mx-auto mb-5">
-        <svg class="w-8 h-8 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+<div id="successModal" style="display:none; position:fixed; inset:0; z-index:9999; align-items:center; justify-content:center; background:rgba(0,0,0,0.4); backdrop-filter:blur(4px); padding:16px;">
+  <div style="background:#fff; border-radius:16px; box-shadow:0 25px 50px rgba(0,0,0,0.25); width:100%; max-width:448px; overflow:hidden; animation:fadeInUp 0.3s ease-out;">
+    <div style="padding:32px; text-align:center;">
+      <div style="width:64px; height:64px; background:#d1fae5; border-radius:16px; display:flex; align-items:center; justify-content:center; margin:0 auto 20px;">
+        <svg style="width:32px; height:32px; color:#059669;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/>
         </svg>
       </div>
-      <h2 class="text-xl font-bold text-gray-900 mb-2">Registration Successful!</h2>
-      <p class="text-sm text-gray-500 mb-5">Your data has been received. Please wait for confirmation from the admin via email.</p>
-      <div class="bg-amber-50 border border-amber-200 rounded-xl p-4 text-sm text-amber-700 mb-6 text-left">
+      <h2 style="font-size:20px; font-weight:700; color:#111827; margin-bottom:8px;">Registration Successful!</h2>
+      <p style="font-size:14px; color:#6b7280; margin-bottom:20px;">Your data has been received. Please wait for confirmation from the admin via email.</p>
+      <div style="background:#fffbeb; border:1px solid #fde68a; border-radius:12px; padding:16px; font-size:14px; color:#d97706; margin-bottom:24px; text-align:left;">
         <strong>✉️ Check your email</strong><br>
         Once approved, you will receive an email with your login password.
       </div>
-      <button onclick="closeSuccessModal()" class="w-full py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-xl transition text-sm">
+      <button onclick="closeSuccessModal()" style="width:100%; padding:10px 0; background:#4f46e5; color:#fff; font-weight:600; font-size:14px; border:none; border-radius:12px; cursor:pointer; transition:background 0.2s;"
+              onmouseover="this.style.background='#4338ca'" onmouseout="this.style.background='#4f46e5'">
         Close
       </button>
     </div>
@@ -415,10 +420,8 @@
 </div>
 
 <style>
-  .animate-modal { animation: modalPop 0.3s ease-out; }
-  @keyframes modalPop { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
+  @keyframes fadeInUp { from { opacity:0; transform:scale(0.9); } to { opacity:1; transform:scale(1); } }
 </style>
 
-<script src="{{ asset('js/main.js') }}"></script>
 </body>
 </html>

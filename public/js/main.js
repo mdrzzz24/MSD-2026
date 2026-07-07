@@ -166,7 +166,7 @@ if (regForm) {
       const data = await response.json();
 
       if (response.ok && data.success) {
-        // Show success modal instead of redirect
+        // Show success modal
         showSuccessModal();
         regForm.reset();
         const gdpr = regForm.querySelector('[name="gdpr"]');
@@ -192,18 +192,15 @@ if (regForm) {
 function showSuccessModal() {
   const modal = document.getElementById('successModal');
   if (modal) {
-    modal.classList.remove('hidden');
-    modal.classList.add('flex');
+    modal.style.display = 'flex';
   }
 }
 
 function closeSuccessModal() {
   const modal = document.getElementById('successModal');
   if (modal) {
-    modal.classList.add('hidden');
-    modal.classList.remove('flex');
+    modal.style.display = 'none';
   }
-  // Scroll to top
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
@@ -217,3 +214,4 @@ document.addEventListener('click', function(e) {
 document.addEventListener('keydown', function(e) {
   if (e.key === 'Escape') closeSuccessModal();
 });
+
