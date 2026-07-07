@@ -114,7 +114,7 @@ img{max-width:100%;display:block}
 .hero-icon{
   position:absolute;
   pointer-events:none;
-  z-index:1;
+  z-index:-1;
   opacity:0.3;
 }
 .hero-icon--top-right{
