@@ -61,7 +61,7 @@
         Shangri-La Hotel
       </span>
     </div>
-    <button onclick="openRemindModal()" class="btn">Remind me when regis open</button>
+    <button onclick="openRemindModal()" class="btn">Register Now</button>
   </div>
 </header>
 
@@ -146,7 +146,7 @@
 </section>
 
 <!-- AGENDA -->
-<section id="agenda" class="why reveal" style="overflow:hidden">
+<section id="agenda" class="why reveal">
   <div class="section-icon section-icon--bottom-right">
     <img src="{{ asset('img/ICON 7.png') }}" alt="">
   </div>
@@ -300,7 +300,21 @@
         <div class="sponsor"><img src="{{ asset('img/PLATINUM/SALESFORCE.png') }}" alt="Salesforce"></div>
       </div>
     </div>
-
+    
+    <div class="sponsors-block">
+      <div class="sponsor-tier">Workshop</div>
+      <div class="sponsor-grid">
+        <div class="sponsor"><img src="{{ asset('img/WORKSHOP/Alibaba_Cloud.png') }}" alt="Alicloud"></div>
+        <div class="sponsor"><img src="{{ asset('img/WORKSHOP/Cloudflare.png') }}" alt="Cloudflare"></div>
+        <div class="sponsor"><img src="{{ asset('img/WORKSHOP/Confluent.png') }}" alt="Confluent"></div>
+        <div class="sponsor"><img src="{{ asset('img/WORKSHOP/Creatio.png') }}" alt="Creatio"></div>
+        <div class="sponsor"><img src="{{ asset('img/WORKSHOP/google_cloud.png') }}" alt="Google Cloud"></div>
+        <div class="sponsor"><img src="{{ asset('img/WORKSHOP/NetApp.png') }}" alt="NetApp"></div>
+        <div class="sponsor"><img src="{{ asset('img/WORKSHOP/REHDAT.png') }}" alt="Red Hat"></div>
+        <div class="sponsor"><img src="{{ asset('img/WORKSHOP/SANGFOR.png') }}" alt="Sangfor"></div>
+        <div class="sponsor"><img src="{{ asset('img/WORKSHOP/singleStore.png') }}" alt="SingleStore"></div>
+      </div>
+    </div>
     <div class="sponsors-block">
       <div class="sponsor-tier">Gold</div>
       <div class="sponsor-grid">
@@ -321,31 +335,18 @@
       </div>
     </div>
 
-    <div class="sponsors-block">
-      <div class="sponsor-tier">Workshop</div>
-      <div class="sponsor-grid">
-        <div class="sponsor"><img src="{{ asset('img/WORKSHOP/Alibaba_Cloud.png') }}" alt="Alicloud"></div>
-        <div class="sponsor"><img src="{{ asset('img/WORKSHOP/Cloudflare.png') }}" alt="Cloudflare"></div>
-        <div class="sponsor"><img src="{{ asset('img/WORKSHOP/Confluent.png') }}" alt="Confluent"></div>
-        <div class="sponsor"><img src="{{ asset('img/WORKSHOP/Creatio.png') }}" alt="Creatio"></div>
-        <div class="sponsor"><img src="{{ asset('img/WORKSHOP/google_cloud.png') }}" alt="Google Cloud"></div>
-        <div class="sponsor"><img src="{{ asset('img/WORKSHOP/NetApp.png') }}" alt="NetApp"></div>
-        <div class="sponsor"><img src="{{ asset('img/WORKSHOP/REHDAT.png') }}" alt="Red Hat"></div>
-        <div class="sponsor"><img src="{{ asset('img/WORKSHOP/SANGFOR.png') }}" alt="Sangfor"></div>
-        <div class="sponsor"><img src="{{ asset('img/WORKSHOP/singleStore.png') }}" alt="SingleStore"></div>
-      </div>
-    </div>
 
     <div class="sponsors-block">
       <div class="sponsor-tier">Proud Collaborators</div>
       <div class="sponsor-grid">
-        <div class="sponsor"><img src="{{ asset('img/metrodata.png') }}" alt="Metrodata Electronics"></div>
-        <div class="sponsor"><img src="{{ asset('img/METRODATA-GROUP/MII.png') }}" alt="MII"></div>
+        <!-- <div class="sponsor"><img src="{{ asset('img/metrodata.png') }}" alt="Metrodata Electronics"></div> -->
         <div class="sponsor"><img src="{{ asset('img/METRODATA-GROUP/SMI.png') }}" alt="SMI"></div>
+        <div class="sponsor"><img src="{{ asset('img/METRODATA-GROUP/MII.png') }}" alt="MII"></div>
         <div class="sponsor"><img src="{{ asset('img/METRODATA-GROUP/SOLTIUS.png') }}" alt="Soltius"></div>
-        <div class="sponsor"><img src="{{ asset('img/METRODATA-GROUP/FMI.png') }}" alt="FMI"></div>
-        <div class="sponsor"><img src="{{ asset('img/METRODATA-GROUP/SINERGI TRANSFORMASI DIGITAL-01.png') }}" alt="Sinergi"></div>
         <div class="sponsor"><img src="{{ asset('img/METRODATA-GROUP/MY ICON TECHNOLOGY.png') }}" alt="MIT"></div>
+        <div class="sponsor"><img src="{{ asset('img/METRODATA-GROUP/SINERGI TRANSFORMASI DIGITAL-01.png') }}" alt="Sinergi"></div>
+        <div class="sponsor"><img src="{{ asset('img/METRODATA-GROUP/FMI.png') }}" alt="FMI"></div>
+        <div class="sponsor"><img src="{{ asset('img/METRODATA-GROUP/PACKET_SYSTEMS.png') }}" alt="Packet Systems"></div>
         <div class="sponsor"><img src="{{ asset('img/METRODATA-GROUP/CMI.png') }}" alt="CMI"></div>
       </div>
     </div>
@@ -364,17 +365,17 @@
 
 <!-- REGISTER -->
 <!-- REGISTER -->
-<section id="register" class="register reveal" style="overflow:hidden">
+<section id="register" class="register reveal">
   <div class="section-icon section-icon--top-left">
     <img src="{{ asset('img/ICON 1.png') }}" alt="">
   </div>
   <div class="container">
     <p class="section-eyebrow">Register</p>
     <h2 class="section-title">Registration Form</h2>
-    <div class="reg-notice">
+    <!-- <div class="reg-notice">
       <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
       <span>Registration is not yet open. Please check back on <strong>July 20, 2026</strong>.</span>
-    </div>
+    </div> -->
     <div class="form-wrap">
       <form id="regForm" class="form-grid" method="POST" action="{{ route('register.submit') }}">
         @csrf
