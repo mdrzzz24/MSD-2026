@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="{{ asset('css/style.css') }}">
+<link rel="stylesheet" href="{{ asset('css/style.css') }}?v=2">
 </head>
 <body>
 
@@ -146,7 +146,7 @@
 </section>
 
 <!-- AGENDA -->
-<section id="agenda" class="why reveal">
+<section id="agenda" class="why reveal" style="overflow:hidden">
   <div class="section-icon section-icon--bottom-right">
     <img src="{{ asset('img/ICON 7.png') }}" alt="">
   </div>
@@ -339,10 +339,14 @@
     <div class="sponsors-block">
       <div class="sponsor-tier">Proud Collaborators</div>
       <div class="sponsor-grid">
-        <div class="sponsor">Metrodata Electronics</div><div class="sponsor">MII</div>
-        <div class="sponsor">SMI</div><div class="sponsor">Soltius</div>
-        <div class="sponsor">FMI</div><div class="sponsor">Sinergi</div>
-        <div class="sponsor">MIT</div><div class="sponsor">CMI</div>
+        <div class="sponsor"><img src="{{ asset('img/metrodata.png') }}" alt="Metrodata Electronics"></div>
+        <div class="sponsor"><img src="{{ asset('img/METRODATA-GROUP/MII.png') }}" alt="MII"></div>
+        <div class="sponsor"><img src="{{ asset('img/METRODATA-GROUP/SMI.png') }}" alt="SMI"></div>
+        <div class="sponsor"><img src="{{ asset('img/METRODATA-GROUP/SOLTIUS.png') }}" alt="Soltius"></div>
+        <div class="sponsor"><img src="{{ asset('img/METRODATA-GROUP/FMI.png') }}" alt="FMI"></div>
+        <div class="sponsor"><img src="{{ asset('img/METRODATA-GROUP/SINERGI TRANSFORMASI DIGITAL-01.png') }}" alt="Sinergi"></div>
+        <div class="sponsor"><img src="{{ asset('img/METRODATA-GROUP/MY ICON TECHNOLOGY.png') }}" alt="MIT"></div>
+        <div class="sponsor"><img src="{{ asset('img/METRODATA-GROUP/CMI.png') }}" alt="CMI"></div>
       </div>
     </div>
   </div>
@@ -360,7 +364,7 @@
 
 <!-- REGISTER -->
 <!-- REGISTER -->
-<section id="register" class="register reveal">
+<section id="register" class="register reveal" style="overflow:hidden">
   <div class="section-icon section-icon--top-left">
     <img src="{{ asset('img/ICON 1.png') }}" alt="">
   </div>

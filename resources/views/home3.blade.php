@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="{{ asset('css/style.css') }}">
+<link rel="stylesheet" href="{{ asset('css/style.css') }}?v=2">
 <style>
 /* ============================================================
    home3 — AI FUTURISTIC Theme
@@ -805,10 +805,14 @@ input.field-error, select.field-error { border-color:#ef4444 !important; }
     <div class="sponsors-block-3">
       <div class="sponsor-tier-3">Proud Collaborators</div>
       <div class="sponsor-grid-3">
-        <div class="sponsor-card">Metrodata Electronics</div><div class="sponsor-card">MII</div>
-        <div class="sponsor-card">SMI</div><div class="sponsor-card">Soltius</div>
-        <div class="sponsor-card">FMI</div><div class="sponsor-card">Sinergi</div>
-        <div class="sponsor-card">MIT</div><div class="sponsor-card">CMI</div>
+        <div class="sponsor-card"><img src="{{ asset('img/logo-metrodata.png') }}" alt="Metrodata Electronics"></div>
+        <div class="sponsor-card"><img src="{{ asset('img/METRODATA-GROUP/MII.png') }}" alt="MII"></div>
+        <div class="sponsor-card"><img src="{{ asset('img/METRODATA-GROUP/SMI.png') }}" alt="SMI"></div>
+        <div class="sponsor-card"><img src="{{ asset('img/METRODATA-GROUP/SOLTIUS.png') }}" alt="Soltius"></div>
+        <div class="sponsor-card"><img src="{{ asset('img/METRODATA-GROUP/FMI.png') }}" alt="FMI"></div>
+        <div class="sponsor-card"><img src="{{ asset('img/METRODATA-GROUP/SINERGI TRANSFORMASI DIGITAL-01.png') }}" alt="Sinergi"></div>
+        <div class="sponsor-card"><img src="{{ asset('img/METRODATA-GROUP/MY ICON TECHNOLOGY.png') }}" alt="MIT"></div>
+        <div class="sponsor-card"><img src="{{ asset('img/METRODATA-GROUP/CMI.png') }}" alt="CMI"></div>
       </div>
     </div>
   </div>
