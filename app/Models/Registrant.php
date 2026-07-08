@@ -37,6 +37,7 @@ class Registrant extends Authenticatable
         'referral_code',
         'referral_code_id',
         'attended_before',
+        'referral_source',
         'checked_in_at',
         'approved_by',
         'rejected_by',

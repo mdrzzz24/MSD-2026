@@ -32,23 +32,23 @@
 <!-- HERO -->
 <header class="hero" id="top">
   <div class="hero-icon hero-icon--top-right">
-    <img src="{{ asset('img/ICON 3.png') }}" alt="">
+    <img src="{{ asset('img/ICON 2.png') }}" alt="">
   </div>
 
   <div class="hero-icon hero-icon--bottom-right">
-    <img src="{{ asset('img/ICON 2.png') }}" alt="">
+    <img src="{{ asset('img/ICON 1.png') }}" alt="">
   </div>
   <div class="hero-icon hero-icon--bottom-left">
-    <img src="{{ asset('img/ICON 1.png') }}" alt="">
+    <img src="{{ asset('img/ICON 4.png') }}" alt="">
   </div>
   <div class="hero-light hero-light--blue"></div>
   <div class="hero-light hero-light--pink"></div>
   <div class="container hero-content">
     <p class="eyebrow"><strong>Metrodata</strong> Proudly Present</p>
     <div class="hero-title-group">
-      <img src="{{ asset('img/logo-msd.svg') }}" alt="MSD" class="logo-glow" style="height:clamp(60px,10vw,120px);width:auto">
+      <img src="{{ asset('img/logo-msd.png') }}" alt="MSD" class="logo-glow" style="height:clamp(60px,10vw,120px);width:auto">
     </div>
-    <h1>Winning with AI: Build, Run, and Scale for Measurable Impact</h1>
+    <h1>Winning with AI:<br>Build, Run, and Scale for Measurable Impact</h1>
     <p class="tagline">Accelerating AI for Real Business and Operational Value</p>
     <div class="hero-meta">
       <span>
@@ -66,11 +66,14 @@
 
 <!-- OVERVIEW -->
 <section id="overview" class="reveal">
+  <div class="section-icon section-icon--top-right">
+    <img src="{{ asset('img/ICON 4.png') }}" alt="">
+  </div>
   <div class="container">
     <!-- <p class="section-eyebrow">Topic</p> -->
     <div class="two-col">
       <div class="reveal">
-        <h2 class="section-title">Winning with AI: Build, Run, and Scale for Measurable Impact</h2>
+        <h2 class="section-title">Winning with AI:<br>Build, Run, and Scale for Measurable Impact</h2>
         <p style="color:var(--pink);font-weight:600;font-style:italic">Accelerating AI for Real Business and Operational Value</p>
       </div>
       <div class="reveal">
@@ -84,23 +87,14 @@
     </div>
 
     <p class="section-eyebrow" style="margin-top:80px">What to Expect</p>
-    <h3 class="section-title" style="font-size:28px">A melting pot of innovators and gamechangers</h3>
+    <h3 class="section-title" style="font-size:28px">A melting pot of innovators and game changers</h3>
 
     <div class="stats-grid">
-      <div class="stat"><div class="num">9</div><div class="lbl">Keynotes</div></div>
-      <div class="stat"><div class="num">9</div><div class="lbl">Workshops</div></div>
-      <div class="stat"><div class="num">32</div><div class="lbl">Sessions</div></div>
-      <div class="stat"><div class="num">32</div><div class="lbl">Exhibits</div></div>
+      <div class="stat"><div class="num">10</div><div class="lbl">Visionary Keynotes</div><div class="desc">from global technology leaders, industry experts, and national stakeholders.</div></div>
+      <div class="stat"><div class="num">9</div><div class="lbl">Interactive Workshops</div><div class="desc">with hands-on learning from technology experts.</div></div>
+      <div class="stat"><div class="num">32</div><div class="lbl">Tech Sessions</div><div class="desc">featuring real-world case studies and best practices.</div></div>
+      <div class="stat"><div class="num">32</div><div class="lbl">Innovation Exhibits</div><div class="desc">showcasing the latest enterprise technologies.</div></div>
       <div class="stat"><div class="num">1,200+</div><div class="lbl">Professionals</div></div>
-    </div>
-
-    <div class="features reveal">
-      <div class="feature" style="transition-delay:0s"><h4>Visionary Keynotes</h4><p>From global technology leaders, industry experts, and national stakeholders.</p></div>
-      <div class="feature"><h4>Tech Sessions</h4><p>Featuring real-world case studies and best practices.</p></div>
-      <div class="feature"><h4>Interactive Workshops</h4><p>Hands-on learning from technology experts.</p></div>
-      <div class="feature"><h4>Innovation Exhibits</h4><p>Showcasing the latest enterprise technologies.</p></div>
-      <div class="feature"><h4>Strategic Networking</h4><p>Connect with industry leaders and partners.</p></div>
-      <div class="feature"><h4>Exclusive Tech Offers</h4><p>Available only during the event.</p></div>
     </div>
   </div>
 </section>
@@ -108,6 +102,9 @@
 <!-- WHY ATTEND -->
 <!-- WHY ATTEND -->
 <section class="why reveal">
+  <div class="section-icon section-icon--bottom-right">
+    <img src="{{ asset('img/ICON 5.png') }}" alt="">
+  </div>
   <div class="container">
     <p class="section-eyebrow">Why Should You Attend</p>
     <h2 class="section-title">Insights, connections, and solutions for your transformation journey</h2>
@@ -128,6 +125,9 @@
 
 <!-- ABOUT -->
 <section class="reveal">
+  <div class="section-icon section-icon--top-right">
+    <img src="{{ asset('img/ICON 6.png') }}" alt="">
+  </div>
   <div class="container">
     <p class="section-eyebrow">About</p>
     <h2 class="section-title">Metrodata Solution Day</h2>
@@ -146,6 +146,9 @@
 
 <!-- AGENDA -->
 <section id="agenda" class="why reveal">
+  <div class="section-icon section-icon--bottom-right">
+    <img src="{{ asset('img/ICON 7.png') }}" alt="">
+  </div>
   <div class="container">
     <p class="section-eyebrow">Agenda</p>
     <h2 class="section-title">A full day of learning, exchange, and discovery</h2>
@@ -275,6 +278,9 @@
 
 <!-- SPONSORS -->
 <section id="sponsors" class="reveal">
+  <div class="section-icon section-icon--bottom-left">
+    <img src="{{ asset('img/ICON 3.png') }}" alt="">
+  </div>
   <div class="container">
     <p class="section-eyebrow">Sponsors</p>
     <h2 class="section-title">Our trusted technology partners</h2>
@@ -282,29 +288,50 @@
     <div class="sponsors-block" style="margin-top:48px">
       <div class="sponsor-tier">Platinum</div>
       <div class="sponsor-grid">
-        <div class="sponsor">Anaplan</div><div class="sponsor">AWS</div><div class="sponsor">Cloudera</div>
-        <div class="sponsor">Google Cloud</div><div class="sponsor">IBM</div><div class="sponsor">Microsoft</div>
-        <div class="sponsor">Palo Alto</div><div class="sponsor">Red Hat</div><div class="sponsor">Salesforce</div>
+        <div class="sponsor"><img src="{{ asset('img/PLATINUM/anaplan.png') }}" alt="Anaplan"></div>
+        <div class="sponsor"><img src="{{ asset('img/PLATINUM/aws.png') }}" alt="AWS"></div>
+        <div class="sponsor"><img src="{{ asset('img/PLATINUM/cloudera.png') }}" alt="Cloudera"></div>
+        <div class="sponsor"><img src="{{ asset('img/PLATINUM/google_cloud.png') }}" alt="Google Cloud"></div>
+        <div class="sponsor"><img src="{{ asset('img/PLATINUM/IBM.png') }}" alt="IBM"></div>
+        <div class="sponsor"><img src="{{ asset('img/PLATINUM/Microsoft.png') }}" alt="Microsoft"></div>
+        <div class="sponsor"><img src="{{ asset('img/PLATINUM/PaloAlto Network.png') }}" alt="Palo Alto"></div>
+        <div class="sponsor"><img src="{{ asset('img/PLATINUM/REHDAT.png') }}" alt="Red Hat"></div>
+        <div class="sponsor"><img src="{{ asset('img/PLATINUM/SALESFORCE.png') }}" alt="Salesforce"></div>
       </div>
     </div>
 
     <div class="sponsors-block">
       <div class="sponsor-tier">Gold</div>
       <div class="sponsor-grid">
-        <div class="sponsor">Byteplus</div><div class="sponsor">Confluent</div><div class="sponsor">Cyble</div>
-        <div class="sponsor">Datadog</div><div class="sponsor">Dynatrace</div><div class="sponsor">EDB Postgres</div>
-        <div class="sponsor">Fortinet</div><div class="sponsor">HPE</div><div class="sponsor">HP Inc</div>
-        <div class="sponsor">Huawei Cloud</div><div class="sponsor">KONG</div><div class="sponsor">Lark</div>
-        <div class="sponsor">Proofpoint</div><div class="sponsor">Tenable</div>
+        <div class="sponsor"><img src="{{ asset('img/GOLD/BytePlus.png') }}" alt="Byteplus"></div>
+        <div class="sponsor"><img src="{{ asset('img/GOLD/Confluent.png') }}" alt="Confluent"></div>
+        <div class="sponsor"><img src="{{ asset('img/GOLD/Cyble.png') }}" alt="Cyble"></div>
+        <div class="sponsor"><img src="{{ asset('img/GOLD/Datadog.png') }}" alt="Datadog"></div>
+        <div class="sponsor"><img src="{{ asset('img/GOLD/Dynatrace.png') }}" alt="Dynatrace"></div>
+        <div class="sponsor"><img src="{{ asset('img/GOLD/EDB.png') }}" alt="EDB Postgres"></div>
+        <div class="sponsor"><img src="{{ asset('img/GOLD/Fortinet.png') }}" alt="Fortinet"></div>
+        <div class="sponsor"><img src="{{ asset('img/GOLD/HPE.png') }}" alt="HPE"></div>
+        <div class="sponsor"><img src="{{ asset('img/GOLD/HP.png') }}" alt="HP Inc"></div>
+        <div class="sponsor"><img src="{{ asset('img/GOLD/Huawei Cloud.png') }}" alt="Huawei Cloud"></div>
+        <div class="sponsor"><img src="{{ asset('img/GOLD/KONG.png') }}" alt="KONG"></div>
+        <div class="sponsor"><img src="{{ asset('img/GOLD/LARK.png') }}" alt="Lark"></div>
+        <div class="sponsor"><img src="{{ asset('img/GOLD/Proofpoint.png') }}" alt="Proofpoint"></div>
+        <div class="sponsor"><img src="{{ asset('img/GOLD/Tenable.png') }}" alt="Tenable"></div>
       </div>
     </div>
 
     <div class="sponsors-block">
       <div class="sponsor-tier">Workshop</div>
       <div class="sponsor-grid">
-        <div class="sponsor">Alicloud</div><div class="sponsor">Cloudflare</div><div class="sponsor">Confluent</div>
-        <div class="sponsor">Creatio</div><div class="sponsor">Google Cloud</div><div class="sponsor">NetApp</div>
-        <div class="sponsor">Red Hat</div><div class="sponsor">Sangfor</div><div class="sponsor">SingleStore</div>
+        <div class="sponsor"><img src="{{ asset('img/WORKSHOP/Alibaba_Cloud.png') }}" alt="Alicloud"></div>
+        <div class="sponsor"><img src="{{ asset('img/WORKSHOP/Cloudflare.png') }}" alt="Cloudflare"></div>
+        <div class="sponsor"><img src="{{ asset('img/WORKSHOP/Confluent.png') }}" alt="Confluent"></div>
+        <div class="sponsor"><img src="{{ asset('img/WORKSHOP/Creatio.png') }}" alt="Creatio"></div>
+        <div class="sponsor"><img src="{{ asset('img/WORKSHOP/google_cloud.png') }}" alt="Google Cloud"></div>
+        <div class="sponsor"><img src="{{ asset('img/WORKSHOP/NetApp.png') }}" alt="NetApp"></div>
+        <div class="sponsor"><img src="{{ asset('img/WORKSHOP/REHDAT.png') }}" alt="Red Hat"></div>
+        <div class="sponsor"><img src="{{ asset('img/WORKSHOP/SANGFOR.png') }}" alt="Sangfor"></div>
+        <div class="sponsor"><img src="{{ asset('img/WORKSHOP/singleStore.png') }}" alt="SingleStore"></div>
       </div>
     </div>
 
@@ -333,6 +360,9 @@
 <!-- REGISTER -->
 <!-- REGISTER -->
 <section id="register" class="register reveal">
+  <div class="section-icon section-icon--top-left">
+    <img src="{{ asset('img/ICON 1.png') }}" alt="">
+  </div>
   <div class="container">
     <p class="section-eyebrow">Register</p>
     <h2 class="section-title">Registration Form</h2>
@@ -349,11 +379,42 @@
           <label>Industry</label>
           <select name="industry" required>
             <option value="">Select Industry</option>
-            <option>Banking & Finance</option><option>Government</option>
-            <option>Manufacturing</option><option>Retail</option>
-            <option>Telco</option><option>Other</option>
+            <option>AGRICULTURE, FORESTRY</option>
+            <option>CHEMICALS</option>
+            <option>CONSTRUCTION, PROPERTY & REAL ESTATE</option>
+            <option>DISTRIBUTION</option>
+            <option>EDUCATION</option>
+            <option>FINANCIAL SERVICES</option>
+            <option>FISHING & MARINE</option>
+            <option>FOREIGN SERVICES</option>
+            <option>GOVERNMENT SERVICES</option>
+            <option>HEALTHCARE</option>
+            <option>HIGH TECHNOLOGY</option>
+            <option>HOSPITALITY / TOURISM</option>
+            <option>MANUFACTURING</option>
+            <option>MEDIA</option>
+            <option>MINING & METALS</option>
+            <option>OIL & GAS</option>
+            <option>PROFESSIONAL & BUSINESS SERVICES</option>
+            <option>RETAIL, WHOLESALE</option>
+            <option>TELECOMMUNICATIONS</option>
+            <option>TRANSPORTATION</option>
+            <option>UTILITIES / PUBLIC SERVICES</option>
           </select>
           <span class="field-err" data-field="industry"></span>
+        </div>
+        <div class="field">
+          <label>How did you hear about this event?</label>
+          <select name="referral_source" required>
+            <option value="">Select one</option>
+            <option>LinkedIn</option>
+            <option>Instagram</option>
+            <option>Kompas Newspaper</option>
+            <option>Metrodata Website</option>
+            <option>Email</option>
+            <option>Metrodata Group Sales Representative / Colleague</option>
+          </select>
+          <span class="field-err" data-field="referral_source"></span>
         </div>
         <div class="field">
           <label>Number of Employee</label>
@@ -368,7 +429,7 @@
         <div class="field full gdpr-group">
           <label class="checkbox-label">
             <input type="checkbox" name="gdpr" required checked>
-            <span>By submitting this form, I understand Metrodata will process my personal information in accordance with their <strong>Privacy Notice</strong>. Additionally, I consent to my information being shared with <strong>Event Partners</strong> in accordance. I understand I may withdraw my consent or update my information at any time.</span>
+            <span>By submitting this form, I understand Metrodata will process my personal information in accordance with their <strong><a href="https://www.metrodata.co.id/privacy-policy" target="_blank">Privacy Notice</a></strong>. Additionally, I consent to my information being shared with <strong><a href="https://jovenindo.com/privacy-policy" target="_blank">Event Partners</a></strong> in accordance. I understand I may withdraw my consent or update my information at any time.</span>
           </label>
         </div>
         <div class="field full" style="margin-top:4px">

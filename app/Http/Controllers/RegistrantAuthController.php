@@ -25,8 +25,9 @@ class RegistrantAuthController extends Controller
                 'phone'         => ['required', 'string', 'max:50'],
                 'industry'      => ['required', 'string', 'max:255'],
                 'employees'     => ['required', 'string', 'max:50'],
-                'gdpr'          => ['accepted'],
-                'referral_code' => ['nullable', 'string', 'max:20'],
+                'gdpr'           => ['accepted'],
+                'referral_source'=> ['required', 'string', 'max:255'],
+                'referral_code'  => ['nullable', 'string', 'max:20'],
                 'attended_before' => ['nullable', 'boolean'],
             ]);
         } catch (ValidationException $e) {
@@ -43,8 +44,9 @@ class RegistrantAuthController extends Controller
             'phone'           => $validated['phone'],
             'industry'        => $validated['industry'],
             'employees'       => $validated['employees'],
-            'gdpr'            => true,
-            'referral_code'   => $request->input('referral_code'),
+            'gdpr'             => true,
+            'referral_source'  => $validated['referral_source'],
+            'referral_code'    => $request->input('referral_code'),
             'attended_before' => $request->boolean('attended_before'),
             'utm_source'      => $request->input('utm_source'),
             'utm_medium'      => $request->input('utm_medium'),
