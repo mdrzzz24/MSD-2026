@@ -269,11 +269,21 @@ function hideFormError() {
 
 // ── Countdown Timer ──
 (function() {
-  const targetDate = new Date('2026-07-20T00:00:00+07:00').getTime();
+  const regOpen = new Date('2026-07-20T00:00:00+07:00').getTime();
+  const eventStart = new Date('2026-08-20T08:00:00+07:00').getTime();
 
   function updateCountdown() {
     const now = Date.now();
-    let diff = targetDate - now;
+    let target, label;
+    if (now < regOpen) {
+      target = regOpen;
+      label = 'Registration Opens In';
+    } else {
+      target = eventStart;
+      label = 'Event Starts In';
+    }
+
+    let diff = target - now;
     if (diff < 0) diff = 0;
 
     const days = Math.floor(diff / (1000 * 60 * 60 * 24));
@@ -283,11 +293,13 @@ function hideFormError() {
 
     const pad = n => String(n).padStart(2, '0');
 
+    const elLabel = document.querySelector('.countdown-label');
     const elDays = document.getElementById('count-days');
     const elHours = document.getElementById('count-hours');
     const elMinutes = document.getElementById('count-minutes');
     const elSeconds = document.getElementById('count-seconds');
 
+    if (elLabel) elLabel.textContent = label;
     if (elDays) elDays.textContent = pad(days);
     if (elHours) elHours.textContent = pad(hours);
     if (elMinutes) elMinutes.textContent = pad(minutes);
@@ -309,5 +321,39 @@ function hideFormError() {
   }
   updateTime();
   setInterval(updateTime, 1000);
+})();
+
+// ── Disable registration form until countdown ends ──
+(function() {
+  const form = document.getElementById('regForm');
+  const notice = document.querySelector('.reg-notice');
+  if (!form) return;
+
+  const targetDate = new Date('2026-07-20T00:00:00+07:00').getTime();
+
+  function toggleForm() {
+    const now = Date.now();
+    const isOpen = now >= targetDate;
+
+    form.querySelectorAll('input, select, button').forEach(el => {
+      if (el.type !== 'hidden') el.disabled = !isOpen;
+    });
+
+    if (isOpen) {
+      form.removeEventListener('submit', preventSubmit);
+      if (notice) notice.style.display = 'none';
+    } else {
+      form.addEventListener('submit', preventSubmit);
+      if (notice) notice.style.display = '';
+    }
+  }
+
+  function preventSubmit(e) {
+    e.preventDefault();
+  }
+
+  toggleForm();
+  // Re-check every second alongside countdown
+  setInterval(toggleForm, 1000);
 })();
 

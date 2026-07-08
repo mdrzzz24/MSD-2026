@@ -233,7 +233,7 @@ img{max-width:100%;display:block}
 }
 .countdown-label{
   font-size:12px;letter-spacing:.2em;text-transform:uppercase;
-  color:var(--pink);font-weight:700;margin-bottom:12px;
+  color:var(--pink);font-weight:700;margin-bottom:12px;text-align:center;
 }
 .countdown{
   display:flex;align-items:center;justify-content:center;gap:0;
@@ -440,6 +440,14 @@ td.full{background:rgba(59,91,255,.15);color:#c9d6ff;font-weight:600}
 
 /* Register form */
 .register{background:transparent}
+.reg-notice{
+  display:flex;align-items:center;gap:10px;margin-top:24px;
+  padding:14px 18px;border-radius:12px;
+  background:rgba(255,183,74,.1);border:1px solid rgba(255,183,74,.25);
+  color:#fbbf24;font-size:14px;line-height:1.5;
+}
+.reg-notice svg{flex:none;width:20px;height:20px;color:#fbbf24}
+.reg-notice strong{color:#fff;font-weight:700}
 .form-wrap{
   margin-top:40px;display:grid;grid-template-columns:1fr 1fr;gap:40px;align-items:start;
   background:var(--card-bg);padding:36px;border-radius:16px;border:1px solid var(--line);

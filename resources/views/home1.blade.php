@@ -367,6 +367,10 @@
   <div class="container">
     <p class="section-eyebrow">Register</p>
     <h2 class="section-title">Registration Form</h2>
+    <div class="reg-notice">
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      <span>Registration is not yet open. Please check back on <strong>July 20, 2026</strong>.</span>
+    </div>
     <div class="form-wrap">
       <form id="regForm" class="form-grid" method="POST" action="{{ route('register.submit') }}">
         @csrf
@@ -464,7 +468,7 @@
         <div class="countdown-sep">:</div>
         <div class="countdown-item"><span class="countdown-num" id="count-seconds">00</span><span class="countdown-lbl">Seconds</span></div>
       </div>
-      <p class="current-time" id="currentTime">--</p>
+      <!-- <p class="current-time" id="currentTime">--</p> -->
     </div>
         <h4>Registration Information</h4>
         <ul>
