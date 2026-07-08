@@ -300,7 +300,7 @@
         <div class="sponsor"><img src="{{ asset('img/PLATINUM/SALESFORCE.png') }}" alt="Salesforce"></div>
       </div>
     </div>
-    
+
     <div class="sponsors-block">
       <div class="sponsor-tier">Workshop</div>
       <div class="sponsor-grid">
@@ -494,7 +494,7 @@
     <div style="padding:32px 32px 36px;">
       <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:24px;">
         <span style="color:var(--pink); font-weight:700; letter-spacing:.2em; font-size:13px; text-transform:uppercase;">Reminder</span>
-        <button onclick="closeRemindModal()" style="background:rgba(255,255,255,.1); border:0; color:#fff; font-size:18px; cursor:pointer; line-height:1; padding:4px 10px; border-radius:8px; transition:background .2s;" 
+        <button onclick="closeRemindModal()" style="background:rgba(255,255,255,.1); border:0; color:#fff; font-size:18px; cursor:pointer; line-height:1; padding:4px 10px; border-radius:8px; transition:background .2s;"
                 onmouseover="this.style.background='rgba(255,255,255,.2)'" onmouseout="this.style.background='rgba(255,255,255,.1)'">&times;</button>
       </div>
       <div style="margin-bottom:28px; text-align:center;">
