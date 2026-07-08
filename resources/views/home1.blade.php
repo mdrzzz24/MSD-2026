@@ -68,7 +68,7 @@
 <!-- OVERVIEW -->
 <section id="overview" class="reveal">
   <div class="section-icon section-icon--top-right">
-    <img src="{{ asset('img/ICON 4.png') }}" alt="">
+    <!-- <img src="{{ asset('img/ICON 4.png') }}" alt=""> -->
   </div>
   <div class="container">
     <!-- <p class="section-eyebrow">Topic</p> -->

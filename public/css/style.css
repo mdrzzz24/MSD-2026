@@ -143,12 +143,12 @@ img{max-width:100%;display:block}
 }
 .section-icon img{width:100%;height:auto;display:block}
 .section-icon--top-right{
-  top:1585px;right:-200px;
+  top:-80px;right:-200px;
   width:clamp(650px,75vw,1000px);
   transform:rotate(15deg);
 }
 .section-icon--bottom-left{
-  bottom:-1257px;right:-300px;
+  bottom:-80px;right:-300px;
   width:clamp(650px,75vw,1000px);
   transform:rotate(10deg);
 }
