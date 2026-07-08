@@ -267,3 +267,47 @@ function hideFormError() {
   if (errEl) errEl.style.display = 'none';
 }
 
+// ── Countdown Timer ──
+(function() {
+  const targetDate = new Date('2026-07-20T00:00:00+07:00').getTime();
+
+  function updateCountdown() {
+    const now = Date.now();
+    let diff = targetDate - now;
+    if (diff < 0) diff = 0;
+
+    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+    const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+    const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+
+    const pad = n => String(n).padStart(2, '0');
+
+    const elDays = document.getElementById('count-days');
+    const elHours = document.getElementById('count-hours');
+    const elMinutes = document.getElementById('count-minutes');
+    const elSeconds = document.getElementById('count-seconds');
+
+    if (elDays) elDays.textContent = pad(days);
+    if (elHours) elHours.textContent = pad(hours);
+    if (elMinutes) elMinutes.textContent = pad(minutes);
+    if (elSeconds) elSeconds.textContent = pad(seconds);
+  }
+
+  updateCountdown();
+  setInterval(updateCountdown, 1000);
+})();
+
+// ── Current System Time ──
+(function() {
+  const el = document.getElementById('currentTime');
+  if (!el) return;
+  function updateTime() {
+    const now = new Date();
+    const opts = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit', timeZoneName: 'short', timeZone: 'Asia/Jakarta' };
+    el.textContent = now.toLocaleDateString('en-US', opts);
+  }
+  updateTime();
+  setInterval(updateTime, 1000);
+})();
+

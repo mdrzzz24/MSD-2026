@@ -50,6 +50,7 @@
     </div>
     <h1>Winning with AI:<br>Build, Run, and Scale for Measurable Impact</h1>
     <p class="tagline">Accelerating AI for Real Business and Operational Value</p>
+
     <div class="hero-meta">
       <span>
         <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
@@ -452,6 +453,19 @@
         </div>
       </form>
       <aside class="info">
+        <div class="countdown-wrap">
+      <p class="countdown-label">Registration Opens In</p>
+      <div class="countdown" id="countdown">
+        <div class="countdown-item"><span class="countdown-num" id="count-days">00</span><span class="countdown-lbl">Days</span></div>
+        <div class="countdown-sep">:</div>
+        <div class="countdown-item"><span class="countdown-num" id="count-hours">00</span><span class="countdown-lbl">Hours</span></div>
+        <div class="countdown-sep">:</div>
+        <div class="countdown-item"><span class="countdown-num" id="count-minutes">00</span><span class="countdown-lbl">Minutes</span></div>
+        <div class="countdown-sep">:</div>
+        <div class="countdown-item"><span class="countdown-num" id="count-seconds">00</span><span class="countdown-lbl">Seconds</span></div>
+      </div>
+      <p class="current-time" id="currentTime">--</p>
+    </div>
         <h4>Registration Information</h4>
         <ul>
           <li>Metrodata Solution Day is <strong>free admission</strong> with mandatory RSVP.</li>
