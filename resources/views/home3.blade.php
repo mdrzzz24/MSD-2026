@@ -855,12 +855,6 @@ input.field-error, select.field-error { border-color:#ef4444 !important; }
           </label>
         </div>
         <div class="field full" style="margin-top:4px">
-          <label class="checkbox-label">
-            <input type="checkbox" name="attended_before" value="1">
-            <span>I have attended Metrodata Solution Day <strong>before</strong>.</span>
-          </label>
-        </div>
-        <div class="field full" style="margin-top:4px">
           <label>Referral Code (optional)</label>
           <input name="referral_code" placeholder="Enter referral code if you have one">
         </div>

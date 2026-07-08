@@ -136,12 +136,7 @@
                                 <dd class="text-sm font-medium text-gray-900">{{ $registrant->utm_source }}</dd>
                             </div>
                             @endif
-                            @if ($registrant->attended_before)
-                            <div class="bg-gray-50 rounded-xl p-4">
-                                <dt class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Returning</dt>
-                                <dd class="text-sm font-medium text-indigo-600">Previously attended</dd>
-                            </div>
-                            @endif
+
                         </div>
 
                         @if ($registrant->notes)
