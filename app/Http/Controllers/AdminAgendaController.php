@@ -28,7 +28,9 @@ class AdminAgendaController extends Controller
     public function create()
     {
         $rooms = Room::ordered()->get();
-        return view('admin.agenda.create', compact('rooms'));
+        $tracks = \App\Models\Track::orderBy('title')->get(['id', 'title', 'description']);
+        $workshops = \App\Models\Workshop::orderBy('title')->get(['id', 'title', 'description', 'room', 'start_time', 'end_time', 'capacity', 'registration_open']);
+        return view('admin.agenda.create', compact('rooms', 'tracks', 'workshops'));
     }
 
     public function store(Request $request)
@@ -48,7 +50,6 @@ class AdminAgendaController extends Controller
             'colspan'           => ['nullable', 'integer', 'min:1', 'max:8'],
             'is_registrable'     => ['boolean'],
             'capacity'          => ['nullable', 'integer', 'min:0'],
-            'registration_open' => ['boolean'],
             'workshop_id'       => ['nullable', 'string'],
             'track_id'          => ['nullable', 'string'],
             'new_workshop_title' => ['nullable', 'string', 'max:255'],
@@ -68,7 +69,6 @@ class AdminAgendaController extends Controller
         }
 
         $validated['is_registrable'] = $request->boolean('is_registrable');
-        $validated['registration_open'] = $request->boolean('registration_open', true);
 
         // Don't pass __new__ as workshop_id or track_id
         if (($validated['workshop_id'] ?? '') === '__new__') $validated['workshop_id'] = null;
@@ -140,7 +140,6 @@ class AdminAgendaController extends Controller
             'colspan'           => ['nullable', 'integer', 'min:1', 'max:8'],
             'is_registrable'     => ['boolean'],
             'capacity'          => ['nullable', 'integer', 'min:0'],
-            'registration_open' => ['boolean'],
             'workshop_id'       => ['nullable', 'string'],
             'new_workshop_title' => ['nullable', 'string', 'max:255'],
             'new_workshop_desc'  => ['nullable', 'string', 'max:2000'],
@@ -156,7 +155,6 @@ class AdminAgendaController extends Controller
         }
 
         $validated['is_registrable'] = $request->boolean('is_registrable');
-        $validated['registration_open'] = $request->boolean('registration_open', true);
 
         // Don't pass __new__ as workshop_id or track_id
         if (($validated['workshop_id'] ?? '') === '__new__') $validated['workshop_id'] = null;
@@ -244,15 +242,7 @@ class AdminAgendaController extends Controller
             ->with('success', 'Merge updated for <strong>' . e($agendum->title) . '</strong>.');
     }
 
-    /**
-     * Toggle registration open/close for an agenda item.
-     */
-    public function toggleRegistration(AgendaItem $agendum)
-    {
-        $agendum->update(['registration_open' => !$agendum->registration_open]);
-        $status = $agendum->registration_open ? 'opened' : 'closed';
-        return back()->with('success', 'Registration ' . $status . ' for <strong>' . e($agendum->title) . '</strong>.');
-    }
+
 
     // ── Agenda Registrants Management ──
 
@@ -297,6 +287,10 @@ class AdminAgendaController extends Controller
      */
     public function registrantsApprove(AgendaItem $agendum, $registrantId)
     {
+        if (!auth()->user()->hasPermission('agenda')) {
+            return back()->with('error', 'You do not have permission to approve agenda registrations.');
+        }
+
         $agendum->registrants()->updateExistingPivot($registrantId, [
             'status'       => 'approved',
             'processed_by' => auth()->id(),
@@ -325,6 +319,10 @@ class AdminAgendaController extends Controller
      */
     public function registrantsReject(Request $request, AgendaItem $agendum, $registrantId)
     {
+        if (!auth()->user()->hasPermission('agenda')) {
+            return back()->with('error', 'You do not have permission to reject agenda registrations.');
+        }
+
         $request->validate(['admin_notes' => ['required', 'string', 'max:500']]);
 
         $agendum->registrants()->updateExistingPivot($registrantId, [

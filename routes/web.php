@@ -124,8 +124,6 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::put('/agenda/{agendum}', [AdminAgendaController::class, 'update'])->name('agenda.update');
     Route::delete('/agenda/{agendum}', [AdminAgendaController::class, 'destroy'])->name('agenda.destroy');
     Route::post('/agenda/{agendum}/merge', [AdminAgendaController::class, 'merge'])->name('agenda.merge');
-    Route::post('/agenda/{agendum}/toggle-registration', [AdminAgendaController::class, 'toggleRegistration'])->name('agenda.toggle-registration');
-
     // Time Slots management
     Route::get('/time-slots', [AdminTimeSlotController::class, 'index'])->name('time-slots.index');
     Route::post('/time-slots', [AdminTimeSlotController::class, 'store'])->name('time-slots.store');
@@ -159,11 +157,11 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::put('/tracks/{track}', [AdminTrackController::class, 'update'])->name('tracks.update');
     Route::delete('/tracks/{track}', [AdminTrackController::class, 'destroy'])->name('tracks.destroy');
     Route::post('/tracks/{track}/toggle', [AdminTrackController::class, 'toggle'])->name('tracks.toggle');
-    // Track registrants approve/reject (super_admin + admin only)
+    });
+
+    // ── Track registrants approve/reject — accessible by admin + super_admin ──
     Route::post('/tracks/{track}/registrants/{registrant}/approve', [AdminTrackController::class, 'approveRegistrant'])->name('tracks.registrants.approve');
     Route::post('/tracks/{track}/registrants/{registrant}/reject', [AdminTrackController::class, 'rejectRegistrant'])->name('tracks.registrants.reject');
-
-    });
 
     // ── Workshop & Track Viewing — accessible by all admin roles (including client) ──
     Route::get('/workshops', [AdminWorkshopController::class, 'index'])->name('workshops.index');

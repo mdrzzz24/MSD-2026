@@ -213,6 +213,14 @@ if (regForm) {
 function showSuccessModal() {
   const modal = document.getElementById('successModal');
   if (modal) {
+    var icon = document.getElementById('notifIcon');
+    var svg = document.getElementById('notifIconSvg');
+    var title = document.getElementById('notifTitle');
+    var msg = document.getElementById('notifMessage');
+    if (icon) { icon.style.background = 'rgba(16,185,129,0.15)'; icon.style.borderColor = 'rgba(16,185,129,0.2)'; }
+    if (svg) { svg.style.color = '#10b981'; svg.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/>'; }
+    if (title) title.textContent = 'Registration Successful';
+    if (msg) msg.innerHTML = 'Your data has been received. Please wait for confirmation from the admin via email.';
     modal.style.display = 'flex';
   }
 }
@@ -222,6 +230,7 @@ function closeSuccessModal() {
   if (modal) {
     modal.style.display = 'none';
   }
+  document.body.style.overflow = '';
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 

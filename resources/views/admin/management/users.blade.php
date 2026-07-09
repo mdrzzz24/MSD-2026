@@ -69,7 +69,7 @@
 </td>
 <td class="px-5 py-4"><span class="text-sm text-gray-500">{{ $u->created_at->format('d M Y') }}</span></td>
 <td class="px-5 py-4 text-center">
-<button onclick="editUser('{{ $u->id }}', '{{ $u->name }}', '{{ $u->email }}', '{{ $u->role }}')" class="text-xs text-amber-600 hover:text-amber-800 font-medium mr-2">Edit</button>
+<button data-user-id="{{ $u->id }}" data-user-name="{{ $u->name }}" data-user-email="{{ $u->email }}" data-user-role="{{ $u->role }}" data-user-perms='@json($u->permissions ?? \App\Models\User::defaultPermissions($u->role))' onclick="editUserFromData(this)" class="text-xs text-amber-600 hover:text-amber-800 font-medium mr-2">Edit</button>
 @if ($u->id !== auth()->id())
 <form action="{{ route('admin.management.users.destroy', $u) }}" method="POST" class="inline" onsubmit="return confirm('Delete {{ $u->name }}?')">
 @csrf @method('DELETE')
@@ -100,11 +100,29 @@
 <div><label class="block text-sm font-semibold text-gray-700 mb-1.5">Email</label><input type="email" id="userEmail" name="email" required class="w-full px-4 py-2.5 text-sm border border-gray-200 rounded-xl bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"></div>
 <div><label class="block text-sm font-semibold text-gray-700 mb-1.5">Password <span id="pwdLabel" class="text-gray-400 font-normal">(leave blank to keep current)</span></label><input type="password" id="userPassword" name="password" class="w-full px-4 py-2.5 text-sm border border-gray-200 rounded-xl bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"></div>
 <div><label class="block text-sm font-semibold text-gray-700 mb-1.5">Role</label>
-<select id="userRole" name="role" required class="w-full px-4 py-2.5 text-sm border border-gray-200 rounded-xl bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500">
+<select id="userRole" name="role" onchange="onRoleChange()" required class="w-full px-4 py-2.5 text-sm border border-gray-200 rounded-xl bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500">
 <option value="admin">Admin</option>
 <option value="super_admin">Super Admin</option>
 <option value="client">Client</option>
-</select></div>
+</select>
+<p class="text-xs text-gray-400 mt-1">Permissions auto-adjust when role changes. Super Admin always has full access.</p>
+</div>
+
+{{-- Permissions --}}
+<div id="permissionsSection">
+<label class="block text-sm font-semibold text-gray-700 mb-2">Menu Access</label>
+<div class="grid grid-cols-2 gap-2.5 p-3 bg-gray-50 rounded-xl border border-gray-200">
+<input type="hidden" name="permissions[_enabled]" value="1">
+@php $allPerms = \App\Models\User::allPermissions(); @endphp
+@foreach ($allPerms as $key => $label)
+<label class="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
+<input type="checkbox" name="permissions[{{ $key }}]" value="1" checked
+class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500">
+{{ $label }}
+</label>
+@endforeach
+</div>
+</div>
 </div>
 <div class="flex justify-end gap-2.5 px-6 py-4 border-t border-gray-100 bg-gray-50/50">
 <button type="button" onclick="closeUserModal()" class="px-5 py-2.5 text-sm font-medium rounded-xl bg-gray-100 text-gray-700 hover:bg-gray-200 transition">Cancel</button>
@@ -116,6 +134,45 @@
 
 @include('admin.partials.mobile-sidebar')
 <script>
+const defaultPerms = {
+registrants: true, workshops: true, workshop_registrants: false,
+tracks: false, agenda: false, speakers: false, time_slots: false,
+rooms: false, email_templates: false, utm_sources: true,
+qr_codes: true, checkin_log: false, admin_users: false
+};
+const roleDefaults = {
+admin: {
+registrants: true, workshops: true, workshop_registrants: true,
+tracks: true, agenda: false, speakers: false, time_slots: false,
+rooms: false, email_templates: false, utm_sources: true,
+qr_codes: true, checkin_log: false, admin_users: false
+},
+super_admin: Object.fromEntries(
+Object.keys(defaultPerms).map(k => [k, true])
+),
+client: {
+registrants: true, workshops: true, workshop_registrants: false,
+tracks: false, agenda: false, speakers: false, time_slots: false,
+rooms: false, email_templates: false, utm_sources: true,
+qr_codes: true, checkin_log: false, admin_users: false
+}
+};
+function setPermissions(perms) {
+document.querySelectorAll('#permissionsSection input[type=checkbox]').forEach(cb => {
+const key = cb.name.replace('permissions[', '').replace(']', '');
+cb.checked = perms[key] === true;
+});
+}
+function onRoleChange() {
+const role = document.getElementById('userRole').value;
+const perms = roleDefaults[role] || defaultPerms;
+setPermissions(perms);
+if (role === 'super_admin') {
+document.getElementById('permissionsSection').style.display = 'none';
+} else {
+document.getElementById('permissionsSection').style.display = 'block';
+}
+}
 function openUserModal() {
 document.getElementById('userModalTitle').textContent = 'Add User';
 document.getElementById('userForm').action = '{{ route("admin.management.users.store") }}';
@@ -127,10 +184,21 @@ document.getElementById('userPassword').value = '';
 document.getElementById('userPassword').required = true;
 document.getElementById('pwdLabel').textContent = '(required for new user)';
 document.getElementById('userRole').value = 'admin';
+onRoleChange();
 document.getElementById('userModal').classList.remove('hidden');
 document.getElementById('userModal').classList.add('flex');
 }
-function editUser(id, name, email, role) {
+function editUserFromData(btn) {
+const id = btn.dataset.userId;
+const name = btn.dataset.userName;
+const email = btn.dataset.userEmail;
+const role = btn.dataset.userRole;
+let perms;
+try {
+perms = JSON.parse(btn.dataset.userPerms);
+} catch(e) {
+perms = roleDefaults[role];
+}
 document.getElementById('userModalTitle').textContent = 'Edit User';
 document.getElementById('userForm').action = '/admin/management/users/' + id;
 document.getElementById('userFormMethod').value = 'PUT';
@@ -141,6 +209,12 @@ document.getElementById('userPassword').value = '';
 document.getElementById('userPassword').required = false;
 document.getElementById('pwdLabel').textContent = '(leave blank to keep current)';
 document.getElementById('userRole').value = role;
+setPermissions(perms || roleDefaults[role]);
+if (role === 'super_admin') {
+document.getElementById('permissionsSection').style.display = 'none';
+} else {
+document.getElementById('permissionsSection').style.display = 'block';
+}
 document.getElementById('userModal').classList.remove('hidden');
 document.getElementById('userModal').classList.add('flex');
 }

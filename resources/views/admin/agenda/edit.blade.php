@@ -112,12 +112,9 @@
                 </div>
                 <div class="flex items-end gap-4 pb-2">
                     <label class="flex items-center gap-2 cursor-pointer">
+                        <input type="hidden" name="is_registrable" value="0">
                         <input type="checkbox" name="is_registrable" value="1" {{ old('is_registrable', $agendum->is_registrable) ? 'checked' : '' }} class="w-4 h-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500">
                         <span class="text-sm font-medium text-gray-700">Open for Registration</span>
-                    </label>
-                    <label class="flex items-center gap-2 cursor-pointer">
-                        <input type="checkbox" name="registration_open" value="1" {{ old('registration_open', $agendum->registration_open) ? 'checked' : '' }} class="w-4 h-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500">
-                        <span class="text-sm font-medium text-gray-700">Active</span>
                     </label>
                 </div>
             </div>

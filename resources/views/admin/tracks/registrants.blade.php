@@ -33,7 +33,7 @@
             <div><p class="text-xs text-gray-400 uppercase">Approved</p><p class="text-sm font-bold text-indigo-600">{{ $allRegistrants->where('pivot.status','approved')->count() }}</p></div>
             <div><p class="text-xs text-gray-400 uppercase">Status</p>
                 @if($firstAgenda)
-                    @if($firstAgenda->registration_open)<span class="inline-flex px-2 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700">Open</span>@else<span class="inline-flex px-2 py-0.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-600">Closed</span>@endif
+                    @if($firstAgenda->is_registrable)<span class="inline-flex px-2 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700">Open</span>@else<span class="inline-flex px-2 py-0.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-600">Closed</span>@endif
                 @else
                     <span class="text-sm text-gray-400">—</span>
                 @endif</div>
@@ -60,9 +60,9 @@
                 <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase hidden md:table-cell">Company</th>
                 <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Agenda Item</th>
                 <th class="px-4 py-3 text-center text-xs font-semibold text-gray-500 uppercase">Status</th>
-                @unless(Auth::user()->isClient())
+                @if (Auth::user()->canWrite())
                 <th class="px-4 py-3 text-center text-xs font-semibold text-gray-500 uppercase">Action</th>
-                @endunless
+                @endif
             </tr></thead>
             <tbody class="divide-y divide-gray-50">
                 @foreach ($allRegistrants->values() as $i => $r)
@@ -78,7 +78,7 @@
                         @elseif ($ws==='rejected')<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-red-50 text-red-700"><span class="w-1.5 h-1.5 rounded-full bg-red-500"></span>Rejected</span>
                         @else<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-50 text-amber-700"><span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>Pending</span>@endif
                     </td>
-                    @unless(Auth::user()->isClient())
+                    @if (Auth::user()->canWrite())
                     <td class="px-4 py-3 text-center">
                         <div class="flex justify-center gap-1">
                             @if($ws==='pending')
@@ -91,7 +91,7 @@
                             @endif
                         </div>
                     </td>
-                    @endunless
+                    @endif
                 </tr>
                 @endforeach
             </tbody>

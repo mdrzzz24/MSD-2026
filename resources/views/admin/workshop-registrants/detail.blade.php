@@ -77,9 +77,9 @@
                         <th class="px-4 py-3.5 text-center text-xs font-semibold text-gray-500 uppercase">WS Status</th>
                         <th class="px-4 py-3.5 text-center text-xs font-semibold text-gray-500 uppercase">Reg Status</th>
                         <th class="px-4 py-3.5 text-center text-xs font-semibold text-gray-500 uppercase">Check-in</th>
-                        @unless (Auth::user()->isClient())
+                        @if (Auth::user()->canWrite())
                         <th class="px-4 py-3.5 text-center text-xs font-semibold text-gray-500 uppercase">Action</th>
-                        @endunless
+                        @endif
                     </tr></thead>
                     <tbody class="divide-y divide-gray-50">
                         @foreach ($registrants as $i => $r)
@@ -113,7 +113,7 @@
                                     @else<span class="text-xs text-gray-400">—</span>
                                     @endif
                                 </td>
-                                @unless (Auth::user()->isClient())
+                                @if (Auth::user()->canWrite())
                                 <td class="px-4 py-3.5 text-center">
                                     <div class="flex items-center justify-center gap-1">
                                         @if ($wsStatus === 'pending')
@@ -126,7 +126,7 @@
                                         @endif
                                     </div>
                                 </td>
-                                @endunless
+                                @endif
                             </tr>
                         @endforeach
                     </tbody>

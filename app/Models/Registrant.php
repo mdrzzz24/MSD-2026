@@ -116,11 +116,11 @@ class Registrant extends Authenticatable
     }
 
     /**
-     * Get the QR code URL (via API).
+     * Get the QR code URL (via API) encoding the unique code.
      */
     public function getQrCodeUrlAttribute(): string
     {
-        $data = route('registrant.qr-scan', $this->qr_token);
+        $data = $this->unique_code ?? $this->qr_token;
         return 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=' . urlencode($data);
     }
 

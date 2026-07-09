@@ -21,19 +21,67 @@
     @endif
     <form action="{{ route('admin.agenda.store') }}" method="POST" class="space-y-4">
         @csrf
-        <div><label class="block text-sm font-semibold text-gray-700 mb-1.5">Title</label><input type="text" name="title" value="{{ old('title') }}" required class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 focus:bg-white transition"></div>
 
-        <div><label class="block text-sm font-semibold text-gray-700 mb-1.5">Description</label><textarea name="description" rows="3" class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 focus:bg-white transition">{{ old('description') }}</textarea></div>
+        {{-- Mode Selection --}}
+        <div class="mb-4">
+            <label class="block text-sm font-semibold text-gray-700 mb-2.5">Input Mode</label>
+            <div class="grid grid-cols-2 gap-3">
+                <label class="relative flex items-center gap-3 p-4 rounded-xl border-2 cursor-pointer transition-all @php $mode = old('_mode', 'scratch'); @endphp {{ $mode === 'scratch' ? 'border-indigo-500 bg-indigo-50 shadow-sm' : 'border-gray-200 bg-white hover:border-gray-300' }}">
+                    <input type="radio" name="_mode" value="scratch" class="w-4 h-4 text-indigo-600 focus:ring-indigo-500" {{ $mode === 'scratch' ? 'checked' : '' }} onchange="toggleFormMode('scratch')">
+                    <div>
+                        <p class="text-sm font-semibold text-gray-900">Fill from Scratch</p>
+                        <p class="text-xs text-gray-500 mt-0.5">Manually enter all agenda details</p>
+                    </div>
+                </label>
+                <label class="relative flex items-center gap-3 p-4 rounded-xl border-2 cursor-pointer transition-all {{ $mode === 'existing' ? 'border-indigo-500 bg-indigo-50 shadow-sm' : 'border-gray-200 bg-white hover:border-gray-300' }}">
+                    <input type="radio" name="_mode" value="existing" class="w-4 h-4 text-indigo-600 focus:ring-indigo-500" {{ $mode === 'existing' ? 'checked' : '' }} onchange="toggleFormMode('existing')">
+                    <div>
+                        <p class="text-sm font-semibold text-gray-900">Use Existing Track / Workshop</p>
+                        <p class="text-xs text-gray-500 mt-0.5">Pre-fill from a saved track or workshop</p>
+                    </div>
+                </label>
+            </div>
+            <div id="existingSourceSection" class="mt-3 p-4 bg-indigo-50 border border-indigo-200 rounded-xl {{ $mode === 'existing' ? '' : 'hidden' }}">
+                <label class="block text-sm font-semibold text-indigo-700 mb-2">Select Track or Workshop</label>
+                <select id="existingSourceSelect" class="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500" onchange="onExistingSourceSelect(this)">
+                    <option value="">— Select —</option>
+                    <optgroup label="🗂️ Tracks">
+                        @foreach ($tracks as $tr)
+                        <option value="track_{{ $tr->id }}" data-title="{{ e($tr->title) }}" data-desc="{{ e($tr->description) }}" data-type="track">{{ $tr->title }}</option>
+                        @endforeach
+                    </optgroup>
+                    <optgroup label="🔧 Workshops">
+                        @foreach ($workshops as $ws)
+                        <option value="workshop_{{ $ws->id }}"
+                            data-title="{{ e($ws->title) }}"
+                            data-desc="{{ e($ws->description) }}"
+                            data-type="workshop"
+                            data-room="{{ e($ws->room ?? '') }}"
+                            data-start="{{ $ws->start_time }}"
+                            data-end="{{ $ws->end_time }}"
+                            data-capacity="{{ $ws->capacity }}"
+                            data-regopen="{{ $ws->registration_open ? '1' : '0' }}">{{ $ws->title }}</option>
+                        @endforeach
+                    </optgroup>
+                </select>
+                <p class="text-xs text-indigo-500 mt-1.5">The selected data will auto-fill the form. You can still edit any field afterwards.</p>
+            </div>
+        </div>
+
+        <div id="formFields" class="space-y-4 @php $showForm = old('_mode') || $errors->any(); @endphp {{ $showForm ? '' : 'hidden' }}">
+        <div><label class="block text-sm font-semibold text-gray-700 mb-1.5">Title</label><input type="text" name="title" id="inputTitle" value="{{ old('title') }}" required class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 focus:bg-white transition"></div>
+
+        <div><label class="block text-sm font-semibold text-gray-700 mb-1.5">Description</label><textarea name="description" id="inputDescription" rows="3" class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 focus:bg-white transition">{{ old('description') }}</textarea></div>
 
         <div class="grid grid-cols-2 gap-4">
-            <div><label class="block text-sm font-semibold text-gray-700 mb-1.5">Start Time</label><input type="time" name="start_time" value="{{ old('start_time', request('start_time')) }}" required class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 focus:bg-white transition"></div>
-            <div><label class="block text-sm font-semibold text-gray-700 mb-1.5">End Time</label><input type="time" name="end_time" value="{{ old('end_time', request('end_time')) }}" required class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 focus:bg-white transition"></div>
+            <div><label class="block text-sm font-semibold text-gray-700 mb-1.5">Start Time</label><input type="time" name="start_time" id="inputStartTime" value="{{ old('start_time', request('start_time')) }}" required class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 focus:bg-white transition"></div>
+            <div><label class="block text-sm font-semibold text-gray-700 mb-1.5">End Time</label><input type="time" name="end_time" id="inputEndTime" value="{{ old('end_time', request('end_time')) }}" required class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 focus:bg-white transition"></div>
         </div>
 
         <div class="grid grid-cols-2 gap-4">
             <div>
                 <label class="block text-sm font-semibold text-gray-700 mb-1.5">Room</label>
-                <select name="room" class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 focus:bg-white transition">
+                <select name="room" id="inputRoom" class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 focus:bg-white transition">
                     <option value="">— Full Row (all rooms) —</option>
                     @foreach ($rooms as $room)
                         <option value="{{ $room->name }}" {{ old('room', request('room')) === $room->name ? 'selected' : '' }}>{{ $room->name }}</option>
@@ -108,33 +156,14 @@
             </div>
             <div class="grid grid-cols-2 gap-4 mt-3">
                 <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-1.5">Link to Workshop <span class="text-xs text-gray-400 font-normal">(optional)</span></label>
-                    @php $workshopList = \App\Models\Workshop::orderBy('title')->get(); @endphp
-                    <select name="workshop_id" id="workshopSelect" class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 focus:bg-white transition" onchange="onWorkshopSelect(this)">
-                        <option value="">— None —</option>
-                        <option value="__new__" style="font-weight:700;color:#4f46e5;">+ Create New Workshop</option>
-                        @foreach ($workshopList as $ws)
-                            <option value="{{ $ws->id }}" data-title="{{ e($ws->title) }}" data-desc="{{ e($ws->description) }}" {{ old('workshop_id')==$ws->id?'selected':'' }}>{{ $ws->title }}</option>
-                        @endforeach
-                    </select>
-                    <div id="newWorkshopFields" class="hidden mt-2 p-3 bg-indigo-50 border border-indigo-200 rounded-xl space-y-2">
-                        <p class="text-xs font-semibold text-indigo-700">Create New Workshop</p>
-                        <input type="text" name="new_workshop_title" placeholder="Workshop title..." class="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500/20">
-                        <textarea name="new_workshop_desc" rows="2" placeholder="Workshop description..." class="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500/20"></textarea>
-                    </div>
-                </div>
-                <div>
                     <label class="block text-sm font-semibold text-gray-700 mb-1.5">Capacity <span class="text-xs text-gray-400 font-normal">(0 = unlimited)</span></label>
-                    <input type="number" name="capacity" value="{{ old('capacity', 0) }}" min="0" class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 focus:bg-white transition">
+                    <input type="number" name="capacity" id="inputCapacity" value="{{ old('capacity', 0) }}" min="0" class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 focus:bg-white transition">
                 </div>
                 <div class="flex items-end gap-4 pb-2">
                     <label class="flex items-center gap-2 cursor-pointer">
-                        <input type="checkbox" name="is_registrable" value="1" {{ old('is_registrable') ? 'checked' : '' }} class="w-4 h-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500">
+                        <input type="hidden" name="is_registrable" value="0">
+                        <input type="checkbox" name="is_registrable" id="inputIsRegistrable" value="1" {{ old('is_registrable') ? 'checked' : '' }} class="w-4 h-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500">
                         <span class="text-sm font-medium text-gray-700">Open for Registration</span>
-                    </label>
-                    <label class="flex items-center gap-2 cursor-pointer">
-                        <input type="checkbox" name="registration_open" value="1" {{ old('registration_open', true) ? 'checked' : '' }} class="w-4 h-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500">
-                        <span class="text-sm font-medium text-gray-700">Active</span>
                     </label>
                 </div>
             </div>
@@ -171,13 +200,15 @@
         </div>
 
         <button type="submit" class="w-full py-3 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-semibold rounded-xl shadow-lg shadow-indigo-500/25 transition-all text-sm">Save Item</button>
+        </div>
     </form>
 
 <script>
+// ── Existing: Workshop/Track inline create ──
 function onWorkshopSelect(sel) {
     var newFields = document.getElementById('newWorkshopFields');
-    var titleInput = document.querySelector('[name="title"]');
-    var descInput = document.querySelector('[name="description"]');
+    var titleInput = document.getElementById('inputTitle');
+    var descInput = document.getElementById('inputDescription');
 
     if (sel.value === '__new__') {
         newFields.classList.remove('hidden');
@@ -194,8 +225,8 @@ function onWorkshopSelect(sel) {
 }
 function onTrackSelect(sel) {
     var newFields = document.getElementById('newTrackFields');
-    var titleInput = document.querySelector('[name="title"]');
-    var descInput = document.querySelector('[name="description"]');
+    var titleInput = document.getElementById('inputTitle');
+    var descInput = document.getElementById('inputDescription');
 
     if (sel.value === '__new__') {
         newFields.classList.remove('hidden');
@@ -210,7 +241,81 @@ function onTrackSelect(sel) {
         newFields.classList.add('hidden');
     }
 }
-// Run on load for old() values
+
+// ── Mode toggle ──
+function toggleFormMode(mode) {
+    var section = document.getElementById('existingSourceSection');
+    var formFields = document.getElementById('formFields');
+    if (mode === 'existing') {
+        section.classList.remove('hidden');
+        formFields.classList.add('hidden');
+        document.getElementById('existingSourceSelect').value = '';
+    } else {
+        section.classList.add('hidden');
+        formFields.classList.remove('hidden');
+    }
+}
+
+// ── Existing source data pre-fill ──
+function onExistingSourceSelect(sel) {
+    var opt = sel.options[sel.selectedIndex];
+    if (!opt || !opt.value) return;
+
+    // Show the form fields
+    document.getElementById('formFields').classList.remove('hidden');
+
+    var titleInput = document.getElementById('inputTitle');
+    var descInput = document.getElementById('inputDescription');
+    var agendaType = document.getElementById('agendaTypeSelect');
+    var startTime = document.getElementById('inputStartTime');
+    var endTime = document.getElementById('inputEndTime');
+    var room = document.getElementById('inputRoom');
+    var capacity = document.getElementById('inputCapacity');
+    var isReg = document.getElementById('inputIsRegistrable');
+
+    var type = opt.getAttribute('data-type');
+    var wsTitle = opt.getAttribute('data-title');
+    var wsDesc = opt.getAttribute('data-desc');
+
+    // Always fill title & description
+    if (wsTitle) titleInput.value = wsTitle;
+    if (wsDesc) descInput.value = wsDesc;
+
+    if (type === 'track') {
+        agendaType.value = 'track';
+        // Clear workshop-specific fields
+        startTime.value = '';
+        endTime.value = '';
+        room.value = '';
+        capacity.value = '0';
+        isReg.checked = false;
+    } else if (type === 'workshop') {
+        agendaType.value = 'workshop';
+        var wsStart = opt.getAttribute('data-start');
+        var wsEnd = opt.getAttribute('data-end');
+        var wsRoom = opt.getAttribute('data-room');
+        var wsCapacity = opt.getAttribute('data-capacity');
+        var wsRegOpen = opt.getAttribute('data-regopen');
+
+        if (wsStart) startTime.value = wsStart;
+        if (wsEnd) endTime.value = wsEnd;
+        if (wsRoom) {
+            // Try to select matching room option
+            for (var i = 0; i < room.options.length; i++) {
+                if (room.options[i].value === wsRoom) {
+                    room.selectedIndex = i;
+                    break;
+                }
+            }
+        }
+        if (wsCapacity) capacity.value = wsCapacity;
+        if (wsRegOpen === '1') {
+            isReg.checked = true;
+        }
+    }
+}
+
+// ── On load ──
 document.addEventListener('DOMContentLoaded', function() {
     var sel = document.getElementById('workshopSelect');
     if (sel && sel.value && sel.value !== '__new__') onWorkshopSelect(sel);

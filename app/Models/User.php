@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
-#[Fillable(['name', 'email', 'password', 'is_admin', 'role'])]
+#[Fillable(['name', 'email', 'password', 'is_admin', 'role', 'permissions'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {
@@ -28,7 +28,75 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'is_admin' => 'boolean',
+            'permissions' => 'array',
         ];
+    }
+
+    /**
+     * All available permission keys with their display labels.
+     */
+    public static function allPermissions(): array
+    {
+        return [
+            'registrants'         => 'Registrants',
+            'workshops'           => 'Workshops',
+            'workshop_registrants'=> 'Workshop Registrants',
+            'tracks'              => 'Tracks',
+            'agenda'              => 'Agenda',
+            'speakers'            => 'Speakers',
+            'time_slots'          => 'Time Slots',
+            'rooms'               => 'Rooms & Floors',
+            'email_templates'     => 'Email Templates',
+            'utm_sources'         => 'UTM Sources',
+            'qr_codes'            => 'QR Codes',
+            'checkin_log'         => 'Check-in Log',
+            'admin_users'         => 'Admin Users',
+        ];
+    }
+
+    /**
+     * Default permissions for a given role.
+     */
+    public static function defaultPermissions(string $role): array
+    {
+        $all = array_keys(self::allPermissions());
+        return match ($role) {
+            'super_admin' => array_combine($all, array_fill(0, count($all), true)),
+            'admin' => [
+                'registrants' => true, 'workshops' => true, 'workshop_registrants' => true,
+                'tracks' => true, 'utm_sources' => true, 'qr_codes' => true,
+            ] + array_combine($all, array_fill(0, count($all), false)),
+            'client' => [
+                'workshops' => true, 'utm_sources' => true, 'qr_codes' => true,
+            ] + array_combine($all, array_fill(0, count($all), false)),
+            default => [],
+        };
+    }
+
+    /**
+     * Check if the user has a specific permission.
+     * Super admins always have all permissions.
+     */
+    public function hasPermission(string $permission): bool
+    {
+        if ($this->isSuperAdmin()) {
+            return true;
+        }
+        $perms = $this->permissions ?? [];
+        return filter_var($perms[$permission] ?? false, FILTER_VALIDATE_BOOLEAN);
+    }
+
+    /**
+     * Normalize permission array: ensure all keys exist with boolean values.
+     */
+    public static function normalizePermissions(?array $perms): array
+    {
+        $all = array_keys(self::allPermissions());
+        $result = [];
+        foreach ($all as $key) {
+            $result[$key] = filter_var($perms[$key] ?? false, FILTER_VALIDATE_BOOLEAN);
+        }
+        return $result;
     }
 
     /**

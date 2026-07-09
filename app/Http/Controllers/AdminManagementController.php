@@ -18,7 +18,7 @@ class AdminManagementController extends Controller
         $user = auth()->user();
 
         $sources = Registrant::whereNotNull('utm_source')
-            ->selectRaw("utm_source, COUNT(*) as total, 
+            ->selectRaw("utm_source, COUNT(*) as total,
                 COUNT(CASE WHEN checked_in_at IS NOT NULL THEN 1 END) as checked_in,
                 COUNT(CASE WHEN status = 'approved' THEN 1 END) as approved_count,
                 COUNT(CASE WHEN status = 'pending' THEN 1 END) as pending_count,
@@ -117,10 +117,6 @@ class AdminManagementController extends Controller
 
     public function qrCodes()
     {
-        if (auth()->user()->isClient()) {
-            return redirect()->route('admin.dashboard')->with('error', 'Clients do not have access to QR codes.');
-        }
-
         $registrants = Registrant::approved()
             ->whereNotNull('qr_token')
             ->latest()
@@ -146,13 +142,24 @@ class AdminManagementController extends Controller
             'role'     => ['required', 'in:admin,super_admin,client'],
         ]);
 
-        User::create([
+        $data = [
             'name'     => $request->name,
             'email'    => $request->email,
             'password' => Hash::make($request->password),
             'is_admin' => $request->role !== 'client',
             'role'     => $request->role,
-        ]);
+        ];
+
+        // Set permissions from request, or default for role
+        if ($request->has('permissions') && is_array($request->permissions) && isset($request->permissions['_enabled'])) {
+            $perms = $request->permissions;
+            unset($perms['_enabled']);
+            $data['permissions'] = User::normalizePermissions($perms);
+        } else {
+            $data['permissions'] = User::defaultPermissions($request->role);
+        }
+
+        User::create($data);
 
         return redirect()->route('admin.management.users')
             ->with('success', "User <strong>{$request->name}</strong> created successfully.");
@@ -175,6 +182,18 @@ class AdminManagementController extends Controller
 
         if ($request->filled('password')) {
             $data['password'] = Hash::make($request->password);
+        }
+
+        // Save permissions
+        if ($request->has('permissions') && is_array($request->permissions)) {
+            $perms = $request->permissions;
+            // _enabled flag = permissions section was shown → save even if all unchecked
+            if (isset($perms['_enabled'])) {
+                unset($perms['_enabled']);
+                $data['permissions'] = User::normalizePermissions($perms);
+            }
+        } elseif ($request->role === 'super_admin') {
+            $data['permissions'] = User::defaultPermissions('super_admin');
         }
 
         $user->update($data);

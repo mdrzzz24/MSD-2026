@@ -51,6 +51,10 @@ class AdminTrackController extends Controller
      */
     public function registrants(Track $track)
     {
+        if (!auth()->user()->hasPermission('tracks')) {
+            return redirect()->route('admin.dashboard')->with('error', 'You do not have permission to view track registrants.');
+        }
+
         $agendaItems = $track->agendaItems()->with(['registrants'])->get();
         $allRegistrants = collect();
         foreach ($agendaItems as $item) {
@@ -71,6 +75,10 @@ class AdminTrackController extends Controller
      */
     public function approveRegistrant(Request $request, Track $track, $registrantId)
     {
+        if (!auth()->user()->hasPermission('tracks')) {
+            return back()->with('error', 'You do not have permission to approve track registrations.');
+        }
+
         $agendaItemId = $request->input('agenda_item_id');
         if ($agendaItemId) {
             $item = AgendaItem::findOrFail($agendaItemId);
@@ -106,6 +114,10 @@ class AdminTrackController extends Controller
      */
     public function rejectRegistrant(Request $request, Track $track, $registrantId)
     {
+        if (!auth()->user()->hasPermission('tracks')) {
+            return back()->with('error', 'You do not have permission to reject track registrations.');
+        }
+
         $request->validate(['admin_notes' => ['required', 'string', 'max:500']]);
         $agendaItemId = $request->input('agenda_item_id');
         if ($agendaItemId) {

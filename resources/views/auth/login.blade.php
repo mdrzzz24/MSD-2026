@@ -141,8 +141,8 @@
 
             {{-- Card --}}
             <div class="bg-white rounded-2xl shadow-xl shadow-gray-200/60 p-8 sm:p-10 border border-gray-100">
-                <h2 class="text-2xl font-bold text-gray-900 mb-1">Welcome</h2>
-                <p class="text-gray-500 text-sm mb-8">Sign in to your account</p>
+                <h2 class="text-2xl font-bold text-gray-900 mb-1">Welcome Back</h2>
+                <p class="text-gray-500 text-sm mb-8">Already have an account? Sign in below, or <a href="{{ route('home1', request()->only(['utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content'])) }}#register" class="text-indigo-600 hover:text-indigo-800 font-semibold hover:underline">register here</a>.</p>
 
                 {{-- Errors --}}
                 @if ($errors->any())
@@ -210,6 +210,9 @@
             </div>
 
             <p class="text-center text-xs text-gray-400 mt-6">
+                Don&apos;t have an account? <a href="{{ route('home1', request()->only(['utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content'])) }}#register" class="text-indigo-600 hover:text-indigo-800 font-semibold hover:underline">Register here</a>
+            </p>
+            <p class="text-center text-xs text-gray-400 mt-2">
                 &copy; {{ date('Y') }} {{ config('app.name') }}. All rights reserved.
             </p>
         </div>

@@ -111,8 +111,8 @@ class AdminController extends Controller
      */
     public function approve(Request $request, Registrant $registrant)
     {
-        if (auth()->user()->isClient()) {
-            return redirect()->back()->with('error', 'Clients do not have permission to approve registrants.');
+        if (!auth()->user()->hasPermission('registrants')) {
+            return redirect()->back()->with('error', 'You do not have permission to approve registrants.');
         }
 
         $plainPassword = Str::random(10);
@@ -141,8 +141,8 @@ class AdminController extends Controller
      */
     public function reject(Request $request, Registrant $registrant)
     {
-        if (auth()->user()->isClient()) {
-            return redirect()->back()->with('error', 'Clients do not have permission to reject registrants.');
+        if (!auth()->user()->hasPermission('registrants')) {
+            return redirect()->back()->with('error', 'You do not have permission to reject registrants.');
         }
 
         $request->validate([
@@ -173,6 +173,9 @@ class AdminController extends Controller
      */
     public function show(Registrant $registrant)
     {
+        if (!auth()->user()->hasPermission('registrants')) {
+            return redirect()->route('admin.dashboard')->with('error', 'You do not have access to the Registrants page.');
+        }
         $workshops = $registrant->workshops;
         $agendaItems = $registrant->agendaItems;
         return view('admin.registrant-detail', compact('registrant', 'workshops', 'agendaItems'));
@@ -183,6 +186,11 @@ class AdminController extends Controller
      */
     public function index(Request $request)
     {
+        // Permission check — clients without registrants permission are redirected
+        if (!auth()->user()->hasPermission('registrants')) {
+            return redirect()->route('admin.dashboard')->with('error', 'You do not have access to the Registrants page.');
+        }
+
         $status = $request->get('status', 'all');
         $utmSource   = $request->get('utm_source');
         $utmMedium   = $request->get('utm_medium');
@@ -249,9 +257,9 @@ class AdminController extends Controller
      */
     public function edit(Registrant $registrant)
     {
-        if (auth()->user()->isClient()) {
+        if (!auth()->user()->hasPermission('registrants')) {
             return redirect()->route('admin.registrants.show', $registrant)
-                ->with('error', 'Clients do not have permission to edit registrants.');
+                ->with('error', 'You do not have permission to edit registrants.');
         }
 
         return view('admin.registrants.edit', compact('registrant'));
@@ -262,8 +270,8 @@ class AdminController extends Controller
      */
     public function update(Request $request, Registrant $registrant)
     {
-        if (auth()->user()->isClient()) {
-            return redirect()->back()->with('error', 'Clients do not have permission to update registrants.');
+        if (!auth()->user()->hasPermission('registrants')) {
+            return redirect()->back()->with('error', 'You do not have permission to update registrants.');
         }
 
         $validated = $request->validate([
@@ -290,8 +298,8 @@ class AdminController extends Controller
      */
     public function destroy(Registrant $registrant)
     {
-        if (auth()->user()->isClient()) {
-            return redirect()->back()->with('error', 'Clients do not have permission to delete registrants.');
+        if (!auth()->user()->hasPermission('registrants')) {
+            return redirect()->back()->with('error', 'You do not have permission to delete registrants.');
         }
 
         $name = $registrant->name;
@@ -307,8 +315,8 @@ class AdminController extends Controller
      */
     public function resendCredentials(Registrant $registrant)
     {
-        if (auth()->user()->isClient()) {
-            return redirect()->back()->with('error', 'Clients do not have permission to resend credentials.');
+        if (!auth()->user()->hasPermission('registrants')) {
+            return redirect()->back()->with('error', 'You do not have permission to resend credentials.');
         }
 
         if ($registrant->status !== 'approved' || !$registrant->plain_password) {
@@ -329,8 +337,8 @@ class AdminController extends Controller
      */
     public function bulkApprove(Request $request)
     {
-        if (auth()->user()->isClient()) {
-            return redirect()->back()->with('error', 'Clients do not have permission to bulk approve.');
+        if (!auth()->user()->hasPermission('registrants')) {
+            return redirect()->back()->with('error', 'You do not have permission to bulk approve.');
         }
 
         $request->validate([
@@ -368,8 +376,8 @@ class AdminController extends Controller
      */
     public function bulkReject(Request $request)
     {
-        if (auth()->user()->isClient()) {
-            return redirect()->back()->with('error', 'Clients do not have permission to bulk reject.');
+        if (!auth()->user()->hasPermission('registrants')) {
+            return redirect()->back()->with('error', 'You do not have permission to bulk reject.');
         }
 
         $request->validate([
@@ -406,6 +414,10 @@ class AdminController extends Controller
      */
     public function exportCsv(Request $request)
     {
+        if (!auth()->user()->hasPermission('registrants')) {
+            return redirect()->route('admin.dashboard')->with('error', 'You do not have permission to export registrants.');
+        }
+
         $status = $request->get('status', 'all');
 
         $query = Registrant::query();

@@ -168,7 +168,61 @@
         // Group rooms by floor for dynamic header
         $floorGroups = $rooms->groupBy(fn($r) => $r->floorRelation?->name ?? 'Other');
       @endphp
-      <div class="table-wrap">
+      <div class="table-wrap" style="position:relative;">
+        {{-- Overlay instruction --}}
+        <div id="agendaOverlay" style="position:absolute;inset:-4px;z-index:50;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(5,13,42,0.88);backdrop-filter:blur(8px);border-radius:20px;cursor:pointer;transition:opacity 0.6s,transform 0.6s;">
+          {{-- Desktop content --}}
+          <div id="overlayDesktop" style="display:flex;flex-direction:column;align-items:center;">
+            <img src="https://img.icons8.com/?size=100&id=pGqqobAPSa_u&format=png&color=000000" style="width:48px;height:48px;margin-bottom:14px;opacity:0.7;filter:brightness(0) invert(1);">
+            <p style="font-size:15px;font-weight:700;color:#e2e8f0;margin-bottom:4px;letter-spacing:-0.01em;">Tap any session to explore</p>
+            <p style="font-size:13px;color:#94a3b8;max-width:300px;text-align:center;line-height:1.6;">Click on a <strong style="color:#f472b6;">workshop</strong> or <strong style="color:#818cf8;">track</strong> in the table to view details.</p>
+          </div>
+          {{-- Mobile content --}}
+          <div id="overlayMobile" style="display:none;flex-direction:column;align-items:center;padding:0 16px;">
+            <img src="https://img.icons8.com/?size=100&id=xP7ywSliik10&format=png&color=000000" style="width:44px;height:44px;margin-bottom:12px;opacity:0.7;filter:brightness(0) invert(1);">
+            <p style="font-size:15px;font-weight:700;color:#e2e8f0;margin-bottom:4px;letter-spacing:-0.01em;text-align:center;">Swipe to explore</p>
+            <p style="font-size:13px;color:#94a3b8;max-width:280px;text-align:center;line-height:1.6;">Swipe <strong style="color:#f472b6;">horizontally</strong> to see all sessions, then tap any <strong style="color:#818cf8;">workshop</strong> or <strong style="color:#f472b6;">track</strong> for details.</p>
+          </div>
+        </div>
+        <style>
+          @media (max-width: 767px) {
+            #overlayDesktop { display: none !important; }
+            #overlayMobile  { display: flex !important; }
+          }
+        </style>
+        <script>
+        (function() {
+          var overlay = document.getElementById('agendaOverlay');
+          if (!overlay) return;
+
+          var duration = 3000;
+
+          var dismissed = false;
+          function dismissOverlay() {
+            if (dismissed) return;
+            dismissed = true;
+            overlay.style.opacity = '0';
+            overlay.style.transform = 'scale(0.96)';
+            setTimeout(function() {
+              overlay.style.display = 'none';
+            }, 600);
+          }
+
+          // Dismiss on click
+          overlay.addEventListener('click', dismissOverlay);
+
+          // Intersection Observer — start timer only when agenda is visible
+          var observer = new IntersectionObserver(function(entries) {
+            entries.forEach(function(entry) {
+              if (entry.isIntersecting && !dismissed) {
+                setTimeout(dismissOverlay, duration);
+                observer.disconnect();
+              }
+            });
+          }, { threshold: 0.3 });
+          observer.observe(overlay);
+        })();
+        </script>
         <table>
           <thead>
             <tr>
@@ -198,7 +252,7 @@
               <tr>
                 <td class="time">{{ $ts->label() }}</td>
                 @if ($fullRow)
-                  <td class="full" colspan="{{ $rooms->count() }}">
+                  <td class="full" colspan="{{ $rooms->count() }}" data-timeslot="{{ $slotKey }}">
                     @if ($fullRow->category || $fullRow->agenda_type)
                       <span class="tag {{ \App\Models\AgendaItem::categoryClass($fullRow->category, $fullRow->agenda_type) }}">{{ $fullRow->title }}</span>
                     @else
@@ -235,9 +289,9 @@
                             $tag = ($item->category || $item->agenda_type)
                                 ? '<span class="tag ' . \App\Models\AgendaItem::categoryClass($item->category, $item->agenda_type) . '">' . e($item->title) . '</span>'
                                 : e($item->title);
-                            $cells[] = '<td' . $attrs . '>' . $tag . '</td>';
+                            $cells[] = '<td' . $attrs . ' data-timeslot="' . $slotKey . '">' . $tag . '</td>';
                         } else {
-                            $cells[] = '<td>—</td>';
+                            $cells[] = '<td data-timeslot="' . $slotKey . '">—</td>';
                         }
                     }
                   @endphp
@@ -286,44 +340,44 @@
 </section>
 
 {{-- Agenda Detail Modal --}}
-<div id="agendaModal" style="display:none;position:fixed;inset:0;z-index:9999;align-items:center;justify-content:center;background:rgba(5,13,42,0.85);backdrop-filter:blur(8px);padding:20px;overflow-y:auto;">
-  <div style="background:linear-gradient(135deg,#fff 0%,#f8fafc 100%);border-radius:24px;box-shadow:0 30px 80px rgba(0,0,0,0.4);width:100%;max-width:600px;max-height:90vh;overflow-y:auto;animation:msdFadeIn 0.35s ease-out;border:1px solid rgba(255,255,255,0.2);">
+<div id="agendaModal" style="display:none;position:fixed;inset:0;z-index:9999;align-items:center;justify-content:center;background:rgba(5,13,42,0.85);backdrop-filter:blur(12px);padding:20px;overflow-y:auto;">
+  <div style="background:rgba(255,255,255,0.05);backdrop-filter:blur(16px);border-radius:24px;box-shadow:0 30px 80px rgba(0,0,0,0.5),inset 0 1px 0 rgba(255,255,255,0.08);width:100%;max-width:600px;max-height:90vh;overflow-y:auto;animation:msdFadeIn 0.35s ease-out;border:1px solid rgba(255,255,255,0.08);">
     {{-- Header bar with close --}}
-    <div style="position:sticky;top:0;z-index:10;display:flex;align-items:center;justify-content:space-between;padding:16px 20px;background:linear-gradient(135deg,#050d2a,#0a1a4a);border-radius:24px 24px 0 0;">
-      <div style="display:flex;align-items:center;gap:8px;">
-        <img src="{{ asset('img/logo-msd.png') }}" style="height:24px;width:auto;filter:brightness(0) invert(1);">
-        <span style="font-size:11px;font-weight:700;color:rgba(255,255,255,0.9);letter-spacing:0.5px;">METRODATA SOLUTION DAY 2026</span>
+    <div style="position:sticky;top:0;z-index:10;display:flex;align-items:center;justify-content:space-between;padding:16px 24px;background:linear-gradient(135deg,#050d2a,#0e2461);border-radius:24px 24px 0 0;border-bottom:1px solid rgba(255,255,255,0.06);">
+      <div style="display:flex;align-items:center;gap:10px;">
+        <img src="{{ asset('img/logo-msd.png') }}" style="height:22px;width:auto;filter:brightness(0) invert(1);">
+        <span style="font-size:10px;font-weight:700;color:rgba(255,255,255,0.6);letter-spacing:1.5px;">MSD 2026</span>
       </div>
-      <button onclick="closeAgendaModal()" style="width:32px;height:32px;border-radius:50%;border:none;background:rgba(255,255,255,0.15);font-size:16px;cursor:pointer;color:#fff;display:flex;align-items:center;justify-content:center;transition:background 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.25)'" onmouseout="this.style.background='rgba(255,255,255,0.15)'">✕</button>
+      <button onclick="closeAgendaModal()" style="width:30px;height:30px;border-radius:50%;border:none;background:rgba(255,255,255,0.08);font-size:15px;cursor:pointer;color:rgba(255,255,255,0.6);display:flex;align-items:center;justify-content:center;transition:all 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.15)';this.style.color='#fff'" onmouseout="this.style.background='rgba(255,255,255,0.08)';this.style.color='rgba(255,255,255,0.6)'">✕</button>
     </div>
 
-    <div style="padding:28px 32px 32px;">
-      {{-- Date & Time + Room --}}
-      <div style="display:flex;flex-wrap:wrap;gap:16px;margin-bottom:12px;font-size:13px;color:var(--muted);">
-        <span id="modalDateTime" style="font-weight:600;color:var(--primary);"></span>
-        <span id="modalRoom"></span>
+    <div style="padding:28px 28px 32px;">
+      {{-- Date, Time & Room --}}
+      <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:14px;font-size:12px;">
+        <div id="modalDateTime" style="display:flex;align-items:center;gap:6px;color:#f472b6;font-weight:500;"></div>
+        <div id="modalRoom" style="display:flex;align-items:center;gap:6px;color:#94a3b8;"></div>
       </div>
 
       {{-- Type Badge --}}
-      <div style="margin-bottom:20px;">
-        <span id="modalTypeBadge" style="display:inline-block;font-size:11px;font-weight:700;text-transform:uppercase;padding:4px 12px;border-radius:20px;letter-spacing:0.5px;"></span>
-        <span id="modalCapacity" style="display:inline-block;font-size:12px;color:var(--muted);margin-left:10px;"></span>
+      <div style="margin-bottom:16px;">
+        <span id="modalTypeBadge" style="display:inline-block;font-size:10px;font-weight:700;text-transform:uppercase;padding:3px 10px;border-radius:20px;letter-spacing:0.8px;"></span>
+        <span id="modalCapacity" style="display:inline-block;font-size:12px;color:#94a3b8;margin-left:10px;"></span>
       </div>
 
       {{-- Title --}}
-      <h2 style="font-size:24px;font-weight:800;color:#0f172a;margin-bottom:20px;line-height:1.35;" id="modalTitle"></h2>
+      <h2 style="font-size:22px;font-weight:800;color:#e2e8f0;margin-bottom:18px;line-height:1.35;letter-spacing:-0.02em;" id="modalTitle"></h2>
 
       {{-- Description --}}
-      <div id="modalDesc" style="font-size:14px;color:#475569;line-height:1.7;margin-bottom:24px;"></div>
+      <div id="modalDesc" style="font-size:13px;color:#94a3b8;line-height:1.7;margin-bottom:24px;"></div>
 
       {{-- Speakers --}}
-      <div id="modalSpeakers" style="margin-bottom:24px;padding:20px;background:#f8fafc;border-radius:16px;border:1px solid #e2e8f0;"></div>
+      <div id="modalSpeakers" style="margin-bottom:24px;padding:20px;background:rgba(255,255,255,0.04);border-radius:16px;border:1px solid rgba(255,255,255,0.06);"></div>
 
       {{-- Key Highlights --}}
       <div id="modalHighlights" style="margin-bottom:24px;"></div>
 
       {{-- Registration --}}
-      <div id="modalRegSection" style="border-top:2px solid #e2e8f0;padding-top:20px;margin-top:12px;"></div>
+      <div id="modalRegSection" style="border-top:1px solid rgba(255,255,255,0.08);padding-top:20px;margin-top:12px;"></div>
     </div>
   </div>
 </div>
@@ -332,24 +386,33 @@
 @keyframes msdFadeIn{from{opacity:0;transform:scale(0.92) translateY(20px);}to{opacity:1;transform:scale(1) translateY(0);}}
 </style>
 
-@if (Auth::guard('registrant')->check())
 <script>
-// ── Agenda data for modal ──
+// ── Agenda data for modal (available to all) ──
 window._agendaData = {!! json_encode($agendaItems->keyBy('id'), JSON_UNESCAPED_SLASHES) !!};
+
+@if (Auth::guard('registrant')->check())
 window._agendaRegistrations = {!! json_encode(
     Auth::guard('registrant')->user()->agendaItems()->get()->mapWithKeys(fn($i) => [$i->id => $i->pivot->status]),
     JSON_UNESCAPED_SLASHES
 ) !!};
 window._agendaRegisterUrl = '{{ route('registrant.agenda.register', ['agendaItem' => '__ID__']) }}';
 window._agendaUnregisterUrl = '{{ route('registrant.agenda.unregister', ['agendaItem' => '__ID__']) }}';
+@endif
 
 // ── Modal Functions ──
 function openAgendaModal(id) {
     const item = window._agendaData[id];
     if (!item) return;
 
-    document.getElementById('modalDateTime').textContent = '📅 ' + (item.date || '20 August 2026') + '  ·  🕐 ' + (item.start_time || '').substring(0,5) + ' – ' + (item.end_time || '').substring(0,5);
-    document.getElementById('modalRoom').textContent = '📍 Shangri-La Hotel' + (item.room ? ', ' + item.room + ' Room' : '');
+    document.getElementById('modalDateTime').innerHTML =
+        '<svg style="width:14px;height:14px;flex-shrink:0;" fill="none" stroke="#f472b6" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" stroke-width="2"/><path stroke-width="2" d="M16 2v4M8 2v4M3 10h18"/></svg> ' +
+        '<span>' + (item.date || '20 August 2026') + '</span>' +
+        '<span style="color:#475569;">·</span>' +
+        '<svg style="width:14px;height:14px;flex-shrink:0;" fill="none" stroke="#f472b6" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke-width="2"/><path stroke-width="2" d="M12 6v6l4 2"/></svg> ' +
+        '<span>' + (item.start_time || '').substring(0,5) + ' – ' + (item.end_time || '').substring(0,5) + '</span>';
+    document.getElementById('modalRoom').innerHTML =
+        '<svg style="width:14px;height:14px;flex-shrink:0;" fill="none" stroke="#94a3b8" viewBox="0 0 24 24"><path stroke-width="2" d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/><circle cx="12" cy="9" r="2.5" stroke-width="2"/></svg> ' +
+        '<span>Shangri-La Hotel' + (item.room ? ', ' + item.room + ' Room' : '') + '</span>';
     document.getElementById('modalTitle').textContent = item.title;
 
     // Type badge with fallback logic
@@ -359,19 +422,23 @@ function openAgendaModal(id) {
     if (!type && item.track_id) type = 'track';
     if (!type && item.workshop_id) type = 'workshop';
     if (!type) type = 'session';
-    badge.textContent = type;
+    badge.textContent = type.toUpperCase();
     if (type === 'workshop') {
-        badge.style.background = 'linear-gradient(135deg,#fef3c7,#fde68a)';
-        badge.style.color = '#92400e';
+        badge.style.background = 'rgba(251,191,36,0.15)';
+        badge.style.color = '#fbbf24';
+        badge.style.border = '1px solid rgba(251,191,36,0.2)';
     } else if (type === 'track') {
-        badge.style.background = 'linear-gradient(135deg,#e0e7ff,#c7d2fe)';
-        badge.style.color = '#3730a3';
+        badge.style.background = 'rgba(129,140,248,0.15)';
+        badge.style.color = '#818cf8';
+        badge.style.border = '1px solid rgba(129,140,248,0.2)';
     } else if (type === 'keynote') {
-        badge.style.background = 'linear-gradient(135deg,#dcfce7,#bbf7d0)';
-        badge.style.color = '#166534';
+        badge.style.background = 'rgba(52,211,153,0.15)';
+        badge.style.color = '#34d399';
+        badge.style.border = '1px solid rgba(52,211,153,0.2)';
     } else {
-        badge.style.background = 'linear-gradient(135deg,#f3f4f6,#e5e7eb)';
-        badge.style.color = '#4b5563';
+        badge.style.background = 'rgba(148,163,184,0.15)';
+        badge.style.color = '#94a3b8';
+        badge.style.border = '1px solid rgba(148,163,184,0.2)';
     }
 
     // Capacity
@@ -384,39 +451,39 @@ function openAgendaModal(id) {
 
     // Description
     const descEl = document.getElementById('modalDesc');
-    descEl.innerHTML = item.description ? '<strong style="color:#0f172a;">Session Description</strong><br><br>' + item.description.replace(/\n/g,'<br>') : '';
+    descEl.innerHTML = item.description ? '<strong style="color:#e2e8f0;font-size:13px;text-transform:uppercase;letter-spacing:0.5px;">Session Description</strong><br><br><span style="color:#94a3b8;">' + item.description.replace(/\n/g,'<br>') + '</span>' : '';
 
     // Speakers from relationship with all details
     let speakersHtml = '';
     if (item.speakers && item.speakers.length > 0) {
-        speakersHtml += '<h4 style="font-size:13px;font-weight:700;color:#0f172a;margin-bottom:12px;text-transform:uppercase;letter-spacing:0.5px;">🎤 Speaker' + (item.speakers.length > 1 ? 's' : '') + '</h4>';
+        speakersHtml += '<h4 style="font-size:12px;font-weight:700;color:#94a3b8;margin-bottom:14px;text-transform:uppercase;letter-spacing:1px;"><svg style="width:14px;height:14px;vertical-align:-2px;margin-right:6px;" fill="none" stroke="#94a3b8" viewBox="0 0 24 24"><path stroke-width="2" d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path stroke-width="2" d="M19 10v2a7 7 0 0 1-14 0v-2"/><line stroke-width="2" x1="12" y1="19" x2="12" y2="23"/><line stroke-width="2" x1="8" y1="23" x2="16" y2="23"/></svg> Speaker' + (item.speakers.length > 1 ? 's' : '') + '</h4>';
         item.speakers.forEach(function(sp) {
-            speakersHtml += '<div style="display:flex;align-items:flex-start;gap:14px;margin-bottom:20px;padding-bottom:16px;border-bottom:1px solid #f1f5f9;">';
+            speakersHtml += '<div style="display:flex;align-items:flex-start;gap:14px;margin-bottom:18px;padding-bottom:16px;border-bottom:1px solid rgba(255,255,255,0.06);">';
             if (sp.photo) {
                 var photoUrl = sp.photo;
                 if (!photoUrl.startsWith('http') && !photoUrl.startsWith('/')) {
-                    photoUrl = '/2026-Testing/public/storage/' + photoUrl;
+                    photoUrl = '{{ asset('storage') }}/' + photoUrl;
                 }
-                speakersHtml += '<img src="'+photoUrl+'" style="width:52px;height:52px;border-radius:50%;object-fit:cover;border:3px solid #e2e8f0;flex-shrink:0;margin-top:2px;" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'flex\';">';
-                speakersHtml += '<div style="display:none;width:52px;height:52px;border-radius:50%;background:linear-gradient(135deg,#6366f1,#8b5cf6);align-items:center;justify-content:center;color:#fff;font-size:18px;font-weight:700;flex-shrink:0;margin-top:2px;">'+sp.name.charAt(0).toUpperCase()+'</div>';
+                speakersHtml += '<img src="'+photoUrl+'" style="width:48px;height:48px;border-radius:50%;object-fit:cover;border:2px solid rgba(255,255,255,0.1);flex-shrink:0;margin-top:2px;" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'flex\';">';
+                speakersHtml += '<div style="display:none;width:48px;height:48px;border-radius:50%;background:linear-gradient(135deg,#ff3d6e,#e91e63);align-items:center;justify-content:center;color:#fff;font-size:16px;font-weight:700;flex-shrink:0;margin-top:2px;">'+sp.name.charAt(0).toUpperCase()+'</div>';
             } else {
-                speakersHtml += '<div style="width:52px;height:52px;border-radius:50%;background:linear-gradient(135deg,#6366f1,#8b5cf6);display:flex;align-items:center;justify-content:center;color:#fff;font-size:18px;font-weight:700;flex-shrink:0;margin-top:2px;">'+sp.name.charAt(0).toUpperCase()+'</div>';
+                speakersHtml += '<div style="width:48px;height:48px;border-radius:50%;background:linear-gradient(135deg,#ff3d6e,#e91e63);display:flex;align-items:center;justify-content:center;color:#fff;font-size:16px;font-weight:700;flex-shrink:0;margin-top:2px;">'+sp.name.charAt(0).toUpperCase()+'</div>';
             }
             speakersHtml += '<div style="flex:1;min-width:0;">';
-            speakersHtml += '<p style="font-weight:700;font-size:14px;color:#0f172a;">'+sp.name+'</p>';
-            speakersHtml += '<p style="font-size:12px;color:#64748b;margin-bottom:6px;">'+(sp.title||'')+(sp.company ? ' · '+sp.company : '')+'</p>';
+            speakersHtml += '<p style="font-weight:700;font-size:14px;color:#e2e8f0;">'+sp.name+'</p>';
+            speakersHtml += '<p style="font-size:12px;color:#64748b;margin-bottom:6px;">'+(sp.title||'')+(sp.company ? ' <span style="color:#475569;">·</span> '+sp.company : '')+'</p>';
 
             // Presentation title
             if (sp.pivot && sp.pivot.presentation_title) {
-                speakersHtml += '<p style="font-weight:600;font-size:13px;color:#4338ca;margin-bottom:4px;">📄 ' + sp.pivot.presentation_title + '</p>';
+                speakersHtml += '<p style="font-weight:600;font-size:13px;color:#f472b6;margin-bottom:4px;"><svg style="width:13px;height:13px;vertical-align:-2px;margin-right:5px;" fill="none" stroke="#f472b6" viewBox="0 0 24 24"><path stroke-width="2" d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline stroke-width="2" points="14 2 14 8 20 8"/><line stroke-width="2" x1="9" y1="13" x2="15" y2="13"/><line stroke-width="2" x1="9" y1="17" x2="13" y2="17"/></svg> ' + sp.pivot.presentation_title + '</p>';
             }
             // Presentation description
             if (sp.pivot && sp.pivot.presentation_description) {
-                speakersHtml += '<p style="font-size:12px;color:#64748b;line-height:1.6;margin-bottom:8px;">' + sp.pivot.presentation_description.replace(/\n/g,'<br>') + '</p>';
+                speakersHtml += '<p style="font-size:12px;color:#94a3b8;line-height:1.6;margin-bottom:8px;">' + sp.pivot.presentation_description.replace(/\n/g,'<br>') + '</p>';
             }
             // Key highlights
             if (sp.pivot && sp.pivot.key_highlights) {
-                speakersHtml += '<ul style="margin-top:4px;padding-left:16px;font-size:12px;color:#475569;line-height:1.9;">';
+                speakersHtml += '<ul style="margin-top:4px;padding-left:16px;font-size:12px;color:#94a3b8;line-height:1.9;">';
                 sp.pivot.key_highlights.split('\n').filter(function(l){return l.trim();}).forEach(function(l){
                     speakersHtml += '<li style="padding-left:2px;">' + l.replace(/^\d+\.\s*/, '') + '</li>';
                 });
@@ -425,32 +492,40 @@ function openAgendaModal(id) {
             speakersHtml += '</div></div>';
         });
     }
-    document.getElementById('modalSpeakers').innerHTML = speakersHtml || '<p style="font-size:13px;color:#94a3b8;text-align:center;">No speaker assigned</p>';
+    document.getElementById('modalSpeakers').innerHTML = speakersHtml || '<p style="font-size:13px;color:#64748b;text-align:center;">No speaker assigned</p>';
 
     // Hide global highlights section (now per-speaker)
     document.getElementById('modalHighlights').innerHTML = '';
 
     // Registration section
     const regSection = document.getElementById('modalRegSection');
-    const regStatus = window._agendaRegistrations[id] || null;
-    const canReg = item.is_registrable && item.registration_open;
+    const isLoggedIn = typeof window._agendaRegistrations !== 'undefined';
+    const canReg = item.is_registrable;
 
     if (!canReg) {
-        regSection.innerHTML = '<p style="font-size:13px;color:#94a3b8;text-align:center;">Registration not available for this session.</p>';
-    } else if (regStatus === 'approved') {
-        regSection.innerHTML = '<div style="text-align:center;"><div style="display:inline-flex;align-items:center;gap:6px;padding:8px 20px;border-radius:20px;font-size:13px;font-weight:600;background:#d1fae5;color:#065f46;margin-bottom:12px;">✅ You are registered</div>' +
-            '<form action="'+window._agendaUnregisterUrl.replace('__ID__',id)+'" method="POST">@csrf<button style="padding:10px 24px;background:#fee2e2;color:#991b1b;font-weight:600;font-size:13px;border:none;border-radius:12px;cursor:pointer;">Cancel Registration</button></form></div>';
-    } else if (regStatus === 'pending') {
-        regSection.innerHTML = '<div style="text-align:center;"><div style="display:inline-flex;align-items:center;gap:6px;padding:8px 20px;border-radius:20px;font-size:13px;font-weight:600;background:#fef3c7;color:#92400e;margin-bottom:12px;">⏳ Pending Approval</div>' +
-            '<form action="'+window._agendaUnregisterUrl.replace('__ID__',id)+'" method="POST">@csrf<button style="padding:10px 24px;background:#fee2e2;color:#991b1b;font-weight:600;font-size:13px;border:none;border-radius:12px;cursor:pointer;">Cancel</button></form></div>';
-    } else if (regStatus === 'rejected') {
-        regSection.innerHTML = '<div style="text-align:center;"><div style="display:inline-flex;align-items:center;gap:6px;padding:8px 20px;border-radius:20px;font-size:13px;font-weight:600;background:#fee2e2;color:#991b1b;margin-bottom:12px;">❌ Rejected</div>' +
-            '<form action="'+window._agendaRegisterUrl.replace('__ID__',id)+'" method="POST">@csrf<button style="padding:12px 32px;background:linear-gradient(135deg,#4f46e5,#7c3aed);color:#fff;font-weight:700;font-size:14px;border:none;border-radius:12px;cursor:pointer;">🔄 Re-register</button></form></div>';
+        regSection.innerHTML = '<p style="font-size:13px;color:#64748b;text-align:center;">Registration not available for this session.</p>';
+    } else if (!isLoggedIn) {
+        var loginUrl = '{{ route('login', request()->only(['utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content'])) }}';
+        regSection.innerHTML = '<div style="text-align:center;padding:12px 0;">' +
+            '<p style="font-size:13px;color:#94a3b8;">Please <a href="'+loginUrl+'" style="color:#f472b6;font-weight:600;text-decoration:underline;text-underline-offset:2px;">login</a> to register for this session.</p>' +
+        '</div>';
     } else {
-        const capInfo = item.capacity > 0 ? '<div style="font-size:12px;color:var(--muted);margin-bottom:8px;">'+ (item.approved_count || 0) +'/'+ item.capacity +' seats filled</div>' : '';
+        const regStatus = window._agendaRegistrations[id] || null;
+        if (regStatus === 'approved') {
+        regSection.innerHTML = '<div style="text-align:center;"><div style="display:inline-flex;align-items:center;gap:8px;padding:8px 20px;border-radius:999px;font-size:13px;font-weight:600;background:rgba(16,185,129,0.15);color:#34d399;border:1px solid rgba(16,185,129,0.2);margin-bottom:14px;"><svg style="width:16px;height:16px;" fill="none" stroke="#34d399" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke-width="2"/><path stroke-width="2.5" d="M8 12l3 3 5-5"/></svg> You are registered</div>' +
+            '<form action="'+window._agendaUnregisterUrl.replace('__ID__',id)+'" method="POST">@csrf<button style="padding:10px 28px;background:rgba(239,68,68,0.1);color:#ef4444;font-weight:600;font-size:13px;border:1px solid rgba(239,68,68,0.2);border-radius:999px;cursor:pointer;transition:all 0.2s;" onmouseover="this.style.background=\'rgba(239,68,68,0.2)\'" onmouseout="this.style.background=\'rgba(239,68,68,0.1)\'">Cancel Registration</button></form></div>';
+    } else if (regStatus === 'pending') {
+        regSection.innerHTML = '<div style="text-align:center;"><div style="display:inline-flex;align-items:center;gap:8px;padding:8px 20px;border-radius:999px;font-size:13px;font-weight:600;background:rgba(251,191,36,0.15);color:#fbbf24;border:1px solid rgba(251,191,36,0.2);margin-bottom:14px;"><svg style="width:16px;height:16px;" fill="none" stroke="#fbbf24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke-width="2"/><path stroke-width="2" d="M12 6v6l4 2"/></svg> Pending Approval</div>' +
+            '<form action="'+window._agendaUnregisterUrl.replace('__ID__',id)+'" method="POST">@csrf<button style="padding:10px 28px;background:rgba(239,68,68,0.1);color:#ef4444;font-weight:600;font-size:13px;border:1px solid rgba(239,68,68,0.2);border-radius:999px;cursor:pointer;transition:all 0.2s;" onmouseover="this.style.background=\'rgba(239,68,68,0.2)\'" onmouseout="this.style.background=\'rgba(239,68,68,0.1)\'">Cancel</button></form></div>';
+    } else if (regStatus === 'rejected') {
+        regSection.innerHTML = '<div style="text-align:center;"><div style="display:inline-flex;align-items:center;gap:8px;padding:8px 20px;border-radius:999px;font-size:13px;font-weight:600;background:rgba(239,68,68,0.15);color:#ef4444;border:1px solid rgba(239,68,68,0.2);margin-bottom:14px;"><svg style="width:16px;height:16px;" fill="none" stroke="#ef4444" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke-width="2"/><path stroke-width="2" d="M15 9l-6 6M9 9l6 6"/></svg> Rejected</div>' +
+            '<form action="'+window._agendaRegisterUrl.replace('__ID__',id)+'" method="POST">@csrf<button style="padding:12px 36px;background:linear-gradient(135deg,#ff3d6e,#e91e63);color:#fff;font-weight:700;font-size:14px;border:none;border-radius:999px;cursor:pointer;box-shadow:0 8px 24px rgba(233,30,99,0.35);transition:all 0.25s;" onmouseover="this.style.transform=\'translateY(-2px)\';this.style.boxShadow=\'0 12px 30px rgba(233,30,99,0.5)\'" onmouseout="this.style.transform=\'\';this.style.boxShadow=\'0 8px 24px rgba(233,30,99,0.35)\""><svg style="width:15px;height:15px;vertical-align:-2px;margin-right:6px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-width="2.5" d="M1 4v6h6"/><path stroke-width="2.5" d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg> Re-register</button></form></div>';
+    } else {
+        const capInfo = item.capacity > 0 ? '<div style="font-size:12px;color:#64748b;margin-bottom:10px;">'+ (item.approved_count || 0) +'/'+ item.capacity +' seats filled</div>' : '';
         regSection.innerHTML = '<div style="text-align:center;">'+capInfo+
-            '<form action="'+window._agendaRegisterUrl.replace('__ID__',id)+'" method="POST">@csrf<button style="padding:12px 40px;background:linear-gradient(135deg,#4f46e5,#7c3aed);color:#fff;font-weight:700;font-size:14px;border:none;border-radius:12px;cursor:pointer;box-shadow:0 4px 15px rgba(79,70,229,0.4);">Register Now</button></form></div>';
+            '<form action="'+window._agendaRegisterUrl.replace('__ID__',id)+'" method="POST">@csrf<button style="padding:12px 44px;background:linear-gradient(135deg,#ff3d6e,#e91e63);color:#fff;font-weight:700;font-size:14px;letter-spacing:0.03em;border:none;border-radius:999px;cursor:pointer;box-shadow:0 8px 24px rgba(233,30,99,0.35);transition:all 0.25s;" onmouseover="this.style.transform=\'translateY(-2px)\';this.style.boxShadow=\'0 12px 30px rgba(233,30,99,0.5)\'" onmouseout="this.style.transform=\'\';this.style.boxShadow=\'0 8px 24px rgba(233,30,99,0.35)\'">Register Now</button></form></div>';
     }
+        }
 
     document.getElementById('agendaModal').style.display = 'flex';
     document.body.style.overflow = 'hidden';
@@ -478,19 +553,27 @@ document.addEventListener('DOMContentLoaded', function() {
     table.addEventListener('click', function(e) {
         const cell = e.target.closest('td');
         if (!cell) return;
-        // Find matching agenda item by title comparison
         const title = cell.textContent.trim();
-        if (!title || title === '—') return;
+        if (!title || title === '—' || title === 'Time') return;
+        var cellTimeSlot = cell.getAttribute('data-timeslot');
         for (const [id, item] of Object.entries(window._agendaData)) {
             if (item.title === title && (item.is_registrable || (item.speakers && item.speakers.length > 0) || item.description)) {
-                openAgendaModal(id);
-                return;
+                if (cellTimeSlot && item.start_time) {
+                    var slotStart = cellTimeSlot.split('-')[0].substring(0,5);
+                    var itemStart = item.start_time.substring(0,5);
+                    if (slotStart === itemStart) {
+                        openAgendaModal(id);
+                        return;
+                    }
+                } else {
+                    openAgendaModal(id);
+                    return;
+                }
             }
         }
     });
 });
 </script>
-@endif
 
 <!-- SPONSORS -->
 <section id="sponsors" class="reveal">
@@ -699,24 +782,57 @@ document.addEventListener('DOMContentLoaded', function() {
 input.field-error, select.field-error { border-color:#ef4444 !important; }
 </style>
 
-{{-- Success Modal --}}
-<div id="successModal" style="display:none; position:fixed; inset:0; z-index:9999; align-items:center; justify-content:center; background:rgba(0,0,0,0.4); backdrop-filter:blur(4px); padding:16px;">
-  <div style="background:#fff; border-radius:16px; box-shadow:0 25px 50px rgba(0,0,0,0.25); width:100%; max-width:448px; overflow:hidden; animation:fadeInUp 0.3s ease-out;">
-    <div style="padding:32px; text-align:center;">
-      <div style="width:64px; height:64px; background:#d1fae5; border-radius:16px; display:flex; align-items:center; justify-content:center; margin:0 auto 20px;">
-        <svg style="width:32px; height:32px; color:#059669;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+{{-- Success / Notification Modal --}}
+<div id="successModal" style="display:none; position:fixed; inset:0; z-index:9999; align-items:center; justify-content:center; background:rgba(5,13,42,0.7); backdrop-filter:blur(8px); padding:16px;">
+  <div style="background:rgba(255,255,255,0.06); backdrop-filter:blur(12px); border:1px solid rgba(255,255,255,0.1); border-radius:20px; box-shadow:0 25px 60px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.08); width:100%; max-width:420px; overflow:hidden; animation:fadeInUp 0.35s ease-out;">
+    <div style="padding:36px 32px 28px; text-align:center;">
+      <div id="notifIcon" style="width:72px; height:72px; background:rgba(16,185,129,0.15); border-radius:20px; display:flex; align-items:center; justify-content:center; margin:0 auto 22px; border:1px solid rgba(16,185,129,0.2);">
+        <svg id="notifIconSvg" style="width:34px; height:34px; color:#10b981;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/>
         </svg>
       </div>
-      <h2 style="font-size:20px; font-weight:700; color:#111827; margin-bottom:8px;">Registration Successful!</h2>
-      <p style="font-size:14px; color:#6b7280; margin-bottom:20px;">Your data has been received. Please wait for confirmation from the admin via email.</p>
-      <button onclick="closeSuccessModal()" style="width:100%; padding:10px 0; background:#4f46e5; color:#fff; font-weight:600; font-size:14px; border:none; border-radius:12px; cursor:pointer; transition:background 0.2s;"
-              onmouseover="this.style.background='#4338ca'" onmouseout="this.style.background='#4f46e5'">
+      <h2 id="notifTitle" style="font-size:19px; font-weight:700; color:#e2e8f0; margin-bottom:6px; letter-spacing:-0.01em;">Notification</h2>
+      <p id="notifMessage" style="font-size:14px; color:#94a3b8; line-height:1.6; margin-bottom:24px;"></p>
+      <button onclick="closeSuccessModal()" style="width:100%; padding:12px 0; background:linear-gradient(135deg,#ff3d6e,#e91e63); color:#fff; font-weight:700; font-size:14px; letter-spacing:0.03em; border:none; border-radius:999px; cursor:pointer; box-shadow:0 8px 24px rgba(233,30,99,0.35); transition:transform 0.25s,box-shadow 0.25s;"
+              onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 12px 30px rgba(233,30,99,0.5)'" onmouseout="this.style.transform='';this.style.boxShadow='0 8px 24px rgba(233,30,99,0.35)'">
         Close
       </button>
     </div>
   </div>
 </div>
+
+<script>
+// ── Theme the notification icon based on flash type ──
+@if (session('success'))
+document.addEventListener('DOMContentLoaded', function() {
+    var icon = document.getElementById('notifIcon');
+    var svg = document.getElementById('notifIconSvg');
+    var title = document.getElementById('notifTitle');
+    icon.style.background = 'rgba(16,185,129,0.15)';
+    icon.style.borderColor = 'rgba(16,185,129,0.2)';
+    svg.style.color = '#10b981';
+    svg.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/>';
+    title.textContent = 'Registration Successful';
+    document.getElementById('notifMessage').innerHTML = '{!! str_replace(["'"], ["\\'"], session('success')) !!}';
+    document.getElementById('successModal').style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+});
+@elseif (session('error'))
+document.addEventListener('DOMContentLoaded', function() {
+    var icon = document.getElementById('notifIcon');
+    var svg = document.getElementById('notifIconSvg');
+    var title = document.getElementById('notifTitle');
+    icon.style.background = 'rgba(239,68,68,0.15)';
+    icon.style.borderColor = 'rgba(239,68,68,0.2)';
+    svg.style.color = '#ef4444';
+    svg.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/>';
+    title.textContent = 'Notice';
+    document.getElementById('notifMessage').innerHTML = '{!! str_replace(["'"], ["\\'"], session('error')) !!}';
+    document.getElementById('successModal').style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+});
+@endif
+</script>
 
 <style>
   @keyframes fadeInUp { from { opacity:0; transform:scale(0.9); } to { opacity:1; transform:scale(1); } }

@@ -136,6 +136,10 @@ class AdminWorkshopController extends Controller
      */
     public function approveRegistrant(Workshop $workshop, $registrantId)
     {
+        if (!auth()->user()->hasPermission('workshop_registrants')) {
+            return back()->with('error', 'You do not have permission to approve workshop registrations.');
+        }
+
         $workshop->registrants()->updateExistingPivot($registrantId, [
             'status'       => 'approved',
             'processed_by' => auth()->id(),
@@ -161,6 +165,10 @@ class AdminWorkshopController extends Controller
      */
     public function rejectRegistrant(Request $request, Workshop $workshop, $registrantId)
     {
+        if (!auth()->user()->hasPermission('workshop_registrants')) {
+            return back()->with('error', 'You do not have permission to reject workshop registrations.');
+        }
+
         $request->validate([
             'admin_notes' => ['required', 'string', 'max:500'],
         ], [

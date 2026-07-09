@@ -13,7 +13,7 @@
 <body class="bg-gray-50 font-sans antialiased">
 <div id="copyToast" class="fixed top-4 right-4 z-50 hidden items-center gap-2 bg-gray-900 text-white px-4 py-2.5 rounded-xl shadow-lg text-sm transition-opacity duration-300 opacity-0">
 <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-<span>URL copied!</span>
+<span>Copied!</span>
 </div>
 <div class="flex min-h-screen">
 @include('admin.partials.sidebar')
@@ -34,8 +34,8 @@
 <table class="w-full">
 <thead><tr class="bg-gray-50/80">
 <th class="px-5 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Name</th>
+<th class="px-5 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Unique Code</th>
 <th class="px-5 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">QR Code</th>
-<th class="px-5 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Check-in URL</th>
 <th class="px-5 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Status</th>
 </tr></thead>
 <tbody class="divide-y divide-gray-50">
@@ -45,11 +45,16 @@
 <a href="{{ route('admin.registrants.show', $r) }}" class="text-sm font-semibold text-indigo-600 hover:text-indigo-800">{{ $r->name }}</a>
 </td>
 <td class="px-5 py-4">
-<img src="{{ $r->qr_code_url }}" alt="QR" class="w-16 h-16 rounded border border-gray-200">
+<div class="flex items-center gap-2">
+<span class="font-mono text-sm font-bold text-gray-900 bg-gray-100 px-3 py-1.5 rounded-lg tracking-wider">{{ $r->unique_code ?? '—' }}</span>
+<button onclick="copyText('{{ $r->unique_code }}', this)" class="shrink-0 p-1.5 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition" title="Copy Code">
+<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"/></svg>
+</button>
+</div>
 </td>
 <td class="px-5 py-4">
 <div class="flex items-center gap-2">
-<a href="{{ $r->qr_checkin_url }}" target="_blank" class="text-xs text-indigo-600 hover:text-indigo-800 break-all">{{ $r->qr_checkin_url }}</a>
+<img src="{{ $r->qr_code_url }}" alt="QR" class="w-16 h-16 rounded border border-gray-200">
 <button onclick="copyUrl('{{ $r->qr_checkin_url }}', this)" class="shrink-0 p-1.5 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition" title="Copy URL">
 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"/></svg>
 </button>
@@ -64,7 +69,7 @@
 </td>
 </tr>
 @empty
-<tr><td colspan="4" class="text-center py-16 text-gray-400">No registrants with QR codes yet</td></tr>
+<tr><td colspan="4" class="text-center py-16 text-gray-400">No registrants found</td></tr>
 @endforelse
 </tbody>
 </table>
@@ -78,25 +83,41 @@
 </div>
 @include('admin.partials.mobile-sidebar')
 <script>
+function showToast(msg) {
+    const toast = document.getElementById('copyToast');
+    toast.querySelector('span').textContent = msg;
+    toast.classList.remove('hidden', 'opacity-0');
+    toast.classList.add('opacity-100');
+    setTimeout(() => {
+        toast.classList.remove('opacity-100');
+        toast.classList.add('opacity-0');
+        setTimeout(() => toast.classList.add('hidden'), 300);
+    }, 2000);
+}
 function copyUrl(url, btn) {
     navigator.clipboard.writeText(url).then(() => {
-        // Show toast
-        const toast = document.getElementById('copyToast');
-        toast.classList.remove('hidden', 'opacity-0');
-        toast.classList.add('opacity-100');
-        setTimeout(() => {
-            toast.classList.remove('opacity-100');
-            toast.classList.add('opacity-0');
-            setTimeout(() => toast.classList.add('hidden'), 300);
-        }, 2000);
+        showToast('URL copied!');
     }).catch(() => {
-        // Fallback
         const input = document.createElement('input');
         input.value = url;
         document.body.appendChild(input);
         input.select();
         document.execCommand('copy');
         document.body.removeChild(input);
+        showToast('URL copied!');
+    });
+}
+function copyText(text, btn) {
+    navigator.clipboard.writeText(text).then(() => {
+        showToast('Code copied!');
+    }).catch(() => {
+        const input = document.createElement('input');
+        input.value = text;
+        document.body.appendChild(input);
+        input.select();
+        document.execCommand('copy');
+        document.body.removeChild(input);
+        showToast('Code copied!');
     });
 }
 document.getElementById('sidebarToggle')?.addEventListener('click', () => {

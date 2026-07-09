@@ -32,7 +32,6 @@ class AgendaItem extends Model
         'colspan',
         'is_registrable',
         'capacity',
-        'registration_open',
     ];
 
     protected $casts = [
@@ -40,7 +39,6 @@ class AgendaItem extends Model
         'start_time'        => 'string',
         'end_time'          => 'string',
         'is_registrable'     => 'boolean',
-        'registration_open' => 'boolean',
         'capacity'          => 'integer',
     ];
 
@@ -90,7 +88,7 @@ class AgendaItem extends Model
 
     public function canRegister(): bool
     {
-        return $this->is_registrable && $this->registration_open && !$this->isFull();
+        return $this->is_registrable && !$this->isFull();
     }
 
     public function approvedCount(): int

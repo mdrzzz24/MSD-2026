@@ -15,9 +15,9 @@
 <header class="sticky top-0 z-30 bg-white/80 backdrop-blur border-b border-gray-200">
     <div class="flex items-center justify-between h-16 px-4 sm:px-6 lg:px-8">
         <div><h1 class="text-lg font-bold text-gray-900">Tracks</h1><p class="text-xs text-gray-500">Manage event tracks</p></div>
-        @unless(Auth::user()->isClient())
+        @if (Auth::user()->canWrite())
         <button onclick="document.getElementById('addForm').classList.toggle('hidden')" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-xl transition">+ Add Track</button>
-        @endunless
+        @endif
     </div>
 </header>
 <div class="p-4 sm:p-6 lg:p-8">
@@ -38,9 +38,9 @@
         <table class="w-full">
             <thead><tr class="bg-gray-50/80">
                 <th class="px-5 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase">Track</th>
-                @unless(Auth::user()->isClient())
+                @if (Auth::user()->canWrite())
                 <th class="px-5 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase hidden md:table-cell">Agenda Items</th>
-                @endunless
+                @endif
                 <th class="px-5 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase hidden md:table-cell">Registrants</th>
                 <th class="px-5 py-3.5 text-center text-xs font-semibold text-gray-500 uppercase">Status</th>
                 <th class="px-5 py-3.5 text-center text-xs font-semibold text-gray-500 uppercase">Actions</th>
@@ -50,9 +50,9 @@
                 <tr class="hover:bg-gray-50/50">
                     <td class="px-5 py-4"><p class="text-sm font-semibold text-gray-900">{{ $tr->title }}</p>
                         @if($tr->description)<p class="text-xs text-gray-400 mt-0.5 truncate max-w-[250px]">{{ $tr->description }}</p>@endif</td>
-                    @unless(Auth::user()->isClient())
+                    @if (Auth::user()->canWrite())
                     <td class="px-5 py-4 hidden md:table-cell"><span class="text-sm text-gray-600">{{ $tr->agenda_items_count }}</span></td>
-                    @endunless
+                    @endif
                     <td class="px-5 py-4 hidden md:table-cell">
                         @php $total = $tr->registrantsCount() + $tr->pendingCount() + $tr->rejectedCount(); @endphp
                         @if ($total > 0)
@@ -72,11 +72,11 @@
                     <td class="px-5 py-4 text-center">
                         <div class="flex justify-center gap-1">
                             <a href="{{ route('admin.tracks.registrants', $tr) }}" class="px-2.5 py-1.5 text-xs font-medium rounded-lg bg-indigo-50 text-indigo-700 hover:bg-indigo-100 transition">View</a>
-                            @unless(Auth::user()->isClient())
+                            @if (Auth::user()->canWrite())
                             <button onclick="editTrack({{ $tr->id }},'{{ e($tr->title) }}','{{ e($tr->description) }}')" class="px-2.5 py-1.5 text-xs font-medium rounded-lg bg-gray-100 text-gray-700 hover:bg-gray-200">Edit</button>
                             <form action="{{ route('admin.tracks.toggle', $tr) }}" method="POST" class="inline">@csrf<button class="px-2.5 py-1.5 text-xs font-medium rounded-lg bg-amber-50 text-amber-700 hover:bg-amber-100">{{ $tr->is_active ? 'Disable' : 'Enable' }}</button></form>
                             <form action="{{ route('admin.tracks.destroy', $tr) }}" method="POST" class="inline" onsubmit="return confirm('Delete {{ $tr->title }}?')">@csrf @method('DELETE')<button class="px-2.5 py-1.5 text-xs font-medium rounded-lg bg-red-50 text-red-700 hover:bg-red-100">Delete</button></form>
-                            @endunless
+                            @endif
                         </div>
                     </td>
                 </tr>

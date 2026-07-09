@@ -64,9 +64,9 @@ class RegistrantDashboardController extends Controller
             return back()->with('success', "Re-registered for workshop <strong>{$workshop->title}</strong>. Waiting for admin approval.");
         }
 
-        // Check for time conflict with approved workshops only
+        // Check for time conflict with workshops (any status)
         $conflict = $registrant->workshops()
-            ->wherePivot('status', 'approved')
+            ->where('workshops.id', '!=', $workshop->id)
             ->where(function ($q) use ($workshop) {
                 $q->where('date', $workshop->date)
                   ->where(function ($q2) use ($workshop) {
@@ -79,8 +79,21 @@ class RegistrantDashboardController extends Controller
                   });
             })->exists();
 
+        // Also check time conflict with agenda item registrations on the same date (any status)
+        if (!$conflict) {
+            $conflict = $registrant->agendaItems()
+                ->where(function ($q) use ($workshop) {
+                    $q->where('agenda_items.date', $workshop->date)
+                      ->orWhereNull('agenda_items.date');
+                })
+                ->where(function ($q) use ($workshop) {
+                    $q->where('start_time', '<', $workshop->end_time)
+                       ->where('end_time', '>', $workshop->start_time);
+                })->exists();
+        }
+
         if ($conflict) {
-            return back()->with('error', 'You are already registered for another workshop at the same time.');
+            return back()->with('error', 'You are already registered for another session at the same time.');
         }
 
         $registrant->workshops()->attach($workshop->id, ['status' => 'pending']);
@@ -127,15 +140,34 @@ class RegistrantDashboardController extends Controller
             return back()->with('success', "Re-registered for <strong>{$agendaItem->title}</strong>. Waiting for approval.");
         }
 
-        // Check time conflict with approved agenda items
+        // Check time conflict with agenda items on the same date (any status)
         $conflict = $registrant->agendaItems()
-            ->wherePivot('status', 'approved')
+            ->where('agenda_items.id', '!=', $agendaItem->id)
+            ->where(function ($q) use ($agendaItem) {
+                if ($agendaItem->date) {
+                    $q->where('agenda_items.date', $agendaItem->date);
+                } else {
+                    $q->whereNull('agenda_items.date');
+                }
+            })
             ->where(function ($q) use ($agendaItem) {
                 $q->where(function ($q2) use ($agendaItem) {
                     $q2->where('start_time', '<', $agendaItem->end_time)
                        ->where('end_time', '>', $agendaItem->start_time);
                 });
             })->exists();
+
+        // Also check time conflict with workshop registrations on the same date (any status)
+        if (!$conflict && $agendaItem->date) {
+            $conflict = $registrant->workshops()
+                ->where('date', $agendaItem->date)
+                ->where(function ($q) use ($agendaItem) {
+                    $q->where(function ($q2) use ($agendaItem) {
+                        $q2->where('start_time', '<', $agendaItem->end_time)
+                           ->where('end_time', '>', $agendaItem->start_time);
+                    });
+                })->exists();
+        }
 
         if ($conflict) {
             return back()->with('error', 'You are already registered for another session at the same time.');

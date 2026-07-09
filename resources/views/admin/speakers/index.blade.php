@@ -143,7 +143,7 @@
 let _editCurrentPhoto = '';
 
 function editSpeaker(id,name,title,company,photo,bio){
-    document.getElementById('editForm').action='/2026-Testing/public/admin/speakers/'+id;
+    document.getElementById('editForm').action='{{ route('admin.speakers.update', ['speaker' => '__ID__']) }}'.replace('__ID__', id);
     document.getElementById('editName').value=name;
     document.getElementById('editTitle').value=title;
     document.getElementById('editCompany').value=company;
@@ -153,11 +153,11 @@ function editSpeaker(id,name,title,company,photo,bio){
 
     const preview = document.getElementById('editPhotoPreview');
     const placeholder = document.getElementById('editPhotoPlaceholder');
-    const removeBtn = document.getElementById('editPhotoRemoveBtn');
+    const removeBtn = document.getElementById('editRemovePhotoBtn');
 
     if (photo) {
         _editCurrentPhoto = photo;
-        preview.src = '/2026-Testing/public/storage/' + photo;
+        preview.src = '{{ asset('storage') }}/' + photo;
         preview.classList.remove('hidden');
         placeholder.classList.add('hidden');
         removeBtn.classList.remove('hidden');
@@ -174,7 +174,7 @@ function editSpeaker(id,name,title,company,photo,bio){
 function previewEditPhoto(input) {
     const preview = document.getElementById('editPhotoPreview');
     const placeholder = document.getElementById('editPhotoPlaceholder');
-    const removeBtn = document.getElementById('editPhotoRemoveBtn');
+    const removeBtn = document.getElementById('editRemovePhotoBtn');
     document.getElementById('editRemovePhoto').value='0';
     if (input.files && input.files[0]) {
         const reader = new FileReader();
@@ -193,7 +193,7 @@ function removeEditPhoto() {
     document.getElementById('editRemovePhoto').value='1';
     document.getElementById('editPhotoPreview').classList.add('hidden');
     document.getElementById('editPhotoPlaceholder').classList.remove('hidden');
-    document.getElementById('editPhotoRemoveBtn').classList.add('hidden');
+    document.getElementById('editRemovePhotoBtn').classList.add('hidden');
 }
 
 function closeEditModal(){document.getElementById('editModal').style.display='none';}
