@@ -50,6 +50,9 @@ class DatabaseSeeder extends Seeder
         // ── Seed Agenda (Floors, Rooms, TimeSlots, AgendaItems) ──
         $this->call(AgendaSeeder::class);
 
+        // ── Seed Tracks & Workshops and link them to agenda items ──
+        $this->call(TrackWorkshopSeeder::class);
+
         foreach ($registrants as $data) {
             \App\Models\Registrant::create($data);
         }
