@@ -519,7 +519,7 @@ document.addEventListener('DOMContentLoaded', function() {
         <div class="sponsor"><img src="{{ asset('img/WORKSHOP/Alibaba_Cloud.png') }}" alt="Alicloud"></div>
         <div class="sponsor"><img src="{{ asset('img/WORKSHOP/Cloudflare.png') }}" alt="Cloudflare"></div>
         <div class="sponsor"><img src="{{ asset('img/WORKSHOP/Confluent.png') }}" alt="Confluent"></div>
-        <div class="sponsor"><img src="{{ asset('img/WORKSHOP/Creatio.png') }}" alt="Creatio"></div>
+        <!-- <div class="sponsor"><img src="{{ asset('img/WORKSHOP/Creatio.png') }}" alt="Creatio"></div> -->
         <div class="sponsor"><img src="{{ asset('img/WORKSHOP/google_cloud.png') }}" alt="Google Cloud"></div>
         <div class="sponsor"><img src="{{ asset('img/WORKSHOP/NetApp.png') }}" alt="NetApp"></div>
         <div class="sponsor"><img src="{{ asset('img/WORKSHOP/REHDAT.png') }}" alt="Red Hat"></div>
