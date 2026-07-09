@@ -9,7 +9,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="{{ asset('css/style.css') }}?v=2">
+<link rel="preload" as="image" href="{{ asset('img/Website-BG.png') }}" fetchpriority="high">
+<link rel="stylesheet" href="{{ asset('css/style.css') }}?v=6">
 </head>
 <body>
 
@@ -31,16 +32,6 @@
 
 <!-- HERO -->
 <header class="hero" id="top">
-  <div class="hero-icon hero-icon--top-right">
-    <img src="{{ asset('img/ICON 2.png') }}" alt="">
-  </div>
-
-  <div class="hero-icon hero-icon--bottom-right">
-    <img src="{{ asset('img/ICON 1.png') }}" alt="">
-  </div>
-  <div class="hero-icon hero-icon--bottom-left">
-    <img src="{{ asset('img/ICON 4.png') }}" alt="">
-  </div>
   <div class="hero-light hero-light--blue"></div>
   <div class="hero-light hero-light--pink"></div>
   <div class="container hero-content">
@@ -67,9 +58,6 @@
 
 <!-- OVERVIEW -->
 <section id="overview" class="reveal">
-  <div class="section-icon section-icon--top-right">
-    <!-- <img src="{{ asset('img/ICON 4.png') }}" alt=""> -->
-  </div>
   <div class="container">
     <!-- <p class="section-eyebrow">Topic</p> -->
     <div class="two-col">
@@ -103,9 +91,6 @@
 <!-- WHY ATTEND -->
 <!-- WHY ATTEND -->
 <section class="why reveal">
-  <div class="section-icon section-icon--bottom-right">
-    <img src="{{ asset('img/ICON 5.png') }}" alt="">
-  </div>
   <div class="container">
     <p class="section-eyebrow">Why Should You Attend</p>
     <h2 class="section-title">Insights, connections, and solutions for your transformation journey</h2>
@@ -126,9 +111,6 @@
 
 <!-- ABOUT -->
 <section class="reveal">
-  <div class="section-icon section-icon--top-right">
-    <img src="{{ asset('img/ICON 6.png') }}" alt="">
-  </div>
   <div class="container">
     <p class="section-eyebrow">About</p>
     <h2 class="section-title">Metrodata Solution Day</h2>
@@ -147,9 +129,6 @@
 
 <!-- AGENDA -->
 <section id="agenda" class="why reveal">
-  <div class="section-icon section-icon--bottom-right">
-    <img src="{{ asset('img/ICON 7.png') }}" alt="">
-  </div>
   <div class="container">
     <p class="section-eyebrow">Agenda</p>
     <h2 class="section-title">A full day of learning, exchange, and discovery</h2>
@@ -279,9 +258,6 @@
 
 <!-- SPONSORS -->
 <section id="sponsors" class="reveal">
-  <div class="section-icon section-icon--bottom-left">
-    <img src="{{ asset('img/ICON 3.png') }}" alt="">
-  </div>
   <div class="container">
     <p class="section-eyebrow">Sponsors</p>
     <h2 class="section-title">Our trusted technology partners</h2>
@@ -366,9 +342,6 @@
 <!-- REGISTER -->
 <!-- REGISTER -->
 <section id="register" class="register reveal">
-  <div class="section-icon section-icon--top-left">
-    <img src="{{ asset('img/ICON 1.png') }}" alt="">
-  </div>
   <div class="container">
     <p class="section-eyebrow">Register</p>
     <h2 class="section-title">Registration Form</h2>
