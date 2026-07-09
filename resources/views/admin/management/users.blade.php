@@ -57,6 +57,10 @@
 <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-purple-50 text-purple-700 border border-purple-200">
 <span class="w-1.5 h-1.5 rounded-full bg-purple-500"></span> Super Admin
 </span>
+@elseif ($u->role === 'client')
+<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-200">
+<span class="w-1.5 h-1.5 rounded-full bg-blue-500"></span> Client
+</span>
 @else
 <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-gray-50 text-gray-600 border border-gray-200">
 <span class="w-1.5 h-1.5 rounded-full bg-gray-400"></span> Admin
@@ -99,6 +103,7 @@
 <select id="userRole" name="role" required class="w-full px-4 py-2.5 text-sm border border-gray-200 rounded-xl bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500">
 <option value="admin">Admin</option>
 <option value="super_admin">Super Admin</option>
+<option value="client">Client</option>
 </select></div>
 </div>
 <div class="flex justify-end gap-2.5 px-6 py-4 border-t border-gray-100 bg-gray-50/50">

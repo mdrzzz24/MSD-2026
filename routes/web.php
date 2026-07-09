@@ -138,16 +138,12 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
 
     });
 
-    // ── Management (UTM & Referral - all admins, scoped) ──
+    // ── Management (UTM - all admins, scoped) ──
     Route::prefix('management')->name('management.')->group(function () {
         Route::get('/utm-sources', [App\Http\Controllers\AdminManagementController::class, 'utmSources'])->name('utm');
         Route::post('/utm-links', [App\Http\Controllers\AdminManagementController::class, 'storeUtmLink'])->name('utm-links.store');
         Route::put('/utm-links/{utmLink}', [App\Http\Controllers\AdminManagementController::class, 'updateUtmLink'])->name('utm-links.update');
         Route::delete('/utm-links/{utmLink}', [App\Http\Controllers\AdminManagementController::class, 'destroyUtmLink'])->name('utm-links.destroy');
-        Route::get('/referral-codes', [App\Http\Controllers\AdminManagementController::class, 'referralCodes'])->name('referrals');
-        Route::post('/referral-codes', [App\Http\Controllers\AdminManagementController::class, 'storeReferralCode'])->name('referral-codes.store');
-        Route::put('/referral-codes/{referralCode}', [App\Http\Controllers\AdminManagementController::class, 'updateReferralCode'])->name('referral-codes.update');
-        Route::delete('/referral-codes/{referralCode}', [App\Http\Controllers\AdminManagementController::class, 'destroyReferralCode'])->name('referral-codes.destroy');
 
         // QR Codes — all admins can view
         Route::get('/qr-codes', [App\Http\Controllers\AdminManagementController::class, 'qrCodes'])->name('qr');

@@ -110,6 +110,10 @@ class AdminController extends Controller
      */
     public function approve(Request $request, Registrant $registrant)
     {
+        if (auth()->user()->isClient()) {
+            return redirect()->back()->with('error', 'Clients do not have permission to approve registrants.');
+        }
+
         $plainPassword = Str::random(10);
 
         $registrant->update([
@@ -136,6 +140,10 @@ class AdminController extends Controller
      */
     public function reject(Request $request, Registrant $registrant)
     {
+        if (auth()->user()->isClient()) {
+            return redirect()->back()->with('error', 'Clients do not have permission to reject registrants.');
+        }
+
         $request->validate([
             'admin_notes' => ['required', 'string', 'max:500'],
         ], [
@@ -202,6 +210,11 @@ class AdminController extends Controller
      */
     public function edit(Registrant $registrant)
     {
+        if (auth()->user()->isClient()) {
+            return redirect()->route('admin.registrants.show', $registrant)
+                ->with('error', 'Clients do not have permission to edit registrants.');
+        }
+
         return view('admin.registrants.edit', compact('registrant'));
     }
 
@@ -210,6 +223,10 @@ class AdminController extends Controller
      */
     public function update(Request $request, Registrant $registrant)
     {
+        if (auth()->user()->isClient()) {
+            return redirect()->back()->with('error', 'Clients do not have permission to update registrants.');
+        }
+
         $validated = $request->validate([
             'name'         => ['required', 'string', 'max:255'],
             'first_name'   => ['nullable', 'string', 'max:255'],
@@ -236,6 +253,10 @@ class AdminController extends Controller
      */
     public function destroy(Registrant $registrant)
     {
+        if (auth()->user()->isClient()) {
+            return redirect()->back()->with('error', 'Clients do not have permission to delete registrants.');
+        }
+
         $name = $registrant->name;
         $registrant->workshops()->detach();
         $registrant->delete();
@@ -249,6 +270,10 @@ class AdminController extends Controller
      */
     public function resendCredentials(Registrant $registrant)
     {
+        if (auth()->user()->isClient()) {
+            return redirect()->back()->with('error', 'Clients do not have permission to resend credentials.');
+        }
+
         if ($registrant->status !== 'approved' || !$registrant->plain_password) {
             return redirect()->back()
                 ->with('error', 'This registrant has not been approved or has no password on record.');
@@ -267,6 +292,10 @@ class AdminController extends Controller
      */
     public function bulkApprove(Request $request)
     {
+        if (auth()->user()->isClient()) {
+            return redirect()->back()->with('error', 'Clients do not have permission to bulk approve.');
+        }
+
         $request->validate([
             'ids'   => ['required', 'array', 'min:1'],
             'ids.*' => ['exists:registrants,id'],
@@ -302,6 +331,10 @@ class AdminController extends Controller
      */
     public function bulkReject(Request $request)
     {
+        if (auth()->user()->isClient()) {
+            return redirect()->back()->with('error', 'Clients do not have permission to bulk reject.');
+        }
+
         $request->validate([
             'ids'         => ['required', 'array', 'min:1'],
             'ids.*'       => ['exists:registrants,id'],

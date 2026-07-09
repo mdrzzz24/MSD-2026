@@ -115,7 +115,7 @@
 
         <div class="relative z-10 text-center px-12 animate-fade-in login-content">
             <div class="mb-6">
-                <img src="{{ asset('img/logo-msd.svg') }}" alt="MSD" style="height:clamp(50px,8vw,90px);width:auto;filter:drop-shadow(0 0 20px rgba(0,212,255,.3))" class="mx-auto">
+                <img src="{{ asset('img/logo-msd.png') }}" alt="MSD" style="height:clamp(50px,8vw,90px);width:auto;filter:drop-shadow(0 0 20px rgba(0,212,255,.3))" class="mx-auto">
             </div>
             <h1 class="text-3xl xl:text-4xl font-extrabold leading-tight tracking-tight mb-3" style="background:linear-gradient(135deg,#fff 50%,#00d4ff 100%);-webkit-background-clip:text;background-clip:text;color:transparent;">
                 Winning with AI

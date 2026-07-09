@@ -27,16 +27,17 @@ class AuthController extends Controller
         $credentials = $request->only('email', 'password');
         $remember    = $request->boolean('remember');
 
-        // ── Try Admin login first ──
+        // ── Try Admin/Client login first ──
         if (Auth::attempt($credentials, $remember)) {
             $user = Auth::user();
 
-            if ($user->is_admin) {
+            // Allow admin users AND client users
+            if ($user->is_admin || $user->role === 'client') {
                 $request->session()->regenerate();
                 return redirect()->intended(route('admin.dashboard'));
             }
 
-            // Logged in but not admin — log out and try registrant
+            // Logged in but not admin/client — log out and try registrant
             Auth::logout();
         }
 

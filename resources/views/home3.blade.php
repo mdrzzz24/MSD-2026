@@ -573,7 +573,7 @@ input.field-error, select.field-error { border-color:#ef4444 !important; }
   <div class="container hero-content">
     <div class="hero-badge"><span class="dot-live"></span> Metrodata Proudly Present</div>
     <div class="hero-logo-row">
-      <img src="{{ asset('img/logo-msd.svg') }}" alt="MSD" style="height:clamp(50px,9vw,90px);width:auto">
+      <img src="{{ asset('img/logo-msd.png') }}" alt="MSD" style="height:clamp(50px,9vw,90px);width:auto">
     </div>
     <h1>Winning with AI: Build, Run, and Scale for Measurable Impact</h1>
     <p class="tagline">Accelerating AI for Real Business and Operational Value</p>

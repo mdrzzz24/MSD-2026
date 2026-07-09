@@ -220,6 +220,7 @@
                     @endif
 
                     {{-- Actions --}}
+                    @unless (Auth::user()->isClient())
                     <div class="px-6 py-4 bg-gray-50/50 border-t border-gray-100 flex items-center justify-between">
                         <div class="flex items-center gap-2">
                             <a href="{{ route('admin.registrants.edit', $registrant) }}"
@@ -259,6 +260,7 @@
                             @endif
                         </div>
                     </div>
+                    @endunless
                 </div>
             </div>
 

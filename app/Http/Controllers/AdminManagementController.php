@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Models\Registrant;
-use App\Models\ReferralCode;
 use App\Models\User;
 use App\Models\UtmLink;
 use Illuminate\Http\Request;
@@ -104,81 +103,14 @@ class AdminManagementController extends Controller
             ->with('success', "UTM Link <strong>{$name}</strong> deleted.");
     }
 
-    // ── Referral Codes (Management + Tracking) ──
-
-    public function referralCodes()
-    {
-        $user = auth()->user();
-
-        // Managed codes — scope by admin unless super_admin
-        $referralCodes = ReferralCode::when($user->role !== 'super_admin', fn($q) => $q->where('created_by', $user->id))
-            ->orderBy('created_at', 'desc')
-            ->get();
-
-        // Also show registrant-submitted codes not in the managed list (all, not scoped)
-        $unmanagedCodes = Registrant::whereNotNull('referral_code')
-            ->where('referral_code', '!=', '')
-            ->whereNotIn('referral_code', ReferralCode::pluck('code'))
-            ->selectRaw('referral_code, COUNT(*) as total, COUNT(CASE WHEN checked_in_at IS NOT NULL THEN 1 END) as checked_in')
-            ->groupBy('referral_code')
-            ->orderByDesc('total')
-            ->get();
-
-        return view('admin.management.referrals', compact('referralCodes', 'unmanagedCodes'));
-    }
-
-    public function storeReferralCode(Request $request)
-    {
-        $request->validate([
-            'code'        => ['required', 'string', 'max:50', 'unique:referral_codes,code'],
-            'owner_name'  => ['nullable', 'string', 'max:255'],
-            'description' => ['nullable', 'string', 'max:1000'],
-            'max_uses'    => ['nullable', 'integer', 'min:0'],
-        ]);
-
-        ReferralCode::create(array_merge($request->all(), ['created_by' => auth()->id()]));
-
-        return redirect()->route('admin.management.referrals')
-            ->with('success', "Referral code <strong>{$request->code}</strong> created.");
-    }
-
-    public function updateReferralCode(Request $request, ReferralCode $referralCode)
-    {
-        $user = auth()->user();
-        if ($user->role !== 'super_admin' && $referralCode->created_by !== $user->id) {
-            return redirect()->route('admin.management.referrals')->with('error', 'You can only edit your own referral codes.');
-        }
-
-        $request->validate([
-            'code'        => ['required', 'string', 'max:50', 'unique:referral_codes,code,' . $referralCode->id],
-            'owner_name'  => ['nullable', 'string', 'max:255'],
-            'description' => ['nullable', 'string', 'max:1000'],
-            'max_uses'    => ['nullable', 'integer', 'min:0'],
-        ]);
-
-        $referralCode->update($request->all());
-
-        return redirect()->route('admin.management.referrals')
-            ->with('success', "Referral code <strong>{$referralCode->code}</strong> updated.");
-    }
-
-    public function destroyReferralCode(ReferralCode $referralCode)
-    {
-        $user = auth()->user();
-        if ($user->role !== 'super_admin' && $referralCode->created_by !== $user->id) {
-            return redirect()->route('admin.management.referrals')->with('error', 'You can only delete your own referral codes.');
-        }
-
-        $code = $referralCode->code;
-        $referralCode->delete();
-        return redirect()->route('admin.management.referrals')
-            ->with('success', "Referral code <strong>{$code}</strong> deleted.");
-    }
-
     // ── QR Codes (list all approved with QR) ──
 
     public function qrCodes()
     {
+        if (auth()->user()->isClient()) {
+            return redirect()->route('admin.dashboard')->with('error', 'Clients do not have access to QR codes.');
+        }
+
         $registrants = Registrant::approved()
             ->whereNotNull('qr_token')
             ->latest()
@@ -201,14 +133,14 @@ class AdminManagementController extends Controller
             'name'     => ['required', 'string', 'max:255'],
             'email'    => ['required', 'email', 'max:255', 'unique:users'],
             'password' => ['required', 'string', 'min:6'],
-            'role'     => ['required', 'in:admin,super_admin'],
+            'role'     => ['required', 'in:admin,super_admin,client'],
         ]);
 
         User::create([
             'name'     => $request->name,
             'email'    => $request->email,
             'password' => Hash::make($request->password),
-            'is_admin' => true,
+            'is_admin' => $request->role !== 'client',
             'role'     => $request->role,
         ]);
 
@@ -221,13 +153,14 @@ class AdminManagementController extends Controller
         $request->validate([
             'name'  => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'max:255', 'unique:users,email,' . $user->id],
-            'role'  => ['required', 'in:admin,super_admin'],
+            'role'  => ['required', 'in:admin,super_admin,client'],
         ]);
 
         $data = [
-            'name'  => $request->name,
-            'email' => $request->email,
-            'role'  => $request->role,
+            'name'     => $request->name,
+            'email'    => $request->email,
+            'role'     => $request->role,
+            'is_admin' => $request->role !== 'client',
         ];
 
         if ($request->filled('password')) {

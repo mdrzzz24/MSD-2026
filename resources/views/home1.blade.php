@@ -6,11 +6,29 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Metrodata Solution Day 2026 — Winning with AI</title>
 <meta name="description" content="MSD 2026: Winning with AI — Build, Run, and Scale for Measurable Impact. Jakarta, 20 August 2026, Shangri-La Hotel." />
+
+{{-- Open Graph / Social Media Meta Tags --}}
+<meta property="og:type" content="website" />
+<meta property="og:title" content="Metrodata Solution Day 2026 — Winning with AI" />
+<meta property="og:description" content="MSD 2026: Winning with AI — Build, Run, and Scale for Measurable Impact. Jakarta, 20 August 2026, Shangri-La Hotel." />
+<meta property="og:image" content="{{ asset('img/header-sos.jpeg') }}" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta property="og:url" content="{{ url()->current() }}" />
+<meta property="og:site_name" content="Metrodata Solution Day 2026" />
+<meta property="og:locale" content="id_ID" />
+
+{{-- Twitter Card --}}
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="Metrodata Solution Day 2026 — Winning with AI" />
+<meta name="twitter:description" content="MSD 2026: Winning with AI — Build, Run, and Scale for Measurable Impact. Jakarta, 20 August 2026, Shangri-La Hotel." />
+<meta name="twitter:image" content="{{ asset('img/header-sos.jpeg') }}" />
+
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="preload" as="image" href="{{ asset('img/Website-BG.png') }}" fetchpriority="high">
-<link rel="stylesheet" href="{{ asset('css/style.css') }}?v=6">
+<link rel="stylesheet" href="{{ asset('css/style.css') }}?v=7">
 </head>
 <body>
 
@@ -37,7 +55,7 @@
   <div class="container hero-content">
     <p class="eyebrow"><strong>Metrodata</strong> Proudly Present</p>
     <div class="hero-title-group">
-      <img src="{{ asset('img/logo-msd.png') }}" alt="MSD" class="logo-glow" style="height:clamp(60px,10vw,120px);width:auto">
+      <img src="{{ asset('img/logo-msd.png') }}" alt="MSD" class="logo-glow" style="height:clamp(60px,10vw,100px);width:auto">
     </div>
     <h1>Winning with AI:<br>Build, Run, and Scale for Measurable Impact</h1>
     <p class="tagline">Accelerating AI for Real Business and Operational Value</p>
@@ -52,7 +70,7 @@
         Shangri-La Hotel
       </span>
     </div>
-    <button onclick="openRemindModal()" class="btn">Register Now</button>
+    <a href="#register" class="btn">Register Now</a>
   </div>
 </header>
 
@@ -303,7 +321,7 @@
         <div class="sponsor"><img src="{{ asset('img/GOLD/Fortinet.png') }}" alt="Fortinet"></div>
         <div class="sponsor"><img src="{{ asset('img/GOLD/HPE.png') }}" alt="HPE"></div>
         <div class="sponsor"><img src="{{ asset('img/GOLD/HP.png') }}" alt="HP Inc"></div>
-        <div class="sponsor"><img src="{{ asset('img/GOLD/Huawei Cloud.png') }}" alt="Huawei Cloud"></div>
+        <div class="sponsor"><img src="{{ asset('img/GOLD/Huawei.png') }}" alt="Huawei"></div>
         <div class="sponsor"><img src="{{ asset('img/GOLD/KONG.png') }}" alt="KONG"></div>
         <div class="sponsor"><img src="{{ asset('img/GOLD/LARK.png') }}" alt="Lark"></div>
         <div class="sponsor"><img src="{{ asset('img/GOLD/Proofpoint.png') }}" alt="Proofpoint"></div>
@@ -415,10 +433,6 @@
             <span>By submitting this form, I understand Metrodata will process my personal information in accordance with their <strong><a href="https://www.metrodata.co.id/privacy-policy" target="_blank">Privacy Notice</a></strong>. Additionally, I consent to my information being shared with <strong><a href="https://jovenindo.com/privacy-policy" target="_blank">Event Partners</a></strong> in accordance. I understand I may withdraw my consent or update my information at any time.</span>
           </label>
         </div>
-        <div class="field full" style="margin-top:4px">
-          <label>Referral Code (optional)</label>
-          <input name="referral_code" placeholder="Enter referral code if you have one">
-        </div>
         {{-- UTM hidden fields --}}
         <input type="hidden" name="utm_source" id="utm_source" value="">
         <input type="hidden" name="utm_medium" id="utm_medium" value="">
@@ -440,14 +454,12 @@
         <div class="countdown-sep">:</div>
         <div class="countdown-item"><span class="countdown-num" id="count-seconds">00</span><span class="countdown-lbl">Seconds</span></div>
       </div>
-      <!-- <p class="current-time" id="currentTime">--</p> -->
     </div>
         <h4>Registration Information</h4>
         <ul>
           <li>Metrodata Solution Day is <strong>free admission</strong> with mandatory RSVP.</li>
           <li>Access will be granted exclusively to participants who receive a <strong>confirmation email</strong>.</li>
           <li>Please have your confirmation email ready for verification upon arrival.</li>
-          <li>Enter a valid <strong>referral code</strong> to receive priority access.</li>
           <li><strong>Workshop participation</strong> requires separate registration due to limited seating.</li>
         </ul>
       </aside>
@@ -461,143 +473,7 @@
   </div>
 </footer>
 
-{{-- Remind Modal --}}
-<div id="remindModal" style="display:none; position:fixed; inset:0; z-index:9999; align-items:center; justify-content:center; background:rgba(0,0,0,0.6); backdrop-filter:blur(6px); padding:16px;">
-  <div style="background:rgba(10,26,74,.96); border:1px solid rgba(255,255,255,.15); border-radius:20px; box-shadow:0 25px 60px rgba(0,0,0,0.5); width:100%; max-width:420px; animation:fadeInUp 0.3s ease-out;">
-    <div style="padding:32px 32px 36px;">
-      <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:24px;">
-        <span style="color:var(--pink); font-weight:700; letter-spacing:.2em; font-size:13px; text-transform:uppercase;">Reminder</span>
-        <button onclick="closeRemindModal()" style="background:rgba(255,255,255,.1); border:0; color:#fff; font-size:18px; cursor:pointer; line-height:1; padding:4px 10px; border-radius:8px; transition:background .2s;"
-                onmouseover="this.style.background='rgba(255,255,255,.2)'" onmouseout="this.style.background='rgba(255,255,255,.1)'">&times;</button>
-      </div>
-      <div style="margin-bottom:28px; text-align:center;">
-        <p class="countdown-label" style="font-size:12px;">Registration Opens In</p>
-        <div class="countdown">
-          <div class="countdown-item">
-            <span class="countdown-num" id="remind-days">00</span>
-            <span class="countdown-lbl">Days</span>
-          </div>
-          <div class="countdown-sep">:</div>
-          <div class="countdown-item">
-            <span class="countdown-num" id="remind-hours">00</span>
-            <span class="countdown-lbl">Hrs</span>
-          </div>
-          <div class="countdown-sep">:</div>
-          <div class="countdown-item">
-            <span class="countdown-num" id="remind-minutes">00</span>
-            <span class="countdown-lbl">Min</span>
-          </div>
-        </div>
-      </div>
-      <form id="remindForm" style="display:grid;gap:16px;">
-        <div class="field">
-          <label>Enter Name</label>
-          <input required name="name" placeholder="John Doe">
-        </div>
-        <div class="field">
-          <label>Email Address</label>
-          <input required type="email" name="email" placeholder="your@email.com">
-        </div>
-        <div class="field">
-          <label>Company Name</label>
-          <input required name="company" placeholder="Your company">
-        </div>
-        <button type="button" id="remindBtn" class="btn btn-submit" style="margin-top:8px;">Remind me</button>
-      </form>
-    </div>
-  </div>
-</div>
-
-<script src="{{ asset('js/main.js') }}"></script>
-<script>
-function openRemindModal() {
-  document.getElementById('remindModal').style.display = 'flex';
-  document.body.style.overflow = 'hidden';
-  tickRemind();
-}
-function closeRemindModal() {
-  document.getElementById('remindModal').style.display = 'none';
-  document.body.style.overflow = '';
-}
-// Remind countdown
-function tickRemind() {
-  try {
-    const dEl = document.getElementById('remind-days');
-    const hEl = document.getElementById('remind-hours');
-    const mEl = document.getElementById('remind-minutes');
-    if (!dEl || !hEl || !mEl) return;
-    const target = new Date(2026, 6, 20).getTime();
-    const diff = target - Date.now();
-    if (diff <= 0) {
-      dEl.textContent = '00'; hEl.textContent = '00'; mEl.textContent = '00';
-      return;
-    }
-    dEl.textContent = String(Math.floor(diff / 86400000)).padStart(2,'0');
-    hEl.textContent = String(Math.floor((diff % 86400000) / 3600000)).padStart(2,'0');
-    mEl.textContent = String(Math.floor((diff % 3600000) / 60000)).padStart(2,'0');
-  } catch(e) { /* silent */ }
-}
-setTimeout(tickRemind, 0);
-setInterval(tickRemind, 10000);
-
-// Remind form submit + backdrop close — delegation on modal
-document.getElementById('remindModal').addEventListener('click', function(e) {
-  // Backdrop click
-  if (e.target === this) { closeRemindModal(); return; }
-  // Button click
-  const btn = e.target.closest('#remindBtn');
-  if (!btn) return;
-  const form = document.getElementById('remindForm');
-  if (!form.querySelector('[name="name"]').value.trim() ||
-      !form.querySelector('[name="email"]').value.trim() ||
-      !form.querySelector('[name="company"]').value.trim()) return;
-  btn.disabled = true;
-  btn.textContent = 'Sending...';
-  setTimeout(() => {
-    closeRemindModal();
-    showRemindToast();
-    btn.disabled = false;
-    btn.textContent = 'Remind me';
-    form.reset();
-  }, 600);
-});
-
-// Toast notification
-function showRemindToast() {
-  const existing = document.getElementById('remindToast');
-  if (existing) existing.remove();
-  const toast = document.createElement('div');
-  toast.id = 'remindToast';
-  toast.innerHTML =
-    '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" style="flex:none"><path d="M5 13l4 4L19 7"/></svg>' +
-    '<span>Thank you! We\'ll remind you when registration opens.</span>';
-  Object.assign(toast.style, {
-    position:'fixed', bottom:'32px', left:'50%',
-    transform:'translateX(-50%) translateY(20px)',
-    opacity:'0',
-    zIndex:'99999', display:'flex', alignItems:'center', gap:'12px',
-    background:'rgba(5,13,42,.95)', border:'1px solid var(--pink)',
-    borderRadius:'14px', padding:'16px 24px',
-    boxShadow:'0 12px 40px rgba(0,0,0,0.5)',
-    fontSize:'14px', fontWeight:'500', color:'#fff',
-    maxWidth:'480px', width:'90%',
-    transition:'opacity 0.4s ease-out, transform 0.4s ease-out',
-    backdropFilter:'blur(8px)',
-  });
-  toast.querySelector('svg').style.color = '#22c55e';
-  document.body.appendChild(toast);
-  // Trigger entrance animation
-  setTimeout(() => {
-    toast.style.transform = 'translateX(-50%) translateY(0)';
-    toast.style.opacity = '1';
-  }, 20);
-  setTimeout(() => {
-    toast.style.opacity = '0';
-    toast.style.transform = 'translateX(-50%) translateY(20px)';
-    setTimeout(() => toast.remove(), 400);
-  }, 3500);
-}
-</script>
+<script src="{{ asset('js/main.js') }}?v=9"></script>
 <style>
 .field-err { display:block; font-size:12px; color:#ef4444; margin-top:2px; min-height:0; }
 .field-err:empty { display:none; }

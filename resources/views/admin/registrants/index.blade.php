@@ -156,6 +156,7 @@
                     </div>
                     <div class="flex items-center gap-2">
                         {{-- Bulk action buttons --}}
+                        @unless (Auth::user()->isClient())
                         <div id="bulkActions" class="hidden items-center gap-2">
                             <span class="text-xs text-gray-500" id="selectedCount">0 selected</span>
                             <button onclick="bulkApprove()"
@@ -167,6 +168,7 @@
                                 Reject Selected
                             </button>
                         </div>
+                        @endunless
                         <div class="relative">
                             <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
@@ -182,9 +184,11 @@
                     <table class="w-full" id="registrantTable">
                         <thead>
                             <tr class="bg-gray-50/80">
+                                @unless (Auth::user()->isClient())
                                 <th class="px-5 py-3.5 text-left w-10">
                                     <input type="checkbox" id="selectAll" class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500">
                                 </th>
+                                @endunless
                                 <th class="px-5 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Name</th>
                                 <th class="px-5 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider hidden md:table-cell">Email</th>
                                 <th class="px-5 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider hidden lg:table-cell">Phone</th>
@@ -198,9 +202,11 @@
                         <tbody class="divide-y divide-gray-50">
                             @forelse ($registrants as $r)
                                 <tr class="hover:bg-gray-50/50 transition search-row">
+                                    @unless (Auth::user()->isClient())
                                     <td class="px-5 py-4">
                                         <input type="checkbox" class="registrant-checkbox rounded border-gray-300 text-indigo-600 focus:ring-indigo-500" value="{{ $r->id }}">
                                     </td>
+                                    @endunless
                                     <td class="px-5 py-4">
                                         <div class="flex items-center gap-3">
                                             <div class="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-400 to-purple-500 flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
@@ -264,6 +270,7 @@
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
                                                 </svg>
                                             </a>
+                                            @unless (Auth::user()->isClient())
                                             <a href="{{ route('admin.registrants.edit', $r) }}"
                                                title="Edit"
                                                class="p-1.5 text-gray-400 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition">
@@ -311,6 +318,7 @@
                                                     </svg>
                                                 </button>
                                             </form>
+                                            @endunless
                                         </div>
                                     </td>
                                 </tr>

@@ -269,7 +269,7 @@ function hideFormError() {
 
 // ── Countdown Timer ──
 (function() {
-  const regOpen = new Date('2026-07-20T00:00:00+07:00').getTime();
+  const regOpen = new Date('2026-07-13T00:00:00+07:00').getTime();
   const eventStart = new Date('2026-08-20T08:00:00+07:00').getTime();
 
   function updateCountdown() {
@@ -310,6 +310,27 @@ function hideFormError() {
   setInterval(updateCountdown, 1000);
 })();
 
+// ── Disable registration form until countdown ends ──
+(function() {
+  const form = document.getElementById('regForm');
+  if (!form) return;
+
+  const targetDate = new Date('2026-07-13T00:00:00+07:00').getTime();
+
+  function toggleForm() {
+    const now = Date.now();
+    const isOpen = now >= targetDate;
+
+    form.querySelectorAll('input, select, button').forEach(el => {
+      if (el.type !== 'hidden') el.disabled = !isOpen;
+    });
+  }
+
+  toggleForm();
+  // Re-check every second alongside countdown
+  setInterval(toggleForm, 1000);
+})();
+
 // ── Current System Time ──
 (function() {
   const el = document.getElementById('currentTime');
@@ -322,38 +343,3 @@ function hideFormError() {
   updateTime();
   setInterval(updateTime, 1000);
 })();
-
-// ── Disable registration form until countdown ends ──
-(function() {
-  const form = document.getElementById('regForm');
-  const notice = document.querySelector('.reg-notice');
-  if (!form) return;
-
-  const targetDate = new Date('2026-07-20T00:00:00+07:00').getTime();
-
-  function toggleForm() {
-    const now = Date.now();
-    const isOpen = now >= targetDate;
-
-    form.querySelectorAll('input, select, button').forEach(el => {
-      if (el.type !== 'hidden') el.disabled = !isOpen;
-    });
-
-    if (isOpen) {
-      form.removeEventListener('submit', preventSubmit);
-      if (notice) notice.style.display = 'none';
-    } else {
-      form.addEventListener('submit', preventSubmit);
-      if (notice) notice.style.display = '';
-    }
-  }
-
-  function preventSubmit(e) {
-    e.preventDefault();
-  }
-
-  toggleForm();
-  // Re-check every second alongside countdown
-  setInterval(toggleForm, 1000);
-})();
-
