@@ -6,18 +6,19 @@ use App\Models\TimeSlot;
 use App\Models\Floor;
 use App\Models\Room;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\DB;
 
 class AgendaSeeder extends Seeder
 {
     public function run(): void
     {
         // ── Disable FK checks for truncation ──
-        \DB::statement('SET FOREIGN_KEY_CHECKS=0');
+        DB::statement('SET FOREIGN_KEY_CHECKS=0');
         \App\Models\AgendaItem::truncate();
         TimeSlot::truncate();
         Room::truncate();
         Floor::truncate();
-        \DB::statement('SET FOREIGN_KEY_CHECKS=1');
+        DB::statement('SET FOREIGN_KEY_CHECKS=1');
 
         // ── Time Slots ──
         $slots = [

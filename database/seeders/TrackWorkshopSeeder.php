@@ -6,18 +6,19 @@ use App\Models\AgendaItem;
 use App\Models\Track;
 use App\Models\Workshop;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\DB;
 
 class TrackWorkshopSeeder extends Seeder
 {
     public function run(): void
     {
         // ── Disable FK checks for truncation ──
-        \DB::statement('SET FOREIGN_KEY_CHECKS=0');
+        DB::statement('SET FOREIGN_KEY_CHECKS=0');
         // Detach links first, then truncate
         AgendaItem::query()->update(['track_id' => null, 'workshop_id' => null]);
         Track::truncate();
         Workshop::truncate();
-        \DB::statement('SET FOREIGN_KEY_CHECKS=1');
+        DB::statement('SET FOREIGN_KEY_CHECKS=1');
 
         // ═══════════════════════════════════════════════════
         // 1. TRACKS
