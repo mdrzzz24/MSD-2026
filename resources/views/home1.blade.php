@@ -43,7 +43,14 @@
       <a href="#overview" class="active">Overview</a>
       <a href="#agenda">Agenda</a>
       <a href="#sponsors">Sponsors</a>
-      <a href="#register">Register</a>
+      @if (Auth::guard('registrant')->check())
+        <a href="{{ route('registrant.dashboard') }}">Dashboard</a>
+        <a href="#" onclick="event.preventDefault(); document.getElementById('logoutForm').submit();" style="color:#ef4444;">Logout</a>
+        <form id="logoutForm" action="{{ route('registrant.logout') }}" method="POST" style="display:none;">@csrf</form>
+      @else
+        <a href="#register">Register</a>
+        <a href="{{ route('login') }}" class="btn" style="padding:6px 18px;font-size:13px;">Login</a>
+      @endif
     </div>
   </div>
 </nav>
@@ -70,7 +77,11 @@
         Shangri-La Hotel
       </span>
     </div>
+    @unless (Auth::guard('registrant')->check())
     <a href="#register" class="btn">Register Now</a>
+    @else
+    <a href="{{ route('registrant.dashboard') }}" class="btn">My Dashboard</a>
+    @endunless
   </div>
 </header>
 
@@ -188,8 +199,8 @@
                 <td class="time">{{ $ts->label() }}</td>
                 @if ($fullRow)
                   <td class="full" colspan="{{ $rooms->count() }}">
-                    @if ($fullRow->category)
-                      <span class="tag {{ \App\Models\AgendaItem::categoryClass($fullRow->category) }}">{{ $fullRow->title }}</span>
+                    @if ($fullRow->category || $fullRow->agenda_type)
+                      <span class="tag {{ \App\Models\AgendaItem::categoryClass($fullRow->category, $fullRow->agenda_type) }}">{{ $fullRow->title }}</span>
                     @else
                       {{ $fullRow->title }}
                     @endif
@@ -221,8 +232,8 @@
                                     }
                                 }
                             }
-                            $tag = $item->category
-                                ? '<span class="tag ' . \App\Models\AgendaItem::categoryClass($item->category) . '">' . e($item->title) . '</span>'
+                            $tag = ($item->category || $item->agenda_type)
+                                ? '<span class="tag ' . \App\Models\AgendaItem::categoryClass($item->category, $item->agenda_type) . '">' . e($item->title) . '</span>'
                                 : e($item->title);
                             $cells[] = '<td' . $attrs . '>' . $tag . '</td>';
                         } else {
@@ -273,6 +284,213 @@
     @endif
   </div>
 </section>
+
+{{-- Agenda Detail Modal --}}
+<div id="agendaModal" style="display:none;position:fixed;inset:0;z-index:9999;align-items:center;justify-content:center;background:rgba(5,13,42,0.85);backdrop-filter:blur(8px);padding:20px;overflow-y:auto;">
+  <div style="background:linear-gradient(135deg,#fff 0%,#f8fafc 100%);border-radius:24px;box-shadow:0 30px 80px rgba(0,0,0,0.4);width:100%;max-width:600px;max-height:90vh;overflow-y:auto;animation:msdFadeIn 0.35s ease-out;border:1px solid rgba(255,255,255,0.2);">
+    {{-- Header bar with close --}}
+    <div style="position:sticky;top:0;z-index:10;display:flex;align-items:center;justify-content:space-between;padding:16px 20px;background:linear-gradient(135deg,#050d2a,#0a1a4a);border-radius:24px 24px 0 0;">
+      <div style="display:flex;align-items:center;gap:8px;">
+        <img src="{{ asset('img/logo-msd.png') }}" style="height:24px;width:auto;filter:brightness(0) invert(1);">
+        <span style="font-size:11px;font-weight:700;color:rgba(255,255,255,0.9);letter-spacing:0.5px;">METRODATA SOLUTION DAY 2026</span>
+      </div>
+      <button onclick="closeAgendaModal()" style="width:32px;height:32px;border-radius:50%;border:none;background:rgba(255,255,255,0.15);font-size:16px;cursor:pointer;color:#fff;display:flex;align-items:center;justify-content:center;transition:background 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.25)'" onmouseout="this.style.background='rgba(255,255,255,0.15)'">✕</button>
+    </div>
+
+    <div style="padding:28px 32px 32px;">
+      {{-- Date & Time + Room --}}
+      <div style="display:flex;flex-wrap:wrap;gap:16px;margin-bottom:12px;font-size:13px;color:var(--muted);">
+        <span id="modalDateTime" style="font-weight:600;color:var(--primary);"></span>
+        <span id="modalRoom"></span>
+      </div>
+
+      {{-- Type Badge --}}
+      <div style="margin-bottom:20px;">
+        <span id="modalTypeBadge" style="display:inline-block;font-size:11px;font-weight:700;text-transform:uppercase;padding:4px 12px;border-radius:20px;letter-spacing:0.5px;"></span>
+        <span id="modalCapacity" style="display:inline-block;font-size:12px;color:var(--muted);margin-left:10px;"></span>
+      </div>
+
+      {{-- Title --}}
+      <h2 style="font-size:24px;font-weight:800;color:#0f172a;margin-bottom:20px;line-height:1.35;" id="modalTitle"></h2>
+
+      {{-- Description --}}
+      <div id="modalDesc" style="font-size:14px;color:#475569;line-height:1.7;margin-bottom:24px;"></div>
+
+      {{-- Speakers --}}
+      <div id="modalSpeakers" style="margin-bottom:24px;padding:20px;background:#f8fafc;border-radius:16px;border:1px solid #e2e8f0;"></div>
+
+      {{-- Key Highlights --}}
+      <div id="modalHighlights" style="margin-bottom:24px;"></div>
+
+      {{-- Registration --}}
+      <div id="modalRegSection" style="border-top:2px solid #e2e8f0;padding-top:20px;margin-top:12px;"></div>
+    </div>
+  </div>
+</div>
+
+<style>
+@keyframes msdFadeIn{from{opacity:0;transform:scale(0.92) translateY(20px);}to{opacity:1;transform:scale(1) translateY(0);}}
+</style>
+
+@if (Auth::guard('registrant')->check())
+<script>
+// ── Agenda data for modal ──
+window._agendaData = {!! json_encode($agendaItems->keyBy('id'), JSON_UNESCAPED_SLASHES) !!};
+window._agendaRegistrations = {!! json_encode(
+    Auth::guard('registrant')->user()->agendaItems()->get()->mapWithKeys(fn($i) => [$i->id => $i->pivot->status]),
+    JSON_UNESCAPED_SLASHES
+) !!};
+window._agendaRegisterUrl = '{{ route('registrant.agenda.register', ['agendaItem' => '__ID__']) }}';
+window._agendaUnregisterUrl = '{{ route('registrant.agenda.unregister', ['agendaItem' => '__ID__']) }}';
+
+// ── Modal Functions ──
+function openAgendaModal(id) {
+    const item = window._agendaData[id];
+    if (!item) return;
+
+    document.getElementById('modalDateTime').textContent = '📅 ' + (item.date || '20 August 2026') + '  ·  🕐 ' + (item.start_time || '').substring(0,5) + ' – ' + (item.end_time || '').substring(0,5);
+    document.getElementById('modalRoom').textContent = '📍 Shangri-La Hotel' + (item.room ? ', ' + item.room + ' Room' : '');
+    document.getElementById('modalTitle').textContent = item.title;
+
+    // Type badge with fallback logic
+    const badge = document.getElementById('modalTypeBadge');
+    let type = item.agenda_type;
+    if (!type && item.category === 'workshop') type = 'workshop';
+    if (!type && item.track_id) type = 'track';
+    if (!type && item.workshop_id) type = 'workshop';
+    if (!type) type = 'session';
+    badge.textContent = type;
+    if (type === 'workshop') {
+        badge.style.background = 'linear-gradient(135deg,#fef3c7,#fde68a)';
+        badge.style.color = '#92400e';
+    } else if (type === 'track') {
+        badge.style.background = 'linear-gradient(135deg,#e0e7ff,#c7d2fe)';
+        badge.style.color = '#3730a3';
+    } else if (type === 'keynote') {
+        badge.style.background = 'linear-gradient(135deg,#dcfce7,#bbf7d0)';
+        badge.style.color = '#166534';
+    } else {
+        badge.style.background = 'linear-gradient(135deg,#f3f4f6,#e5e7eb)';
+        badge.style.color = '#4b5563';
+    }
+
+    // Capacity
+    const capEl = document.getElementById('modalCapacity');
+    if (item.capacity > 0) {
+        capEl.textContent = 'Capacity: ' + (item.approved_count || 0) + '/' + item.capacity;
+    } else {
+        capEl.textContent = '';
+    }
+
+    // Description
+    const descEl = document.getElementById('modalDesc');
+    descEl.innerHTML = item.description ? '<strong style="color:#0f172a;">Session Description</strong><br><br>' + item.description.replace(/\n/g,'<br>') : '';
+
+    // Speakers from relationship with all details
+    let speakersHtml = '';
+    if (item.speakers && item.speakers.length > 0) {
+        speakersHtml += '<h4 style="font-size:13px;font-weight:700;color:#0f172a;margin-bottom:12px;text-transform:uppercase;letter-spacing:0.5px;">🎤 Speaker' + (item.speakers.length > 1 ? 's' : '') + '</h4>';
+        item.speakers.forEach(function(sp) {
+            speakersHtml += '<div style="display:flex;align-items:flex-start;gap:14px;margin-bottom:20px;padding-bottom:16px;border-bottom:1px solid #f1f5f9;">';
+            if (sp.photo) {
+                var photoUrl = sp.photo;
+                if (!photoUrl.startsWith('http') && !photoUrl.startsWith('/')) {
+                    photoUrl = '/2026-Testing/public/storage/' + photoUrl;
+                }
+                speakersHtml += '<img src="'+photoUrl+'" style="width:52px;height:52px;border-radius:50%;object-fit:cover;border:3px solid #e2e8f0;flex-shrink:0;margin-top:2px;" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'flex\';">';
+                speakersHtml += '<div style="display:none;width:52px;height:52px;border-radius:50%;background:linear-gradient(135deg,#6366f1,#8b5cf6);align-items:center;justify-content:center;color:#fff;font-size:18px;font-weight:700;flex-shrink:0;margin-top:2px;">'+sp.name.charAt(0).toUpperCase()+'</div>';
+            } else {
+                speakersHtml += '<div style="width:52px;height:52px;border-radius:50%;background:linear-gradient(135deg,#6366f1,#8b5cf6);display:flex;align-items:center;justify-content:center;color:#fff;font-size:18px;font-weight:700;flex-shrink:0;margin-top:2px;">'+sp.name.charAt(0).toUpperCase()+'</div>';
+            }
+            speakersHtml += '<div style="flex:1;min-width:0;">';
+            speakersHtml += '<p style="font-weight:700;font-size:14px;color:#0f172a;">'+sp.name+'</p>';
+            speakersHtml += '<p style="font-size:12px;color:#64748b;margin-bottom:6px;">'+(sp.title||'')+(sp.company ? ' · '+sp.company : '')+'</p>';
+
+            // Presentation title
+            if (sp.pivot && sp.pivot.presentation_title) {
+                speakersHtml += '<p style="font-weight:600;font-size:13px;color:#4338ca;margin-bottom:4px;">📄 ' + sp.pivot.presentation_title + '</p>';
+            }
+            // Presentation description
+            if (sp.pivot && sp.pivot.presentation_description) {
+                speakersHtml += '<p style="font-size:12px;color:#64748b;line-height:1.6;margin-bottom:8px;">' + sp.pivot.presentation_description.replace(/\n/g,'<br>') + '</p>';
+            }
+            // Key highlights
+            if (sp.pivot && sp.pivot.key_highlights) {
+                speakersHtml += '<ul style="margin-top:4px;padding-left:16px;font-size:12px;color:#475569;line-height:1.9;">';
+                sp.pivot.key_highlights.split('\n').filter(function(l){return l.trim();}).forEach(function(l){
+                    speakersHtml += '<li style="padding-left:2px;">' + l.replace(/^\d+\.\s*/, '') + '</li>';
+                });
+                speakersHtml += '</ul>';
+            }
+            speakersHtml += '</div></div>';
+        });
+    }
+    document.getElementById('modalSpeakers').innerHTML = speakersHtml || '<p style="font-size:13px;color:#94a3b8;text-align:center;">No speaker assigned</p>';
+
+    // Hide global highlights section (now per-speaker)
+    document.getElementById('modalHighlights').innerHTML = '';
+
+    // Registration section
+    const regSection = document.getElementById('modalRegSection');
+    const regStatus = window._agendaRegistrations[id] || null;
+    const canReg = item.is_registrable && item.registration_open;
+
+    if (!canReg) {
+        regSection.innerHTML = '<p style="font-size:13px;color:#94a3b8;text-align:center;">Registration not available for this session.</p>';
+    } else if (regStatus === 'approved') {
+        regSection.innerHTML = '<div style="text-align:center;"><div style="display:inline-flex;align-items:center;gap:6px;padding:8px 20px;border-radius:20px;font-size:13px;font-weight:600;background:#d1fae5;color:#065f46;margin-bottom:12px;">✅ You are registered</div>' +
+            '<form action="'+window._agendaUnregisterUrl.replace('__ID__',id)+'" method="POST">@csrf<button style="padding:10px 24px;background:#fee2e2;color:#991b1b;font-weight:600;font-size:13px;border:none;border-radius:12px;cursor:pointer;">Cancel Registration</button></form></div>';
+    } else if (regStatus === 'pending') {
+        regSection.innerHTML = '<div style="text-align:center;"><div style="display:inline-flex;align-items:center;gap:6px;padding:8px 20px;border-radius:20px;font-size:13px;font-weight:600;background:#fef3c7;color:#92400e;margin-bottom:12px;">⏳ Pending Approval</div>' +
+            '<form action="'+window._agendaUnregisterUrl.replace('__ID__',id)+'" method="POST">@csrf<button style="padding:10px 24px;background:#fee2e2;color:#991b1b;font-weight:600;font-size:13px;border:none;border-radius:12px;cursor:pointer;">Cancel</button></form></div>';
+    } else if (regStatus === 'rejected') {
+        regSection.innerHTML = '<div style="text-align:center;"><div style="display:inline-flex;align-items:center;gap:6px;padding:8px 20px;border-radius:20px;font-size:13px;font-weight:600;background:#fee2e2;color:#991b1b;margin-bottom:12px;">❌ Rejected</div>' +
+            '<form action="'+window._agendaRegisterUrl.replace('__ID__',id)+'" method="POST">@csrf<button style="padding:12px 32px;background:linear-gradient(135deg,#4f46e5,#7c3aed);color:#fff;font-weight:700;font-size:14px;border:none;border-radius:12px;cursor:pointer;">🔄 Re-register</button></form></div>';
+    } else {
+        const capInfo = item.capacity > 0 ? '<div style="font-size:12px;color:var(--muted);margin-bottom:8px;">'+ (item.approved_count || 0) +'/'+ item.capacity +' seats filled</div>' : '';
+        regSection.innerHTML = '<div style="text-align:center;">'+capInfo+
+            '<form action="'+window._agendaRegisterUrl.replace('__ID__',id)+'" method="POST">@csrf<button style="padding:12px 40px;background:linear-gradient(135deg,#4f46e5,#7c3aed);color:#fff;font-weight:700;font-size:14px;border:none;border-radius:12px;cursor:pointer;box-shadow:0 4px 15px rgba(79,70,229,0.4);">Register Now</button></form></div>';
+    }
+
+    document.getElementById('agendaModal').style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+}
+
+function closeAgendaModal() {
+    document.getElementById('agendaModal').style.display = 'none';
+    document.body.style.overflow = '';
+}
+
+// Close on backdrop click
+document.getElementById('agendaModal').addEventListener('click', function(e) {
+    if (e.target === this) closeAgendaModal();
+});
+
+// Close on Escape
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') closeAgendaModal();
+});
+
+// ── Make registrable agenda items clickable ──
+document.addEventListener('DOMContentLoaded', function() {
+    const table = document.querySelector('#agenda table');
+    if (!table) return;
+    table.addEventListener('click', function(e) {
+        const cell = e.target.closest('td');
+        if (!cell) return;
+        // Find matching agenda item by title comparison
+        const title = cell.textContent.trim();
+        if (!title || title === '—') return;
+        for (const [id, item] of Object.entries(window._agendaData)) {
+            if (item.title === title && (item.is_registrable || (item.speakers && item.speakers.length > 0) || item.description)) {
+                openAgendaModal(id);
+                return;
+            }
+        }
+    });
+});
+</script>
+@endif
 
 <!-- SPONSORS -->
 <section id="sponsors" class="reveal">
@@ -357,7 +575,7 @@
   </div>
 </section> -->
 
-<!-- REGISTER -->
+@unless (Auth::guard('registrant')->check())
 <!-- REGISTER -->
 <section id="register" class="register reveal">
   <div class="container">
@@ -368,7 +586,7 @@
       <span>Registration is not yet open. Please check back on <strong>July 20, 2026</strong>.</span>
     </div> -->
     <div class="form-wrap">
-      <form id="regForm" class="form-grid" method="POST" action="{{ route('register.submit') }}">
+      <form id="regForm" class="form-grid" method="POST" action="{{ route('register.submit') }}" data-force-open="{{ $registrationForcedOpen ? 'true' : 'false' }}">
         @csrf
         <div class="field"><label>First Name</label><input required name="firstName" placeholder="First Name" /><span class="field-err" data-field="firstName"></span></div>
         <div class="field"><label>Last Name</label><input required name="lastName" placeholder="Last Name" /><span class="field-err" data-field="lastName"></span></div>
@@ -466,6 +684,7 @@
     </div>
   </div>
 </section>
+@endunless
 
 <footer>
   <div class="container">
@@ -473,7 +692,7 @@
   </div>
 </footer>
 
-<script src="{{ asset('js/main.js') }}?v=9"></script>
+<script src="{{ asset('js/main.js') }}?v=10"></script>
 <style>
 .field-err { display:block; font-size:12px; color:#ef4444; margin-top:2px; min-height:0; }
 .field-err:empty { display:none; }

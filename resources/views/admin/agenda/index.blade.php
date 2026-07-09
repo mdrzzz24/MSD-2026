@@ -93,6 +93,12 @@
                                     </span>
                                     <div class="cell-actions justify-center">
                                         <a href="{{ route('admin.agenda.edit', $fullRow) }}" class="bg-amber-100 text-amber-700 hover:bg-amber-200">Edit</a>
+                                        @if ($fullRow->is_registrable)
+                                        <form action="{{ route('admin.agenda.toggle-registration', $fullRow) }}" method="POST" style="display:inline">
+                                            @csrf
+                                            <button class="{{ $fullRow->registration_open ? 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200' : 'bg-red-100 text-red-600 hover:bg-red-200' }}">{{ $fullRow->registration_open ? 'Open' : 'Closed' }}</button>
+                                        </form>
+                                        @endif
                                         <form action="{{ route('admin.agenda.destroy', $fullRow) }}" method="POST" onsubmit="return confirm('Delete &quot;{{ $fullRow->title }}&quot;?')">
                                             @csrf @method('DELETE')
                                             <button class="bg-red-100 text-red-600 hover:bg-red-200">Delete</button>
@@ -142,6 +148,7 @@
                                         $mergeDown  = '<form action="' . route('admin.agenda.merge', [$item, 'dir' => 'down']) . '" method="POST" style="display:inline">' . csrf_field() . '<button type="submit" class="btn-merge bg-indigo-100 text-indigo-600 hover:bg-indigo-200" title="Merge down (rowspan+1)">↓</button></form>';
                                         $unRight = $item->colspan > 1 ? '<form action="' . route('admin.agenda.merge', [$item, 'dir' => 'unright']) . '" method="POST" style="display:inline">' . csrf_field() . '<button type="submit" class="btn-merge bg-amber-50 text-amber-400 hover:bg-amber-100" title="Unmerge right">←</button></form>' : '';
                                         $unDown  = $item->rowspan > 1 ? '<form action="' . route('admin.agenda.merge', [$item, 'dir' => 'undown']) . '" method="POST" style="display:inline">' . csrf_field() . '<button type="submit" class="btn-merge bg-indigo-50 text-indigo-400 hover:bg-indigo-100" title="Unmerge down">↑</button></form>' : '';
+                                        $toggleBtn = $item->is_registrable ? '<form action="' . route('admin.agenda.toggle-registration', $item) . '" method="POST" style="display:inline">' . csrf_field() . '<button class="' . ($item->registration_open ? 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200' : 'bg-red-100 text-red-600 hover:bg-red-200') . '">' . ($item->registration_open ? 'Open' : 'Closed') . '</button></form>' : '';
                                         $cells[] = '<td' . $attrs . '>
                                             <div class="cell-item">
                                                 <span class="cell-title">' . $tag . $badge . '</span>
@@ -152,6 +159,7 @@
                                                         <input type="hidden" name="_method" value="DELETE">
                                                         <button class="bg-red-100 text-red-600 hover:bg-red-200">Delete</button>
                                                     </form>
+                                                    ' . $toggleBtn . '
                                                     <a href="' . route('admin.agenda.create', ['room' => $rm, 'start_time' => $startT, 'end_time' => $endT]) . '" class="bg-indigo-50 text-indigo-600 hover:bg-indigo-100">+</a>
                                                     ' . $unRight . $mergeRight . $unDown . $mergeDown . '
                                                 </div>

@@ -49,4 +49,31 @@ class UtmLink extends Model
             ->whereNotNull('checked_in_at')
             ->count();
     }
+
+    public function approvedCount(): int
+    {
+        return \App\Models\Registrant::where('utm_source', $this->utm_source)
+            ->where('utm_medium', $this->utm_medium)
+            ->where('utm_campaign', $this->utm_campaign)
+            ->where('status', 'approved')
+            ->count();
+    }
+
+    public function pendingCount(): int
+    {
+        return \App\Models\Registrant::where('utm_source', $this->utm_source)
+            ->where('utm_medium', $this->utm_medium)
+            ->where('utm_campaign', $this->utm_campaign)
+            ->where('status', 'pending')
+            ->count();
+    }
+
+    public function rejectedCount(): int
+    {
+        return \App\Models\Registrant::where('utm_source', $this->utm_source)
+            ->where('utm_medium', $this->utm_medium)
+            ->where('utm_campaign', $this->utm_campaign)
+            ->where('status', 'rejected')
+            ->count();
+    }
 }

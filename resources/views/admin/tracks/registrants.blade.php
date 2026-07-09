@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="icon" type="image/png" href="{{ asset('img/metrodata.png') }}">
+    <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Registrants: {{ $track->title }} — {{ config('app.name') }}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script>tailwind.config={theme:{extend:{fontFamily:{sans:['Inter','system-ui','sans-serif']}}}}</script>
+</head>
+<body class="bg-gray-50 font-sans antialiased">
+<div class="flex min-h-screen">
+@include('admin.partials.sidebar')
+<main class="flex-1 lg:ml-64">
+<header class="sticky top-0 z-30 bg-white/80 backdrop-blur border-b border-gray-200">
+    <div class="flex items-center h-16 px-4 sm:px-6 lg:px-8 gap-4">
+        <a href="{{ route('admin.tracks.index') }}" class="inline-flex items-center gap-1.5 text-sm text-indigo-600 hover:text-indigo-800 font-medium">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>Tracks</a>
+        <span class="text-gray-300">/</span><h1 class="text-lg font-bold text-gray-900 truncate">{{ $track->title }}</h1>
+    </div>
+</header>
+<div class="p-4 sm:p-6 lg:p-8">
+    @if (session('success'))
+        <div class="flex items-start gap-3 bg-emerald-50 border border-emerald-200 text-emerald-800 px-5 py-4 rounded-2xl mb-6">{!! session('success') !!}</div>
+    @endif
+
+    @php $firstAgenda = $track->agendaItems()->first(); @endphp
+    <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 mb-6">
+        <div class="grid grid-cols-2 sm:grid-cols-5 gap-4">
+            <div><p class="text-xs text-gray-400 uppercase">Time</p><p class="text-sm font-semibold text-gray-900">{{ $firstAgenda ? $firstAgenda->timeLabel() : '—' }}</p></div>
+            <div><p class="text-xs text-gray-400 uppercase">Room</p><p class="text-sm font-semibold text-gray-900">{{ $firstAgenda?->room ?? '—' }}</p></div>
+            <div><p class="text-xs text-gray-400 uppercase">Capacity</p><p class="text-sm font-semibold text-gray-900">{{ $firstAgenda?->capacity ?: 'Unlimited' }}</p></div>
+            <div><p class="text-xs text-gray-400 uppercase">Approved</p><p class="text-sm font-bold text-indigo-600">{{ $allRegistrants->where('pivot.status','approved')->count() }}</p></div>
+            <div><p class="text-xs text-gray-400 uppercase">Status</p>
+                @if($firstAgenda)
+                    @if($firstAgenda->registration_open)<span class="inline-flex px-2 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700">Open</span>@else<span class="inline-flex px-2 py-0.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-600">Closed</span>@endif
+                @else
+                    <span class="text-sm text-gray-400">—</span>
+                @endif</div>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+        <div class="px-5 py-4 border-b border-gray-100 flex justify-between items-center">
+            <div><h2 class="text-base font-bold text-gray-900">Registrants</h2><p class="text-xs text-gray-500">Total: {{ $allRegistrants->count() }}</p></div>
+            <div class="flex gap-3 text-xs">
+                <span>App: <strong class="text-emerald-600">{{ $allRegistrants->where('pivot.status','approved')->count() }}</strong></span>
+                <span>Pend: <strong class="text-amber-600">{{ $allRegistrants->where('pivot.status','pending')->count() }}</strong></span>
+                <span>Rej: <strong class="text-red-600">{{ $allRegistrants->where('pivot.status','rejected')->count() }}</strong></span>
+            </div>
+        </div>
+        @if ($allRegistrants->isEmpty())
+            <div class="px-5 py-12 text-center text-gray-400 text-sm">No registrants yet.</div>
+        @else
+        <div class="overflow-x-auto"><table class="w-full">
+            <thead><tr class="bg-gray-50/80">
+                <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">#</th>
+                <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Name</th>
+                <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Email</th>
+                <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase hidden md:table-cell">Company</th>
+                <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Agenda Item</th>
+                <th class="px-4 py-3 text-center text-xs font-semibold text-gray-500 uppercase">Status</th>
+                @unless(Auth::user()->isClient())
+                <th class="px-4 py-3 text-center text-xs font-semibold text-gray-500 uppercase">Action</th>
+                @endunless
+            </tr></thead>
+            <tbody class="divide-y divide-gray-50">
+                @foreach ($allRegistrants->values() as $i => $r)
+                @php $ws = $r->pivot->status ?? 'pending'; @endphp
+                <tr class="hover:bg-gray-50/50">
+                    <td class="px-4 py-3"><span class="text-sm text-gray-400">{{ $i+1 }}</span></td>
+                    <td class="px-4 py-3"><a href="{{ route('admin.registrants.show', $r) }}" class="text-sm font-semibold text-indigo-600 hover:underline">{{ $r->display_name }}</a></td>
+                    <td class="px-4 py-3"><span class="text-sm text-gray-600">{{ $r->email }}</span></td>
+                    <td class="px-4 py-3 hidden md:table-cell"><span class="text-sm text-gray-600">{{ $r->company ?? '—' }}</span></td>
+                    <td class="px-4 py-3"><span class="text-xs text-gray-600">{{ $r->agenda_item_title ?? '—' }}</span></td>
+                    <td class="px-4 py-3 text-center">
+                        @if ($ws==='approved')<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700"><span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>Approved</span>
+                        @elseif ($ws==='rejected')<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-red-50 text-red-700"><span class="w-1.5 h-1.5 rounded-full bg-red-500"></span>Rejected</span>
+                        @else<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-50 text-amber-700"><span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>Pending</span>@endif
+                    </td>
+                    @unless(Auth::user()->isClient())
+                    <td class="px-4 py-3 text-center">
+                        <div class="flex justify-center gap-1">
+                            @if($ws==='pending')
+                                <form action="{{ route('admin.tracks.registrants.approve', [$track, $r->id]) }}" method="POST">@csrf<input type="hidden" name="agenda_item_id" value="{{ $r->agenda_item_id }}"><button class="px-2.5 py-1.5 text-xs font-medium rounded-lg bg-emerald-50 text-emerald-700 hover:bg-emerald-100" title="Approve">✓</button></form>
+                                <button onclick="showReject({{ $r->id }},'{{ e($r->display_name) }}',{{ $r->agenda_item_id }})" class="px-2.5 py-1.5 text-xs font-medium rounded-lg bg-red-50 text-red-700 hover:bg-red-100" title="Reject">✕</button>
+                            @elseif($ws==='approved')
+                                <button onclick="showReject({{ $r->id }},'{{ e($r->display_name) }}',{{ $r->agenda_item_id }})" class="px-2.5 py-1.5 text-xs font-medium rounded-lg bg-red-50 text-red-700 hover:bg-red-100" title="Reject">✕</button>
+                            @elseif($ws==='rejected')
+                                <form action="{{ route('admin.tracks.registrants.approve', [$track, $r->id]) }}" method="POST">@csrf<input type="hidden" name="agenda_item_id" value="{{ $r->agenda_item_id }}"><button class="px-2.5 py-1.5 text-xs font-medium rounded-lg bg-emerald-50 text-emerald-700 hover:bg-emerald-100" title="Approve">✓</button></form>
+                            @endif
+                        </div>
+                    </td>
+                    @endunless
+                </tr>
+                @endforeach
+            </tbody>
+        </table></div>
+        @endif
+    </div>
+</div>
+</main>
+</div>
+
+<div id="rejectModal" style="display:none;position:fixed;inset:0;z-index:9999;align-items:center;justify-content:center;background:rgba(0,0,0,0.4);backdrop-filter:blur(4px);padding:16px;">
+  <div style="background:#fff;border-radius:16px;width:100%;max-width:440px;padding:24px;">
+    <h3 class="text-lg font-bold text-gray-900 mb-2">Reject Registration</h3>
+    <p class="text-sm text-gray-500 mb-4">Reject <strong id="rejectName"></strong>?</p>
+    <form id="rejectForm" method="POST">@csrf
+        <input type="hidden" name="agenda_item_id" id="rejectAgendaId">
+        <textarea name="admin_notes" required rows="3" placeholder="Reason..." class="w-full px-3 py-2 border rounded-lg text-sm mb-4"></textarea>
+        <div class="flex gap-2">
+            <button type="button" onclick="closeReject()" class="flex-1 px-4 py-2 bg-gray-100 text-gray-700 text-sm font-semibold rounded-lg">Cancel</button>
+            <button type="submit" class="flex-1 px-4 py-2 bg-red-600 text-white text-sm font-semibold rounded-lg">Reject</button>
+        </div>
+    </form>
+  </div>
+</div>
+<script>
+function showReject(id,name,agendaId){
+    document.getElementById('rejectName').textContent=name;
+    document.getElementById('rejectAgendaId').value=agendaId;
+    document.getElementById('rejectForm').action='{{ route('admin.tracks.registrants.reject', [$track, '__ID__']) }}'.replace('__ID__',id);
+    document.getElementById('rejectModal').style.display='flex';
+}
+function closeReject(){document.getElementById('rejectModal').style.display='none';}
+document.getElementById('rejectModal').addEventListener('click',function(e){if(e.target===this)closeReject();});
+</script>
+</body>
+</html>

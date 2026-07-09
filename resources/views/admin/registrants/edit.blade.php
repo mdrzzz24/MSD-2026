@@ -144,20 +144,15 @@
                             </div>
                         </div>
 
-                        {{-- Organization Details --}}
+                        {{-- Company Details --}}
                         <div>
                             <h3 class="text-sm font-bold text-gray-800 mb-4 flex items-center gap-2">
                                 <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
                                 </svg>
-                                Organization Details
+                                Company Details
                             </h3>
                             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                <div>
-                                    <label for="organization" class="block text-sm font-semibold text-gray-700 mb-1.5">Organization</label>
-                                    <input type="text" id="organization" name="organization" value="{{ old('organization', $registrant->organization) }}"
-                                           class="w-full px-4 py-2.5 text-sm border border-gray-200 rounded-xl bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 focus:bg-white transition">
-                                </div>
                                 <div>
                                     <label for="company" class="block text-sm font-semibold text-gray-700 mb-1.5">Company</label>
                                     <input type="text" id="company" name="company" value="{{ old('company', $registrant->company) }}"

@@ -18,6 +18,16 @@ class QrScanController extends Controller
     }
 
     /**
+     * Show shareable QR code page — for admin to share with participant.
+     */
+    public function share($token)
+    {
+        $registrant = Registrant::where('qr_token', $token)->firstOrFail();
+
+        return view('admin.qr-share', compact('registrant'));
+    }
+
+    /**
      * Process check-in (mark as arrived).
      */
     public function checkin(Request $request, $token)

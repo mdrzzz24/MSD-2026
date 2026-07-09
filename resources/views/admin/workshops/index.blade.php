@@ -17,7 +17,9 @@
 <header class="sticky top-0 z-30 bg-white/80 backdrop-blur border-b border-gray-200">
     <div class="flex items-center justify-between h-16 px-4 sm:px-6 lg:px-8">
         <div><h1 class="text-lg font-bold text-gray-900">Manage Workshops</h1><p class="text-xs text-gray-500">Manage schedules, open/close registration</p></div>
+        @unless(Auth::user()->isClient())
         <a href="{{ route('admin.workshops.create') }}" class="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-medium bg-indigo-500 text-white rounded-xl hover:bg-indigo-600 shadow-sm shadow-indigo-200 transition"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>Create Workshop</a>
+        @endunless
     </div>
 </header>
 <div class="p-4 sm:p-6 lg:p-8">
@@ -30,10 +32,10 @@
             <table class="w-full">
                 <thead><tr class="bg-gray-50/80">
                     <th class="px-5 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase">Workshop</th>
-                    <th class="px-5 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase hidden md:table-cell">Room</th>
-                    <th class="px-5 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase">Date</th>
-                    <th class="px-5 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase">Time</th>
-                    <th class="px-5 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase hidden lg:table-cell">Registrants</th>
+                    @unless(Auth::user()->isClient())
+                    <th class="px-5 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase hidden lg:table-cell">Linked Agenda</th>
+                    @endunless
+                    <th class="px-5 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase hidden md:table-cell">Registrants</th>
                     <th class="px-5 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase">Status</th>
                     <th class="px-5 py-3.5 text-center text-xs font-semibold text-gray-500 uppercase">Actions</th>
                 </tr></thead>
@@ -41,15 +43,29 @@
                     @forelse ($workshops as $w)
                         <tr class="hover:bg-gray-50/50">
                             <td class="px-5 py-4"><p class="text-sm font-semibold text-gray-900">{{ $w->title }}</p>
-                                @if($w->description)<p class="text-xs text-gray-400 mt-0.5 truncate max-w-[200px]">{{ $w->description }}</p>@endif
+                                @if($w->description)<p class="text-xs text-gray-400 mt-0.5 truncate max-w-[250px]">{{ $w->description }}</p>@endif
                             </td>
-                            <td class="px-5 py-4 hidden md:table-cell"><span class="text-sm text-gray-600">{{ $w->room ?? '—' }}</span></td>
-                            <td class="px-5 py-4"><span class="text-sm text-gray-600 whitespace-nowrap">{{ $w->date->format('d M Y') }}</span></td>
-                            <td class="px-5 py-4"><span class="text-sm text-gray-600 whitespace-nowrap">{{ $w->timeRange() }}</span></td>
+                            @unless(Auth::user()->isClient())
                             <td class="px-5 py-4 hidden lg:table-cell">
-                                <a href="{{ route('admin.workshops.registrants', $w) }}" class="text-sm text-indigo-600 hover:text-indigo-800 font-medium">
-                                    {{ $w->registrationsCount() }}/{{ $w->capacity > 0 ? $w->capacity : '∞' }}
-                                </a>
+                                @php $linked = $w->agendaItems; @endphp
+                                @if ($linked->isNotEmpty())
+                                    @foreach ($linked as $ai)
+                                        <span class="inline-block px-2 py-0.5 rounded text-xs font-medium bg-indigo-50 text-indigo-700 mb-1">{{ $ai->title }}</span>
+                                    @endforeach
+                                @else
+                                    <span class="text-xs text-gray-400">—</span>
+                                @endif
+                            </td>
+                            @endunless
+                            <td class="px-5 py-4 hidden md:table-cell">
+                                <div class="flex items-center gap-2 text-xs">
+                                    <a href="{{ route('admin.workshops.registrants', $w) }}" class="font-bold text-indigo-600 hover:text-indigo-800">
+                                        {{ ($w->approved_count ?? 0) + ($w->pending_count ?? 0) + ($w->rejected_count ?? 0) }} total
+                                    </a>
+                                    <span class="text-emerald-600">✓{{ $w->approved_count ?? 0 }}</span>
+                                    <span class="text-amber-600">⏳{{ $w->pending_count ?? 0 }}</span>
+                                    <span class="text-red-500">✕{{ $w->rejected_count ?? 0 }}</span>
+                                </div>
                             </td>
                             <td class="px-5 py-4">
                                 @if ($w->registration_open)
@@ -60,6 +76,8 @@
                             </td>
                             <td class="px-5 py-4 text-center">
                                 <div class="flex justify-center gap-1.5">
+                                    <a href="{{ route('admin.workshops.registrants', $w) }}" class="px-2.5 py-1.5 text-xs font-medium rounded-lg bg-indigo-50 text-indigo-700 hover:bg-indigo-100 transition">View</a>
+                                    @unless(Auth::user()->isClient())
                                     <a href="{{ route('admin.workshops.edit', $w) }}" class="px-2.5 py-1.5 text-xs font-medium rounded-lg bg-amber-100 text-amber-700 hover:bg-amber-200 transition">Edit</a>
                                     <form action="{{ route('admin.workshops.toggle', $w) }}" method="POST">@csrf
                                         <button class="px-2.5 py-1.5 text-xs font-medium rounded-lg {{ $w->registration_open ? 'bg-red-100 text-red-600 hover:bg-red-200' : 'bg-emerald-100 text-emerald-600 hover:bg-emerald-200' }} transition">
@@ -69,6 +87,7 @@
                                     <form action="{{ route('admin.workshops.destroy', $w) }}" method="POST" onsubmit="return confirm('Delete workshop {{ $w->title }}?')">@csrf @method('DELETE')
                                         <button class="px-2.5 py-1.5 text-xs font-medium rounded-lg bg-gray-100 text-gray-600 hover:bg-gray-200 transition">Delete</button>
                                     </form>
+                                    @endunless
                                 </div>
                             </td>
                         </tr>

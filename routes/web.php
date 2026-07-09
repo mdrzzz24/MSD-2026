@@ -7,6 +7,8 @@ use App\Http\Controllers\EmailTemplateController;
 use App\Http\Controllers\RegistrantAuthController;
 use App\Http\Controllers\RegistrantDashboardController;
 use App\Http\Controllers\AdminWorkshopController;
+use App\Http\Controllers\AdminSpeakerController;
+use App\Http\Controllers\AdminTrackController;
 
 use App\Http\Controllers\AdminAgendaController;
 use App\Http\Controllers\AdminTimeSlotController;
@@ -19,7 +21,7 @@ Route::get('/', function () {
     return view('home');
 });
 Route::get('/home1', function () {
-    $agendaItems = AgendaItem::ordered()->get();
+    $agendaItems = AgendaItem::ordered()->with('speakers')->get();
     $timeSlots = \App\Models\TimeSlot::ordered()->get();
     $rooms = \App\Models\Room::ordered()->get();
     // Group items by time slot key
@@ -28,8 +30,12 @@ Route::get('/home1', function () {
         $key = $item->start_time . '-' . $item->end_time;
         $itemMap[$key][] = $item;
     }
-    return view('home1', compact('agendaItems', 'timeSlots', 'rooms', 'itemMap'));
-});
+    $registrationForcedOpen = \Illuminate\Support\Facades\Cache::get('registration_forced_open', false);
+    $workshops = \App\Models\Workshop::withCount(['registrants as approved_count' => function ($q) {
+        $q->where('registrant_workshop.status', 'approved');
+    }])->orderBy('date')->orderBy('start_time')->get();
+    return view('home1', compact('agendaItems', 'timeSlots', 'rooms', 'itemMap', 'registrationForcedOpen', 'workshops'));
+})->name('home1');
 Route::get('/home2', function () {
     return view('home2');
 });
@@ -44,6 +50,7 @@ Route::get('/register/success', [RegistrantAuthController::class, 'success'])->n
 // ── QR Scan (public) ──
 Route::get('/qr/{token}', [App\Http\Controllers\QrScanController::class, 'scan'])->name('registrant.qr-scan');
 Route::post('/qr/{token}/checkin', [App\Http\Controllers\QrScanController::class, 'checkin'])->name('registrant.qr-checkin');
+Route::get('/qr-view/{token}', [App\Http\Controllers\QrScanController::class, 'share'])->name('registrant.qr-share');
 
 // ── Admin auth routes (unified — handles Admin & Registrant via role selector) ──
 Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
@@ -61,6 +68,9 @@ Route::middleware('auth:registrant')->prefix('registrant')->name('registrant.')-
     Route::get('/dashboard', [RegistrantDashboardController::class, 'dashboard'])->name('dashboard');
     Route::post('/workshops/{workshop}/register', [RegistrantDashboardController::class, 'registerWorkshop'])->name('workshop.register');
     Route::post('/workshops/{workshop}/unregister', [RegistrantDashboardController::class, 'unregisterWorkshop'])->name('workshop.unregister');
+    // Agenda item registration
+    Route::post('/agenda/{agendaItem}/register', [RegistrantDashboardController::class, 'registerAgenda'])->name('agenda.register');
+    Route::post('/agenda/{agendaItem}/unregister', [RegistrantDashboardController::class, 'unregisterAgenda'])->name('agenda.unregister');
 });
 
 // ── Admin routes (protected by admin middleware) ──
@@ -85,6 +95,9 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     // ── Super Admin only sections ──
     Route::middleware('super_admin')->group(function () {
 
+    // Registration Form Toggle
+    Route::post('/toggle-registration', [AdminController::class, 'toggleRegistration'])->name('toggle-registration');
+
     // Email Templates
     Route::get('/templates', [EmailTemplateController::class, 'index'])->name('templates.index');
     Route::get('/templates/upload', [EmailTemplateController::class, 'uploadForm'])->name('templates.upload');
@@ -96,16 +109,13 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::delete('/templates/{template}', [EmailTemplateController::class, 'destroy'])->name('templates.destroy');
     Route::post('/templates/{template}/toggle', [EmailTemplateController::class, 'toggleActive'])->name('templates.toggle');
 
-    // Workshop management
-    Route::get('/workshops', [AdminWorkshopController::class, 'index'])->name('workshops.index');
+    // Workshop CRUD (super_admin only)
     Route::get('/workshops/create', [AdminWorkshopController::class, 'create'])->name('workshops.create');
     Route::post('/workshops', [AdminWorkshopController::class, 'store'])->name('workshops.store');
     Route::get('/workshops/{workshop}/edit', [AdminWorkshopController::class, 'edit'])->name('workshops.edit');
     Route::put('/workshops/{workshop}', [AdminWorkshopController::class, 'update'])->name('workshops.update');
     Route::delete('/workshops/{workshop}', [AdminWorkshopController::class, 'destroy'])->name('workshops.destroy');
     Route::post('/workshops/{workshop}/toggle', [AdminWorkshopController::class, 'toggleRegistration'])->name('workshops.toggle');
-    Route::get('/workshops/{workshop}/registrants', [AdminWorkshopController::class, 'registrants'])->name('workshops.registrants');
-
     // Agenda management
     Route::get('/agenda', [AdminAgendaController::class, 'index'])->name('agenda.index');
     Route::get('/agenda/create', [AdminAgendaController::class, 'create'])->name('agenda.create');
@@ -114,6 +124,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::put('/agenda/{agendum}', [AdminAgendaController::class, 'update'])->name('agenda.update');
     Route::delete('/agenda/{agendum}', [AdminAgendaController::class, 'destroy'])->name('agenda.destroy');
     Route::post('/agenda/{agendum}/merge', [AdminAgendaController::class, 'merge'])->name('agenda.merge');
+    Route::post('/agenda/{agendum}/toggle-registration', [AdminAgendaController::class, 'toggleRegistration'])->name('agenda.toggle-registration');
 
     // Time Slots management
     Route::get('/time-slots', [AdminTimeSlotController::class, 'index'])->name('time-slots.index');
@@ -136,7 +147,40 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::put('/floors/{floor}', fn() => redirect()->route('admin.rooms.index'));
     Route::delete('/floors/{floor}', fn() => redirect()->route('admin.rooms.index'));
 
+    // Speakers management
+    Route::get('/speakers', [AdminSpeakerController::class, 'index'])->name('speakers.index');
+    Route::post('/speakers', [AdminSpeakerController::class, 'store'])->name('speakers.store');
+    Route::put('/speakers/{speaker}', [AdminSpeakerController::class, 'update'])->name('speakers.update');
+    Route::delete('/speakers/{speaker}', [AdminSpeakerController::class, 'destroy'])->name('speakers.destroy');
+    Route::post('/speakers/{speaker}/toggle', [AdminSpeakerController::class, 'toggle'])->name('speakers.toggle');
+
+    // Tracks CRUD (super_admin only)
+    Route::post('/tracks', [AdminTrackController::class, 'store'])->name('tracks.store');
+    Route::put('/tracks/{track}', [AdminTrackController::class, 'update'])->name('tracks.update');
+    Route::delete('/tracks/{track}', [AdminTrackController::class, 'destroy'])->name('tracks.destroy');
+    Route::post('/tracks/{track}/toggle', [AdminTrackController::class, 'toggle'])->name('tracks.toggle');
+    // Track registrants approve/reject (super_admin + admin only)
+    Route::post('/tracks/{track}/registrants/{registrant}/approve', [AdminTrackController::class, 'approveRegistrant'])->name('tracks.registrants.approve');
+    Route::post('/tracks/{track}/registrants/{registrant}/reject', [AdminTrackController::class, 'rejectRegistrant'])->name('tracks.registrants.reject');
+
     });
+
+    // ── Workshop & Track Viewing — accessible by all admin roles (including client) ──
+    Route::get('/workshops', [AdminWorkshopController::class, 'index'])->name('workshops.index');
+    Route::get('/workshops/{workshop}/registrants', [AdminWorkshopController::class, 'registrants'])->name('workshops.registrants');
+    Route::get('/tracks', [AdminTrackController::class, 'index'])->name('tracks.index');
+    Route::get('/tracks/{track}/registrants', [AdminTrackController::class, 'registrants'])->name('tracks.registrants');
+
+    // ── Workshop Registrants Management (admin + super_admin) ──
+    Route::get('/workshop-registrants', [AdminWorkshopController::class, 'workshopRegistrants'])->name('workshop-registrants.index');
+    Route::post('/workshops/{workshop}/registrants/{registrant}/approve', [AdminWorkshopController::class, 'approveRegistrant'])->name('workshops.registrants.approve');
+    Route::post('/workshops/{workshop}/registrants/{registrant}/reject', [AdminWorkshopController::class, 'rejectRegistrant'])->name('workshops.registrants.reject');
+
+    // ── Agenda Registrants — accessible by all admin roles ──
+    Route::get('/agenda-registrants', [AdminAgendaController::class, 'registrantsIndex'])->name('agenda-registrants.index');
+    Route::get('/agenda-registrants/{agendum}', [AdminAgendaController::class, 'registrantsDetail'])->name('agenda-registrants.detail');
+    Route::post('/agenda-registrants/{agendum}/registrants/{registrant}/approve', [AdminAgendaController::class, 'registrantsApprove'])->name('agenda-registrants.approve');
+    Route::post('/agenda-registrants/{agendum}/registrants/{registrant}/reject', [AdminAgendaController::class, 'registrantsReject'])->name('agenda-registrants.reject');
 
     // ── Management (UTM - all admins, scoped) ──
     Route::prefix('management')->name('management.')->group(function () {

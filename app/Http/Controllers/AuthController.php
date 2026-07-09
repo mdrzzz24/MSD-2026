@@ -48,7 +48,7 @@ class AuthController extends Controller
 
             if ($registrant->isApproved()) {
                 $request->session()->regenerate();
-                return redirect()->intended(route('registrant.dashboard'));
+                return redirect()->intended(route('home1'));
             }
 
             // Not approved yet

@@ -317,9 +317,13 @@ function hideFormError() {
 
   const targetDate = new Date('2026-07-13T00:00:00+07:00').getTime();
 
+  function isForcedOpen() {
+    return form.getAttribute('data-force-open') === 'true';
+  }
+
   function toggleForm() {
     const now = Date.now();
-    const isOpen = now >= targetDate;
+    const isOpen = isForcedOpen() || now >= targetDate;
 
     form.querySelectorAll('input, select, button').forEach(el => {
       if (el.type !== 'hidden') el.disabled = !isOpen;

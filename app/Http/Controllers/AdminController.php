@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Response;
+use Illuminate\Support\Facades\Cache;
 
 class AdminController extends Controller
 {
@@ -173,7 +174,8 @@ class AdminController extends Controller
     public function show(Registrant $registrant)
     {
         $workshops = $registrant->workshops;
-        return view('admin.registrant-detail', compact('registrant', 'workshops'));
+        $agendaItems = $registrant->agendaItems;
+        return view('admin.registrant-detail', compact('registrant', 'workshops', 'agendaItems'));
     }
 
     /**
@@ -182,6 +184,10 @@ class AdminController extends Controller
     public function index(Request $request)
     {
         $status = $request->get('status', 'all');
+        $utmSource   = $request->get('utm_source');
+        $utmMedium   = $request->get('utm_medium');
+        $utmCampaign = $request->get('utm_campaign');
+        $direct      = $request->get('direct');
 
         $query = Registrant::latest();
 
@@ -193,15 +199,48 @@ class AdminController extends Controller
             $query->rejected();
         }
 
+        // Filter by UTM parameters
+        if ($utmSource) {
+            $query->where('utm_source', $utmSource);
+        }
+        if ($utmMedium) {
+            $query->where('utm_medium', $utmMedium);
+        }
+        if ($utmCampaign) {
+            $query->where('utm_campaign', $utmCampaign);
+        }
+
+        // Filter for Direct (no UTM)
+        if ($direct) {
+            $query->whereNull('utm_source');
+        }
+
         $registrants = $query->paginate(20)->withQueryString();
 
-        $total    = Registrant::count();
-        $pending  = Registrant::pending()->count();
-        $approved = Registrant::approved()->count();
-        $rejected = Registrant::rejected()->count();
+        // Stats — scoped to UTM filters if applied
+        $statsQuery = Registrant::query();
+        if ($utmSource) {
+            $statsQuery->where('utm_source', $utmSource);
+        }
+        if ($utmMedium) {
+            $statsQuery->where('utm_medium', $utmMedium);
+        }
+        if ($utmCampaign) {
+            $statsQuery->where('utm_campaign', $utmCampaign);
+        }
+        if ($direct) {
+            $statsQuery->whereNull('utm_source');
+        }
+
+        $total    = (clone $statsQuery)->count();
+        $pending  = (clone $statsQuery)->pending()->count();
+        $approved = (clone $statsQuery)->approved()->count();
+        $rejected = (clone $statsQuery)->rejected()->count();
+
+        $utmFilter = $utmSource ?: null;
 
         return view('admin.registrants.index', compact(
-            'registrants', 'total', 'pending', 'approved', 'rejected', 'status'
+            'registrants', 'total', 'pending', 'approved', 'rejected', 'status', 'utmFilter'
         ));
     }
 
@@ -233,8 +272,6 @@ class AdminController extends Controller
             'last_name'    => ['nullable', 'string', 'max:255'],
             'email'        => ['required', 'email', 'max:255'],
             'phone'        => ['nullable', 'string', 'max:50'],
-            'organization' => ['nullable', 'string', 'max:255'],
-            'job_title'    => ['nullable', 'string', 'max:255'],
             'company'      => ['nullable', 'string', 'max:255'],
             'industry'     => ['nullable', 'string', 'max:255'],
             'employees'    => ['nullable', 'string', 'max:50'],
@@ -397,7 +434,7 @@ class AdminController extends Controller
             // Header row
             fputcsv($handle, [
                 'ID', 'Name', 'First Name', 'Last Name', 'Email', 'Phone',
-                'Organization', 'Job Title', 'Company', 'Industry',
+                'Job Title', 'Company', 'Industry',
                 'Employees', 'Status', 'Unique Code', 'Notes', 'Admin Notes',
                 'Registered At', 'Processed At',
             ]);
@@ -410,7 +447,6 @@ class AdminController extends Controller
                     $r->last_name,
                     $r->email,
                     $r->phone,
-                    $r->organization,
                     $r->job_title,
                     $r->company,
                     $r->industry,
@@ -428,5 +464,19 @@ class AdminController extends Controller
         };
 
         return Response::stream($callback, 200, $headers);
+    }
+
+    /**
+     * Toggle registration form open/close (super admin only).
+     */
+    public function toggleRegistration()
+    {
+        $current = Cache::get('registration_forced_open', false);
+        $new = !$current;
+        Cache::put('registration_forced_open', $new);
+
+        $status = $new ? 'OPEN' : 'CLOSED (follows countdown)';
+        return redirect()->back()
+            ->with('success', "Registration form is now <strong>{$status}</strong>.");
     }
 }

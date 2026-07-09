@@ -12,7 +12,17 @@ class AdminWorkshopController extends Controller
      */
     public function index()
     {
-        $workshops = Workshop::orderBy('date')->orderBy('start_time')->get();
+        $workshops = Workshop::with('agendaItems')->withCount(['registrants as approved_count' => function ($q) {
+                $q->where('registrant_workshop.status', 'approved');
+            }])
+            ->withCount(['registrants as pending_count' => function ($q) {
+                $q->where('registrant_workshop.status', 'pending');
+            }])
+            ->withCount(['registrants as rejected_count' => function ($q) {
+                $q->where('registrant_workshop.status', 'rejected');
+            }])
+            ->orderBy('title')
+            ->get();
         return view('admin.workshops.index', compact('workshops'));
     }
 
@@ -31,18 +41,13 @@ class AdminWorkshopController extends Controller
     {
         $validated = $request->validate([
             'title'       => ['required', 'string', 'max:255'],
-            'description' => ['nullable', 'string', 'max:1000'],
-            'room'        => ['nullable', 'string', 'max:255'],
-            'date'        => ['required', 'date'],
-            'start_time'  => ['required'],
-            'end_time'    => ['required', 'after:start_time'],
-            'capacity'    => ['required', 'integer', 'min:0'],
+            'description' => ['nullable', 'string', 'max:2000'],
         ]);
 
         Workshop::create($validated + ['registration_open' => true]);
 
         return redirect()->route('admin.workshops.index')
-            ->with('success', "Workshop <strong>{$validated['title']}</strong> created successfully.");
+            ->with('success', "Workshop <strong>{$validated['title']}</strong> created. Link it to an agenda slot to set date, time & room.");
     }
 
     /**
@@ -60,18 +65,13 @@ class AdminWorkshopController extends Controller
     {
         $validated = $request->validate([
             'title'       => ['required', 'string', 'max:255'],
-            'description' => ['nullable', 'string', 'max:1000'],
-            'room'        => ['nullable', 'string', 'max:255'],
-            'date'        => ['required', 'date'],
-            'start_time'  => ['required'],
-            'end_time'    => ['required', 'after:start_time'],
-            'capacity'    => ['required', 'integer', 'min:0'],
+            'description' => ['nullable', 'string', 'max:2000'],
         ]);
 
         $workshop->update($validated);
 
         return redirect()->route('admin.workshops.index')
-            ->with('success', "Workshop <strong>{$workshop->title}</strong> updated successfully.");
+            ->with('success', "Workshop <strong>{$workshop->title}</strong> updated.");
     }
 
     /**
@@ -100,11 +100,92 @@ class AdminWorkshopController extends Controller
     }
 
     /**
-     * View registrants of a workshop.
+     * List all workshops with registrant counts (accessible by all admin roles).
+     */
+    public function workshopRegistrants()
+    {
+        $workshops = Workshop::withCount(['registrants as approved_count' => function ($q) {
+                $q->where('registrant_workshop.status', 'approved');
+            }])
+            ->withCount(['registrants as pending_count' => function ($q) {
+                $q->where('registrant_workshop.status', 'pending');
+            }])
+            ->withCount('waitlist')
+            ->orderBy('date')
+            ->orderBy('start_time')
+            ->get();
+
+        return view('admin.workshop-registrants.index', compact('workshops'));
+    }
+
+    /**
+     * View registrants of a workshop with full details.
      */
     public function registrants(Workshop $workshop)
     {
-        $registrants = $workshop->registrants()->orderBy('name')->get();
-        return view('admin.workshops.registrants', compact('workshop', 'registrants'));
+        $registrants = $workshop->registrants()
+            ->with(['workshops', 'workshopWaitlists'])
+            ->orderBy('name')
+            ->get();
+
+        return view('admin.workshop-registrants.detail', compact('workshop', 'registrants'));
+    }
+
+    /**
+     * Approve a registrant's workshop registration.
+     */
+    public function approveRegistrant(Workshop $workshop, $registrantId)
+    {
+        $workshop->registrants()->updateExistingPivot($registrantId, [
+            'status'       => 'approved',
+            'processed_by' => auth()->id(),
+            'processed_at' => now(),
+        ]);
+
+        // Also sync to linked agenda items
+        foreach ($workshop->agendaItems as $item) {
+            $registrant = \App\Models\Registrant::find($registrantId);
+            $existA = $registrant->agendaItems()->where('agenda_item_id', $item->id)->first();
+            if ($existA) {
+                $registrant->agendaItems()->updateExistingPivot($item->id, [
+                    'status' => 'approved', 'processed_by' => auth()->id(), 'processed_at' => now(),
+                ]);
+            }
+        }
+
+        return back()->with('success', 'Workshop registration approved.');
+    }
+
+    /**
+     * Reject a registrant's workshop registration.
+     */
+    public function rejectRegistrant(Request $request, Workshop $workshop, $registrantId)
+    {
+        $request->validate([
+            'admin_notes' => ['required', 'string', 'max:500'],
+        ], [
+            'admin_notes.required' => 'Rejection reason is required.',
+        ]);
+
+        $workshop->registrants()->updateExistingPivot($registrantId, [
+            'status'       => 'rejected',
+            'admin_notes'  => $request->input('admin_notes'),
+            'processed_by' => auth()->id(),
+            'processed_at' => now(),
+        ]);
+
+        // Also sync to linked agenda items
+        foreach ($workshop->agendaItems as $item) {
+            $registrant = \App\Models\Registrant::find($registrantId);
+            $existA = $registrant->agendaItems()->where('agenda_item_id', $item->id)->first();
+            if ($existA) {
+                $registrant->agendaItems()->updateExistingPivot($item->id, [
+                    'status' => 'rejected', 'admin_notes' => $request->input('admin_notes'),
+                    'processed_by' => auth()->id(), 'processed_at' => now(),
+                ]);
+            }
+        }
+
+        return back()->with('success', 'Workshop registration rejected.');
     }
 }

@@ -77,6 +77,24 @@
                 </div>
             @endif
 
+            {{-- UTM Filter Badge --}}
+            @if (request('utm_source') || request('direct'))
+            <div class="flex items-center gap-3 bg-indigo-50 border border-indigo-200 text-indigo-800 px-5 py-3 rounded-2xl">
+                <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>
+                <span class="text-sm">
+                    Filtered by UTM:
+                    @if (request('direct'))
+                        <strong>Direct</strong> (no UTM source)
+                    @else
+                        <strong>{{ request('utm_source') }}</strong>
+                        @if (request('utm_medium')) / <strong>{{ request('utm_medium') }}</strong> @endif
+                        @if (request('utm_campaign')) / <strong>{{ request('utm_campaign') }}</strong> @endif
+                    @endif
+                </span>
+                <a href="{{ route('admin.registrants.index') }}" class="ml-auto text-xs font-medium text-indigo-600 hover:text-indigo-800 hover:underline">Clear filter</a>
+            </div>
+            @endif
+
             {{-- Stats cards --}}
             <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
                 <a href="{{ route('admin.registrants.index', ['status' => 'all']) }}"
@@ -192,7 +210,7 @@
                                 <th class="px-5 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Name</th>
                                 <th class="px-5 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider hidden md:table-cell">Email</th>
                                 <th class="px-5 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider hidden lg:table-cell">Phone</th>
-                                <th class="px-5 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider hidden xl:table-cell">Organization</th>
+                                <th class="px-5 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider hidden xl:table-cell">Company</th>
                                 <th class="px-5 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider hidden sm:table-cell">Source</th>
                                 <th class="px-5 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Status</th>
                                 <th class="px-5 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider hidden sm:table-cell">Date</th>
@@ -230,7 +248,7 @@
                                         <span class="text-sm text-gray-600">{{ $r->phone ?? '—' }}</span>
                                     </td>
                                     <td class="px-5 py-4 hidden xl:table-cell">
-                                        <span class="text-sm text-gray-600">{{ $r->organization ?? '—' }}</span>
+                                        <span class="text-sm text-gray-600">{{ $r->company ?? '—' }}</span>
                                     </td>
                                     <td class="px-5 py-4 hidden sm:table-cell">
                                         @if ($r->utm_source)

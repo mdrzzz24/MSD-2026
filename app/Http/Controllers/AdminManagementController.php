@@ -18,7 +18,11 @@ class AdminManagementController extends Controller
         $user = auth()->user();
 
         $sources = Registrant::whereNotNull('utm_source')
-            ->selectRaw('utm_source, COUNT(*) as total, COUNT(CASE WHEN checked_in_at IS NOT NULL THEN 1 END) as checked_in')
+            ->selectRaw("utm_source, COUNT(*) as total, 
+                COUNT(CASE WHEN checked_in_at IS NOT NULL THEN 1 END) as checked_in,
+                COUNT(CASE WHEN status = 'approved' THEN 1 END) as approved_count,
+                COUNT(CASE WHEN status = 'pending' THEN 1 END) as pending_count,
+                COUNT(CASE WHEN status = 'rejected' THEN 1 END) as rejected_count")
             ->groupBy('utm_source')
             ->orderByDesc('total')
             ->get();
@@ -26,11 +30,17 @@ class AdminManagementController extends Controller
         // Add "Direct" row for registrants without UTM
         $directTotal = Registrant::whereNull('utm_source')->count();
         $directChecked = Registrant::whereNull('utm_source')->whereNotNull('checked_in_at')->count();
+        $directApproved = Registrant::whereNull('utm_source')->where('status', 'approved')->count();
+        $directPending = Registrant::whereNull('utm_source')->where('status', 'pending')->count();
+        $directRejected = Registrant::whereNull('utm_source')->where('status', 'rejected')->count();
         if ($directTotal > 0) {
             $sources->push((object) [
-                'utm_source' => null,
-                'total'      => $directTotal,
-                'checked_in' => $directChecked,
+                'utm_source'      => null,
+                'total'           => $directTotal,
+                'checked_in'      => $directChecked,
+                'approved_count'  => $directApproved,
+                'pending_count'   => $directPending,
+                'rejected_count'  => $directRejected,
             ]);
         }
 

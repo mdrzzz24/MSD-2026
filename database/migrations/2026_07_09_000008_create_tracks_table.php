@@ -1,0 +1,36 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    public function up(): void
+    {
+        if (!Schema::hasTable('tracks')) {
+            Schema::create('tracks', function (Blueprint $table) {
+                $table->id();
+                $table->string('title');
+                $table->text('description')->nullable();
+                $table->boolean('is_active')->default(true);
+                $table->timestamps();
+            });
+        }
+
+        Schema::table('agenda_items', function (Blueprint $table) {
+            if (!Schema::hasColumn('agenda_items', 'track_id')) {
+                $table->foreignId('track_id')->nullable()->after('workshop_id')->constrained()->nullOnDelete();
+            }
+        });
+    }
+
+    public function down(): void
+    {
+        Schema::table('agenda_items', function (Blueprint $table) {
+            $table->dropForeign(['track_id']);
+            $table->dropColumn('track_id');
+        });
+        Schema::dropIfExists('tracks');
+    }
+};

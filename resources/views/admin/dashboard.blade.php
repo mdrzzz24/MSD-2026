@@ -86,6 +86,30 @@
                 </div>
             @endif
 
+            {{-- Registration Form Toggle (Super Admin only) --}}
+            @if (Auth::user()->isSuperAdmin())
+            @php $forcedOpen = \Illuminate\Support\Facades\Cache::get('registration_forced_open', false); @endphp
+            <div class="flex items-center gap-4 bg-white rounded-2xl border border-gray-200 px-5 py-4 shadow-sm">
+                <div>
+                    <p class="text-sm font-bold text-gray-900">Registration Form</p>
+                    <p class="text-xs text-gray-500">
+                        Status: 
+                        @if ($forcedOpen)
+                            <span class="text-emerald-600 font-semibold">Forced OPEN</span> — form open regardless of countdown
+                        @else
+                            <span class="text-amber-600 font-semibold">Follows Countdown</span> — opens automatically on 13 July 2026
+                        @endif
+                    </p>
+                </div>
+                <form action="{{ route('admin.toggle-registration') }}" method="POST" class="ml-auto">
+                    @csrf
+                    <button type="submit" class="px-4 py-2 text-sm font-semibold rounded-xl transition {{ $forcedOpen ? 'bg-red-500 text-white hover:bg-red-600' : 'bg-emerald-500 text-white hover:bg-emerald-600' }}">
+                        {{ $forcedOpen ? 'Close Registration' : 'Force Open Registration' }}
+                    </button>
+                </form>
+            </div>
+            @endif
+
             {{-- ===== ROW 1: Welcome + Today's Stats ===== --}}
             <div class="grid grid-cols-1 lg:grid-cols-4 gap-4">
                 {{-- Welcome card --}}
@@ -372,26 +396,6 @@
                                 @if ($workshopCount > 0)
                                 <p class="text-[10px] text-indigo-400 mt-1">{{ round($workshopRegistrations/max($workshopCount,1)) }}/workshop avg</p>
                                 @endif
-                            </div>
-                        </div>
-                    </div>
-
-                    {{-- Check-in Stats --}}
-                    <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
-                        <h3 class="text-sm font-bold text-gray-900 mb-4 flex items-center gap-2">
-                            <svg class="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                            </svg>
-                            Check-In
-                        </h3>
-                        <div class="grid grid-cols-2 gap-4">
-                            <div class="bg-emerald-50 rounded-xl p-4 text-center">
-                                <p class="text-2xl font-bold text-emerald-700">{{ $checkedInToday }}</p>
-                                <p class="text-xs text-emerald-600 mt-1">Checked in today</p>
-                            </div>
-                            <div class="bg-blue-50 rounded-xl p-4 text-center">
-                                <p class="text-2xl font-bold text-blue-700">{{ $checkedInTotal }}</p>
-                                <p class="text-xs text-blue-600 mt-1">Total checked in</p>
                             </div>
                         </div>
                     </div>

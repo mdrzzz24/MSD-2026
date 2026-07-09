@@ -21,15 +21,20 @@
     @endif
     <form action="{{ route('admin.workshops.update', $workshop) }}" method="POST" class="space-y-5">
         @csrf @method('PUT')
-        <div><label class="block text-sm font-semibold text-gray-700 mb-1.5">Judul Workshop</label><input type="text" name="title" value="{{ old('title', $workshop->title) }}" required class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 focus:bg-white transition"></div>
-        <div><label class="block text-sm font-semibold text-gray-700 mb-1.5">Deskripsi</label><textarea name="description" rows="3" class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 focus:bg-white transition resize-y">{{ old('description', $workshop->description) }}</textarea></div>
-        <div><label class="block text-sm font-semibold text-gray-700 mb-1.5">Ruangan</label><input type="text" name="room" value="{{ old('room', $workshop->room) }}" class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 focus:bg-white transition"></div>
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div><label class="block text-sm font-semibold text-gray-700 mb-1.5">Tanggal</label><input type="date" name="date" value="{{ old('date', $workshop->date->format('Y-m-d')) }}" required class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 focus:bg-white transition"></div>
-            <div><label class="block text-sm font-semibold text-gray-700 mb-1.5">Jam Mulai</label><input type="time" name="start_time" value="{{ old('start_time', $workshop->start_time) }}" required class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 focus:bg-white transition"></div>
-            <div><label class="block text-sm font-semibold text-gray-700 mb-1.5">Jam Selesai</label><input type="time" name="end_time" value="{{ old('end_time', $workshop->end_time) }}" required class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 focus:bg-white transition"></div>
-        </div>
-        <div><label class="block text-sm font-semibold text-gray-700 mb-1.5">Kapasitas Peserta <span class="text-xs text-gray-400 font-normal">(0 = tidak terbatas)</span></label><input type="number" name="capacity" value="{{ old('capacity', $workshop->capacity) }}" min="0" required class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 focus:bg-white transition"></div>
+        <div><label class="block text-sm font-semibold text-gray-700 mb-1.5">Workshop Title</label><input type="text" name="title" value="{{ old('title', $workshop->title) }}" required class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 focus:bg-white transition"></div>
+        <div><label class="block text-sm font-semibold text-gray-700 mb-1.5">Description</label><textarea name="description" rows="4" class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 focus:bg-white transition resize-y">{{ old('description', $workshop->description) }}</textarea></div>
+        @if ($workshop->agendaItems()->exists())
+            <div class="bg-indigo-50 border border-indigo-200 rounded-xl p-4 text-sm text-indigo-700">
+                <strong>🔗 Linked to Agenda:</strong>
+                @foreach ($workshop->agendaItems as $ai)
+                    <span class="inline-block mt-1 px-2 py-0.5 bg-white rounded text-xs font-medium">{{ $ai->title }} ({{ $ai->timeLabel() }})</span>
+                @endforeach
+            </div>
+        @else
+            <div class="bg-amber-50 border border-amber-200 rounded-xl p-4 text-sm text-amber-700">
+                <strong>💡 Not linked to any agenda yet.</strong> Go to <strong>Agenda</strong> → Create/Edit to link this workshop.
+            </div>
+        @endif
         <button type="submit" class="w-full py-3 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-semibold rounded-xl shadow-lg shadow-indigo-500/25 transition-all text-sm">Update Workshop</button>
     </form>
 </div></div></div>

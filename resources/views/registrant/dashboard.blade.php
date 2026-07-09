@@ -67,33 +67,59 @@
                 </div>
             @endif
 
-            {{-- My Workshops --}}
+            {{-- My Sessions (Agenda Tracks & Workshops) --}}
             <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-                <div class="px-5 py-4 border-b border-gray-100">
-                    <h2 class="text-base font-bold text-gray-900">My Workshops</h2>
-                    <p class="text-xs text-gray-500">Workshops you have registered for</p>
+                <div class="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
+                    <div>
+                        <h2 class="text-base font-bold text-gray-900">My Sessions</h2>
+                        <p class="text-xs text-gray-500">Tracks & workshops you registered for via agenda</p>
+                    </div>
+                    <a href="{{ route('home1') }}" class="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold bg-gradient-to-r from-pink-500 to-rose-500 text-white rounded-full hover:from-pink-600 hover:to-rose-600 shadow-md shadow-pink-200 transition">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 01-1 1"/></svg>
+                        Back to Home
+                    </a>
                 </div>
-                @if ($myWorkshops->isEmpty())
-                    <div class="px-5 py-12 text-center text-gray-400 text-sm">You haven't registered for any workshops yet.</div>
+                @if ($myAgendaItems->isEmpty())
+                    <div class="px-5 py-12 text-center text-gray-400 text-sm">No sessions registered yet.</div>
                 @else
                     <div class="overflow-x-auto">
                         <table class="w-full">
                             <thead><tr class="bg-gray-50/80">
-                                <th class="px-5 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase">Workshop</th>
-                                <th class="px-5 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase hidden sm:table-cell">Room</th>
-                                <th class="px-5 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase">Date</th>
+                                <th class="px-5 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase">Session</th>
+                                <th class="px-5 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase">Type</th>
                                 <th class="px-5 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase">Time</th>
+                                <th class="px-5 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase hidden sm:table-cell">Room</th>
+                                <th class="px-5 py-3.5 text-center text-xs font-semibold text-gray-500 uppercase">Status</th>
                                 <th class="px-5 py-3.5 text-center text-xs font-semibold text-gray-500 uppercase">Action</th>
                             </tr></thead>
                             <tbody class="divide-y divide-gray-50">
-                                @foreach ($myWorkshops as $w)
+                                @foreach ($myAgendaItems as $item)
+                                    @php $agStatus = $item->pivot->status ?? 'pending'; @endphp
                                     <tr class="hover:bg-gray-50/50">
-                                        <td class="px-5 py-4"><p class="text-sm font-semibold text-gray-900">{{ $w->title }}</p></td>
-                                        <td class="px-5 py-4 hidden sm:table-cell"><span class="text-sm text-gray-600">{{ $w->room ?? '—' }}</span></td>
-                                        <td class="px-5 py-4"><span class="text-sm text-gray-600">{{ $w->date->format('d M Y') }}</span></td>
-                                        <td class="px-5 py-4"><span class="text-sm text-gray-600">{{ $w->timeRange() }}</span></td>
+                                        <td class="px-5 py-4"><p class="text-sm font-semibold text-gray-900">{{ $item->title }}</p></td>
+                                        <td class="px-5 py-4">
+                                            @php
+                                                $type = $item->agenda_type
+                                                    ?: ($item->category === 'workshop' ? 'workshop' : null)
+                                                    ?: ($item->track_id ? 'track' : null)
+                                                    ?: ($item->workshop_id ? 'workshop' : null)
+                                                    ?: 'session';
+                                            @endphp
+                                            <span class="inline-flex px-2 py-0.5 rounded-full text-xs font-semibold {{ $type==='workshop'?'bg-amber-50 text-amber-700':($type==='track'?'bg-indigo-50 text-indigo-700':'bg-gray-100 text-gray-600') }}">{{ ucfirst($type) }}</span>
+                                        </td>
+                                        <td class="px-5 py-4"><span class="text-sm text-gray-600">{{ $item->timeLabel() }}</span></td>
+                                        <td class="px-5 py-4 hidden sm:table-cell"><span class="text-sm text-gray-600">{{ $item->room ?? '—' }}</span></td>
                                         <td class="px-5 py-4 text-center">
-                                            <form action="{{ route('registrant.workshop.unregister', $w) }}" method="POST" onsubmit="return confirm('Cancel registration for {{ $w->title }}?')">
+                                            @if ($agStatus === 'approved')
+                                                <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700"><span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>Approved</span>
+                                            @elseif ($agStatus === 'rejected')
+                                                <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-red-50 text-red-700"><span class="w-1.5 h-1.5 rounded-full bg-red-500"></span>Rejected</span>
+                                            @else
+                                                <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-50 text-amber-700"><span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>Pending</span>
+                                            @endif
+                                        </td>
+                                        <td class="px-5 py-4 text-center">
+                                            <form action="{{ route('registrant.agenda.unregister', $item) }}" method="POST" onsubmit="return confirm('Cancel registration for {{ $item->title }}?')">
                                                 @csrf
                                                 <button class="px-2.5 py-1.5 text-xs font-medium rounded-lg bg-red-100 text-red-600 hover:bg-red-200 transition">Cancel</button>
                                             </form>
@@ -130,7 +156,7 @@
                                     <tr class="hover:bg-gray-50/50">
                                         <td class="px-5 py-4"><p class="text-sm font-semibold text-gray-900">{{ $w->title }}</p></td>
                                         <td class="px-5 py-4 hidden sm:table-cell"><span class="text-sm text-gray-600">{{ $w->room ?? '—' }}</span></td>
-                                        <td class="px-5 py-4"><span class="text-sm text-gray-600">{{ $w->date->format('d M Y') }}</span></td>
+                                        <td class="px-5 py-4"><span class="text-sm text-gray-600">{{ $w->date ? $w->date->format('d M Y') : '—' }}</span></td>
                                         <td class="px-5 py-4"><span class="text-sm text-gray-600">{{ $w->timeRange() }}</span></td>
                                         <td class="px-5 py-4 hidden lg:table-cell">
                                             @if ($w->capacity > 0)

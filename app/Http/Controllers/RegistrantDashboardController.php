@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Workshop;
+use App\Models\AgendaItem;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -16,10 +17,18 @@ class RegistrantDashboardController extends Controller
     {
         $registrant = Auth::guard('registrant')->user();
 
-        // Workshops the registrant has already signed up for
-        $myWorkshops = $registrant->workshops()->orderBy('date')->orderBy('start_time')->get();
+        // Workshops the registrant has already signed up for (with pivot status)
+        $myWorkshops = $registrant->workshops()
+            ->orderBy('date')
+            ->orderBy('start_time')
+            ->get();
 
-        // All open workshops where registration is open
+        // Agenda items (tracks/workshops) the registrant has registered for
+        $myAgendaItems = $registrant->agendaItems()
+            ->orderBy('start_time')
+            ->get();
+
+        // All open workshops where registration is open and not already registered
         $availableWorkshops = Workshop::where('registration_open', true)
             ->whereDate('date', '>=', now())
             ->orderBy('date')
@@ -27,11 +36,11 @@ class RegistrantDashboardController extends Controller
             ->get()
             ->filter(fn ($w) => !$registrant->workshops->contains($w->id));
 
-        return view('registrant.dashboard', compact('registrant', 'myWorkshops', 'availableWorkshops'));
+        return view('registrant.dashboard', compact('registrant', 'myWorkshops', 'myAgendaItems', 'availableWorkshops'));
     }
 
     /**
-     * Register for a workshop.
+     * Register for a workshop (pending approval).
      */
     public function registerWorkshop(Request $request, Workshop $workshop)
     {
@@ -41,30 +50,42 @@ class RegistrantDashboardController extends Controller
             return back()->with('error', 'Registration for this workshop is closed or full.');
         }
 
-        if ($registrant->workshops()->where('workshop_id', $workshop->id)->exists()) {
-            return back()->with('error', 'You are already registered for this workshop.');
+        // Check existing registration (any status)
+        $existing = $registrant->workshops()->where('workshop_id', $workshop->id)->first();
+        if ($existing) {
+            $status = $existing->pivot->status;
+            if ($status === 'approved') {
+                return back()->with('error', 'You are already registered for this workshop.');
+            } elseif ($status === 'pending') {
+                return back()->with('error', 'Your registration for this workshop is pending approval.');
+            }
+            // If rejected, allow re-registration
+            $registrant->workshops()->updateExistingPivot($workshop->id, ['status' => 'pending', 'admin_notes' => null, 'processed_by' => null, 'processed_at' => null]);
+            return back()->with('success', "Re-registered for workshop <strong>{$workshop->title}</strong>. Waiting for admin approval.");
         }
 
-        // Check for time conflict
-        $conflict = $registrant->workshops()->where(function ($q) use ($workshop) {
-            $q->where('date', $workshop->date)
-              ->where(function ($q2) use ($workshop) {
-                  $q2->whereBetween('start_time', [$workshop->start_time, $workshop->end_time])
-                     ->orWhereBetween('end_time', [$workshop->start_time, $workshop->end_time])
-                     ->orWhere(function ($q3) use ($workshop) {
-                         $q3->where('start_time', '<=', $workshop->start_time)
-                            ->where('end_time', '>=', $workshop->end_time);
-                     });
-              });
-        })->exists();
+        // Check for time conflict with approved workshops only
+        $conflict = $registrant->workshops()
+            ->wherePivot('status', 'approved')
+            ->where(function ($q) use ($workshop) {
+                $q->where('date', $workshop->date)
+                  ->where(function ($q2) use ($workshop) {
+                      $q2->whereBetween('start_time', [$workshop->start_time, $workshop->end_time])
+                         ->orWhereBetween('end_time', [$workshop->start_time, $workshop->end_time])
+                         ->orWhere(function ($q3) use ($workshop) {
+                             $q3->where('start_time', '<=', $workshop->start_time)
+                                ->where('end_time', '>=', $workshop->end_time);
+                         });
+                  });
+            })->exists();
 
         if ($conflict) {
             return back()->with('error', 'You are already registered for another workshop at the same time.');
         }
 
-        $registrant->workshops()->attach($workshop->id);
+        $registrant->workshops()->attach($workshop->id, ['status' => 'pending']);
 
-        return back()->with('success', "Successfully registered for workshop <strong>{$workshop->title}</strong>.");
+        return back()->with('success', "Successfully registered for workshop <strong>{$workshop->title}</strong>. Waiting for admin approval.");
     }
 
     /**
@@ -76,5 +97,91 @@ class RegistrantDashboardController extends Controller
         $registrant->workshops()->detach($workshop->id);
 
         return back()->with('success', "Successfully unregistered from workshop <strong>{$workshop->title}</strong>.");
+    }
+
+    /**
+     * Register for an agenda item (track/workshop).
+     */
+    public function registerAgenda(Request $request, AgendaItem $agendaItem)
+    {
+        $registrant = Auth::guard('registrant')->user();
+
+        if (!$agendaItem->is_registrable) {
+            return back()->with('error', 'This session is not open for registration.');
+        }
+
+        if (!$agendaItem->canRegister()) {
+            return back()->with('error', 'Registration for this session is closed or full.');
+        }
+
+        $existing = $registrant->agendaItems()->where('agenda_item_id', $agendaItem->id)->first();
+        if ($existing) {
+            $status = $existing->pivot->status;
+            if ($status === 'approved') {
+                return back()->with('error', 'You are already registered for this session.');
+            } elseif ($status === 'pending') {
+                return back()->with('error', 'Your registration for this session is pending approval.');
+            }
+            // Re-register if rejected
+            $registrant->agendaItems()->updateExistingPivot($agendaItem->id, ['status' => 'pending', 'admin_notes' => null, 'processed_by' => null, 'processed_at' => null]);
+            return back()->with('success', "Re-registered for <strong>{$agendaItem->title}</strong>. Waiting for approval.");
+        }
+
+        // Check time conflict with approved agenda items
+        $conflict = $registrant->agendaItems()
+            ->wherePivot('status', 'approved')
+            ->where(function ($q) use ($agendaItem) {
+                $q->where(function ($q2) use ($agendaItem) {
+                    $q2->where('start_time', '<', $agendaItem->end_time)
+                       ->where('end_time', '>', $agendaItem->start_time);
+                });
+            })->exists();
+
+        if ($conflict) {
+            return back()->with('error', 'You are already registered for another session at the same time.');
+        }
+
+        $registrant->agendaItems()->attach($agendaItem->id, ['status' => 'pending']);
+
+        // Also register for linked workshop if exists
+        $workshopId = $agendaItem->workshop_id;
+        // Fallback: try to find workshop by title match
+        if (!$workshopId && $agendaItem->agenda_type === 'workshop') {
+            $matchingWorkshop = \App\Models\Workshop::where('title', $agendaItem->title)->first();
+            if ($matchingWorkshop) {
+                $workshopId = $matchingWorkshop->id;
+                // Also backfill the agenda item
+                $agendaItem->update(['workshop_id' => $workshopId]);
+            }
+        }
+        if ($workshopId) {
+            $existW = $registrant->workshops()->where('workshop_id', $workshopId)->first();
+            if (!$existW) {
+                $registrant->workshops()->attach($workshopId, ['status' => 'pending']);
+            }
+        }
+
+        return back()->with('success', "Registered for <strong>{$agendaItem->title}</strong>. Waiting for admin approval.");
+    }
+
+    /**
+     * Unregister from an agenda item.
+     */
+    public function unregisterAgenda(Request $request, AgendaItem $agendaItem)
+    {
+        $registrant = Auth::guard('registrant')->user();
+        $registrant->agendaItems()->detach($agendaItem->id);
+
+        // Also unregister from linked workshop
+        $workshopId = $agendaItem->workshop_id;
+        if (!$workshopId && $agendaItem->agenda_type === 'workshop') {
+            $matchingWorkshop = \App\Models\Workshop::where('title', $agendaItem->title)->first();
+            if ($matchingWorkshop) $workshopId = $matchingWorkshop->id;
+        }
+        if ($workshopId) {
+            $registrant->workshops()->detach($workshopId);
+        }
+
+        return back()->with('success', "Unregistered from <strong>{$agendaItem->title}</strong>.");
     }
 }

@@ -29,28 +29,10 @@
 <div class="bg-emerald-50 border border-emerald-200 text-emerald-800 px-5 py-4 rounded-2xl text-sm">{!! session('success') !!}</div>
 @endif
 
-{{-- UTM Link Builder --}}
-<div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-<div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
-<h2 class="text-base font-bold text-gray-900">UTM Link Builder</h2>
-<button onclick="openLinkModal()" class="px-3 py-1.5 text-xs font-medium rounded-lg bg-indigo-500 text-white hover:bg-indigo-600 transition">+ New Link</button>
-</div>
-<div class="p-6">
-<p class="text-sm text-gray-500 mb-4">Create campaign links with UTM parameters to track registration sources.</p>
-<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 text-xs">
-<div class="bg-gray-50 rounded-lg p-3 text-center"><span class="text-gray-400">Source</span><p class="font-semibold text-gray-700 mt-0.5">Campaign platform</p></div>
-<div class="bg-gray-50 rounded-lg p-3 text-center"><span class="text-gray-400">Medium</span><p class="font-semibold text-gray-700 mt-0.5">Traffic type</p></div>
-<div class="bg-gray-50 rounded-lg p-3 text-center"><span class="text-gray-400">Campaign</span><p class="font-semibold text-gray-700 mt-0.5">Campaign name</p></div>
-<div class="bg-gray-50 rounded-lg p-3 text-center"><span class="text-gray-400">Content</span><p class="font-semibold text-gray-700 mt-0.5">Specific ad/version</p></div>
-<div class="bg-gray-50 rounded-lg p-3 text-center"><span class="text-gray-400">Auto-capture</span><p class="font-semibold text-gray-700 mt-0.5">Stored on registration</p></div>
-</div>
-</div>
-</div>
-
 {{-- UTM Links Table --}}
 @if ($utmLinks->count())
 <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-<div class="px-5 py-4 border-b border-gray-100"><h2 class="text-base font-bold text-gray-900">{{ Auth::user()->role === 'super_admin' ? 'All UTM Links' : 'My UTM Links' }}</h2></div>
+<div class="px-5 py-4 border-b border-gray-100 flex items-center justify-between"><h2 class="text-base font-bold text-gray-900">{{ Auth::user()->role === 'super_admin' ? 'All UTM Links' : 'My UTM Links' }}</h2><button onclick="openLinkModal()" class="px-3 py-1.5 text-xs font-medium rounded-lg bg-indigo-500 text-white hover:bg-indigo-600 transition">+ New Link</button></div>
 <div class="overflow-x-auto">
 <table class="w-full">
 <thead><tr class="bg-gray-50/80">
@@ -59,12 +41,18 @@
 <th class="px-5 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Full URL</th>
 <th class="px-5 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Created By</th>
 <th class="px-5 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Regs</th>
+@if (Auth::user()->isClient())
+<th class="px-5 py-3.5 text-center text-xs font-semibold text-gray-500 uppercase tracking-wider">Approved</th>
+<th class="px-5 py-3.5 text-center text-xs font-semibold text-gray-500 uppercase tracking-wider">Pending</th>
+<th class="px-5 py-3.5 text-center text-xs font-semibold text-gray-500 uppercase tracking-wider">Rejected</th>
+@else
 <th class="px-5 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Checked</th>
+@endif
 <th class="px-5 py-3.5 text-center text-xs font-semibold text-gray-500 uppercase tracking-wider">Actions</th>
 </tr></thead>
 <tbody class="divide-y divide-gray-50">
 @foreach ($utmLinks as $link)
-@php $regs = $link->registrationsCount(); $checked = $link->checkedInCount(); @endphp
+@php $regs = $link->registrationsCount(); $checked = $link->checkedInCount(); $approved = $link->approvedCount(); $pending = $link->pendingCount(); $rejected = $link->rejectedCount(); @endphp
 <tr class="hover:bg-gray-50/50">
 <td class="px-5 py-4"><span class="text-sm font-semibold text-gray-900">{{ $link->name }}</span></td>
 <td class="px-5 py-4">
@@ -81,10 +69,27 @@
 <td class="px-5 py-4">
 <span class="text-xs text-gray-500">{{ $link->creator?->name ?? '—' }}</span>
 </td>
-<td class="px-5 py-4 text-center"><span class="text-sm font-bold text-gray-900">{{ $regs }}</span></td>
+<td class="px-5 py-4 text-center">
+@if ($regs > 0)
+<a href="{{ route('admin.registrants.index', ['utm_source' => $link->utm_source, 'utm_medium' => $link->utm_medium, 'utm_campaign' => $link->utm_campaign]) }}" class="text-sm font-bold text-indigo-600 hover:text-indigo-800 hover:underline">{{ $regs }}</a>
+@else
+<span class="text-sm text-gray-400">0</span>
+@endif
+</td>
+@if (Auth::user()->isClient())
+<td class="px-5 py-4 text-center"><span class="text-sm {{ $approved > 0 ? 'text-emerald-600 font-bold' : 'text-gray-400' }}">{{ $approved }}</span></td>
+<td class="px-5 py-4 text-center"><span class="text-sm {{ $pending > 0 ? 'text-amber-600 font-bold' : 'text-gray-400' }}">{{ $pending }}</span></td>
+<td class="px-5 py-4 text-center"><span class="text-sm {{ $rejected > 0 ? 'text-red-600 font-bold' : 'text-gray-400' }}">{{ $rejected }}</span></td>
+@else
 <td class="px-5 py-4 text-center"><span class="text-sm {{ $checked > 0 ? 'text-emerald-600 font-bold' : 'text-gray-400' }}">{{ $checked }}</span></td>
+@endif
 <td class="px-5 py-4 text-center">
 <div class="flex items-center justify-center gap-1.5">
+@if ($regs > 0)
+<a href="{{ route('admin.registrants.index', ['utm_source' => $link->utm_source, 'utm_medium' => $link->utm_medium, 'utm_campaign' => $link->utm_campaign]) }}" class="p-1.5 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition" title="View Registrants">
+<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+</a>
+@endif
 <button onclick="editLink({{ $link->id }}, '{{ addslashes($link->name) }}', '{{ $link->base_url }}', '{{ $link->utm_source }}', '{{ $link->utm_medium }}', '{{ $link->utm_campaign }}', '{{ $link->utm_content ?? '' }}')" class="p-1.5 text-gray-400 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition" title="Edit">
 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
 </button>
@@ -110,7 +115,7 @@
 <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-10 text-center">
 <svg class="w-12 h-12 text-gray-300 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10"/></svg>
 <p class="text-gray-400 font-medium">No UTM links yet</p>
-<p class="text-xs text-gray-400 mt-1">Create your first UTM link to start tracking campaigns.</p>
+<p class="text-xs text-gray-400 mt-1">Click the button below to create your first UTM link.</p>
 <button onclick="openLinkModal()" class="mt-4 px-4 py-2 text-sm font-medium rounded-lg bg-indigo-500 text-white hover:bg-indigo-600 transition">+ Create UTM Link</button>
 </div>
 @endif
@@ -118,26 +123,61 @@
 {{-- Source breakdown --}}
 @if ($sources->count())
 <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-<div class="px-5 py-4 border-b border-gray-100"><h2 class="text-base font-bold text-gray-900">All Sources (Auto-tracked)</h2><p class="text-xs text-gray-500 mt-0.5">{{ $totals['all'] }} total · {{ $totals['checked'] }} checked in</p></div>
+<div class="px-5 py-4 border-b border-gray-100"><h2 class="text-base font-bold text-gray-900">All Sources (Auto-tracked)</h2><p class="text-xs text-gray-500 mt-0.5">{{ $totals['all'] }} total{{ Auth::user()->isClient() ? '' : ' · ' . $totals['checked'] . ' checked in' }}</p></div>
 <div class="overflow-x-auto">
 <table class="w-full">
 <thead><tr class="bg-gray-50/80">
 <th class="px-5 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Source</th>
 <th class="px-5 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Registrants</th>
+@if (Auth::user()->isClient())
+<th class="px-5 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Approved</th>
+<th class="px-5 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Pending</th>
+<th class="px-5 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Rejected</th>
+@else
 <th class="px-5 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Checked In</th>
 <th class="px-5 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Rate</th>
+@endif
+<th class="px-5 py-3.5 text-center text-xs font-semibold text-gray-500 uppercase tracking-wider">Actions</th>
 </tr></thead>
 <tbody class="divide-y divide-gray-50">
 @foreach ($sources as $src)
 <tr class="hover:bg-gray-50/50">
-<td class="px-5 py-4"><span class="text-sm font-semibold text-gray-900">{{ $src->utm_source ?: 'Direct' }}</span></td>
-<td class="px-5 py-4"><span class="text-sm text-gray-600">{{ $src->total }}</span></td>
+<td class="px-5 py-4">
+@if ($src->utm_source)
+<a href="{{ route('admin.registrants.index', ['utm_source' => $src->utm_source]) }}" class="text-sm font-semibold text-indigo-600 hover:text-indigo-800 hover:underline">{{ $src->utm_source }}</a>
+@else
+<a href="{{ route('admin.registrants.index', ['direct' => 1]) }}" class="text-sm font-semibold text-indigo-600 hover:text-indigo-800 hover:underline">Direct</a>
+@endif
+</td>
+<td class="px-5 py-4">
+@if ($src->total > 0)
+<a href="{{ $src->utm_source ? route('admin.registrants.index', ['utm_source' => $src->utm_source]) : route('admin.registrants.index', ['direct' => 1]) }}" class="text-sm font-bold text-indigo-600 hover:text-indigo-800 hover:underline">{{ $src->total }}</a>
+@else
+<span class="text-sm text-gray-400">0</span>
+@endif
+</td>
+@if (Auth::user()->isClient())
+<td class="px-5 py-4"><span class="text-sm {{ ($src->approved_count ?? 0) > 0 ? 'text-emerald-600 font-bold' : 'text-gray-400' }}">{{ $src->approved_count ?? 0 }}</span></td>
+<td class="px-5 py-4"><span class="text-sm {{ ($src->pending_count ?? 0) > 0 ? 'text-amber-600 font-bold' : 'text-gray-400' }}">{{ $src->pending_count ?? 0 }}</span></td>
+<td class="px-5 py-4"><span class="text-sm {{ ($src->rejected_count ?? 0) > 0 ? 'text-red-600 font-bold' : 'text-gray-400' }}">{{ $src->rejected_count ?? 0 }}</span></td>
+@else
 <td class="px-5 py-4"><span class="text-sm text-gray-600">{{ $src->checked_in }}</span></td>
 <td class="px-5 py-4">
 <div class="flex items-center gap-2">
 <div class="h-2 w-20 bg-gray-100 rounded-full overflow-hidden"><div class="h-full bg-emerald-400 rounded-full" style="width:{{ $src->total > 0 ? $src->checked_in/$src->total*100 : 0 }}%"></div></div>
 <span class="text-xs text-gray-500">{{ $src->total > 0 ? round($src->checked_in/$src->total*100) : 0 }}%</span>
 </div>
+</td>
+@endif
+<td class="px-5 py-4 text-center">
+@if ($src->total > 0)
+<a href="{{ $src->utm_source ? route('admin.registrants.index', ['utm_source' => $src->utm_source]) : route('admin.registrants.index', ['direct' => 1]) }}" class="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium rounded-lg bg-indigo-50 text-indigo-700 hover:bg-indigo-100 transition" title="View Registrants">
+<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+View
+</a>
+@else
+<span class="text-xs text-gray-400">—</span>
+@endif
 </td>
 </tr>
 @endforeach
@@ -160,19 +200,25 @@
 <input type="hidden" name="link_id" id="linkId">
 <div class="p-6 space-y-3">
 <div><label class="block text-sm font-semibold text-gray-700 mb-1">Link Name <span class="text-red-500">*</span></label>
-<input type="text" id="linkName" name="name" required placeholder="e.g. Google Ads - Branding" class="w-full px-4 py-2.5 text-sm border border-gray-200 rounded-xl bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"></div>
+<input type="text" id="linkName" name="name" required placeholder="e.g. Metrodata LinkedIn Campaign" class="w-full px-4 py-2.5 text-sm border border-gray-200 rounded-xl bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500">
+<p class="text-xs text-gray-400 mt-1">A recognizable name for this link, e.g. "Metrodata LinkedIn Ads" or "MSD Email Blast July".</p></div>
 <div><label class="block text-sm font-semibold text-gray-700 mb-1">Base URL <span class="text-red-500">*</span></label>
-<input type="url" id="linkBaseUrl" name="base_url" value="https://event.anda.com/home1" required class="w-full px-4 py-2.5 text-sm border border-gray-200 rounded-xl bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"></div>
+<input type="url" id="linkBaseUrl" name="base_url" value="https://event.metrodata.co.id/home1" required class="w-full px-4 py-2.5 text-sm border border-gray-200 rounded-xl bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500">
+<p class="text-xs text-gray-400 mt-1">The registration page URL. UTM parameters will be automatically appended to this URL.</p></div>
 <div class="grid grid-cols-3 gap-3">
 <div><label class="block text-sm font-semibold text-gray-700 mb-1">Source <span class="text-red-500">*</span></label>
-<input type="text" id="linkSource" name="utm_source" required placeholder="google" class="w-full px-4 py-2.5 text-sm border border-gray-200 rounded-xl bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"></div>
+<input type="text" id="linkSource" name="utm_source" required placeholder="metrodata" class="w-full px-4 py-2.5 text-sm border border-gray-200 rounded-xl bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500">
+<p class="text-xs text-gray-400 mt-1">Traffic origin: metrodata, linkedin, newsletter, partner_email, etc.</p></div>
 <div><label class="block text-sm font-semibold text-gray-700 mb-1">Medium <span class="text-red-500">*</span></label>
-<input type="text" id="linkMedium" name="utm_medium" required placeholder="cpc" class="w-full px-4 py-2.5 text-sm border border-gray-200 rounded-xl bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"></div>
+<input type="text" id="linkMedium" name="utm_medium" required placeholder="social" class="w-full px-4 py-2.5 text-sm border border-gray-200 rounded-xl bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500">
+<p class="text-xs text-gray-400 mt-1">Marketing medium: cpc, social, email, banner, referral, event_booth.</p></div>
 <div><label class="block text-sm font-semibold text-gray-700 mb-1">Campaign <span class="text-red-500">*</span></label>
-<input type="text" id="linkCampaign" name="utm_campaign" required placeholder="msd2026" class="w-full px-4 py-2.5 text-sm border border-gray-200 rounded-xl bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"></div>
+<input type="text" id="linkCampaign" name="utm_campaign" required placeholder="msd2026" class="w-full px-4 py-2.5 text-sm border border-gray-200 rounded-xl bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500">
+<p class="text-xs text-gray-400 mt-1">Campaign identifier: msd2026, metrodata_summit, soltius_webinar, etc.</p></div>
 </div>
 <div><label class="block text-sm font-semibold text-gray-700 mb-1">Content (optional)</label>
-<input type="text" id="linkContent" name="utm_content" placeholder="e.g. banner-a, version-1" class="w-full px-4 py-2.5 text-sm border border-gray-200 rounded-xl bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"></div>
+<input type="text" id="linkContent" name="utm_content" placeholder="e.g. hero-banner, sidebar-cta" class="w-full px-4 py-2.5 text-sm border border-gray-200 rounded-xl bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500">
+<p class="text-xs text-gray-400 mt-1">Differentiate ad variations: hero-banner, sidebar-cta, email-button-a, etc.</p></div>
 </div>
 <div class="flex justify-end gap-2.5 px-6 py-4 border-t border-gray-100 bg-gray-50/50">
 <button type="button" onclick="closeLinkModal()" class="px-5 py-2.5 text-sm font-medium rounded-xl bg-gray-100 text-gray-700 hover:bg-gray-200 transition">Cancel</button>
@@ -189,7 +235,7 @@ document.getElementById('linkModalTitle').textContent = 'Create UTM Link';
 document.getElementById('linkForm').action = '{{ route("admin.management.utm-links.store") }}';
 document.getElementById('linkFormMethod').value = 'POST';
 ['linkId','linkName','linkBaseUrl','linkSource','linkMedium','linkCampaign','linkContent'].forEach(id => document.getElementById(id).value = '');
-document.getElementById('linkBaseUrl').value = 'https://event.anda.com/home1';
+document.getElementById('linkBaseUrl').value = 'https://event.metrodata.co.id/home1';
 document.getElementById('linkModal').classList.remove('hidden');
 document.getElementById('linkModal').classList.add('flex');
 }

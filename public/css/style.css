@@ -94,6 +94,14 @@ input,select,button,textarea{font-family:inherit}
   padding:6px 2px;border-bottom:2px solid transparent;transition:color .3s,border-color .3s;
 }
 .nav-links a:hover,.nav-links a.active{color:#fff;border-color:var(--pink)}
+.nav-login-btn{
+  display:inline-block;padding:6px 18px;border-radius:999px;
+  font-weight:600;font-size:13px;letter-spacing:.02em;
+  background:rgba(255,255,255,.1);color:#fff !important;
+  border:1px solid rgba(255,255,255,.25) !important;
+  transition:background .3s,border-color .3s;
+}
+.nav-login-btn:hover{background:rgba(255,255,255,.18) !important;border-color:rgba(255,255,255,.5) !important}
 .nav-toggle{display:none;background:transparent;border:0;color:#fff;font-size:24px;cursor:pointer}
 
 /* HERO */
@@ -403,7 +411,9 @@ td.full{background:rgba(59,91,255,.15);color:#c9d6ff;font-weight:600}
 .tag{display:inline-block;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:600}
 .tag.plat{background:#e0e7ff;color:#3730a3}
 .tag.gold{background:#fef3c7;color:#92400e}
-.tag.ws{background:#dcfce7;color:#166534}
+.tag.ws{background:#fef3c7;color:#92400e}
+.tag-track{background:#e0e7ff;color:#3730a3}
+.tag-keynote{background:#dcfce7;color:#166534}
 .tag-general{background:#dbeafe;color:#1e40af}
 .tag-break{background:#f3f4f6;color:#4b5563}
 

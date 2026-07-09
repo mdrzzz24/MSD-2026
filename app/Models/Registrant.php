@@ -132,6 +132,14 @@ class Registrant extends Authenticatable
         return route('registrant.qr-scan', $this->qr_token);
     }
 
+    /**
+     * Get the shareable QR view URL.
+     */
+    public function getQrShareUrlAttribute(): string
+    {
+        return route('registrant.qr-share', $this->qr_token);
+    }
+
     // ── Relationships ──
 
     public function workshops()
@@ -179,5 +187,15 @@ class Registrant extends Authenticatable
     public function referralCode()
     {
         return $this->belongsTo(ReferralCode::class);
+    }
+
+    /**
+     * Agenda items the registrant has signed up for.
+     */
+    public function agendaItems()
+    {
+        return $this->belongsToMany(AgendaItem::class, 'agenda_item_registrant')
+                    ->withTimestamps()
+                    ->withPivot(['status', 'admin_notes', 'processed_by', 'processed_at', 'id']);
     }
 }

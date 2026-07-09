@@ -27,8 +27,9 @@
         </header>
 
         <div class="p-4 sm:p-6 lg:p-8">
-            <div class="max-w-2xl">
-                <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+            <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
+                {{-- Main detail card --}}
+                <div class="xl:col-span-2 bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
                     {{-- Header card --}}
                     <div class="px-6 py-5 border-b border-gray-100 flex items-center gap-4">
                         <div class="w-12 h-12 rounded-full bg-gradient-to-br from-indigo-400 to-purple-500 flex items-center justify-center text-white text-lg font-bold flex-shrink-0">
@@ -80,10 +81,6 @@
                             <div class="bg-gray-50 rounded-xl p-4">
                                 <dt class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Job Title</dt>
                                 <dd class="text-sm font-medium text-gray-900">{{ $registrant->job_title ?? '—' }}</dd>
-                            </div>
-                            <div class="bg-gray-50 rounded-xl p-4">
-                                <dt class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Organization</dt>
-                                <dd class="text-sm font-medium text-gray-900">{{ $registrant->organization ?? '—' }}</dd>
                             </div>
                             <div class="bg-gray-50 rounded-xl p-4">
                                 <dt class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Company</dt>
@@ -152,72 +149,7 @@
                                 <dd class="text-sm text-gray-800">{{ $registrant->admin_notes }}</dd>
                             </div>
                         @endif
-
-                        @if ($registrant->processed_at)
-                            <p class="text-xs text-gray-400 text-right">
-                                Processed: {{ $registrant->processed_at->format('d M Y, H:i') }}
-                                @if ($registrant->status === 'approved' && $registrant->approver)
-                                    <br>by <strong>{{ $registrant->approver->name }}</strong>
-                                @elseif ($registrant->status === 'rejected' && $registrant->rejecter)
-                                    <br>by <strong>{{ $registrant->rejecter->name }}</strong>
-                                @endif
-                            </p>
-                        @endif
                     </div>
-
-                    {{-- Workshops --}}
-                    @if ($registrant->status === 'approved' && $workshops->count() > 0)
-                        <div class="border-t border-gray-100">
-                            <div class="px-6 py-4">
-                                <h3 class="text-sm font-bold text-gray-800 mb-3 flex items-center gap-2">
-                                    <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-                                    </svg>
-                                    Registered Workshops ({{ $workshops->count() }})
-                                </h3>
-                                <div class="flex flex-wrap gap-2">
-                                    @foreach ($workshops as $w)
-                                        <a href="{{ route('admin.workshops.registrants', $w) }}"
-                                           class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-indigo-50 text-indigo-700 rounded-lg hover:bg-indigo-100 transition">
-                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/>
-                                            </svg>
-                                            {{ $w->title }}
-                                        </a>
-                                    @endforeach
-                                </div>
-                            </div>
-                        </div>
-                    @endif
-
-                    {{-- QR Code --}}
-                    @if ($registrant->qr_token)
-                        <div class="border-t border-gray-100">
-                            <div class="px-6 py-4">
-                                <h3 class="text-sm font-bold text-gray-800 mb-3 flex items-center gap-2">
-                                    <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"/>
-                                    </svg>
-                                    QR Code
-                                </h3>
-                                <div class="flex items-center gap-4">
-                                    <img src="{{ $registrant->qr_code_url }}" alt="QR Code" class="w-28 h-28 rounded-lg border border-gray-200">
-                                    <div>
-                                        <p class="text-xs text-gray-500 mb-2">Scan for check-in</p>
-                                        <a href="{{ $registrant->qr_checkin_url }}" target="_blank"
-                                           class="text-xs text-indigo-600 hover:text-indigo-800 font-medium">
-                                            {{ $registrant->qr_checkin_url }}
-                                        </a>
-                                        @if ($registrant->checked_in_at)
-                                            <p class="text-xs text-emerald-600 font-semibold mt-2">
-                                                ✓ Checked in at {{ $registrant->checked_in_at->format('H:i, d M Y') }}
-                                            </p>
-                                        @endif
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    @endif
 
                     {{-- Actions --}}
                     @unless (Auth::user()->isClient())
@@ -262,29 +194,126 @@
                     </div>
                     @endunless
                 </div>
-            </div>
 
-            {{-- Quick stats card --}}
-            <div class="mt-6 grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div class="bg-white rounded-xl border border-gray-100 shadow-sm p-4">
-                    <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Unique Code</p>
-                    <p class="text-sm font-bold text-gray-900 font-mono">{{ $registrant->unique_code ?? '—' }}</p>
-                </div>
-                <div class="bg-white rounded-xl border border-gray-100 shadow-sm p-4">
-                    <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Registered</p>
-                    <p class="text-sm font-bold text-gray-900">{{ $registrant->created_at->format('d M Y, H:i') }}</p>
-                </div>
-                <div class="bg-white rounded-xl border border-gray-100 shadow-sm p-4">
-                    <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Processed</p>
-                    <p class="text-sm font-bold text-gray-900">{{ $registrant->processed_at?->format('d M Y, H:i') ?? '—' }}</p>
-                    @if ($registrant->status === 'approved' && $registrant->approver)
-                        <p class="text-xs text-gray-500 mt-1">by {{ $registrant->approver->name }}</p>
-                    @elseif ($registrant->status === 'rejected' && $registrant->rejecter)
-                        <p class="text-xs text-gray-500 mt-1">by {{ $registrant->rejecter->name }}</p>
+                {{-- Sidebar column --}}
+                <div class="xl:col-span-1 space-y-5">
+                    {{-- Quick stats --}}
+                    <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+                        <div class="px-5 py-4 border-b border-gray-100">
+                            <h3 class="text-sm font-bold text-gray-800">Quick Stats</h3>
+                        </div>
+                        <div class="p-5 space-y-4">
+                            <div>
+                                <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Unique Code</p>
+                                <p class="text-sm font-bold text-gray-900 font-mono">{{ $registrant->unique_code ?? '—' }}</p>
+                            </div>
+                            <div>
+                                <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Registered</p>
+                                <p class="text-sm font-bold text-gray-900">{{ $registrant->created_at->format('d M Y, H:i') }}</p>
+                            </div>
+                            <div>
+                                <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Processed</p>
+                                <p class="text-sm font-bold text-gray-900">{{ $registrant->processed_at?->format('d M Y, H:i') ?? '—' }}</p>
+                                @if ($registrant->status === 'approved' && $registrant->approver)
+                                    <p class="text-xs text-gray-500 mt-0.5">by {{ $registrant->approver->name }}</p>
+                                @elseif ($registrant->status === 'rejected' && $registrant->rejecter)
+                                    <p class="text-xs text-gray-500 mt-0.5">by {{ $registrant->rejecter->name }}</p>
+                                @endif
+                            </div>
+                    </div>
+
+                    {{-- Workshops --}}
+                    @if ($workshops->count() > 0)
+                    <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+                        <div class="px-5 py-4 border-b border-gray-100">
+                            <h3 class="text-sm font-bold text-gray-800 flex items-center gap-2">
+                                <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                                </svg>
+                                Workshops ({{ $workshops->count() }})
+                            </h3>
+                        </div>
+                        <div class="p-5">
+                            <div class="flex flex-wrap gap-2">
+                                @foreach ($workshops as $w)
+                                    <a href="{{ route('admin.workshops.registrants', $w) }}"
+                                       class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-indigo-50 text-indigo-700 rounded-lg hover:bg-indigo-100 transition">
+                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/>
+                                        </svg>
+                                        {{ $w->title }}
+                                        @php $pw = $w->pivot; @endphp
+                                        @if ($pw)
+                                            <span class="text-xs px-1.5 py-0.5 rounded-full {{ $pw->status === 'approved' ? 'bg-emerald-100 text-emerald-700' : ($pw->status === 'rejected' ? 'bg-red-100 text-red-600' : 'bg-amber-100 text-amber-700') }}">{{ $pw->status }}</span>
+                                        @endif
+                                    </a>
+                                @endforeach
+                            </div>
+                        </div>
+                    </div>
+                    @endif
+
+                    {{-- Agenda Sessions --}}
+                    @if ($agendaItems->count() > 0)
+                    <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+                        <div class="px-5 py-4 border-b border-gray-100">
+                            <h3 class="text-sm font-bold text-gray-800 flex items-center gap-2">
+                                <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                </svg>
+                                Sessions ({{ $agendaItems->count() }})
+                            </h3>
+                        </div>
+                        <div class="p-5">
+                            <div class="flex flex-wrap gap-2">
+                                @foreach ($agendaItems as $item)
+                                    <span class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-gray-50 text-gray-700 rounded-lg border border-gray-200">
+                                        {{ $item->title }}
+                                        @php $as = $item->pivot->status ?? 'pending'; @endphp
+                                        <span class="text-xs px-1.5 py-0.5 rounded-full {{ $as === 'approved' ? 'bg-emerald-100 text-emerald-700' : ($as === 'rejected' ? 'bg-red-100 text-red-600' : 'bg-amber-100 text-amber-700') }}">{{ $as }}</span>
+                                    </span>
+                                @endforeach
+                            </div>
+                        </div>
+                    </div>
+                    @endif
+
+                    {{-- QR Code --}}
+                    @if ($registrant->qr_token)
+                    <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+                        <div class="px-5 py-4 border-b border-gray-100">
+                            <h3 class="text-sm font-bold text-gray-800 flex items-center gap-2">
+                                <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"/>
+                                </svg>
+                                QR Code
+                            </h3>
+                        </div>
+                        <div class="p-5 text-center">
+                            <img src="{{ $registrant->qr_code_url }}" alt="QR Code" class="w-32 h-32 mx-auto rounded-lg border border-gray-200 mb-3">
+                            <div class="flex items-center gap-2">
+                                <input type="text" value="{{ $registrant->qr_share_url }}" readonly
+                                       class="text-xs text-indigo-600 bg-indigo-50 px-2 py-1.5 rounded-lg w-full border-0 cursor-text"
+                                       id="qrShareUrl">
+                                <button onclick="copyQrUrl()"
+                                        class="px-3 py-1.5 text-xs font-medium rounded-lg bg-indigo-500 text-white hover:bg-indigo-600 transition whitespace-nowrap flex-shrink-0">
+                                    Copy
+                                </button>
+                            </div>
+                            <a href="{{ $registrant->qr_share_url }}" target="_blank"
+                               class="inline-block text-xs text-indigo-600 hover:text-indigo-800 font-medium mt-2">
+                                Preview QR →
+                            </a>
+                            @if ($registrant->checked_in_at)
+                                <p class="text-xs text-emerald-600 font-semibold mt-2">
+                                    ✓ Checked in at {{ $registrant->checked_in_at->format('H:i, d M Y') }}
+                                </p>
+                            @endif
+                        </div>
+                    </div>
                     @endif
                 </div>
             </div>
-        </div>
     </main>
 </div>
 
@@ -296,6 +325,23 @@
             const orig = el.textContent;
             el.textContent = 'Copied!';
             setTimeout(() => el.textContent = orig, 1200);
+        });
+    }
+
+    function copyQrUrl() {
+        const el = document.getElementById('qrShareUrl');
+        if (!el) return;
+        navigator.clipboard.writeText(el.value).then(() => {
+            const btn = event.target;
+            const orig = btn.textContent;
+            btn.textContent = 'Copied!';
+            btn.classList.add('bg-emerald-500');
+            btn.classList.remove('bg-indigo-500', 'hover:bg-indigo-600');
+            setTimeout(() => {
+                btn.textContent = orig;
+                btn.classList.remove('bg-emerald-500');
+                btn.classList.add('bg-indigo-500', 'hover:bg-indigo-600');
+            }, 1500);
         });
     }
 </script>
