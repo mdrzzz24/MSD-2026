@@ -58,6 +58,7 @@
                 <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Name</th>
                 <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Email</th>
                 <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase hidden md:table-cell">Company</th>
+                <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase hidden lg:table-cell">Job Title</th>
                 <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Agenda Item</th>
                 <th class="px-4 py-3 text-center text-xs font-semibold text-gray-500 uppercase">Status</th>
                 @if (Auth::user()->canWrite())
@@ -72,6 +73,7 @@
                     <td class="px-4 py-3"><a href="{{ route('admin.registrants.show', $r) }}" class="text-sm font-semibold text-indigo-600 hover:underline">{{ $r->display_name }}</a></td>
                     <td class="px-4 py-3"><span class="text-sm text-gray-600">{{ $r->email }}</span></td>
                     <td class="px-4 py-3 hidden md:table-cell"><span class="text-sm text-gray-600">{{ $r->company ?? '—' }}</span></td>
+                    <td class="px-4 py-3 hidden lg:table-cell"><span class="text-sm text-gray-600">{{ $r->job_title ?? '—' }}</span></td>
                     <td class="px-4 py-3"><span class="text-xs text-gray-600">{{ $r->agenda_item_title ?? '—' }}</span></td>
                     <td class="px-4 py-3 text-center">
                         @if ($ws==='approved')<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700"><span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>Approved</span>

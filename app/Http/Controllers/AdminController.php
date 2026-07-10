@@ -8,6 +8,7 @@ use App\Mail\RegistrantRejected;
 use App\Models\EmailTemplate;
 use App\Models\Registrant;
 use App\Models\Workshop;
+use App\Services\EmailService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
@@ -127,10 +128,15 @@ class AdminController extends Controller
             'processed_at'   => now(),
         ]);
 
-        // Send credentials email with password
-        Mail::to($registrant->email)->send(
-            new RegistrantCredentials($registrant, $plainPassword)
-        );
+        // Send approval email using template if available, otherwise fall back to credentials email
+        $template = EmailTemplate::activeOfType(EmailTemplate::TYPE_APPROVAL);
+        if ($template) {
+            EmailService::send($registrant, $template, ['password' => $plainPassword]);
+        } else {
+            Mail::to($registrant->email)->send(
+                new RegistrantCredentials($registrant, $plainPassword)
+            );
+        }
 
         return redirect()->route('admin.dashboard')
             ->with('success', "Registrant <strong>{$registrant->name}</strong> has been approved. <br><small class='text-gray-600'>Password: <code class='bg-gray-100 px-1.5 py-0.5 rounded text-xs'>{$plainPassword}</code> (sent via email)</small>");
@@ -158,11 +164,10 @@ class AdminController extends Controller
             'processed_at' => now(),
         ]);
 
-        // Send rejection email
-        $template = EmailTemplate::rejection()->active()->first();
-        Mail::to($registrant->email)->send(
-            new RegistrantRejected($registrant, $template)
-        );
+        // Send rejection email using template if available
+        EmailService::sendByType($registrant, EmailTemplate::TYPE_REJECTION, [
+            'admin_notes' => $request->input('admin_notes'),
+        ]);
 
         return redirect()->route('admin.dashboard')
             ->with('success', "Registrant <strong>{$registrant->name}</strong> has been rejected and a notification email has been sent.");
@@ -278,13 +283,15 @@ class AdminController extends Controller
             'name'         => ['required', 'string', 'max:255'],
             'first_name'   => ['nullable', 'string', 'max:255'],
             'last_name'    => ['nullable', 'string', 'max:255'],
+            'job_title'    => ['nullable', 'string', 'max:255'],
+            'job_role'     => ['nullable', 'string', 'max:255'],
             'email'        => ['required', 'email', 'max:255'],
             'phone'        => ['nullable', 'string', 'max:50'],
             'company'      => ['nullable', 'string', 'max:255'],
             'industry'     => ['nullable', 'string', 'max:255'],
             'employees'    => ['nullable', 'string', 'max:50'],
             'notes'        => ['nullable', 'string', 'max:1000'],
-            'admin_notes'  => ['nullable', 'string', 'max:500'],
+            'admin_notes'  => ['nullable', 'string', 'max:2000'],
         ]);
 
         $registrant->update($validated);
@@ -333,6 +340,29 @@ class AdminController extends Controller
     }
 
     /**
+     * Update admin notes for a registrant.
+     */
+    public function updateNotes(Request $request, Registrant $registrant)
+    {
+        if (!auth()->user()->canWrite() || !auth()->user()->hasPermission('registrants')) {
+            return response()->json(['error' => 'You do not have permission to update notes.'], 403);
+        }
+
+        $validated = $request->validate([
+            'admin_notes' => ['nullable', 'string', 'max:2000'],
+        ]);
+
+        $registrant->update($validated);
+
+        return response()->json([
+            'success'   => true,
+            'message'   => 'Admin notes updated.',
+            'notes'     => $registrant->admin_notes,
+            'updatedAt' => $registrant->updated_at->format('d M Y, H:i'),
+        ]);
+    }
+
+    /**
      * Bulk approve registrants.
      */
     public function bulkApprove(Request $request)
@@ -348,6 +378,7 @@ class AdminController extends Controller
 
         $count = 0;
         $registrants = Registrant::whereIn('id', $request->ids)->pending()->get();
+        $template = EmailTemplate::activeOfType(EmailTemplate::TYPE_APPROVAL);
 
         foreach ($registrants as $registrant) {
             $plainPassword = Str::random(10);
@@ -360,9 +391,13 @@ class AdminController extends Controller
                 'processed_at'   => now(),
             ]);
 
-            Mail::to($registrant->email)->send(
-                new RegistrantCredentials($registrant, $plainPassword)
-            );
+            if ($template) {
+                EmailService::send($registrant, $template, ['password' => $plainPassword]);
+            } else {
+                Mail::to($registrant->email)->send(
+                    new RegistrantCredentials($registrant, $plainPassword)
+                );
+            }
 
             $count++;
         }
@@ -397,10 +432,9 @@ class AdminController extends Controller
                 'processed_at' => now(),
             ]);
 
-            $template = EmailTemplate::rejection()->active()->first();
-            Mail::to($registrant->email)->send(
-                new RegistrantRejected($registrant, $template)
-            );
+            EmailService::sendByType($registrant, EmailTemplate::TYPE_REJECTION, [
+                'admin_notes' => $request->admin_notes,
+            ]);
 
             $count++;
         }
@@ -446,7 +480,7 @@ class AdminController extends Controller
             // Header row
             fputcsv($handle, [
                 'ID', 'Name', 'First Name', 'Last Name', 'Email', 'Phone',
-                'Job Title', 'Company', 'Industry',
+                'Job Title', 'Job Role', 'Company', 'Industry',
                 'Employees', 'Status', 'Unique Code', 'Notes', 'Admin Notes',
                 'Registered At', 'Processed At',
             ]);
@@ -460,6 +494,7 @@ class AdminController extends Controller
                     $r->email,
                     $r->phone,
                     $r->job_title,
+                    $r->job_role,
                     $r->company,
                     $r->industry,
                     $r->employees,

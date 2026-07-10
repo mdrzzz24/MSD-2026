@@ -18,6 +18,7 @@ class Registrant extends Authenticatable
         'phone',
         'organization',
         'job_title',
+        'job_role',
         'company',
         'industry',
         'employees',

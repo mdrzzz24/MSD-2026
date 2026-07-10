@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Workshop;
+use App\Services\EmailService;
 use Illuminate\Http\Request;
 
 class AdminWorkshopController extends Controller
@@ -157,6 +158,11 @@ class AdminWorkshopController extends Controller
             }
         }
 
+        // Send workshop approval email
+        EmailService::sendByType($registrant, \App\Models\EmailTemplate::TYPE_WORKSHOP_APPROVAL, [
+            'workshop_name' => $workshop->title,
+        ]);
+
         return back()->with('success', 'Workshop registration approved.');
     }
 
@@ -193,6 +199,12 @@ class AdminWorkshopController extends Controller
                 ]);
             }
         }
+
+        // Send workshop rejection email
+        EmailService::sendByType($registrant, \App\Models\EmailTemplate::TYPE_WORKSHOP_REJECTION, [
+            'workshop_name' => $workshop->title,
+            'admin_notes'   => $request->input('admin_notes'),
+        ]);
 
         return back()->with('success', 'Workshop registration rejected.');
     }

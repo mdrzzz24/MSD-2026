@@ -46,7 +46,7 @@
   <div class="container hero-content">
     <p class="eyebrow"><strong>Metrodata</strong> Proudly Present</p>
     <div class="hero-title-group">
-      <img src="{{ asset('img/logo-msd.svg') }}" alt="MSD" class="logo-glow" style="height:clamp(60px,10vw,120px);width:auto">
+      <img src="{{ asset('img/logo-msd.png') }}" alt="MSD" class="logo-glow" style="height:clamp(60px,10vw,120px);width:auto">
     </div>
     <h1>Winning with AI: Build, Run, and Scale for Measurable Impact</h1>
     <p class="tagline">Accelerating AI for Real Business and Operational Value</p>

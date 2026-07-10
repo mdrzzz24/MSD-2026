@@ -19,7 +19,8 @@ class RegistrantAuthController extends Controller
             $validated = $request->validate([
                 'firstName'     => ['required', 'string', 'max:255'],
                 'lastName'      => ['required', 'string', 'max:255'],
-                'title'         => ['required', 'string', 'max:255'],
+                'job_role'      => ['required', 'string', 'max:255'],
+                'job_title'     => ['required', 'string', 'max:255'],
                 'company'       => ['required', 'string', 'max:255'],
                 'email'         => ['required', 'email', 'max:255', 'unique:registrants,email'],
                 'phone'         => ['required', 'string', 'max:50'],
@@ -38,7 +39,8 @@ class RegistrantAuthController extends Controller
             'first_name'      => $validated['firstName'],
             'last_name'       => $validated['lastName'],
             'name'            => $validated['firstName'] . ' ' . $validated['lastName'],
-            'job_title'       => $validated['title'],
+            'job_role'        => $validated['job_role'],
+            'job_title'       => $validated['job_title'],
             'company'         => $validated['company'],
             'email'           => $validated['email'],
             'phone'           => $validated['phone'],
@@ -64,6 +66,11 @@ class RegistrantAuthController extends Controller
                 $registrant->update(['referral_code_id' => $rc->id]);
                 $rc->incrementUses();
             }
+        }
+
+        // ── Send auto-reply email using Registration template (if toggle is ON) ──
+        if (\Illuminate\Support\Facades\Cache::get('auto_registration_email', true)) {
+            \App\Services\EmailService::sendByType($registrant, \App\Models\EmailTemplate::TYPE_REGISTRATION);
         }
 
         if ($request->ajax() || $request->wantsJson()) {

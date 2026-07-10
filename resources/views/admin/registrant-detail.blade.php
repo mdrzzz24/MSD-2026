@@ -83,6 +83,10 @@
                                 <dd class="text-sm font-medium text-gray-900">{{ $registrant->job_title ?? '—' }}</dd>
                             </div>
                             <div class="bg-gray-50 rounded-xl p-4">
+                                <dt class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Job Role</dt>
+                                <dd class="text-sm font-medium text-gray-900">{{ $registrant->job_role ?? '—' }}</dd>
+                            </div>
+                            <div class="bg-gray-50 rounded-xl p-4">
                                 <dt class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Company</dt>
                                 <dd class="text-sm font-medium text-gray-900">{{ $registrant->company ?? '—' }}</dd>
                             </div>
@@ -143,12 +147,42 @@
                             </div>
                         @endif
 
-                        @if ($registrant->admin_notes)
-                            <div class="bg-{{ $registrant->status === 'approved' ? 'emerald' : 'red' }}-50 rounded-xl p-4 border border-{{ $registrant->status === 'approved' ? 'emerald' : 'red' }}-200">
-                                <dt class="text-xs font-semibold text-{{ $registrant->status === 'approved' ? 'emerald' : 'red' }}-500 uppercase tracking-wider mb-1">Admin Notes</dt>
-                                <dd class="text-sm text-gray-800">{{ $registrant->admin_notes }}</dd>
+                        {{-- Admin Remarks / Notes (inline editable) --}}
+                        <div class="bg-yellow-50 rounded-xl p-4 border border-yellow-200" id="adminNotesCard">
+                            <div class="flex items-center justify-between mb-2">
+                                <dt class="text-xs font-semibold text-yellow-600 uppercase tracking-wider">Admin Remarks</dt>
+                                @if (Auth::user()->canWrite())
+                                <button onclick="toggleAdminNotesEdit()"
+                                        class="text-xs font-medium text-yellow-700 hover:text-yellow-900 bg-yellow-100 hover:bg-yellow-200 px-3 py-1 rounded-lg transition"
+                                        id="editNotesBtn">
+                                    ✏️ {{ $registrant->admin_notes ? 'Edit' : 'Add Note' }}
+                                </button>
+                                @endif
                             </div>
-                        @endif
+                            {{-- Display mode --}}
+                            <dd class="text-sm text-gray-800 whitespace-pre-wrap" id="adminNotesDisplay">
+                                {{ $registrant->admin_notes ?: 'No remarks yet.' }}
+                            </dd>
+                            {{-- Edit mode (hidden by default) --}}
+                            @if (Auth::user()->canWrite())
+                            <div id="adminNotesEdit" class="hidden">
+                                <textarea id="adminNotesInput" rows="4"
+                                          class="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm focus:ring-2 focus:ring-yellow-400 focus:border-yellow-400 resize-none"
+                                          placeholder="Add your remarks about this registrant...">{{ $registrant->admin_notes }}</textarea>
+                                <div class="flex items-center gap-2 mt-2">
+                                    <button onclick="saveAdminNotes()"
+                                            class="px-4 py-2 text-sm font-semibold rounded-xl bg-yellow-500 text-white hover:bg-yellow-600 shadow-sm transition">
+                                        💾 Save Remarks
+                                    </button>
+                                    <button onclick="cancelAdminNotesEdit()"
+                                            class="px-4 py-2 text-sm font-medium rounded-xl bg-gray-100 text-gray-600 hover:bg-gray-200 transition">
+                                        Cancel
+                                    </button>
+                                    <span id="notesStatus" class="text-xs text-gray-400 ml-2 hidden"></span>
+                                </div>
+                            </div>
+                            @endif
+                        </div>
                     </div>
 
                     {{-- Actions --}}
@@ -343,6 +377,74 @@
                 btn.classList.add('bg-indigo-500', 'hover:bg-indigo-600');
             }, 1500);
         });
+    }
+
+    // ── Admin Notes inline editing ──
+    const notesDisplay = document.getElementById('adminNotesDisplay');
+    const notesEdit   = document.getElementById('adminNotesEdit');
+    const notesInput  = document.getElementById('adminNotesInput');
+    const editBtn     = document.getElementById('editNotesBtn');
+    const notesStatus = document.getElementById('notesStatus');
+    const notesCard   = document.getElementById('adminNotesCard');
+
+    function toggleAdminNotesEdit() {
+        notesDisplay.classList.add('hidden');
+        notesEdit.classList.remove('hidden');
+        editBtn.classList.add('hidden');
+        notesInput.focus();
+        notesInput.setSelectionRange(notesInput.value.length, notesInput.value.length);
+    }
+
+    function cancelAdminNotesEdit() {
+        notesDisplay.classList.remove('hidden');
+        notesEdit.classList.add('hidden');
+        editBtn.classList.remove('hidden');
+        notesInput.value = notesDisplay.textContent.trim() === 'No remarks yet.' ? '' : notesDisplay.textContent.trim();
+    }
+
+    async function saveAdminNotes() {
+        const notes = notesInput.value.trim();
+        const btn = event.target;
+        const origText = btn.textContent;
+        btn.disabled = true;
+        btn.textContent = 'Saving...';
+        notesStatus.classList.add('hidden');
+
+        try {
+            const res = await fetch('{{ route('admin.registrants.notes', $registrant) }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                    'Accept': 'application/json',
+                },
+                body: JSON.stringify({ admin_notes: notes }),
+            });
+
+            const data = await res.json();
+
+            if (res.ok && data.success) {
+                notesDisplay.textContent = data.notes || 'No remarks yet.';
+                notesDisplay.classList.remove('hidden');
+                notesEdit.classList.add('hidden');
+                editBtn.classList.remove('hidden');
+                editBtn.textContent = data.notes ? '✏️ Edit' : '✏️ Add Note';
+                notesCard.classList.add('bg-yellow-50', 'border-yellow-200');
+                notesCard.classList.remove('bg-yellow-100', 'border-yellow-300');
+                // Flash effect
+                notesCard.classList.add('ring-2', 'ring-yellow-400');
+                setTimeout(() => notesCard.classList.remove('ring-2', 'ring-yellow-400'), 1500);
+            } else {
+                notesStatus.textContent = data.error || 'Failed to save.';
+                notesStatus.classList.remove('hidden');
+            }
+        } catch (e) {
+            notesStatus.textContent = 'Network error. Please try again.';
+            notesStatus.classList.remove('hidden');
+        } finally {
+            btn.disabled = false;
+            btn.textContent = origText;
+        }
     }
 </script>
 

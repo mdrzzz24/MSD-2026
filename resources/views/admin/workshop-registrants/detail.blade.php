@@ -74,6 +74,7 @@
                         <th class="px-4 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase">Email</th>
                         <th class="px-4 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase hidden md:table-cell">Phone</th>
                         <th class="px-4 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase hidden lg:table-cell">Company</th>
+                        <th class="px-4 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase hidden xl:table-cell">Job Title</th>
                         <th class="px-4 py-3.5 text-center text-xs font-semibold text-gray-500 uppercase">WS Status</th>
                         <th class="px-4 py-3.5 text-center text-xs font-semibold text-gray-500 uppercase">Reg Status</th>
                         <th class="px-4 py-3.5 text-center text-xs font-semibold text-gray-500 uppercase">Check-in</th>
@@ -90,6 +91,7 @@
                                 <td class="px-4 py-3.5"><span class="text-sm text-gray-600 truncate-cell block">{{ $r->email }}</span></td>
                                 <td class="px-4 py-3.5 hidden md:table-cell"><span class="text-sm text-gray-600">{{ $r->phone ?? '—' }}</span></td>
                                 <td class="px-4 py-3.5 hidden lg:table-cell"><span class="text-sm text-gray-600 truncate-cell block">{{ $r->company ?? '—' }}</span></td>
+                                <td class="px-4 py-3.5 hidden xl:table-cell"><span class="text-sm text-gray-600">{{ $r->job_title ?? '—' }}</span></td>
                                 <td class="px-4 py-3.5 text-center">
                                     @if ($wsStatus === 'approved')
                                         <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200"><span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>Approved</span>

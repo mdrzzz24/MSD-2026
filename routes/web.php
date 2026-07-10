@@ -14,6 +14,7 @@ use App\Http\Controllers\AdminAgendaController;
 use App\Http\Controllers\AdminTimeSlotController;
 use App\Http\Controllers\AdminRoomController;
 use App\Http\Controllers\AdminFloorController;
+use App\Http\Controllers\MailSettingsController;
 use App\Models\AgendaItem;
 
 // Public routes
@@ -91,12 +92,18 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::post('/registrants/bulk-approve', [AdminController::class, 'bulkApprove'])->name('registrants.bulk-approve');
     Route::post('/registrants/bulk-reject', [AdminController::class, 'bulkReject'])->name('registrants.bulk-reject');
     Route::get('/registrants/export/csv', [AdminController::class, 'exportCsv'])->name('registrants.export-csv');
+    Route::post('/registrants/{registrant}/notes', [AdminController::class, 'updateNotes'])->name('registrants.notes');
 
     // ── Super Admin only sections ──
     Route::middleware('super_admin')->group(function () {
 
     // Registration Form Toggle
     Route::post('/toggle-registration', [AdminController::class, 'toggleRegistration'])->name('toggle-registration');
+
+    // Mail Settings
+    Route::get('/mail-settings', [MailSettingsController::class, 'edit'])->name('mail-settings.edit');
+    Route::post('/mail-settings', [MailSettingsController::class, 'update'])->name('mail-settings.update');
+    Route::post('/mail-settings/test', [MailSettingsController::class, 'test'])->name('mail-settings.test');
 
     // Email Templates
     Route::get('/templates', [EmailTemplateController::class, 'index'])->name('templates.index');
@@ -108,6 +115,10 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::put('/templates/{template}', [EmailTemplateController::class, 'update'])->name('templates.update');
     Route::delete('/templates/{template}', [EmailTemplateController::class, 'destroy'])->name('templates.destroy');
     Route::post('/templates/{template}/toggle', [EmailTemplateController::class, 'toggleActive'])->name('templates.toggle');
+    Route::get('/templates/{template}/preview', [EmailTemplateController::class, 'preview'])->name('templates.preview');
+    Route::get('/templates/{template}/logs', [EmailTemplateController::class, 'logs'])->name('templates.logs');
+    Route::match(['get', 'post'], '/templates/reminder/send', [EmailTemplateController::class, 'sendReminder'])->name('templates.send-reminder');
+    Route::post('/templates/toggle-auto-email', [EmailTemplateController::class, 'toggleAutoEmail'])->name('templates.toggle-auto-email');
 
     // Workshop CRUD (super_admin only)
     Route::get('/workshops/create', [AdminWorkshopController::class, 'create'])->name('workshops.create');

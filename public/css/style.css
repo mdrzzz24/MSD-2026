@@ -462,12 +462,15 @@ td.full{background:rgba(59,91,255,.15);color:#c9d6ff;font-weight:600}
 .field{display:flex;flex-direction:column;gap:6px;min-width:0}
 .field.full{grid-column:1/-1}
 label{font-size:13px;font-weight:600;color:rgba(255,255,255,.8)}
+.field label::after{content:" *";color:#ef4444;font-weight:700}
 input,select,textarea{
   width:100%;min-width:0;padding:12px 14px;border:1px solid var(--line);border-radius:10px;
   font:inherit;color:#fff;background:rgba(255,255,255,.08);transition:border-color .25s,box-shadow .25s,background .25s;
 }
+input::placeholder,select::placeholder,textarea::placeholder{color:rgba(255,255,255,.45)}
 input:focus,select:focus,textarea:focus{outline:0;border-color:var(--pink);box-shadow:0 0 0 3px rgba(233,30,99,.15);background:rgba(255,255,255,.12)}
 select{color-scheme:dark;cursor:pointer}
+select:invalid,select option[value=""]{color:rgba(255,255,255,.45)}
 select option{background:#1a234e;color:#fff;padding:10px}
 .info h4{color:#fff;font-size:18px;margin-bottom:12px;font-weight:700}
 .info ul{padding-left:20px;color:var(--muted);font-size:14.5px}
@@ -486,6 +489,7 @@ select option{background:#1a234e;color:#fff;padding:10px}
   accent-color:var(--pink);cursor:pointer;
 }
 .checkbox-label strong{color:#fff;font-weight:600}
+.checkbox-label::after{content:none}
 
 /* Submit button */
 .btn-submit{

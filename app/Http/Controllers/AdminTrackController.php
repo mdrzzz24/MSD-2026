@@ -80,17 +80,18 @@ class AdminTrackController extends Controller
         }
 
         $agendaItemId = $request->input('agenda_item_id');
+        $agendaItem = null;
         if ($agendaItemId) {
-            $item = AgendaItem::findOrFail($agendaItemId);
-            $item->registrants()->updateExistingPivot($registrantId, [
+            $agendaItem = AgendaItem::findOrFail($agendaItemId);
+            $agendaItem->registrants()->updateExistingPivot($registrantId, [
                 'status' => 'approved', 'processed_by' => auth()->id(), 'processed_at' => now(),
             ]);
 
             // Also sync to workshop pivot if linked
-            $workshopId = $item->workshop_id;
-            if (!$workshopId && $item->agenda_type === 'workshop') {
-                $mw = \App\Models\Workshop::where('title', $item->title)->first();
-                if ($mw) { $workshopId = $mw->id; $item->update(['workshop_id' => $mw->id]); }
+            $workshopId = $agendaItem->workshop_id;
+            if (!$workshopId && $agendaItem->agenda_type === 'workshop') {
+                $mw = \App\Models\Workshop::where('title', $agendaItem->title)->first();
+                if ($mw) { $workshopId = $mw->id; $agendaItem->update(['workshop_id' => $mw->id]); }
             }
             if ($workshopId) {
                 $registrant = \App\Models\Registrant::find($registrantId);
@@ -106,6 +107,12 @@ class AdminTrackController extends Controller
                 }
             }
         }
+
+        // Send track approval email
+        \App\Services\EmailService::sendByType($registrant, \App\Models\EmailTemplate::TYPE_TRACK_APPROVAL, [
+            'track_name' => $agendaItem->title,
+        ]);
+
         return back()->with('success', 'Registration approved.');
     }
 
@@ -120,17 +127,18 @@ class AdminTrackController extends Controller
 
         $request->validate(['admin_notes' => ['required', 'string', 'max:500']]);
         $agendaItemId = $request->input('agenda_item_id');
+        $agendaItem = null;
         if ($agendaItemId) {
-            $item = AgendaItem::findOrFail($agendaItemId);
-            $item->registrants()->updateExistingPivot($registrantId, [
+            $agendaItem = AgendaItem::findOrFail($agendaItemId);
+            $agendaItem->registrants()->updateExistingPivot($registrantId, [
                 'status' => 'rejected', 'admin_notes' => $request->admin_notes, 'processed_by' => auth()->id(), 'processed_at' => now(),
             ]);
 
             // Also sync to workshop pivot if linked
-            $workshopId = $item->workshop_id;
-            if (!$workshopId && $item->agenda_type === 'workshop') {
-                $mw = \App\Models\Workshop::where('title', $item->title)->first();
-                if ($mw) { $workshopId = $mw->id; $item->update(['workshop_id' => $mw->id]); }
+            $workshopId = $agendaItem->workshop_id;
+            if (!$workshopId && $agendaItem->agenda_type === 'workshop') {
+                $mw = \App\Models\Workshop::where('title', $agendaItem->title)->first();
+                if ($mw) { $workshopId = $mw->id; $agendaItem->update(['workshop_id' => $mw->id]); }
             }
             if ($workshopId) {
                 $registrant = \App\Models\Registrant::find($registrantId);
@@ -146,6 +154,13 @@ class AdminTrackController extends Controller
                 }
             }
         }
+
+        // Send track rejection email
+        \App\Services\EmailService::sendByType($registrant, \App\Models\EmailTemplate::TYPE_TRACK_REJECTION, [
+            'track_name'  => $agendaItem->title,
+            'admin_notes' => $request->admin_notes,
+        ]);
+
         return back()->with('success', 'Registration rejected.');
     }
 }

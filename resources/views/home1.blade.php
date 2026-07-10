@@ -607,6 +607,7 @@ document.addEventListener('DOMContentLoaded', function() {
         <div class="sponsor"><img src="{{ asset('img/WORKSHOP/REHDAT.png') }}" alt="Red Hat"></div>
         <div class="sponsor"><img src="{{ asset('img/WORKSHOP/SANGFOR.png') }}" alt="Sangfor"></div>
         <div class="sponsor"><img src="{{ asset('img/WORKSHOP/singleStore.png') }}" alt="SingleStore"></div>
+        <div class="sponsor"><img src="{{ asset('img/WORKSHOP/Workday.png') }}" alt="Workday"></div>
       </div>
     </div>
     <div class="sponsors-block">
@@ -672,7 +673,46 @@ document.addEventListener('DOMContentLoaded', function() {
         @csrf
         <div class="field"><label>First Name</label><input required name="firstName" placeholder="First Name" /><span class="field-err" data-field="firstName"></span></div>
         <div class="field"><label>Last Name</label><input required name="lastName" placeholder="Last Name" /><span class="field-err" data-field="lastName"></span></div>
-        <div class="field"><label>Job Title</label><input required name="title" placeholder="Job Title" /><span class="field-err" data-field="title"></span></div>
+        <div class="field">
+          <label>Job Title</label>
+          <select name="job_title" required>
+            <option value="">Select Job Title</option>
+            <option>Staff</option>
+            <option>Supervisor</option>
+            <option>Manager</option>
+            <option>Senior Manager</option>
+            <option>General Manager</option>
+            <option>Head of Department</option>
+            <option>Chief</option>
+            <option>Director</option>
+            <option>President</option>
+            <option>Vice President</option>
+          </select>
+          <span class="field-err" data-field="job_title"></span>
+        </div>
+        <div class="field">
+          <label>Job Role</label>
+          <select name="job_role" required>
+            <option value="">Select Job Role</option>
+            <option>Sales</option>
+            <option>Pre-Sales / Solution Architect</option>
+            <option>Engineering</option>
+            <option>Marketing</option>
+            <option>Management</option>
+            <option>Finance / Accounting</option>
+            <option>Information Technology</option>
+            <option>Operations</option>
+            <option>Human Resources</option>
+            <option>Legal / Compliance</option>
+            <option>Procurement</option>
+            <option>Research & Development</option>
+            <option>Customer Service / Support</option>
+            <option>Consulting</option>
+            <option>Business Development</option>
+            <option>Administration</option>
+          </select>
+          <span class="field-err" data-field="job_role"></span>
+        </div>
         <div class="field"><label>Company Name</label><input required name="company" placeholder="Company Name" /><span class="field-err" data-field="company"></span></div>
         <div class="field"><label>Business Email</label><input required type="email" name="email" placeholder="Business Email" /><span class="field-err" data-field="email"></span></div>
         <div class="field"><label>Mobile Phone</label><input required name="phone" placeholder="Mobile Phone" /><span class="field-err" data-field="phone"></span></div>
