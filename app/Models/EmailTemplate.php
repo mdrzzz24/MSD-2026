@@ -153,6 +153,15 @@ class EmailTemplate extends Model
             $content = str_replace('{{' . $key . '}}', (string) $value, $content);
         }
 
+        // Convert relative storage paths (e.g. /storage/email-templates/xxx/img.jpg)
+        // to absolute URLs so images render in email clients
+        $baseUrl = rtrim(config('app.url'), '/');
+        $content = preg_replace(
+            '/src="\/storage\//i',
+            'src="' . $baseUrl . '/storage/',
+            $content
+        );
+
         return $content;
     }
 }
