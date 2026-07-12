@@ -78,6 +78,11 @@ class AdminWorkshopController extends Controller
 
         $workshop->update($validated);
 
+        // Sync title to linked agenda items
+        if ($workshop->wasChanged('title')) {
+            $workshop->agendaItems()->update(['title' => $workshop->title]);
+        }
+
         return redirect()->route('admin.workshops.index')
             ->with('success', "Workshop <strong>{$workshop->title}</strong> updated.");
     }

@@ -9,6 +9,7 @@ use App\Models\Track;
 use App\Models\AgendaItem;
 use App\Services\EmailService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Mail;
 
 class AdminTrackController extends Controller
@@ -36,6 +37,12 @@ class AdminTrackController extends Controller
             'description' => ['nullable', 'string', 'max:2000'],
         ]);
         $track->update($validated);
+
+        // Sync title to linked agenda items
+        if ($track->wasChanged('title')) {
+            $track->agendaItems()->update(['title' => $track->title]);
+        }
+
         return back()->with('success', 'Track updated.');
     }
 
@@ -56,7 +63,7 @@ class AdminTrackController extends Controller
      */
     public function registrants(Track $track)
     {
-        if (!auth()->user()->hasPermission('tracks')) {
+        if (!Auth::user()->hasPermission('tracks')) {
             return redirect()->route('admin.dashboard')->with('error', 'You do not have permission to view track registrants.');
         }
 
@@ -80,7 +87,7 @@ class AdminTrackController extends Controller
      */
     public function approveRegistrant(Request $request, Track $track, $registrantId)
     {
-        if (!auth()->user()->hasPermission('tracks')) {
+        if (!Auth::user()->hasPermission('tracks')) {
             return back()->with('error', 'You do not have permission to approve track registrations.');
         }
 
@@ -95,7 +102,7 @@ class AdminTrackController extends Controller
         if ($agendaItemId) {
             $agendaItem = AgendaItem::findOrFail($agendaItemId);
             $agendaItem->registrants()->updateExistingPivot($registrantId, [
-                'status' => 'approved', 'processed_by' => auth()->id(), 'processed_at' => now(),
+                'status' => 'approved', 'processed_by' => Auth::id(), 'processed_at' => now(),
             ]);
 
             // Also sync to workshop pivot if linked
@@ -108,11 +115,11 @@ class AdminTrackController extends Controller
                 $existW = $registrant->workshops()->where('workshop_id', $workshopId)->first();
                 if ($existW) {
                     $registrant->workshops()->updateExistingPivot($workshopId, [
-                        'status' => 'approved', 'processed_by' => auth()->id(), 'processed_at' => now(),
+                        'status' => 'approved', 'processed_by' => Auth::id(), 'processed_at' => now(),
                     ]);
                 } else {
                     $registrant->workshops()->attach($workshopId, [
-                        'status' => 'approved', 'processed_by' => auth()->id(), 'processed_at' => now(),
+                        'status' => 'approved', 'processed_by' => Auth::id(), 'processed_at' => now(),
                     ]);
                 }
             }
@@ -162,7 +169,7 @@ class AdminTrackController extends Controller
      */
     public function rejectRegistrant(Request $request, Track $track, $registrantId)
     {
-        if (!auth()->user()->hasPermission('tracks')) {
+        if (!Auth::user()->hasPermission('tracks')) {
             return back()->with('error', 'You do not have permission to reject track registrations.');
         }
 
@@ -181,7 +188,7 @@ class AdminTrackController extends Controller
         if ($agendaItemId) {
             $agendaItem = AgendaItem::findOrFail($agendaItemId);
             $agendaItem->registrants()->updateExistingPivot($registrantId, [
-                'status' => 'rejected', 'admin_notes' => $adminNotes, 'processed_by' => auth()->id(), 'processed_at' => now(),
+                'status' => 'rejected', 'admin_notes' => $adminNotes, 'processed_by' => Auth::id(), 'processed_at' => now(),
             ]);
 
             // Also sync to workshop pivot if linked
@@ -194,11 +201,11 @@ class AdminTrackController extends Controller
                 $existW = $registrant->workshops()->where('workshop_id', $workshopId)->first();
                 if ($existW) {
                     $registrant->workshops()->updateExistingPivot($workshopId, [
-                        'status' => 'rejected', 'admin_notes' => $adminNotes, 'processed_by' => auth()->id(), 'processed_at' => now(),
+                        'status' => 'rejected', 'admin_notes' => $adminNotes, 'processed_by' => Auth::id(), 'processed_at' => now(),
                     ]);
                 } else {
                     $registrant->workshops()->attach($workshopId, [
-                        'status' => 'rejected', 'admin_notes' => $adminNotes, 'processed_by' => auth()->id(), 'processed_at' => now(),
+                        'status' => 'rejected', 'admin_notes' => $adminNotes, 'processed_by' => Auth::id(), 'processed_at' => now(),
                     ]);
                 }
             }
