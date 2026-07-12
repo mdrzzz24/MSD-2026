@@ -16,7 +16,7 @@ class AdminTrackController extends Controller
 {
     public function index()
     {
-        $tracks = Track::withCount('agendaItems')->orderBy('title')->get();
+        $tracks = Track::withCount('agendaItems')->with('agendaItems')->orderBy('title')->get();
         return view('admin.tracks.index', compact('tracks'));
     }
 
