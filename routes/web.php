@@ -21,10 +21,10 @@ use App\Http\Controllers\BounceCheckController;
 use App\Models\AgendaItem;
 
 // Public routes
+// Route::get('/', function () {
+//     return view('home');
+// });
 Route::get('/', function () {
-    return view('home');
-});
-Route::get('/home1', function () {
     $agendaItems = AgendaItem::ordered()->with('speakers')->get();
     $timeSlots = \App\Models\TimeSlot::ordered()->get();
     $rooms = \App\Models\Room::ordered()->get();
