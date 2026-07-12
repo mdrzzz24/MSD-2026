@@ -95,7 +95,7 @@
                         <option value="">— None —</option>
                         <option value="__new__" style="font-weight:700;color:#4f46e5;">+ Create New Workshop</option>
                         @foreach ($workshopList as $ws)
-                            <option value="{{ $ws->id }}" data-title="{{ e($ws->title) }}" data-desc="{{ e($ws->description) }}" {{ old('workshop_id', $agendum->workshop_id)==$ws->id?'selected':'' }}>{{ $ws->title }}</option>
+                            <option value="{{ $ws->id }}" data-title="{{ e($ws->title) }}" data-desc="{{ e($ws->description) }}" data-room="{{ e($ws->room ?? '') }}" data-start="{{ $ws->start_time }}" data-end="{{ $ws->end_time }}" data-capacity="{{ $ws->capacity }}" {{ old('workshop_id', $agendum->workshop_id)==$ws->id?'selected':'' }}>{{ $ws->title }}</option>
                         @endforeach
                     </select>
                     <div id="newWorkshopFields" class="hidden mt-2 p-3 bg-indigo-50 border border-indigo-200 rounded-xl space-y-2">
@@ -167,12 +167,31 @@ function onWorkshopSelect(sel) {
     var newFields = document.getElementById('newWorkshopFields');
     var titleInput = document.querySelector('[name="title"]');
     var descInput = document.querySelector('[name="description"]');
+    var startTime = document.querySelector('[name="start_time"]');
+    var endTime = document.querySelector('[name="end_time"]');
+    var room = document.querySelector('[name="room"]');
+    var capacity = document.querySelector('[name="capacity"]');
     if (sel.value === '__new__') { newFields.classList.remove('hidden'); }
     else if (sel.value) {
         newFields.classList.add('hidden');
         var opt = sel.options[sel.selectedIndex];
         if (opt.getAttribute('data-title')) titleInput.value = opt.getAttribute('data-title');
         if (opt.getAttribute('data-desc')) descInput.value = opt.getAttribute('data-desc');
+        var wsStart = opt.getAttribute('data-start');
+        var wsEnd = opt.getAttribute('data-end');
+        var wsRoom = opt.getAttribute('data-room');
+        var wsCapacity = opt.getAttribute('data-capacity');
+        if (wsStart) startTime.value = wsStart;
+        if (wsEnd) endTime.value = wsEnd;
+        if (wsRoom) {
+            for (var i = 0; i < room.options.length; i++) {
+                if (room.options[i].value === wsRoom) {
+                    room.selectedIndex = i;
+                    break;
+                }
+            }
+        }
+        if (wsCapacity) capacity.value = wsCapacity;
     } else { newFields.classList.add('hidden'); }
 }
 function onTrackSelect(sel) {

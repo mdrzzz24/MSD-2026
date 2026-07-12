@@ -143,7 +143,7 @@
                         <option value="">— None —</option>
                         <option value="__new__" style="font-weight:700;color:#4f46e5;">+ Create New Workshop</option>
                         @foreach ($workshopList as $ws)
-                            <option value="{{ $ws->id }}" data-title="{{ e($ws->title) }}" data-desc="{{ e($ws->description) }}" {{ old('workshop_id')==$ws->id?'selected':'' }}>{{ $ws->title }}</option>
+                            <option value="{{ $ws->id }}" data-title="{{ e($ws->title) }}" data-desc="{{ e($ws->description) }}" data-room="{{ e($ws->room ?? '') }}" data-start="{{ $ws->start_time }}" data-end="{{ $ws->end_time }}" data-capacity="{{ $ws->capacity }}" {{ old('workshop_id')==$ws->id?'selected':'' }}>{{ $ws->title }}</option>
                         @endforeach
                     </select>
                     {{-- Inline create workshop form --}}
@@ -209,6 +209,11 @@ function onWorkshopSelect(sel) {
     var newFields = document.getElementById('newWorkshopFields');
     var titleInput = document.getElementById('inputTitle');
     var descInput = document.getElementById('inputDescription');
+    var startTime = document.getElementById('inputStartTime');
+    var endTime = document.getElementById('inputEndTime');
+    var room = document.getElementById('inputRoom');
+    var capacity = document.getElementById('inputCapacity');
+    var isReg = document.getElementById('inputIsRegistrable');
 
     if (sel.value === '__new__') {
         newFields.classList.remove('hidden');
@@ -217,8 +222,23 @@ function onWorkshopSelect(sel) {
         var opt = sel.options[sel.selectedIndex];
         var wsTitle = opt.getAttribute('data-title');
         var wsDesc = opt.getAttribute('data-desc');
+        var wsStart = opt.getAttribute('data-start');
+        var wsEnd = opt.getAttribute('data-end');
+        var wsRoom = opt.getAttribute('data-room');
+        var wsCapacity = opt.getAttribute('data-capacity');
         if (wsTitle) titleInput.value = wsTitle;
         if (wsDesc) descInput.value = wsDesc;
+        if (wsStart) startTime.value = wsStart;
+        if (wsEnd) endTime.value = wsEnd;
+        if (wsRoom) {
+            for (var i = 0; i < room.options.length; i++) {
+                if (room.options[i].value === wsRoom) {
+                    room.selectedIndex = i;
+                    break;
+                }
+            }
+        }
+        if (wsCapacity) capacity.value = wsCapacity;
     } else {
         newFields.classList.add('hidden');
     }
