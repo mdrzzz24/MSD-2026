@@ -244,9 +244,10 @@ document.getElementById('linkBaseUrl').value = 'https://event.metrodata.co.id/ho
 document.getElementById('linkModal').classList.remove('hidden');
 document.getElementById('linkModal').classList.add('flex');
 }
+const linkUpdateUrl = '{{ route("admin.management.utm-links.update", ["utmLink" => "LINK_ID"]) }}';
 function editLink(id, name, base, source, medium, campaign, content) {
 document.getElementById('linkModalTitle').textContent = 'Edit UTM Link';
-document.getElementById('linkForm').action = '/admin/management/utm-links/' + id;
+document.getElementById('linkForm').action = linkUpdateUrl.replace('LINK_ID', id);
 document.getElementById('linkFormMethod').value = 'PUT';
 document.getElementById('linkId').value = id;
 document.getElementById('linkName').value = name;

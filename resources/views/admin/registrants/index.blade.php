@@ -450,10 +450,12 @@
 @include('admin.partials.mobile-sidebar')
 
 <script>
+    const rejectRoute = '{{ route("admin.registrants.reject", ["registrant" => "REG_ID"]) }}';
+    const resendRoute = '{{ route("admin.registrants.resend-credentials", ["registrant" => "REG_ID"]) }}';
     // ---- Reject Modal (Single) ----
     function openRejectModal(id, name) {
         document.getElementById('rejectName').textContent = name;
-        document.getElementById('rejectForm').action = '/admin/registrants/' + id + '/reject';
+        document.getElementById('rejectForm').action = rejectRoute.replace('REG_ID', id);
         const modal = document.getElementById('rejectModal');
         modal.classList.remove('hidden');
         modal.classList.add('flex');
@@ -530,7 +532,7 @@
 
         const form = document.createElement('form');
         form.method = 'POST';
-        form.action = '/admin/registrants/' + id + '/resend-credentials';
+        form.action = resendRoute.replace('REG_ID', id);
         form.style.display = 'none';
 
         const csrf = document.createElement('input');

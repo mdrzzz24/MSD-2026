@@ -193,6 +193,7 @@ onRoleChange();
 document.getElementById('userModal').classList.remove('hidden');
 document.getElementById('userModal').classList.add('flex');
 }
+const userUpdateUrl = '{{ route("admin.management.users.update", ["user" => "USER_ID"]) }}';
 function editUserFromData(btn) {
 const id = btn.dataset.userId;
 const name = btn.dataset.userName;
@@ -205,7 +206,7 @@ perms = JSON.parse(btn.dataset.userPerms);
 perms = roleDefaults[role];
 }
 document.getElementById('userModalTitle').textContent = 'Edit User';
-document.getElementById('userForm').action = '/admin/management/users/' + id;
+document.getElementById('userForm').action = userUpdateUrl.replace('USER_ID', id);
 document.getElementById('userFormMethod').value = 'PUT';
 document.getElementById('userId').value = id;
 document.getElementById('userName').value = name;
