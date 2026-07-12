@@ -303,9 +303,7 @@ function onExistingSourceSelect(sel) {
 
     if (type === 'track') {
         agendaType.value = 'track';
-        // Clear workshop-specific fields
-        startTime.value = '';
-        endTime.value = '';
+        // Don't clear time — keep pre-filled values from URL params
         room.value = '';
         capacity.value = '0';
         isReg.checked = false;
