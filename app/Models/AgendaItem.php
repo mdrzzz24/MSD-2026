@@ -86,6 +86,18 @@ class AgendaItem extends Model
         return $this->hasMany(AgendaItemQuestion::class, 'agenda_item_id')->orderBy('order');
     }
 
+    public function visits()
+    {
+        return $this->hasMany(AgendaVisit::class);
+    }
+
+    public function visitorRegistrants()
+    {
+        return $this->belongsToMany(Registrant::class, 'agenda_visits')
+            ->withTimestamps()
+            ->withPivot(['visited_at', 'id']);
+    }
+
     // ── Helpers ──
 
     public function isFullRow(): bool

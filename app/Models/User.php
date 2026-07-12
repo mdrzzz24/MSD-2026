@@ -82,6 +82,8 @@ class User extends Authenticatable
             'qr_codes'            => 'QR Codes',
             'checkin_log'         => 'Check-in Log',
             'admin_users'         => 'Admin Users',
+            'booths'              => 'Booths',
+            'booth_visits'        => 'Booth Visits',
         ];
     }
 

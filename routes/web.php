@@ -113,6 +113,11 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('/registrants/export/csv', [AdminController::class, 'exportCsv'])->name('registrants.export-csv');
     Route::post('/registrants/{registrant}/notes', [AdminController::class, 'updateNotes'])->name('registrants.notes');
 
+    // ── Walk-in Registration ──
+    Route::get('/walkin', [AdminController::class, 'walkinForm'])->name('walkin.form');
+    Route::post('/walkin', [AdminController::class, 'walkinStore'])->name('walkin.store');
+    Route::get('/walkin/{registrant}', [AdminController::class, 'walkinShow'])->name('walkin.show');
+
     // ── Super Admin only sections ──
     Route::middleware('super_admin')->group(function () {
 
@@ -219,6 +224,13 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::post('/tracks/{track}/toggle', [AdminTrackController::class, 'toggle'])->name('tracks.toggle');
     });
 
+    // ── Agenda QR Scan — accessible by users with agenda permission ──
+    Route::get('/agenda/scan', [AdminAgendaController::class, 'scanIndex'])->name('agenda.scan-index');
+    Route::get('/agenda/{agendum}/scan', [AdminAgendaController::class, 'scan'])->name('agenda.scan');
+    Route::post('/agenda/{agendum}/scan', [AdminAgendaController::class, 'scanProcess'])->name('agenda.scan-process');
+    Route::get('/agenda/{agendum}/visitors', [AdminAgendaController::class, 'visitors'])->name('agenda.visitors');
+    Route::get('/agenda/{agendum}/visitors/export/csv', [AdminAgendaController::class, 'exportVisitorsCsv'])->name('agenda.visitors.export-csv');
+
     // ── Email Logs — accessible by users with email_templates permission ──
     Route::get('/email-logs', [EmailLogController::class, 'index'])->name('email-logs.index');
     Route::get('/email-logs/export/csv', [EmailLogController::class, 'exportCsv'])->name('email-logs.export-csv');
@@ -250,6 +262,19 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('/agenda-registrants/{agendum}', [AdminAgendaController::class, 'registrantsDetail'])->name('agenda-registrants.detail');
     Route::post('/agenda-registrants/{agendum}/registrants/{registrant}/approve', [AdminAgendaController::class, 'registrantsApprove'])->name('agenda-registrants.approve');
     Route::post('/agenda-registrants/{agendum}/registrants/{registrant}/reject', [AdminAgendaController::class, 'registrantsReject'])->name('agenda-registrants.reject');
+
+    // ── Booths & QR Scan — accessible by users with booths permission ──
+    Route::get('/booths', [App\Http\Controllers\AdminBoothController::class, 'index'])->name('booths.index');
+    Route::get('/booths/create', [App\Http\Controllers\AdminBoothController::class, 'create'])->name('booths.create');
+    Route::post('/booths', [App\Http\Controllers\AdminBoothController::class, 'store'])->name('booths.store');
+    Route::get('/booths/{booth}/edit', [App\Http\Controllers\AdminBoothController::class, 'edit'])->name('booths.edit');
+    Route::put('/booths/{booth}', [App\Http\Controllers\AdminBoothController::class, 'update'])->name('booths.update');
+    Route::delete('/booths/{booth}', [App\Http\Controllers\AdminBoothController::class, 'destroy'])->name('booths.destroy');
+    Route::post('/booths/{booth}/toggle', [App\Http\Controllers\AdminBoothController::class, 'toggle'])->name('booths.toggle');
+    Route::get('/booths/{booth}/scan', [App\Http\Controllers\AdminBoothController::class, 'scan'])->name('booths.scan');
+    Route::post('/booths/{booth}/scan', [App\Http\Controllers\AdminBoothController::class, 'scanProcess'])->name('booths.scan-process');
+    Route::get('/booths/{booth}/visitors', [App\Http\Controllers\AdminBoothController::class, 'visitors'])->name('booths.visitors');
+    Route::get('/booths/{booth}/visitors/export/csv', [App\Http\Controllers\AdminBoothController::class, 'exportVisitorsCsv'])->name('booths.visitors.export-csv');
 
     // ── Management (UTM - all admins, scoped) ──
     Route::prefix('management')->name('management.')->group(function () {

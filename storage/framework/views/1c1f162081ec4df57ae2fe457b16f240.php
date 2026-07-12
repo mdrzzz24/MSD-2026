@@ -102,6 +102,7 @@
 
                                             </button>
                                         </form>
+                                        <a href="<?php echo e(route('admin.agenda.scan', $fullRow)); ?>" class="bg-purple-100 text-purple-700 hover:bg-purple-200">Scan QR</a>
                                         <form action="<?php echo e(route('admin.agenda.destroy', $fullRow)); ?>" method="POST" onsubmit="return confirm('Delete &quot;<?php echo e($fullRow->title); ?>&quot;?')">
                                             <?php echo csrf_field(); ?> <?php echo method_field('DELETE'); ?>
                                             <button class="bg-red-100 text-red-600 hover:bg-red-200">Delete</button>

@@ -3,9 +3,12 @@
 namespace App\Http\Controllers;
 
 use App\Models\AgendaItem;
-use App\Models\TimeSlot;
+use App\Models\AgendaVisit;
+use App\Models\Registrant;
 use App\Models\Room;
+use App\Models\TimeSlot;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class AdminAgendaController extends Controller
 {
@@ -287,13 +290,13 @@ class AdminAgendaController extends Controller
      */
     public function registrantsApprove(AgendaItem $agendum, $registrantId)
     {
-        if (!auth()->user()->hasPermission('agenda')) {
+        if (!Auth::user()->hasPermission('agenda')) {
             return back()->with('error', 'You do not have permission to approve agenda registrations.');
         }
 
         $agendum->registrants()->updateExistingPivot($registrantId, [
             'status'       => 'approved',
-            'processed_by' => auth()->id(),
+            'processed_by' => Auth::id(),
             'processed_at' => now(),
         ]);
 
@@ -307,7 +310,7 @@ class AdminAgendaController extends Controller
                 \DB::table('registrant_workshop')
                     ->where('workshop_id', $agendum->workshop_id)
                     ->where('registrant_id', $registrantId)
-                    ->update(['status' => 'approved', 'processed_by' => auth()->id(), 'processed_at' => now()]);
+                    ->update(['status' => 'approved', 'processed_by' => Auth::id(), 'processed_at' => now()]);
             }
         }
 
@@ -319,7 +322,7 @@ class AdminAgendaController extends Controller
      */
     public function registrantsReject(Request $request, AgendaItem $agendum, $registrantId)
     {
-        if (!auth()->user()->hasPermission('agenda')) {
+        if (!Auth::user()->hasPermission('agenda')) {
             return back()->with('error', 'You do not have permission to reject agenda registrations.');
         }
 
@@ -328,7 +331,7 @@ class AdminAgendaController extends Controller
         $agendum->registrants()->updateExistingPivot($registrantId, [
             'status'       => 'rejected',
             'admin_notes'  => $request->input('admin_notes'),
-            'processed_by' => auth()->id(),
+            'processed_by' => Auth::id(),
             'processed_at' => now(),
         ]);
 
@@ -342,10 +345,162 @@ class AdminAgendaController extends Controller
                 \DB::table('registrant_workshop')
                     ->where('workshop_id', $agendum->workshop_id)
                     ->where('registrant_id', $registrantId)
-                    ->update(['status' => 'rejected', 'admin_notes' => $request->input('admin_notes'), 'processed_by' => auth()->id(), 'processed_at' => now()]);
+                    ->update(['status' => 'rejected', 'admin_notes' => $request->input('admin_notes'), 'processed_by' => Auth::id(), 'processed_at' => now()]);
             }
         }
 
         return back()->with('success', 'Registration rejected.');
+    }
+
+    // ── QR Scan Tracking ──
+
+    /**
+     * Show list of all agenda items for scanning.
+     */
+    public function scanIndex()
+    {
+        if (!Auth::user()->hasPermission('agenda')) {
+            return redirect()->route('admin.agenda.index')->with('error', 'You do not have permission.');
+        }
+
+        $agendaItems = AgendaItem::ordered()->get();
+        return view('admin.agenda.scan-index', compact('agendaItems'));
+    }
+
+    /**
+     * Show QR scan page for an agenda item.
+     */
+    public function scan(AgendaItem $agendum)
+    {
+        if (!Auth::user()->hasPermission('agenda')) {
+            return redirect()->route('admin.agenda.index')->with('error', 'You do not have permission.');
+        }
+
+        return view('admin.agenda.scan', ['agendum' => $agendum]);
+    }
+
+    /**
+     * Process a QR scan — record attendance at an agenda item.
+     */
+    public function scanProcess(Request $request, AgendaItem $agendum)
+    {
+        if (!Auth::user()->hasPermission('agenda')) {
+            return response()->json(['error' => 'No permission.'], 403);
+        }
+
+        $request->validate([
+            'qr_token' => ['required', 'string', 'max:255'],
+        ]);
+
+        $token = trim($request->qr_token);
+
+        $registrant = Registrant::where('qr_token', $token)
+            ->orWhere('unique_code', $token)
+            ->first();
+
+        if (!$registrant) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Invalid QR code. Registrant not found.',
+            ]);
+        }
+
+        if (!$registrant->isApproved()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Registrant is not approved.',
+            ]);
+        }
+
+        // Check if already visited this session
+        $existing = AgendaVisit::where('agenda_item_id', $agendum->id)
+            ->where('registrant_id', $registrant->id)
+            ->first();
+
+        if ($existing) {
+            return response()->json([
+                'success'   => true,
+                'message'   => "{$registrant->name} has already checked in to this session.",
+                'registrant' => [
+                    'name'       => $registrant->name,
+                    'email'      => $registrant->email,
+                    'company'    => $registrant->company,
+                    'visited_at' => $existing->visited_at->format('d M Y, H:i'),
+                ],
+                'already_visited' => true,
+            ]);
+        }
+
+        AgendaVisit::create([
+            'agenda_item_id' => $agendum->id,
+            'registrant_id'  => $registrant->id,
+            'visited_at'     => now(),
+        ]);
+
+        return response()->json([
+            'success'   => true,
+            'message'   => "Check-in recorded for <strong>{$registrant->name}</strong>!",
+            'registrant' => [
+                'name'     => $registrant->name,
+                'email'    => $registrant->email,
+                'company'  => $registrant->company,
+                'job_title' => $registrant->job_title,
+            ],
+            'already_visited' => false,
+        ]);
+    }
+
+    /**
+     * Show visitors list for an agenda item.
+     */
+    public function visitors(AgendaItem $agendum)
+    {
+        if (!Auth::user()->hasPermission('agenda')) {
+            return redirect()->route('admin.agenda.index')->with('error', 'You do not have permission.');
+        }
+
+        $visits = AgendaVisit::with('registrant')
+            ->where('agenda_item_id', $agendum->id)
+            ->orderByDesc('visited_at')
+            ->paginate(30);
+
+        return view('admin.agenda.visitors', compact('agendum', 'visits'));
+    }
+
+    /**
+     * Export agenda visitors to CSV.
+     */
+    public function exportVisitorsCsv(AgendaItem $agendum)
+    {
+        if (!Auth::user()->hasPermission('agenda')) {
+            return redirect()->back()->with('error', 'You do not have permission.');
+        }
+
+        $visits = AgendaVisit::with('registrant')
+            ->where('agenda_item_id', $agendum->id)
+            ->orderByDesc('visited_at')
+            ->get();
+
+        $headers = ['Session Name', 'Registrant Name', 'Email', 'Phone', 'Company', 'Job Title', 'Checked In At'];
+        $rows = $visits->map(fn($v) => [
+            $agendum->title,
+            $v->registrant->display_name ?: $v->registrant->name,
+            $v->registrant->email,
+            $v->registrant->phone ?? '-',
+            $v->registrant->company ?? '-',
+            $v->registrant->job_title ?? '-',
+            $v->visited_at ? $v->visited_at->format('Y-m-d H:i:s') : '-',
+        ])->toArray();
+
+        return response()->stream(function () use ($headers, $rows) {
+            $handle = fopen('php://output', 'w');
+            fprintf($handle, chr(0xEF) . chr(0xBB) . chr(0xBF));
+            fputcsv($handle, $headers);
+            foreach ($rows as $row) fputcsv($handle, $row);
+            fclose($handle);
+        }, 200, [
+            'Content-Type'        => 'text/csv; charset=UTF-8',
+            'Content-Disposition' => 'attachment; filename="session-' . $agendum->id . '-visitors-' . now()->format('YmdHis') . '.csv"',
+        ]);
     }
 }

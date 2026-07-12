@@ -14,6 +14,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Response;
 use Illuminate\Support\Str;
@@ -783,6 +784,73 @@ class AdminController extends Controller
         $status = $new ? 'OPEN' : 'CLOSED (follows countdown)';
         return redirect()->back()
             ->with('success', "Registration form is now <strong>{$status}</strong>.");
+    }
+
+    // ── Walk-in Registration ──
+
+    /**
+     * Show walk-in registration form.
+     */
+    public function walkinForm()
+    {
+        if (!Auth::user()->hasPermission('registrants')) {
+            return redirect()->route('admin.dashboard')->with('error', 'You do not have permission.');
+        }
+
+        return view('admin.walkin');
+    }
+
+    /**
+     * Process walk-in registration — auto-approved with QR code.
+     */
+    public function walkinStore(Request $request)
+    {
+        if (!Auth::user()->canWrite() || !Auth::user()->hasPermission('registrants')) {
+            return redirect()->back()->with('error', 'You do not have permission.');
+        }
+
+        $validated = $request->validate([
+            'name'       => ['required', 'string', 'max:255'],
+            'email'      => ['required', 'email', 'max:255', 'unique:registrants,email'],
+            'phone'      => ['nullable', 'string', 'max:50'],
+            'company'    => ['nullable', 'string', 'max:255'],
+            'job_title'  => ['nullable', 'string', 'max:255'],
+            'notes'      => ['nullable', 'string', 'max:500'],
+        ]);
+
+        $plainPassword = Str::random(8);
+
+        $registrant = Registrant::create([
+            'name'          => $validated['name'],
+            'email'         => $validated['email'],
+            'phone'         => $validated['phone'] ?? null,
+            'company'       => $validated['company'] ?? null,
+            'job_title'     => $validated['job_title'] ?? null,
+            'notes'         => $validated['notes'] ?? null,
+            'status'        => 'approved',
+            'approved_by'   => Auth::id(),
+            'password'      => $plainPassword,
+            'plain_password'=> $plainPassword,
+            'qr_token'      => Registrant::generateQrToken(),
+            'processed_at'  => now(),
+            'checked_in_at' => now(),
+            'utm_source'    => 'walk-in',
+        ]);
+
+        return redirect()->route('admin.walkin.show', $registrant)
+            ->with('success', "Walk-in <strong>{$registrant->name}</strong> registered successfully!");
+    }
+
+    /**
+     * Show walk-in registration result with QR code.
+     */
+    public function walkinShow(Registrant $registrant)
+    {
+        if (!Auth::user()->hasPermission('registrants')) {
+            return redirect()->route('admin.dashboard')->with('error', 'You do not have permission.');
+        }
+
+        return view('admin.walkin-result', compact('registrant'));
     }
 }
 

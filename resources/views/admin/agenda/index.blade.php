@@ -100,6 +100,7 @@
                                                 {{ $fullRow->feedback_enabled ? 'FB ON' : 'FB OFF' }}
                                             </button>
                                         </form>
+                                        <a href="{{ route('admin.agenda.scan', $fullRow) }}" class="bg-purple-100 text-purple-700 hover:bg-purple-200">Scan QR</a>
                                         <form action="{{ route('admin.agenda.destroy', $fullRow) }}" method="POST" onsubmit="return confirm('Delete &quot;{{ $fullRow->title }}&quot;?')">
                                             @csrf @method('DELETE')
                                             <button class="bg-red-100 text-red-600 hover:bg-red-200">Delete</button>
