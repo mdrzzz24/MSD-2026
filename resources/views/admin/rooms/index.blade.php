@@ -20,9 +20,7 @@
             </div>
         </header>
         <div class="p-4 sm:p-6 lg:p-8">
-    @if (session('success'))
-        <div class="bg-emerald-50 border border-emerald-200 text-emerald-800 px-4 py-3 rounded-xl mb-4 text-sm">{{ session('success') }}</div>
-    @endif
+    @include('admin.partials.notification')
 
     {{-- ─── Add New Floor ─── --}}
     <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 mb-6">

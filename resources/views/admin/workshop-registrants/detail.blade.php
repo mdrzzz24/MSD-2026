@@ -16,23 +16,27 @@
 @include('admin.partials.sidebar')
 <main class="flex-1 lg:ml-64">
 <header class="sticky top-0 z-30 bg-white/80 backdrop-blur border-b border-gray-200">
-    <div class="flex items-center h-16 px-4 sm:px-6 lg:px-8 gap-4">
-        <a href="{{ route('admin.workshops.index') }}" class="inline-flex items-center gap-1.5 text-sm text-indigo-600 hover:text-indigo-800 font-medium transition">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
-            Workshops
-        </a>
-        <span class="text-gray-300">/</span>
-        <h1 class="text-lg font-bold text-gray-900 truncate">{{ $workshop->title }}</h1>
+    <div class="flex items-center justify-between h-16 px-4 sm:px-6 lg:px-8">
+        <div class="flex items-center gap-4">
+            <a href="{{ route('admin.workshops.index') }}" class="inline-flex items-center gap-1.5 text-sm text-indigo-600 hover:text-indigo-800 font-medium transition">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+                Workshops
+            </a>
+            <span class="text-gray-300">/</span>
+            <h1 class="text-lg font-bold text-gray-900 truncate">{{ $workshop->title }}</h1>
+        </div>
+        <div class="flex items-center gap-2">
+            <a href="{{ route('admin.workshops.registrants.export-csv', $workshop) }}"
+               class="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-medium rounded-lg border border-gray-200 text-gray-600 bg-white hover:bg-gray-50 transition">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                Export CSV
+            </a>
+        </div>
     </div>
 </header>
 
 <div class="p-4 sm:p-6 lg:p-8">
-    @if (session('success'))
-        <div class="flex items-start gap-3 bg-emerald-50 border border-emerald-200 text-emerald-800 px-5 py-4 rounded-2xl mb-6">
-            <svg class="w-5 h-5 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-            <span class="text-sm">{!! session('success') !!}</span>
-        </div>
-    @endif
+    @include('admin.partials.notification')
 
     {{-- Workshop Summary Card --}}
     @php $linkedAgenda = $workshop->agendaItems->first(); @endphp
@@ -122,7 +126,9 @@
                                             <form action="{{ route('admin.workshops.registrants.approve', [$workshop, $r->id]) }}" method="POST" class="inline">@csrf<button class="px-2.5 py-1.5 text-xs font-medium rounded-lg bg-emerald-50 text-emerald-700 hover:bg-emerald-100 transition" title="Approve">✓</button></form>
                                             <button onclick="showRejectModal({{ $r->id }},'{{ e($r->display_name) }}')" class="px-2.5 py-1.5 text-xs font-medium rounded-lg bg-red-50 text-red-700 hover:bg-red-100 transition" title="Reject">✕</button>
                                         @elseif ($wsStatus === 'approved')
+                                            @if (Auth::user()->isSuperAdmin())
                                             <button onclick="showRejectModal({{ $r->id }},'{{ e($r->display_name) }}')" class="px-2.5 py-1.5 text-xs font-medium rounded-lg bg-red-50 text-red-700 hover:bg-red-100 transition" title="Reject">✕</button>
+                                            @endif
                                         @elseif ($wsStatus === 'rejected')
                                             <form action="{{ route('admin.workshops.registrants.approve', [$workshop, $r->id]) }}" method="POST" class="inline">@csrf<button class="px-2.5 py-1.5 text-xs font-medium rounded-lg bg-emerald-50 text-emerald-700 hover:bg-emerald-100 transition" title="Approve">✓</button></form>
                                         @endif

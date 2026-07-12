@@ -7,32 +7,38 @@ use App\Mail\RegistrantCredentials;
 use App\Mail\RegistrantRejected;
 use App\Models\EmailTemplate;
 use App\Models\Registrant;
+use App\Models\User;
 use App\Models\Workshop;
 use App\Services\EmailService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
-use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Response;
-use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Str;
 
 class AdminController extends Controller
 {
     /**
-     * Show the admin dashboard with registrant statistics & overview.
+     * Gather all dashboard statistics into an array.
      */
-    public function dashboard()
+    private function getDashboardStats(): array
     {
-        // Core stats
         $total      = Registrant::count();
         $pending    = Registrant::pending()->count();
         $approved   = Registrant::approved()->count();
         $rejected   = Registrant::rejected()->count();
 
-        // Recent registrants (last 7)
-        $recentRegistrants = Registrant::latest()->take(7)->get();
+        $recentRegistrants = Registrant::latest()->take(7)->get()->map(fn($r) => [
+            'id'     => $r->id,
+            'name'   => $r->name,
+            'email'  => $r->email,
+            'status' => $r->status,
+            'initial' => strtoupper(substr($r->name, 0, 1)),
+            'timeAgo' => $r->created_at->diffForHumans(),
+        ]);
 
-        // Registrations per day (last 14 days)
         $dailyStats = Registrant::select(
             DB::raw('DATE(created_at) as date'),
             DB::raw('COUNT(*) as total'),
@@ -45,7 +51,6 @@ class AdminController extends Controller
         ->get()
         ->keyBy('date');
 
-        // Fill missing dates with zeros
         $chartData = [];
         $maxDaily = 0;
         for ($i = 13; $i >= 0; $i--) {
@@ -56,33 +61,28 @@ class AdminController extends Controller
             $approvedCount = $stats ? (int) $stats->approved_count : 0;
             $pendingCount = $stats ? (int) $stats->pending_count : 0;
             $chartData[] = [
-                'day'       => $day,
-                'date'      => $date,
-                'total'     => $count,
-                'approved'  => $approvedCount,
-                'pending'   => $pendingCount,
+                'day'      => $day,
+                'date'     => $date,
+                'total'    => $count,
+                'approved' => $approvedCount,
+                'pending'  => $pendingCount,
             ];
             if ($count > $maxDaily) $maxDaily = $count;
         }
         $maxDaily = max($maxDaily, 1);
 
-        // Workshop stats
         $workshopCount = Workshop::count();
         $workshopRegistrations = DB::table('registrant_workshop')->count();
 
-        // Registration trend (today vs yesterday)
         $todayCount = Registrant::whereDate('created_at', today())->count();
         $yesterdayCount = Registrant::whereDate('created_at', today()->subDay())->count();
         $trend = $yesterdayCount > 0 ? round(($todayCount - $yesterdayCount) / $yesterdayCount * 100) : ($todayCount > 0 ? 100 : 0);
 
-        // Pending needing attention (older than 2 days)
         $stalePending = Registrant::pending()->where('created_at', '<', now()->subDays(2))->count();
 
-        // Check-in stats
         $checkedInToday = Registrant::approved()->whereDate('checked_in_at', today())->count();
         $checkedInTotal = Registrant::approved()->whereNotNull('checked_in_at')->count();
 
-        // Source tracking (all registrants)
         $topSources = Registrant::whereNotNull('utm_source')
             ->select('utm_source', DB::raw('COUNT(*) as total'))
             ->groupBy('utm_source')
@@ -90,21 +90,37 @@ class AdminController extends Controller
             ->take(5)
             ->get();
 
-        // Referral code usage (all registrants)
         $referralCount = Registrant::whereNotNull('referral_code')
             ->where('referral_code', '!=', '')->count();
 
-        // Workshop waitlist
         $workshopWaitlistTotal = DB::table('workshop_waitlist')->count();
 
-        return view('admin.dashboard', compact(
+        return compact(
             'total', 'pending', 'approved', 'rejected',
             'recentRegistrants', 'chartData', 'maxDaily',
             'workshopCount', 'workshopRegistrations',
             'todayCount', 'trend', 'stalePending',
             'checkedInToday', 'checkedInTotal', 'topSources',
             'referralCount', 'workshopWaitlistTotal'
-        ));
+        );
+    }
+
+    /**
+     * Show the admin dashboard with registrant statistics & overview.
+     */
+    public function dashboard()
+    {
+        $data = $this->getDashboardStats();
+        return view('admin.dashboard', $data);
+    }
+
+    /**
+     * Return dashboard stats as JSON for real-time polling.
+     */
+    public function dashboardData()
+    {
+        $data = $this->getDashboardStats();
+        return response()->json($data);
     }
 
     /**
@@ -112,7 +128,7 @@ class AdminController extends Controller
      */
     public function approve(Request $request, Registrant $registrant)
     {
-        if (!auth()->user()->hasPermission('registrants')) {
+        if (!Auth::user()->hasPermission('registrants')) {
             return redirect()->back()->with('error', 'You do not have permission to approve registrants.');
         }
 
@@ -120,7 +136,7 @@ class AdminController extends Controller
 
         $registrant->update([
             'status'         => 'approved',
-            'approved_by'    => auth()->id(),
+            'approved_by'    => Auth::id(),
             'password'       => $plainPassword,
             'plain_password' => $plainPassword,
             'qr_token'       => Registrant::generateQrToken(),
@@ -128,17 +144,44 @@ class AdminController extends Controller
             'processed_at'   => now(),
         ]);
 
-        // Send approval email using template if available, otherwise fall back to credentials email
+        // Send approval email using template if available
         $template = EmailTemplate::activeOfType(EmailTemplate::TYPE_APPROVAL);
         if ($template) {
             EmailService::send($registrant, $template, ['password' => $plainPassword]);
         } else {
-            Mail::to($registrant->email)->send(
-                new RegistrantCredentials($registrant, $plainPassword)
-            );
+            // Fallback: send credentials directly via blade view + log manually
+            try {
+                Mail::to($registrant->email)->send(
+                    new RegistrantCredentials($registrant, $plainPassword)
+                );
+                \App\Models\EmailLog::create([
+                    'email_template_id' => null,
+                    'registrant_id'     => $registrant->id,
+                    'template_type'     => 'approval',
+                    'recipient_email'   => $registrant->email,
+                    'recipient_name'    => $registrant->display_name,
+                    'subject'           => 'Akun Anda Telah Disetujui — Login Credentials',
+                    'html_content'      => null, // not stored for fallback
+                    'status'            => 'sent',
+                    'sent_at'           => now(),
+                ]);
+            } catch (\Throwable $e) {
+                \App\Models\EmailLog::create([
+                    'email_template_id' => null,
+                    'registrant_id'     => $registrant->id,
+                    'template_type'     => 'approval',
+                    'recipient_email'   => $registrant->email,
+                    'recipient_name'    => $registrant->display_name,
+                    'subject'           => 'Akun Anda Telah Disetujui — Login Credentials',
+                    'html_content'      => null,
+                    'status'            => 'failed',
+                    'error_message'     => $e->getMessage(),
+                    'sent_at'           => now(),
+                ]);
+            }
         }
 
-        return redirect()->route('admin.dashboard')
+        return back()
             ->with('success', "Registrant <strong>{$registrant->name}</strong> has been approved. <br><small class='text-gray-600'>Password: <code class='bg-gray-100 px-1.5 py-0.5 rounded text-xs'>{$plainPassword}</code> (sent via email)</small>");
     }
 
@@ -147,29 +190,60 @@ class AdminController extends Controller
      */
     public function reject(Request $request, Registrant $registrant)
     {
-        if (!auth()->user()->hasPermission('registrants')) {
+        if (!Auth::user()->hasPermission('registrants')) {
             return redirect()->back()->with('error', 'You do not have permission to reject registrants.');
         }
 
         $request->validate([
-            'admin_notes' => ['required', 'string', 'max:500'],
-        ], [
-            'admin_notes.required' => 'Rejection reason is required.',
+            'admin_notes' => ['nullable', 'string', 'max:500'],
         ]);
 
         $registrant->update([
             'status'       => 'rejected',
-            'rejected_by'  => auth()->id(),
+            'rejected_by'  => Auth::id(),
             'admin_notes'  => $request->input('admin_notes'),
             'processed_at' => now(),
         ]);
 
-        // Send rejection email using template if available
-        EmailService::sendByType($registrant, EmailTemplate::TYPE_REJECTION, [
-            'admin_notes' => $request->input('admin_notes'),
-        ]);
+        // Send rejection email using template if available, otherwise fallback to blade view
+        $rejTemplate = EmailTemplate::activeOfType(EmailTemplate::TYPE_REJECTION);
+        if ($rejTemplate) {
+            EmailService::send($registrant, $rejTemplate, [
+                'admin_notes' => $request->input('admin_notes', ''),
+            ]);
+        } else {
+            try {
+                Mail::to($registrant->email)->send(
+                    new \App\Mail\RegistrantRejected($registrant)
+                );
+                \App\Models\EmailLog::create([
+                    'email_template_id' => null,
+                    'registrant_id'     => $registrant->id,
+                    'template_type'     => 'rejection',
+                    'recipient_email'   => $registrant->email,
+                    'recipient_name'    => $registrant->display_name,
+                    'subject'           => 'Pendaftaran Anda Ditolak',
+                    'html_content'      => null,
+                    'status'            => 'sent',
+                    'sent_at'           => now(),
+                ]);
+            } catch (\Throwable $e) {
+                \App\Models\EmailLog::create([
+                    'email_template_id' => null,
+                    'registrant_id'     => $registrant->id,
+                    'template_type'     => 'rejection',
+                    'recipient_email'   => $registrant->email,
+                    'recipient_name'    => $registrant->display_name,
+                    'subject'           => 'Pendaftaran Anda Ditolak',
+                    'html_content'      => null,
+                    'status'            => 'failed',
+                    'error_message'     => $e->getMessage(),
+                    'sent_at'           => now(),
+                ]);
+            }
+        }
 
-        return redirect()->route('admin.dashboard')
+        return back()
             ->with('success', "Registrant <strong>{$registrant->name}</strong> has been rejected and a notification email has been sent.");
     }
 
@@ -178,12 +252,87 @@ class AdminController extends Controller
      */
     public function show(Registrant $registrant)
     {
-        if (!auth()->user()->hasPermission('registrants')) {
+        if (!Auth::user()->hasPermission('registrants')) {
             return redirect()->route('admin.dashboard')->with('error', 'You do not have access to the Registrants page.');
         }
         $workshops = $registrant->workshops;
         $agendaItems = $registrant->agendaItems;
-        return view('admin.registrant-detail', compact('registrant', 'workshops', 'agendaItems'));
+        $emailLogs = $registrant->emailLogs()->latest('sent_at')->get();
+
+        // Determine which email types should have been sent based on registrant status
+        $sentTypes = $emailLogs->pluck('template_type')->unique()->toArray();
+        $allTypes = EmailTemplate::types();
+        $expectedTypes = [];
+
+        // Registration auto-reply should always be sent
+        $expectedTypes[] = [
+            'type' => 'registration',
+            'label' => $allTypes['registration']['label'],
+            'sent' => in_array('registration', $sentTypes),
+        ];
+
+        if ($registrant->isApproved()) {
+            $expectedTypes[] = [
+                'type' => 'approval',
+                'label' => $allTypes['approval']['label'],
+                'sent' => in_array('approval', $sentTypes),
+            ];
+            $expectedTypes[] = [
+                'type' => 'reminder',
+                'label' => $allTypes['reminder']['label'],
+                'sent' => in_array('reminder', $sentTypes),
+            ];
+        }
+
+        if ($registrant->status === 'rejected') {
+            $expectedTypes[] = [
+                'type' => 'rejection',
+                'label' => $allTypes['rejection']['label'],
+                'sent' => in_array('rejection', $sentTypes),
+            ];
+        }
+
+        // Workshop-related emails
+        $workshopApproved = $workshops->filter(fn($w) => $w->pivot?->status === 'approved');
+        $workshopRejected = $workshops->filter(fn($w) => $w->pivot?->status === 'rejected');
+
+        if ($workshopApproved->count() > 0) {
+            $expectedTypes[] = [
+                'type' => 'workshop_approval',
+                'label' => $allTypes['workshop_approval']['label'],
+                'sent' => in_array('workshop_approval', $sentTypes),
+            ];
+        }
+        if ($workshopRejected->count() > 0) {
+            $expectedTypes[] = [
+                'type' => 'workshop_rejection',
+                'label' => $allTypes['workshop_rejection']['label'],
+                'sent' => in_array('workshop_rejection', $sentTypes),
+            ];
+        }
+
+        // Track-related emails
+        $trackApproved = $agendaItems->filter(fn($a) => $a->pivot?->status === 'approved');
+        $trackRejected = $agendaItems->filter(fn($a) => $a->pivot?->status === 'rejected');
+
+        if ($trackApproved->count() > 0) {
+            $expectedTypes[] = [
+                'type' => 'track_approval',
+                'label' => $allTypes['track_approval']['label'],
+                'sent' => in_array('track_approval', $sentTypes),
+            ];
+        }
+        if ($trackRejected->count() > 0) {
+            $expectedTypes[] = [
+                'type' => 'track_rejection',
+                'label' => $allTypes['track_rejection']['label'],
+                'sent' => in_array('track_rejection', $sentTypes),
+            ];
+        }
+
+        return view('admin.registrant-detail', compact(
+            'registrant', 'workshops', 'agendaItems', 'emailLogs', 'expectedTypes'
+        ));
     }
 
     /**
@@ -192,7 +341,7 @@ class AdminController extends Controller
     public function index(Request $request)
     {
         // Permission check — clients without registrants permission are redirected
-        if (!auth()->user()->hasPermission('registrants')) {
+        if (!Auth::user()->hasPermission('registrants')) {
             return redirect()->route('admin.dashboard')->with('error', 'You do not have access to the Registrants page.');
         }
 
@@ -201,8 +350,7 @@ class AdminController extends Controller
         $utmMedium   = $request->get('utm_medium');
         $utmCampaign = $request->get('utm_campaign');
         $direct      = $request->get('direct');
-
-        $query = Registrant::latest();
+        $query = Registrant::withCount('emailLogs')->latest();
 
         if ($status === 'pending') {
             $query->pending();
@@ -251,9 +399,9 @@ class AdminController extends Controller
         $rejected = (clone $statsQuery)->rejected()->count();
 
         $utmFilter = $utmSource ?: null;
-
         return view('admin.registrants.index', compact(
-            'registrants', 'total', 'pending', 'approved', 'rejected', 'status', 'utmFilter'
+            'registrants', 'total', 'pending', 'approved', 'rejected',
+            'status', 'utmFilter'
         ));
     }
 
@@ -262,7 +410,7 @@ class AdminController extends Controller
      */
     public function edit(Registrant $registrant)
     {
-        if (!auth()->user()->hasPermission('registrants')) {
+        if (!Auth::user()->hasPermission('registrants')) {
             return redirect()->route('admin.registrants.show', $registrant)
                 ->with('error', 'You do not have permission to edit registrants.');
         }
@@ -275,7 +423,7 @@ class AdminController extends Controller
      */
     public function update(Request $request, Registrant $registrant)
     {
-        if (!auth()->user()->hasPermission('registrants')) {
+        if (!Auth::user()->hasPermission('registrants')) {
             return redirect()->back()->with('error', 'You do not have permission to update registrants.');
         }
 
@@ -292,6 +440,7 @@ class AdminController extends Controller
             'employees'    => ['nullable', 'string', 'max:50'],
             'notes'        => ['nullable', 'string', 'max:1000'],
             'admin_notes'  => ['nullable', 'string', 'max:2000'],
+
         ]);
 
         $registrant->update($validated);
@@ -305,7 +454,7 @@ class AdminController extends Controller
      */
     public function destroy(Registrant $registrant)
     {
-        if (!auth()->user()->hasPermission('registrants')) {
+        if (!Auth::user()->hasPermission('registrants')) {
             return redirect()->back()->with('error', 'You do not have permission to delete registrants.');
         }
 
@@ -322,7 +471,7 @@ class AdminController extends Controller
      */
     public function resendCredentials(Registrant $registrant)
     {
-        if (!auth()->user()->hasPermission('registrants')) {
+        if (!Auth::user()->hasPermission('registrants')) {
             return redirect()->back()->with('error', 'You do not have permission to resend credentials.');
         }
 
@@ -331,9 +480,37 @@ class AdminController extends Controller
                 ->with('error', 'This registrant has not been approved or has no password on record.');
         }
 
-        Mail::to($registrant->email)->send(
-            new RegistrantCredentials($registrant, $registrant->plain_password)
-        );
+        try {
+            Mail::to($registrant->email)->send(
+                new RegistrantCredentials($registrant, $registrant->plain_password)
+            );
+            \App\Models\EmailLog::create([
+                'email_template_id' => null,
+                'registrant_id'     => $registrant->id,
+                'template_type'     => 'approval',
+                'recipient_email'   => $registrant->email,
+                'recipient_name'    => $registrant->display_name,
+                'subject'           => 'Akun Anda Telah Disetujui — Login Credentials',
+                'html_content'      => null,
+                'status'            => 'sent',
+                'sent_at'           => now(),
+            ]);
+        } catch (\Throwable $e) {
+            \App\Models\EmailLog::create([
+                'email_template_id' => null,
+                'registrant_id'     => $registrant->id,
+                'template_type'     => 'approval',
+                'recipient_email'   => $registrant->email,
+                'recipient_name'    => $registrant->display_name,
+                'subject'           => 'Akun Anda Telah Disetujui — Login Credentials',
+                'html_content'      => null,
+                'status'            => 'failed',
+                'error_message'     => $e->getMessage(),
+                'sent_at'           => now(),
+            ]);
+            return redirect()->back()
+                ->with('error', "Failed to resend credentials: {$e->getMessage()}");
+        }
 
         return redirect()->back()
             ->with('success', "Credentials have been resent to <strong>{$registrant->email}</strong>.");
@@ -344,7 +521,7 @@ class AdminController extends Controller
      */
     public function updateNotes(Request $request, Registrant $registrant)
     {
-        if (!auth()->user()->canWrite() || !auth()->user()->hasPermission('registrants')) {
+        if (!Auth::user()->canWrite() || !Auth::user()->hasPermission('registrants')) {
             return response()->json(['error' => 'You do not have permission to update notes.'], 403);
         }
 
@@ -367,7 +544,7 @@ class AdminController extends Controller
      */
     public function bulkApprove(Request $request)
     {
-        if (!auth()->user()->hasPermission('registrants')) {
+        if (!Auth::user()->hasPermission('registrants')) {
             return redirect()->back()->with('error', 'You do not have permission to bulk approve.');
         }
 
@@ -384,7 +561,7 @@ class AdminController extends Controller
             $plainPassword = Str::random(10);
             $registrant->update([
                 'status'         => 'approved',
-                'approved_by'    => auth()->id(),
+                'approved_by'    => Auth::id(),
                 'password'       => $plainPassword,
                 'plain_password' => $plainPassword,
                 'qr_token'       => Registrant::generateQrToken(),
@@ -394,9 +571,35 @@ class AdminController extends Controller
             if ($template) {
                 EmailService::send($registrant, $template, ['password' => $plainPassword]);
             } else {
-                Mail::to($registrant->email)->send(
-                    new RegistrantCredentials($registrant, $plainPassword)
-                );
+                try {
+                    Mail::to($registrant->email)->send(
+                        new RegistrantCredentials($registrant, $plainPassword)
+                    );
+                    \App\Models\EmailLog::create([
+                        'email_template_id' => null,
+                        'registrant_id'     => $registrant->id,
+                        'template_type'     => 'approval',
+                        'recipient_email'   => $registrant->email,
+                        'recipient_name'    => $registrant->display_name,
+                        'subject'           => 'Akun Anda Telah Disetujui — Login Credentials',
+                        'html_content'      => null,
+                        'status'            => 'sent',
+                        'sent_at'           => now(),
+                    ]);
+                } catch (\Throwable $e) {
+                    \App\Models\EmailLog::create([
+                        'email_template_id' => null,
+                        'registrant_id'     => $registrant->id,
+                        'template_type'     => 'approval',
+                        'recipient_email'   => $registrant->email,
+                        'recipient_name'    => $registrant->display_name,
+                        'subject'           => 'Akun Anda Telah Disetujui — Login Credentials',
+                        'html_content'      => null,
+                        'status'            => 'failed',
+                        'error_message'     => $e->getMessage(),
+                        'sent_at'           => now(),
+                    ]);
+                }
             }
 
             $count++;
@@ -411,30 +614,64 @@ class AdminController extends Controller
      */
     public function bulkReject(Request $request)
     {
-        if (!auth()->user()->hasPermission('registrants')) {
+        if (!Auth::user()->hasPermission('registrants')) {
             return redirect()->back()->with('error', 'You do not have permission to bulk reject.');
         }
 
         $request->validate([
             'ids'         => ['required', 'array', 'min:1'],
             'ids.*'       => ['exists:registrants,id'],
-            'admin_notes' => ['required', 'string', 'max:500'],
+            'admin_notes' => ['nullable', 'string', 'max:500'],
         ]);
 
         $count = 0;
         $registrants = Registrant::whereIn('id', $request->ids)->pending()->get();
 
+        $rejTemplate = EmailTemplate::activeOfType(EmailTemplate::TYPE_REJECTION);
+
         foreach ($registrants as $registrant) {
             $registrant->update([
                 'status'       => 'rejected',
-                'rejected_by'  => auth()->id(),
+                'rejected_by'  => Auth::id(),
                 'admin_notes'  => $request->admin_notes,
                 'processed_at' => now(),
             ]);
 
-            EmailService::sendByType($registrant, EmailTemplate::TYPE_REJECTION, [
-                'admin_notes' => $request->admin_notes,
-            ]);
+            if ($rejTemplate) {
+                EmailService::send($registrant, $rejTemplate, [
+                    'admin_notes' => $request->admin_notes ?? '',
+                ]);
+            } else {
+                try {
+                    Mail::to($registrant->email)->send(
+                        new \App\Mail\RegistrantRejected($registrant)
+                    );
+                    \App\Models\EmailLog::create([
+                        'email_template_id' => null,
+                        'registrant_id'     => $registrant->id,
+                        'template_type'     => 'rejection',
+                        'recipient_email'   => $registrant->email,
+                        'recipient_name'    => $registrant->display_name,
+                        'subject'           => 'Pendaftaran Anda Ditolak',
+                        'html_content'      => null,
+                        'status'            => 'sent',
+                        'sent_at'           => now(),
+                    ]);
+                } catch (\Throwable $e) {
+                    \App\Models\EmailLog::create([
+                        'email_template_id' => null,
+                        'registrant_id'     => $registrant->id,
+                        'template_type'     => 'rejection',
+                        'recipient_email'   => $registrant->email,
+                        'recipient_name'    => $registrant->display_name,
+                        'subject'           => 'Pendaftaran Anda Ditolak',
+                        'html_content'      => null,
+                        'status'            => 'failed',
+                        'error_message'     => $e->getMessage(),
+                        'sent_at'           => now(),
+                    ]);
+                }
+            }
 
             $count++;
         }
@@ -448,11 +685,15 @@ class AdminController extends Controller
      */
     public function exportCsv(Request $request)
     {
-        if (!auth()->user()->hasPermission('registrants')) {
+        if (!Auth::user()->hasPermission('registrants')) {
             return redirect()->route('admin.dashboard')->with('error', 'You do not have permission to export registrants.');
         }
 
-        $status = $request->get('status', 'all');
+        $status     = $request->get('status', 'all');
+        $utmSource   = $request->get('utm_source');
+        $utmMedium   = $request->get('utm_medium');
+        $utmCampaign = $request->get('utm_campaign');
+        $direct      = $request->get('direct');
 
         $query = Registrant::query();
 
@@ -462,6 +703,19 @@ class AdminController extends Controller
             $query->approved();
         } elseif ($status === 'rejected') {
             $query->rejected();
+        }
+
+        if ($utmSource) {
+            $query->where('utm_source', $utmSource);
+        }
+        if ($utmMedium) {
+            $query->where('utm_medium', $utmMedium);
+        }
+        if ($utmCampaign) {
+            $query->where('utm_campaign', $utmCampaign);
+        }
+        if ($direct) {
+            $query->whereNull('utm_source');
         }
 
         $registrants = $query->latest()->get();
@@ -483,6 +737,7 @@ class AdminController extends Controller
                 'Job Title', 'Job Role', 'Company', 'Industry',
                 'Employees', 'Status', 'Unique Code', 'Notes', 'Admin Notes',
                 'Registered At', 'Processed At',
+                'UTM Source', 'UTM Medium', 'UTM Campaign',
             ]);
 
             foreach ($registrants as $r) {
@@ -504,6 +759,9 @@ class AdminController extends Controller
                     $r->admin_notes,
                     $r->created_at?->format('Y-m-d H:i:s'),
                     $r->processed_at?->format('Y-m-d H:i:s'),
+                    $r->utm_source ?? '',
+                    $r->utm_medium ?? '',
+                    $r->utm_campaign ?? '',
                 ]);
             }
 
@@ -527,3 +785,4 @@ class AdminController extends Controller
             ->with('success', "Registration form is now <strong>{$status}</strong>.");
     }
 }
+

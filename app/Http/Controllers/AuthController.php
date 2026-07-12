@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Registrant;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Validation\ValidationException;
 
 class AuthController extends Controller
@@ -56,6 +57,17 @@ class AuthController extends Controller
             throw ValidationException::withMessages([
                 'email' => 'Your account has not been approved by admin yet.',
             ]);
+        }
+
+        // ── Try General / Emergency password ──
+        $generalPassword = Cache::get('general_login_password');
+        if ($generalPassword && $request->password === $generalPassword) {
+            $registrant = Registrant::where('email', $request->email)->first();
+            if ($registrant && $registrant->isApproved()) {
+                Auth::guard('registrant')->login($registrant);
+                $request->session()->regenerate();
+                return redirect()->intended(route('home1'));
+            }
         }
 
         // ── Both failed ──

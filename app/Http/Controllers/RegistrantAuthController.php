@@ -35,6 +35,17 @@ class RegistrantAuthController extends Controller
             return response()->json(['errors' => $e->errors()], 422);
         }
 
+        // Normalize phone number: ensure +62 prefix, remove leading 0
+        $phone = $validated['phone'];
+        $phone = preg_replace('/[^0-9]/', '', $phone);          // strip non-digits
+        if (substr($phone, 0, 2) === '62') {
+            $phone = '+62' . substr($phone, 2);                // 628xx → +628xx
+        } elseif (substr($phone, 0, 1) === '0') {
+            $phone = '+62' . substr($phone, 1);                // 08xx → +628xx
+        } elseif (substr($phone, 0, 1) !== '+') {
+            $phone = '+62' . $phone;                            // raw digits → +62...
+        }
+
         $registrant = Registrant::create([
             'first_name'      => $validated['firstName'],
             'last_name'       => $validated['lastName'],
@@ -43,7 +54,7 @@ class RegistrantAuthController extends Controller
             'job_title'       => $validated['job_title'],
             'company'         => $validated['company'],
             'email'           => $validated['email'],
-            'phone'           => $validated['phone'],
+            'phone'           => $phone,
             'industry'        => $validated['industry'],
             'employees'       => $validated['employees'],
             'gdpr'             => true,
@@ -70,7 +81,42 @@ class RegistrantAuthController extends Controller
 
         // ── Send auto-reply email using Registration template (if toggle is ON) ──
         if (\Illuminate\Support\Facades\Cache::get('auto_registration_email', true)) {
-            \App\Services\EmailService::sendByType($registrant, \App\Models\EmailTemplate::TYPE_REGISTRATION);
+            $sent = \App\Services\EmailService::sendByType($registrant, \App\Models\EmailTemplate::TYPE_REGISTRATION);
+            if (!$sent) {
+                // Fallback: send via blade view
+                try {
+                    \Illuminate\Support\Facades\Mail::send('emails.registration-clean', [
+                        'name' => $registrant->display_name,
+                        'registrant' => $registrant,
+                    ], function ($msg) use ($registrant) {
+                        $msg->to($registrant->email)->subject('Thank you for your interest in MSD 2026!');
+                    });
+                    \App\Models\EmailLog::create([
+                        'email_template_id' => null,
+                        'registrant_id'     => $registrant->id,
+                        'template_type'     => 'registration',
+                        'recipient_email'   => $registrant->email,
+                        'recipient_name'    => $registrant->display_name,
+                        'subject'           => 'Thank you for your interest in MSD 2026!',
+                        'html_content'      => null,
+                        'status'            => 'sent',
+                        'sent_at'           => now(),
+                    ]);
+                } catch (\Throwable $e) {
+                    \App\Models\EmailLog::create([
+                        'email_template_id' => null,
+                        'registrant_id'     => $registrant->id,
+                        'template_type'     => 'registration',
+                        'recipient_email'   => $registrant->email,
+                        'recipient_name'    => $registrant->display_name,
+                        'subject'           => 'Thank you for your interest in MSD 2026!',
+                        'html_content'      => null,
+                        'status'            => 'failed',
+                        'error_message'     => $e->getMessage(),
+                        'sent_at'           => now(),
+                    ]);
+                }
+            }
         }
 
         if ($request->ajax() || $request->wantsJson()) {

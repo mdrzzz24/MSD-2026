@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="icon" type="image/png" href="<?php echo e(asset('img/metrodata.png')); ?>">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Check-in Log — <?php echo e(config('app.name')); ?></title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<script>tailwind.config={theme:{extend:{fontFamily:{sans:['Inter','system-ui','sans-serif']}}}}</script>
+</head>
+<body class="bg-gray-50 font-sans antialiased">
+<div class="flex min-h-screen">
+<?php echo $__env->make('admin.partials.sidebar', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
+<main class="flex-1 lg:ml-64">
+<header class="sticky top-0 z-30 bg-white/80 backdrop-blur border-b border-gray-200">
+<div class="flex items-center justify-between h-16 px-4 sm:px-6 lg:px-8">
+<div class="flex items-center gap-4">
+<button id="sidebarToggle" class="lg:hidden p-2 -ml-2 text-gray-500 hover:text-gray-700 rounded-lg hover:bg-gray-100">
+<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+</button>
+<div><h1 class="text-lg font-bold text-gray-900">Check-in Log</h1><p class="text-xs text-gray-500">All checked-in registrants</p></div>
+</div>
+<div class="flex items-center gap-2">
+    <a href="<?php echo e(route('admin.management.checkin.export-csv')); ?>"
+       class="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-medium rounded-lg border border-gray-200 text-gray-600 bg-white hover:bg-gray-50 transition">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+        Export CSV
+    </a>
+</div>
+</div>
+</header>
+<div class="p-4 sm:p-6 lg:p-8 space-y-6">
+<div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+<div class="overflow-x-auto">
+<table class="w-full">
+<thead><tr class="bg-gray-50/80">
+<th class="px-5 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Name</th>
+<th class="px-5 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Email</th>
+<th class="px-5 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Company</th>
+<th class="px-5 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Checked In At</th>
+</tr></thead>
+<tbody class="divide-y divide-gray-50">
+<?php $__empty_1 = true; $__currentLoopData = $checkedIn; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $r): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
+<tr class="hover:bg-gray-50/50">
+<td class="px-5 py-4"><a href="<?php echo e(route('admin.registrants.show', $r)); ?>" class="text-sm font-semibold text-indigo-600 hover:text-indigo-800"><?php echo e($r->name); ?></a></td>
+<td class="px-5 py-4"><span class="text-sm text-gray-600"><?php echo e($r->email); ?></span></td>
+<td class="px-5 py-4"><span class="text-sm text-gray-600"><?php echo e($r->company ?? '—'); ?></span></td>
+<td class="px-5 py-4"><span class="text-sm font-medium text-emerald-600"><?php echo e($r->checked_in_at->format('d M Y, H:i')); ?></span></td>
+</tr>
+<?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
+<tr><td colspan="4" class="text-center py-16 text-gray-400">No check-ins yet</td></tr>
+<?php endif; ?>
+</tbody>
+</table>
+</div>
+<?php if($checkedIn->hasPages()): ?>
+<div class="px-5 py-4 border-t border-gray-100"><?php echo e($checkedIn->links()); ?></div>
+<?php endif; ?>
+</div>
+</div>
+</main>
+</div>
+<?php echo $__env->make('admin.partials.mobile-sidebar', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
+<script>
+document.getElementById('sidebarToggle')?.addEventListener('click', () => {
+document.getElementById('mobileSidebar')?.classList.toggle('-translate-x-full');
+document.getElementById('sidebarOverlay')?.classList.toggle('hidden');
+});
+</script>
+</body>
+</html>
+<?php /**PATH /Users/mdrz/2026/MSD26/resources/views/admin/management/checkin-log.blade.php ENDPATH**/ ?>

@@ -28,9 +28,7 @@
     </div>
 </header>
 <div class="p-4 sm:p-6 lg:p-8">
-    @if (session('success'))
-        <div class="flex items-start gap-3 bg-emerald-50 border border-emerald-200 text-emerald-800 px-5 py-4 rounded-2xl mb-6">{!! session('success') !!}</div>
-    @endif
+    @include('admin.partials.notification')
 
     <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
         <table class="w-full">

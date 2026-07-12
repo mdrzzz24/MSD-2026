@@ -2,12 +2,19 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Concerns\Exportable;
+use App\Models\EmailLog;
+use App\Models\EmailTemplate;
+use App\Models\Registrant;
 use App\Models\Workshop;
 use App\Services\EmailService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Mail;
 
 class AdminWorkshopController extends Controller
 {
+    use Exportable;
     /**
      * List all workshops.
      */
@@ -137,31 +144,66 @@ class AdminWorkshopController extends Controller
      */
     public function approveRegistrant(Workshop $workshop, $registrantId)
     {
-        if (!auth()->user()->hasPermission('workshop_registrants')) {
+        if (!Auth::user()->hasPermission('workshop_registrants')) {
             return back()->with('error', 'You do not have permission to approve workshop registrations.');
+        }
+
+        // Load registrant
+        $registrant = Registrant::find($registrantId);
+        if (!$registrant) {
+            return back()->with('error', 'Registrant not found.');
         }
 
         $workshop->registrants()->updateExistingPivot($registrantId, [
             'status'       => 'approved',
-            'processed_by' => auth()->id(),
+            'processed_by' => Auth::id(),
             'processed_at' => now(),
         ]);
 
         // Also sync to linked agenda items
         foreach ($workshop->agendaItems as $item) {
-            $registrant = \App\Models\Registrant::find($registrantId);
             $existA = $registrant->agendaItems()->where('agenda_item_id', $item->id)->first();
             if ($existA) {
                 $registrant->agendaItems()->updateExistingPivot($item->id, [
-                    'status' => 'approved', 'processed_by' => auth()->id(), 'processed_at' => now(),
+                    'status' => 'approved', 'processed_by' => Auth::id(), 'processed_at' => now(),
                 ]);
             }
         }
 
-        // Send workshop approval email
-        EmailService::sendByType($registrant, \App\Models\EmailTemplate::TYPE_WORKSHOP_APPROVAL, [
-            'workshop_name' => $workshop->title,
-        ]);
+        // Send workshop approval email (with fallback)
+        $tmpl = EmailTemplate::activeOfType(EmailTemplate::TYPE_WORKSHOP_APPROVAL);
+        if ($tmpl) {
+            EmailService::send($registrant, $tmpl, ['workshop_name' => $workshop->title]);
+        } else {
+            try {
+                Mail::send('emails.workshop-approved', [
+                    'registrant'   => $registrant,
+                    'workshopName' => $workshop->title,
+                ], function ($msg) use ($registrant, $workshop) {
+                    $msg->to($registrant->email)->subject("Workshop Approved: {$workshop->title}");
+                });
+                EmailLog::create([
+                    'registrant_id'   => $registrant->id,
+                    'template_type'   => 'workshop_approval',
+                    'recipient_email' => $registrant->email,
+                    'recipient_name'  => $registrant->display_name,
+                    'subject'         => "Workshop Approved: {$workshop->title}",
+                    'status'          => 'sent',
+                    'sent_at'         => now(),
+                ]);
+            } catch (\Throwable $e) {
+                EmailLog::create([
+                    'registrant_id'   => $registrant->id,
+                    'template_type'   => 'workshop_approval',
+                    'recipient_email' => $registrant->email,
+                    'recipient_name'  => $registrant->display_name,
+                    'subject'         => "Workshop Approved: {$workshop->title}",
+                    'status'          => 'failed',
+                    'error_message'   => $e->getMessage(),
+                    'sent_at'         => now(),
+                ]);
+            }
+        }
 
         return back()->with('success', 'Workshop registration approved.');
     }
@@ -171,41 +213,143 @@ class AdminWorkshopController extends Controller
      */
     public function rejectRegistrant(Request $request, Workshop $workshop, $registrantId)
     {
-        if (!auth()->user()->hasPermission('workshop_registrants')) {
+        if (!Auth::user()->hasPermission('workshop_registrants')) {
             return back()->with('error', 'You do not have permission to reject workshop registrations.');
         }
 
         $request->validate([
-            'admin_notes' => ['required', 'string', 'max:500'],
-        ], [
-            'admin_notes.required' => 'Rejection reason is required.',
+            'admin_notes' => ['nullable', 'string', 'max:500'],
         ]);
+
+        // Load registrant
+        $registrant = Registrant::find($registrantId);
+        if (!$registrant) {
+            return back()->with('error', 'Registrant not found.');
+        }
+
+        // Only super admin can cancel an already-approved registration
+        $pivot = $workshop->registrants()->wherePivot('registrant_id', $registrantId)->first();
+        $currentStatus = $pivot?->pivot?->status;
+        if ($currentStatus === 'approved' && !Auth::user()->isSuperAdmin()) {
+            return back()->with('error', 'Only a super admin can cancel an approved workshop registration.');
+        }
+
+        $adminNotes = $request->input('admin_notes', '');
 
         $workshop->registrants()->updateExistingPivot($registrantId, [
             'status'       => 'rejected',
-            'admin_notes'  => $request->input('admin_notes'),
-            'processed_by' => auth()->id(),
+            'admin_notes'  => $adminNotes,
+            'processed_by' => Auth::id(),
             'processed_at' => now(),
         ]);
 
         // Also sync to linked agenda items
         foreach ($workshop->agendaItems as $item) {
-            $registrant = \App\Models\Registrant::find($registrantId);
             $existA = $registrant->agendaItems()->where('agenda_item_id', $item->id)->first();
             if ($existA) {
                 $registrant->agendaItems()->updateExistingPivot($item->id, [
-                    'status' => 'rejected', 'admin_notes' => $request->input('admin_notes'),
-                    'processed_by' => auth()->id(), 'processed_at' => now(),
+                    'status' => 'rejected', 'admin_notes' => $adminNotes,
+                    'processed_by' => Auth::id(), 'processed_at' => now(),
                 ]);
             }
         }
 
-        // Send workshop rejection email
-        EmailService::sendByType($registrant, \App\Models\EmailTemplate::TYPE_WORKSHOP_REJECTION, [
-            'workshop_name' => $workshop->title,
-            'admin_notes'   => $request->input('admin_notes'),
-        ]);
+        // Send workshop rejection email (with fallback)
+        $tmpl = EmailTemplate::activeOfType(EmailTemplate::TYPE_WORKSHOP_REJECTION);
+        if ($tmpl) {
+            EmailService::send($registrant, $tmpl, [
+                'workshop_name' => $workshop->title,
+                'admin_notes'   => $adminNotes,
+            ]);
+        } else {
+            try {
+                Mail::send('emails.workshop-rejected', [
+                    'registrant'   => $registrant,
+                    'workshopName' => $workshop->title,
+                    'adminNotes'   => $adminNotes,
+                ], function ($msg) use ($registrant, $workshop) {
+                    $msg->to($registrant->email)->subject("Workshop Registration Rejected: {$workshop->title}");
+                });
+                EmailLog::create([
+                    'registrant_id'   => $registrant->id,
+                    'template_type'   => 'workshop_rejection',
+                    'recipient_email' => $registrant->email,
+                    'recipient_name'  => $registrant->display_name,
+                    'subject'         => "Workshop Registration Rejected: {$workshop->title}",
+                    'status'          => 'sent',
+                    'sent_at'         => now(),
+                ]);
+            } catch (\Throwable $e) {
+                EmailLog::create([
+                    'registrant_id'   => $registrant->id,
+                    'template_type'   => 'workshop_rejection',
+                    'recipient_email' => $registrant->email,
+                    'recipient_name'  => $registrant->display_name,
+                    'subject'         => "Workshop Registration Rejected: {$workshop->title}",
+                    'status'          => 'failed',
+                    'error_message'   => $e->getMessage(),
+                    'sent_at'         => now(),
+                ]);
+            }
+        }
 
         return back()->with('success', 'Workshop registration rejected.');
+    }
+
+    /**
+     * Export all workshops registrants.
+     */
+    public function exportCsv()
+    {
+        $workshops = Workshop::with('registrants')->orderBy('title')->get();
+
+        $headers = ['Workshop', 'Date', 'Time', 'Registrant Name', 'Email', 'Phone', 'Company', 'Job Title', 'Status', 'Registered At', 'UTM Source', 'UTM Medium', 'UTM Campaign'];
+        $rows = [];
+
+        foreach ($workshops as $w) {
+            foreach ($w->registrants as $r) {
+                $rows[] = [
+                    $w->title,
+                    $w->date ? $w->date->format('Y-m-d') : '-',
+                    ($w->start_time ? substr($w->start_time, 0, 5) : '') . ' - ' . ($w->end_time ? substr($w->end_time, 0, 5) : ''),
+                    $r->display_name ?: $r->name,
+                    $r->email,
+                    $r->phone ?? '-',
+                    $r->company ?? '-',
+                    $r->job_title ?? '-',
+                    $r->pivot->status ?? '-',
+                    $r->created_at->format('Y-m-d H:i'),
+                    $r->utm_source ?? '',
+                    $r->utm_medium ?? '',
+                    $r->utm_campaign ?? '',
+                ];
+            }
+        }
+
+        return $this->csvDownload($headers, $rows, 'workshops-all-' . now()->format('YmdHis') . '.csv');
+    }
+
+    /**
+     * Export single workshop registrants.
+     */
+    public function exportWorkshopCsv(Workshop $workshop)
+    {
+        $registrants = $workshop->registrants()->orderBy('name')->get();
+
+        $headers = ['Registrant Name', 'Email', 'Phone', 'Company', 'Job Title', 'Status', 'Registered At', 'UTM Source', 'UTM Medium', 'UTM Campaign'];
+        $rows = $registrants->map(fn($r) => [
+            $r->display_name ?: $r->name,
+            $r->email,
+            $r->phone ?? '-',
+            $r->company ?? '-',
+            $r->job_title ?? '-',
+            $r->pivot->status ?? '-',
+            $r->created_at->format('Y-m-d H:i'),
+            $r->utm_source ?? '',
+            $r->utm_medium ?? '',
+            $r->utm_campaign ?? '',
+        ])->toArray();
+
+        return $this->csvDownload($headers, $rows, 'workshop-' . $workshop->id . '-' . now()->format('YmdHis') . '.csv');
     }
 }

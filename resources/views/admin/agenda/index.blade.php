@@ -42,9 +42,7 @@
     </div>
 </header>
 <div class="p-4 sm:p-6 lg:p-8">
-    @if (session('success'))
-        <div class="flex items-start gap-3 bg-emerald-50 border border-emerald-200 text-emerald-800 px-5 py-4 rounded-2xl mb-6"><svg class="w-5 h-5 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg><span class="text-sm">{!! session('success') !!}</span></div>
-    @endif
+    @include('admin.partials.notification')
 
     <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 overflow-x-auto">
         <table class="agenda-table w-full">
@@ -90,10 +88,18 @@
                                         @else
                                             {{ $fullRow->title }}
                                         @endif
+                                        @if ($fullRow->feedback_enabled)
+                                            <span class="text-[9px] text-emerald-500 font-normal ml-1">📋</span>
+                                        @endif
                                     </span>
                                     <div class="cell-actions justify-center">
                                         <a href="{{ route('admin.agenda.edit', $fullRow) }}" class="bg-amber-100 text-amber-700 hover:bg-amber-200">Edit</a>
-
+                                        <form action="{{ route('admin.agenda.feedback.toggle', $fullRow) }}" method="POST" style="display:inline">
+                                            @csrf
+                                            <button type="submit" class="{{ $fullRow->feedback_enabled ? 'bg-emerald-100 text-emerald-600 hover:bg-emerald-200' : 'bg-gray-100 text-gray-400 hover:bg-gray-200' }}" style="font-size:10px;padding:2px 6px;border-radius:3px;border:none;cursor:pointer">
+                                                {{ $fullRow->feedback_enabled ? 'FB ON' : 'FB OFF' }}
+                                            </button>
+                                        </form>
                                         <form action="{{ route('admin.agenda.destroy', $fullRow) }}" method="POST" onsubmit="return confirm('Delete &quot;{{ $fullRow->title }}&quot;?')">
                                             @csrf @method('DELETE')
                                             <button class="bg-red-100 text-red-600 hover:bg-red-200">Delete</button>
@@ -144,9 +150,12 @@
                                         $unRight = $item->colspan > 1 ? '<form action="' . route('admin.agenda.merge', [$item, 'dir' => 'unright']) . '" method="POST" style="display:inline">' . csrf_field() . '<button type="submit" class="btn-merge bg-amber-50 text-amber-400 hover:bg-amber-100" title="Unmerge right">←</button></form>' : '';
                                         $unDown  = $item->rowspan > 1 ? '<form action="' . route('admin.agenda.merge', [$item, 'dir' => 'undown']) . '" method="POST" style="display:inline">' . csrf_field() . '<button type="submit" class="btn-merge bg-indigo-50 text-indigo-400 hover:bg-indigo-100" title="Unmerge down">↑</button></form>' : '';
 
+                                        $fbOn = $item->feedback_enabled;
+                                        $fbToggle = '<form action="' . route('admin.agenda.feedback.toggle', $item) . '" method="POST" style="display:inline">' . csrf_field() . '<button type="submit" class="' . ($fbOn ? 'bg-emerald-100 text-emerald-600 hover:bg-emerald-200' : 'bg-gray-100 text-gray-400 hover:bg-gray-200') . '" style="display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;font-size:9px;border-radius:3px;cursor:pointer;transition:0.15s;text-decoration:none;border:none" title="' . ($fbOn ? 'Feedback ON - click to turn off' : 'Feedback OFF - click to turn on') . '">' . ($fbOn ? 'FB' : 'fb') . '</button></form>';
+
                                         $cells[] = '<td' . $attrs . '>
                                             <div class="cell-item">
-                                                <span class="cell-title">' . $tag . $badge . '</span>
+                                                <span class="cell-title">' . $tag . $badge . ($fbOn ? ' <span class="text-[9px] text-emerald-500 font-normal">📋</span>' : '') . '</span>
                                                 <div class="cell-actions">
                                                     <a href="' . route('admin.agenda.edit', $item) . '" class="bg-amber-100 text-amber-700 hover:bg-amber-200">Edit</a>
                                                     <form action="' . route('admin.agenda.destroy', $item) . '" method="POST" style="display:inline" onsubmit="return confirm(\'Delete &quot;' . e($item->title) . '&quot;?\')">
@@ -155,7 +164,7 @@
                                                         <button class="bg-red-100 text-red-600 hover:bg-red-200">Delete</button>
                                                     </form>
                                                     <a href="' . route('admin.agenda.create', ['room' => $rm, 'start_time' => $startT, 'end_time' => $endT]) . '" class="bg-indigo-50 text-indigo-600 hover:bg-indigo-100">+</a>
-                                                    ' . $unRight . $mergeRight . $unDown . $mergeDown . '
+                                                    ' . $unRight . $mergeRight . $unDown . $mergeDown . $fbToggle . '
                                                 </div>
                                             </div>
                                         </td>';

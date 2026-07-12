@@ -69,22 +69,7 @@
         <div class="p-4 sm:p-6 lg:p-8 space-y-6">
 
             
-            <?php if(session('success')): ?>
-                <div class="flex items-start gap-3 bg-emerald-50 border border-emerald-200 text-emerald-800 px-5 py-4 rounded-2xl">
-                    <svg class="w-5 h-5 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                    </svg>
-                    <span class="text-sm"><?php echo session('success'); ?></span>
-                </div>
-            <?php endif; ?>
-            <?php if(session('error')): ?>
-                <div class="flex items-start gap-3 bg-red-50 border border-red-200 text-red-800 px-5 py-4 rounded-2xl">
-                    <svg class="w-5 h-5 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                    </svg>
-                    <span class="text-sm"><?php echo e(session('error')); ?></span>
-                </div>
-            <?php endif; ?>
+            <?php echo $__env->make('admin.partials.notification', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
 
             
             <?php if(Auth::user()->isSuperAdmin()): ?>
@@ -93,7 +78,7 @@
                 <div>
                     <p class="text-sm font-bold text-gray-900">Registration Form</p>
                     <p class="text-xs text-gray-500">
-                        Status: 
+                        Status:
                         <?php if($forcedOpen): ?>
                             <span class="text-emerald-600 font-semibold">Forced OPEN</span> — form open regardless of countdown
                         <?php else: ?>
@@ -129,19 +114,19 @@
                     </div>
                     <div class="mt-6 flex items-center gap-6">
                         <div>
-                            <p class="text-3xl font-bold"><?php echo e($todayCount); ?></p>
+                            <p class="text-3xl font-bold" data-stat="todayCount"><?php echo e($todayCount); ?></p>
                             <p class="text-indigo-200 text-xs">registrations today</p>
                         </div>
                         <div class="h-10 w-px bg-white/20"></div>
                         <div>
-                            <p class="text-3xl font-bold <?php echo e($trend >= 0 ? 'text-emerald-300' : 'text-red-300'); ?>">
+                            <p class="text-3xl font-bold <?php echo e($trend >= 0 ? 'text-emerald-300' : 'text-red-300'); ?>" data-stat="trend" data-trend="<?php echo e($trend); ?>">
                                 <?php echo e($trend >= 0 ? '+' : ''); ?><?php echo e($trend); ?>%
                             </p>
                             <p class="text-indigo-200 text-xs">vs yesterday</p>
                         </div>
                         <div class="h-10 w-px bg-white/20"></div>
                         <div>
-                            <p class="text-3xl font-bold text-amber-300"><?php echo e($pending); ?></p>
+                            <p class="text-3xl font-bold text-amber-300" data-stat="pending"><?php echo e($pending); ?></p>
                             <p class="text-indigo-200 text-xs">pending review</p>
                         </div>
                     </div>
@@ -151,38 +136,38 @@
                 <div class="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm">
                     <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-4">Status Distribution</h3>
                     <?php $grand = max($total, 1); ?>
-                    <div class="space-y-3">
+                    <div class="space-y-3" id="status-distribution">
                         <div>
                             <div class="flex justify-between text-xs mb-1">
                                 <span class="font-medium text-gray-700">Approved</span>
-                                <span class="text-gray-500"><?php echo e($approved); ?> (<?php echo e(round($approved/$grand*100)); ?>%)</span>
+                                <span class="text-gray-500"><span data-stat="approved"><?php echo e($approved); ?></span> (<span data-stat="approvedPct"><?php echo e(round($approved/$grand*100)); ?></span>%)</span>
                             </div>
                             <div class="h-2 bg-gray-100 rounded-full overflow-hidden">
-                                <div class="h-full bg-emerald-500 rounded-full transition-all" style="width: <?php echo e($approved/$grand*100); ?>%"></div>
+                                <div class="h-full bg-emerald-500 rounded-full transition-all" data-statbar="approved" style="width: <?php echo e($approved/$grand*100); ?>%"></div>
                             </div>
                         </div>
                         <div>
                             <div class="flex justify-between text-xs mb-1">
                                 <span class="font-medium text-gray-700">Pending</span>
-                                <span class="text-gray-500"><?php echo e($pending); ?> (<?php echo e(round($pending/$grand*100)); ?>%)</span>
+                                <span class="text-gray-500"><span data-stat="pending2"><?php echo e($pending); ?></span> (<span data-stat="pendingPct"><?php echo e(round($pending/$grand*100)); ?></span>%)</span>
                             </div>
                             <div class="h-2 bg-gray-100 rounded-full overflow-hidden">
-                                <div class="h-full bg-amber-400 rounded-full transition-all" style="width: <?php echo e($pending/$grand*100); ?>%"></div>
+                                <div class="h-full bg-amber-400 rounded-full transition-all" data-statbar="pending2" style="width: <?php echo e($pending/$grand*100); ?>%"></div>
                             </div>
                         </div>
                         <div>
                             <div class="flex justify-between text-xs mb-1">
                                 <span class="font-medium text-gray-700">Rejected</span>
-                                <span class="text-gray-500"><?php echo e($rejected); ?> (<?php echo e(round($rejected/$grand*100)); ?>%)</span>
+                                <span class="text-gray-500"><span data-stat="rejected"><?php echo e($rejected); ?></span> (<span data-stat="rejectedPct"><?php echo e(round($rejected/$grand*100)); ?></span>%)</span>
                             </div>
                             <div class="h-2 bg-gray-100 rounded-full overflow-hidden">
-                                <div class="h-full bg-red-400 rounded-full transition-all" style="width: <?php echo e($rejected/$grand*100); ?>%"></div>
+                                <div class="h-full bg-red-400 rounded-full transition-all" data-statbar="rejected" style="width: <?php echo e($rejected/$grand*100); ?>%"></div>
                             </div>
                         </div>
                     </div>
                     <div class="mt-4 pt-3 border-t border-gray-100 flex justify-between text-xs">
                         <span class="text-gray-400">Total</span>
-                        <span class="font-bold text-gray-900"><?php echo e($total); ?></span>
+                        <span class="font-bold text-gray-900"><span data-stat="total"><?php echo e($total); ?></span></span>
                     </div>
                 </div>
 
@@ -195,9 +180,9 @@
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
                             </svg>
-                            Review Pending (<?php echo e($pending); ?>)
+                            Review Pending (<span data-stat="pending"><?php echo e($pending); ?></span>)
                             <?php if($stalePending > 0): ?>
-                                <span class="ml-auto text-xs bg-red-100 text-red-600 px-2 py-0.5 rounded-full font-bold"><?php echo e($stalePending); ?> stale</span>
+                                <span class="ml-auto text-xs bg-red-100 text-red-600 px-2 py-0.5 rounded-full font-bold"><span data-stat="stalePending"><?php echo e($stalePending); ?></span> stale</span>
                             <?php endif; ?>
                         </a>
                         <a href="<?php echo e(route('admin.registrants.index')); ?>"
@@ -236,25 +221,23 @@
                             </span>
                         </div>
                     </div>
-                    <div class="flex items-end gap-1.5 h-36">
+                    <div class="flex items-end gap-1.5 h-36" id="realtime-chart">
                         <?php $__currentLoopData = $chartData; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $bar): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-                            <div class="flex-1 flex flex-col items-center gap-1 group relative">
+                            <div class="flex-1 flex flex-col items-center gap-1 group relative chart-bar" data-date="<?php echo e($bar['date']); ?>">
                                 <div class="w-full flex flex-col-reverse" style="height: 140px;">
-                                    
                                     <?php if($bar['approved'] > 0): ?>
-                                        <div class="w-full bg-emerald-400 rounded-t transition-all duration-500 hover:bg-emerald-500"
+                                        <div class="w-full bg-emerald-400 rounded-t transition-all duration-500 hover:bg-emerald-500 chart-bar-approved"
                                              style="height: <?php echo e(max(2, $bar['approved'] / $maxDaily * 130)); ?>px"
                                              title="<?php echo e($bar['date']); ?>: <?php echo e($bar['approved']); ?> approved"></div>
                                     <?php endif; ?>
-                                    
                                     <?php $pendingBar = $bar['total'] - $bar['approved']; ?>
                                     <?php if($pendingBar > 0): ?>
-                                        <div class="w-full bg-indigo-400 rounded-t transition-all duration-500 hover:bg-indigo-500"
+                                        <div class="w-full bg-indigo-400 rounded-t transition-all duration-500 hover:bg-indigo-500 chart-bar-pending"
                                              style="height: <?php echo e(max(2, $pendingBar / $maxDaily * 130)); ?>px"
                                              title="<?php echo e($bar['date']); ?>: <?php echo e($pendingBar); ?> pending"></div>
                                     <?php endif; ?>
                                     <?php if($bar['total'] === 0): ?>
-                                        <div class="w-full bg-gray-100 rounded-t" style="height: 2px"></div>
+                                        <div class="w-full bg-gray-100 rounded-t chart-bar-empty" style="height: 2px"></div>
                                     <?php endif; ?>
                                 </div>
                                 <span class="text-[10px] text-gray-400 font-medium"><?php echo e($bar['day']); ?></span>
@@ -270,7 +253,7 @@
                         <div class="flex items-center justify-between">
                             <div>
                                 <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Total Registrants</p>
-                                <p class="text-3xl font-bold text-gray-900 mt-1"><?php echo e($total); ?></p>
+                                <p class="text-3xl font-bold text-gray-900 mt-1" data-stat="total"><?php echo e($total); ?></p>
                             </div>
                             <div class="w-11 h-11 bg-gray-100 rounded-xl flex items-center justify-center group-hover:bg-gray-200 transition">
                                 <svg class="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -284,7 +267,7 @@
                         <div class="flex items-center justify-between">
                             <div>
                                 <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Workshops</p>
-                                <p class="text-3xl font-bold text-gray-900 mt-1"><?php echo e($workshopCount); ?></p>
+                                <p class="text-3xl font-bold text-gray-900 mt-1" data-stat="workshopCount"><?php echo e($workshopCount); ?></p>
                             </div>
                             <div class="w-11 h-11 bg-indigo-50 rounded-xl flex items-center justify-center group-hover:bg-indigo-100 transition">
                                 <svg class="w-6 h-6 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -292,14 +275,14 @@
                                 </svg>
                             </div>
                         </div>
-                        <p class="text-xs text-gray-400 mt-2"><?php echo e($workshopRegistrations); ?> total registrations</p>
+                        <p class="text-xs text-gray-400 mt-2"><span data-stat="workshopRegistrations"><?php echo e($workshopRegistrations); ?></span> total registrations</p>
                     </a>
                     <a href="<?php echo e(route('admin.registrants.index', ['status' => 'pending'])); ?>"
                        class="block bg-white rounded-2xl p-5 border border-yellow-100 shadow-sm hover:shadow-md transition group">
                         <div class="flex items-center justify-between">
                             <div>
                                 <p class="text-xs font-semibold text-yellow-600 uppercase tracking-wider">Pending</p>
-                                <p class="text-3xl font-bold text-yellow-700 mt-1"><?php echo e($pending); ?></p>
+                                <p class="text-3xl font-bold text-yellow-700 mt-1" data-stat="pending"><?php echo e($pending); ?></p>
                             </div>
                             <div class="w-11 h-11 bg-yellow-100 rounded-xl flex items-center justify-center group-hover:bg-yellow-200 transition">
                                 <svg class="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -308,7 +291,7 @@
                             </div>
                         </div>
                         <?php if($stalePending > 0): ?>
-                            <p class="text-xs text-red-500 mt-2 font-medium">⚠ <?php echo e($stalePending); ?> pending for &gt;2 days</p>
+                            <p class="text-xs text-red-500 mt-2 font-medium">⚠ <span data-stat="stalePending"><?php echo e($stalePending); ?></span> pending for &gt;2 days</p>
                         <?php endif; ?>
                     </a>
                 </div>
@@ -328,27 +311,27 @@
                             View All &rarr;
                         </a>
                     </div>
-                    <div class="divide-y divide-gray-50">
+                    <div class="divide-y divide-gray-50" id="realtime-recent">
                         <?php $__empty_1 = true; $__currentLoopData = $recentRegistrants; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $r): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
-                            <a href="<?php echo e(route('admin.registrants.show', $r)); ?>"
+                            <a href="<?php echo e(route('admin.registrants.show', $r['id'])); ?>"
                                class="flex items-center gap-3 px-5 py-3 hover:bg-gray-50/50 transition">
                                 <div class="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-400 to-purple-500 flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
-                                    <?php echo e(strtoupper(substr($r->name, 0, 1))); ?>
+                                    <?php echo e($r['initial']); ?>
 
                                 </div>
                                 <div class="flex-1 min-w-0">
-                                    <p class="text-sm font-semibold text-gray-900 truncate"><?php echo e($r->name); ?></p>
-                                    <p class="text-xs text-gray-500 truncate"><?php echo e($r->email); ?></p>
+                                    <p class="text-sm font-semibold text-gray-900 truncate"><?php echo e($r['name']); ?></p>
+                                    <p class="text-xs text-gray-500 truncate"><?php echo e($r['email']); ?></p>
                                 </div>
                                 <div class="text-right flex-shrink-0">
-                                    <?php if($r->status === 'approved'): ?>
+                                    <?php if($r['status'] === 'approved'): ?>
                                         <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-50 text-emerald-700">Approved</span>
-                                    <?php elseif($r->status === 'rejected'): ?>
+                                    <?php elseif($r['status'] === 'rejected'): ?>
                                         <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-red-50 text-red-700">Rejected</span>
                                     <?php else: ?>
                                         <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-amber-50 text-amber-700">Pending</span>
                                     <?php endif; ?>
-                                    <p class="text-[10px] text-gray-400 mt-0.5"><?php echo e($r->created_at->diffForHumans()); ?></p>
+                                    <p class="text-[10px] text-gray-400 mt-0.5"><?php echo e($r['timeAgo']); ?></p>
                                 </div>
                             </a>
                         <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
@@ -366,7 +349,7 @@
                         <h3 class="text-sm font-bold text-gray-900 mb-4">Registration Overview</h3>
                         <div class="grid grid-cols-2 gap-4">
                             <div class="bg-emerald-50 rounded-xl p-4 text-center">
-                                <p class="text-2xl font-bold text-emerald-700"><?php echo e($approved); ?></p>
+                                <p class="text-2xl font-bold text-emerald-700" data-stat="approved"><?php echo e($approved); ?></p>
                                 <p class="text-xs text-emerald-600 mt-1">Approved</p>
                                 <?php if($total > 0): ?>
                                 <div class="mt-2 h-1.5 bg-emerald-200 rounded-full overflow-hidden">
@@ -375,7 +358,7 @@
                                 <?php endif; ?>
                             </div>
                             <div class="bg-amber-50 rounded-xl p-4 text-center">
-                                <p class="text-2xl font-bold text-amber-700"><?php echo e($pending); ?></p>
+                                <p class="text-2xl font-bold text-amber-700" data-stat="pending"><?php echo e($pending); ?></p>
                                 <p class="text-xs text-amber-600 mt-1">Pending</p>
                                 <?php if($total > 0): ?>
                                 <div class="mt-2 h-1.5 bg-amber-200 rounded-full overflow-hidden">
@@ -384,7 +367,7 @@
                                 <?php endif; ?>
                             </div>
                             <div class="bg-red-50 rounded-xl p-4 text-center">
-                                <p class="text-2xl font-bold text-red-600"><?php echo e($rejected); ?></p>
+                                <p class="text-2xl font-bold text-red-600" data-stat="rejected"><?php echo e($rejected); ?></p>
                                 <p class="text-xs text-red-500 mt-1">Rejected</p>
                                 <?php if($total > 0): ?>
                                 <div class="mt-2 h-1.5 bg-red-200 rounded-full overflow-hidden">
@@ -393,7 +376,7 @@
                                 <?php endif; ?>
                             </div>
                             <div class="bg-indigo-50 rounded-xl p-4 text-center">
-                                <p class="text-2xl font-bold text-indigo-700"><?php echo e($workshopRegistrations); ?></p>
+                                <p class="text-2xl font-bold text-indigo-700" data-stat="workshopRegistrations"><?php echo e($workshopRegistrations); ?></p>
                                 <p class="text-xs text-indigo-600 mt-1">Workshop Regs</p>
                                 <?php if($workshopCount > 0): ?>
                                 <p class="text-[10px] text-indigo-400 mt-1"><?php echo e(round($workshopRegistrations/max($workshopCount,1))); ?>/workshop avg</p>
@@ -406,7 +389,7 @@
                     <?php if($topSources->count() > 0): ?>
                     <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
                         <h3 class="text-sm font-bold text-gray-900 mb-3">Top Registration Sources</h3>
-                        <div class="space-y-2.5">
+                        <div class="space-y-2.5" id="realtime-sources">
                             <?php $__currentLoopData = $topSources; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $src): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                             <div class="flex items-center gap-3">
                                 <span class="text-xs font-medium text-gray-600 w-24 truncate"><?php echo e($src->utm_source ?: 'Direct'); ?></span>
@@ -425,14 +408,14 @@
                         <?php if($referralCount > 0): ?>
                         <div class="bg-white rounded-xl border border-gray-100 shadow-sm p-4">
                             <p class="text-xs text-gray-400 uppercase tracking-wider">Referral Codes</p>
-                            <p class="text-xl font-bold text-gray-900 mt-1"><?php echo e($referralCount); ?></p>
+                            <p class="text-xl font-bold text-gray-900 mt-1"><span data-stat="referralCount"><?php echo e($referralCount); ?></span></p>
                             <p class="text-xs text-gray-500">registrants with referral</p>
                         </div>
                         <?php endif; ?>
                         <?php if($workshopWaitlistTotal > 0): ?>
                         <div class="bg-white rounded-xl border border-gray-100 shadow-sm p-4">
                             <p class="text-xs text-gray-400 uppercase tracking-wider">Waitlist</p>
-                            <p class="text-xl font-bold text-amber-600 mt-1"><?php echo e($workshopWaitlistTotal); ?></p>
+                            <p class="text-xl font-bold text-amber-600 mt-1"><span data-stat="workshopWaitlistTotal"><?php echo e($workshopWaitlistTotal); ?></span></p>
                             <p class="text-xs text-gray-500">on workshop waitlist</p>
                         </div>
                         <?php endif; ?>
@@ -497,7 +480,7 @@
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a2 2 0 01-2 2H6a2 2 0 01-2-2V7a2 2 0 012-2h5a2 2 0 012 2v1"/>
                 </svg>
-                Keluar
+                Logout
             </button>
         </form>
     </nav>
@@ -524,7 +507,174 @@
 <style>
     .animate-fade-in { animation: fadeIn 0.2s ease-out; }
     @keyframes fadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+    .realtime-updated { animation: pulse-green 0.6s ease-out; }
+    @keyframes pulse-green {
+        0% { background-color: rgba(16, 185, 129, 0.3); }
+        100% { background-color: transparent; }
+    }
+    .realtime-updated-red { animation: pulse-red 0.6s ease-out; }
+    @keyframes pulse-red {
+        0% { background-color: rgba(239, 68, 68, 0.3); }
+        100% { background-color: transparent; }
+    }
 </style>
+
+
+<script>
+(function(){
+    var pollUrl = '<?php echo e(route("admin.dashboard.data")); ?>';
+    var pollInterval = 8000; // 8 detik
+
+    function updateDashboard(data) {
+        // ── Update semua data-stat ──
+        document.querySelectorAll('[data-stat]').forEach(function(el) {
+            var key = el.getAttribute('data-stat');
+            var val = data[key];
+            if (val === undefined) return;
+
+            var oldVal = el.textContent.trim();
+            // For trend, handle +/- prefix
+            if (key === 'trend') {
+                var prefix = val >= 0 ? '+' : '';
+                var newText = prefix + val + '%';
+                if (oldVal !== newText) {
+                    el.textContent = newText;
+                    el.className = el.className.replace(/text-emerald-300|text-red-300/g, '');
+                    el.classList.add(val >= 0 ? 'text-emerald-300' : 'text-red-300');
+                    highlight(el);
+                }
+                return;
+            }
+            // For percentages
+            if (key === 'approvedPct' || key === 'pendingPct' || key === 'rejectedPct') {
+                var newVal = Math.round(val) + '%';
+                if (oldVal !== newVal) {
+                    el.textContent = newVal;
+                    highlight(el);
+                }
+                return;
+            }
+            // Numeric values
+            var numVal = Number(val);
+            var oldNum = Number(oldVal.replace(/[+,%]/g, ''));
+            if (!isNaN(numVal) && oldNum !== numVal) {
+                el.textContent = numVal;
+                highlight(el);
+            }
+        });
+
+        // ── Update progress bars ──
+        var total = data.total || 1;
+        document.querySelectorAll('[data-statbar]').forEach(function(el) {
+            var key = el.getAttribute('data-statbar');
+            var val = data[key === 'pending2' ? 'pending' : key === 'approved' ? 'approved' : 'rejected'];
+            if (val === undefined) return;
+            var pct = Math.min(100, Math.round(val / total * 100));
+            el.style.width = pct + '%';
+        });
+
+        // ── Update chart bars ──
+        if (data.maxDaily > 0 && data.chartData) {
+            var bars = document.querySelectorAll('#realtime-chart .chart-bar');
+            data.chartData.forEach(function(item, i) {
+                if (bars[i]) {
+                    var approvedBar = bars[i].querySelector('.chart-bar-approved');
+                    var pendingBar = bars[i].querySelector('.chart-bar-pending');
+                    var emptyBar = bars[i].querySelector('.chart-bar-empty');
+                    var maxH = data.maxDaily || 1;
+
+                    if (item.approved > 0) {
+                        if (!approvedBar) {
+                            approvedBar = document.createElement('div');
+                            approvedBar.className = 'w-full bg-emerald-400 rounded-t transition-all duration-500';
+                            bars[i].querySelector('.w-full').appendChild(approvedBar);
+                        }
+                        approvedBar.style.height = Math.max(2, item.approved / maxH * 130) + 'px';
+                        approvedBar.title = item.date + ': ' + item.approved + ' approved';
+                    } else if (approvedBar) { approvedBar.style.height = '0px'; }
+
+                    var pendingCount = item.total - item.approved;
+                    if (pendingCount > 0) {
+                        if (!pendingBar) {
+                            pendingBar = document.createElement('div');
+                            pendingBar.className = 'w-full bg-indigo-400 rounded-t transition-all duration-500';
+                            bars[i].querySelector('.w-full').prepend(pendingBar);
+                        }
+                        pendingBar.style.height = Math.max(2, pendingCount / maxH * 130) + 'px';
+                        pendingBar.title = item.date + ': ' + pendingCount + ' pending';
+                    } else if (pendingBar) { pendingBar.style.height = '0px'; }
+
+                    if (item.total === 0 && !emptyBar) {
+                        emptyBar = document.createElement('div');
+                        emptyBar.className = 'w-full bg-gray-100 rounded-t chart-bar-empty';
+                        emptyBar.style.height = '2px';
+                        bars[i].querySelector('.w-full').appendChild(emptyBar);
+                    } else if (item.total > 0 && emptyBar) { emptyBar.remove(); }
+                }
+            });
+        }
+
+        // ── Update recent registrants ──
+        if (data.recentRegistrants) {
+            var recentContainer = document.getElementById('realtime-recent');
+            if (recentContainer) {
+                var html = '';
+                data.recentRegistrants.forEach(function(r) {
+                    var statusClass, statusText;
+                    if (r.status === 'approved') { statusClass = 'bg-emerald-50 text-emerald-700'; statusText = 'Approved'; }
+                    else if (r.status === 'rejected') { statusClass = 'bg-red-50 text-red-700'; statusText = 'Rejected'; }
+                    else { statusClass = 'bg-amber-50 text-amber-700'; statusText = 'Pending'; }
+                    html += '<a href="/admin/registrants/' + r.id + '" class="flex items-center gap-3 px-5 py-3 hover:bg-gray-50/50 transition">'
+                        + '<div class="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-400 to-purple-500 flex items-center justify-center text-white text-xs font-bold flex-shrink-0">' + r.initial + '</div>'
+                        + '<div class="flex-1 min-w-0"><p class="text-sm font-semibold text-gray-900 truncate">' + escapeHtml(r.name) + '</p><p class="text-xs text-gray-500 truncate">' + escapeHtml(r.email) + '</p></div>'
+                        + '<div class="text-right flex-shrink-0"><span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold ' + statusClass + '">' + statusText + '</span><p class="text-[10px] text-gray-400 mt-0.5">' + escapeHtml(r.timeAgo) + '</p></div>'
+                        + '</a>';
+                });
+                if (!html) html = '<div class="px-5 py-10 text-center"><p class="text-gray-400 text-sm">No registrants yet</p></div>';
+                recentContainer.innerHTML = html;
+            }
+        }
+
+        // ── Source tracking ──
+        if (data.topSources && data.topSources.length > 0) {
+            var srcContainer = document.getElementById('realtime-sources');
+            if (srcContainer) {
+                var srcHtml = '';
+                var maxSrc = Math.max(data.approved, 1);
+                data.topSources.forEach(function(src) {
+                    var pct = Math.min(100, Math.round(src.total / maxSrc * 100));
+                    srcHtml += '<div class="flex items-center gap-3">'
+                        + '<span class="text-xs font-medium text-gray-600 w-24 truncate">' + escapeHtml(src.utm_source || 'Direct') + '</span>'
+                        + '<div class="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden"><div class="h-full bg-indigo-400 rounded-full" style="width:' + pct + '%"></div></div>'
+                        + '<span class="text-xs font-semibold text-gray-700 w-10 text-right">' + src.total + '</span></div>';
+                });
+                srcContainer.innerHTML = srcHtml;
+            }
+        }
+    }
+
+    function escapeHtml(text) {
+        var div = document.createElement('div');
+        div.appendChild(document.createTextNode(text));
+        return div.innerHTML;
+    }
+
+    function highlight(el) {
+        el.classList.remove('realtime-updated', 'realtime-updated-red');
+        // Force reflow
+        void el.offsetWidth;
+        el.classList.add('realtime-updated');
+    }
+
+    // ── Poll setiap N detik ──
+    setInterval(function() {
+        fetch(pollUrl)
+            .then(function(r) { return r.json(); })
+            .then(updateDashboard)
+            .catch(function(err) { /* silently ignore polling errors */ });
+    }, pollInterval);
+})();
+</script>
 
 </body>
 </html>

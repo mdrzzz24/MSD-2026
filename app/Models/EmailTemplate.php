@@ -135,7 +135,8 @@ class EmailTemplate extends Model
      * Supported placeholders:
      *   {{ name }}, {{ email }}, {{ status }}, {{ password }},
      *   {{ unique_code }}, {{ admin_notes }}, {{ workshop_name }},
-     *   {{ track_name }}, {{ event_date }}, {{ login_url }}
+     *   {{ track_name }}, {{ event_date }}, {{ login_url }},
+     *   {{ qr_code }}, {{ qr_checkin_url }}
      */
     public function render(array $data = []): string
     {
@@ -145,6 +146,8 @@ class EmailTemplate extends Model
         $defaults = [
             'event_date' => '12 Agustus 2026',
             'login_url'  => route('registrant.login'),
+            'qr_code'    => '',
+            'qr_checkin_url' => '',
         ];
         $data = array_merge($defaults, $data);
 

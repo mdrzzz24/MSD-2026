@@ -1,0 +1,29 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    public function up(): void
+    {
+        Schema::create('agenda_item_questions', function (Blueprint $table) {
+            $table->id();
+            $table->unsignedBigInteger('agenda_item_id');
+            $table->unsignedBigInteger('source_template_id')->nullable();
+            $table->unsignedBigInteger('source_template_question_id')->nullable();
+            $table->string('question_text');
+            $table->string('question_type'); // text, rating, choice, yes_no
+            $table->json('options')->nullable();
+            $table->unsignedSmallInteger('order')->default(0);
+            $table->boolean('required')->default(true);
+            $table->timestamps();
+        });
+    }
+
+    public function down(): void
+    {
+        Schema::dropIfExists('agenda_item_questions');
+    }
+};

@@ -42,6 +42,7 @@ class Registrant extends Authenticatable
         'checked_in_at',
         'approved_by',
         'rejected_by',
+        'assigned_to',
     ];
 
     protected $hidden = [
@@ -130,7 +131,9 @@ class Registrant extends Authenticatable
      */
     public function getQrCheckinUrlAttribute(): string
     {
-        return route('registrant.qr-scan', $this->qr_token);
+        return $this->qr_token
+            ? route('registrant.qr-scan', $this->qr_token)
+            : '';
     }
 
     /**
@@ -138,7 +141,9 @@ class Registrant extends Authenticatable
      */
     public function getQrShareUrlAttribute(): string
     {
-        return route('registrant.qr-share', $this->qr_token);
+        return $this->qr_token
+            ? route('registrant.qr-share', $this->qr_token)
+            : '';
     }
 
     // ── Relationships ──
@@ -172,6 +177,22 @@ class Registrant extends Authenticatable
     public function rejecter()
     {
         return $this->belongsTo(User::class, 'rejected_by');
+    }
+
+    /**
+     * Admin or Client this registrant is assigned to.
+     */
+    public function assignedAdmin()
+    {
+        return $this->belongsTo(User::class, 'assigned_to');
+    }
+
+    /**
+     * Email logs for this registrant.
+     */
+    public function emailLogs()
+    {
+        return $this->hasMany(EmailLog::class, 'registrant_id');
     }
 
     /**

@@ -20,16 +20,7 @@
 </head>
 <body class="bg-gray-50 font-sans antialiased min-h-screen flex items-center justify-center p-4">
     <div class="w-full max-w-md">
-        @if (session('success'))
-            <div class="bg-emerald-50 border border-emerald-200 text-emerald-800 px-5 py-4 rounded-2xl mb-4 text-sm">
-                {!! session('success') !!}
-            </div>
-        @endif
-        @if (session('error'))
-            <div class="bg-red-50 border border-red-200 text-red-800 px-5 py-4 rounded-2xl mb-4 text-sm">
-                {{ session('error') }}
-            </div>
-        @endif
+        @include('admin.partials.notification')
 
         <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
             <div class="px-6 py-5 border-b border-gray-100 flex items-center gap-4">

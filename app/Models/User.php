@@ -10,12 +10,42 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
-#[Fillable(['name', 'email', 'password', 'is_admin', 'role', 'permissions'])]
+#[Fillable(['name', 'email', 'password', 'is_admin', 'role', 'permissions', 'setup_token', 'setup_token_expires_at', 'group_id'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {
     /** @use HasFactory<UserFactory> */
     use HasFactory, Notifiable;
+
+    public function group()
+    {
+        return $this->belongsTo(Group::class);
+    }
+
+    public function assignedRegistrants()
+    {
+        return $this->hasMany(Registrant::class, 'assigned_to');
+    }
+
+    public function hasPermission(string $key): bool
+    {
+        // Super admin has all permissions
+        if ($this->isSuperAdmin()) {
+            return true;
+        }
+
+        // Check group permissions first
+        if ($this->group) {
+            $groupPerms = $this->group->permissions ?? [];
+            if (isset($groupPerms[$key])) {
+                return filter_var($groupPerms[$key], FILTER_VALIDATE_BOOLEAN);
+            }
+        }
+
+        // Fall back to individual permissions
+        $perms = $this->permissions ?? [];
+        return filter_var($perms[$key] ?? false, FILTER_VALIDATE_BOOLEAN);
+    }
 
     /**
      * Get the attributes that should be cast.
@@ -29,6 +59,7 @@ class User extends Authenticatable
             'password' => 'hashed',
             'is_admin' => 'boolean',
             'permissions' => 'array',
+            'setup_token_expires_at' => 'datetime',
         ];
     }
 
@@ -71,19 +102,6 @@ class User extends Authenticatable
             ] + array_combine($all, array_fill(0, count($all), false)),
             default => [],
         };
-    }
-
-    /**
-     * Check if the user has a specific permission.
-     * Super admins always have all permissions.
-     */
-    public function hasPermission(string $permission): bool
-    {
-        if ($this->isSuperAdmin()) {
-            return true;
-        }
-        $perms = $this->permissions ?? [];
-        return filter_var($perms[$permission] ?? false, FILTER_VALIDATE_BOOLEAN);
     }
 
     /**

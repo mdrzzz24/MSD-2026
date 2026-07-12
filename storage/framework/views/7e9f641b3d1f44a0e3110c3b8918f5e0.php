@@ -18,11 +18,6 @@
         }
     </script>
     <style>
-        .animate-float { animation: float 6s ease-in-out infinite; }
-        @keyframes float {
-            0%, 100% { transform: translateY(0px); }
-            50% { transform: translateY(-20px); }
-        }
         .animate-fade-in { animation: fadeIn 0.6s ease-out; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         .login-hero {
@@ -34,61 +29,15 @@
             content: '';
             position: absolute;
             inset: 0;
-            background: linear-gradient(135deg, rgba(5,13,42,.85), rgba(10,26,74,.65), rgba(5,13,42,.9));
+            background: linear-gradient(135deg, rgba(5,13,42,.4), rgba(10,26,74,.3), rgba(5,13,42,.5));
             z-index: 1;
         }
         .login-hero::after {
-            content: '';
-            position: absolute;
-            inset: 0;
-            background-image:
-                linear-gradient(rgba(0,212,255,.04) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(0,212,255,.04) 1px, transparent 1px);
-            background-size: 60px 60px;
-            z-index: 1;
-            animation: gridPulse 8s ease-in-out infinite;
+            display: none;
         }
         @keyframes gridPulse {
             0%,100% { opacity: .3; }
             50% { opacity: .6; }
-        }
-        .ai-particle {
-            position: absolute;
-            border-radius: 50%;
-            pointer-events: none;
-            z-index: 2;
-        }
-        .ai-particle:nth-child(1) {
-            top: 15%; left: 8%;
-            width: 6px; height: 6px;
-            background: #00d4ff;
-            box-shadow: 0 0 12px #00d4ff;
-            animation: floatAI 6s ease-in-out infinite;
-        }
-        .ai-particle:nth-child(2) {
-            top: 25%; right: 12%;
-            width: 4px; height: 4px;
-            background: #a855f7;
-            box-shadow: 0 0 10px #a855f7;
-            animation: floatAI 8s ease-in-out infinite 1s;
-        }
-        .ai-particle:nth-child(3) {
-            bottom: 30%; left: 15%;
-            width: 8px; height: 8px;
-            background: #00d4ff;
-            box-shadow: 0 0 16px #00d4ff;
-            animation: floatAI 7s ease-in-out infinite 2s;
-        }
-        .ai-particle:nth-child(4) {
-            bottom: 20%; right: 20%;
-            width: 5px; height: 5px;
-            background: #a855f7;
-            box-shadow: 0 0 12px #a855f7;
-            animation: floatAI 9s ease-in-out infinite 0.5s;
-        }
-        @keyframes floatAI {
-            0%,100% { transform: translateY(0) scale(1); opacity: .6; }
-            50% { transform: translateY(-30px) scale(1.5); opacity: 1; }
         }
         .dot-live {
             width: 6px; height: 6px;
@@ -108,11 +57,6 @@
 
     
     <div class="hidden lg:flex lg:w-5/12 xl:w-1/2 login-hero relative overflow-hidden items-center justify-center">
-        <div class="ai-particle"></div>
-        <div class="ai-particle"></div>
-        <div class="ai-particle"></div>
-        <div class="ai-particle"></div>
-
         <div class="relative z-10 text-center px-12 animate-fade-in login-content">
             <div class="mb-6">
                 <img src="<?php echo e(asset('img/logo-msd.png')); ?>" alt="MSD" style="height:clamp(50px,8vw,90px);width:auto;filter:drop-shadow(0 0 20px rgba(0,212,255,.3))" class="mx-auto">
@@ -131,18 +75,20 @@
         <div class="w-full max-w-md animate-fade-in">
 
             
-            <div class="lg:hidden text-center mb-8">
-                <div class="w-16 h-16 mx-auto mb-3 bg-gradient-to-br from-indigo-600 to-purple-600 rounded-2xl flex items-center justify-center p-3">
-                    <img src="<?php echo e(asset('img/logo-msd.svg')); ?>" alt="MSD" class="w-full h-full brightness-0 invert">
-                </div>
-                <h1 class="text-xl font-bold text-gray-900">MSD 2026</h1>
-                <p class="text-xs text-gray-500 mt-1">Winning with AI</p>
+            <div class="lg:hidden relative mb-8 overflow-hidden rounded-2xl" style="background: url('<?php echo e(asset('img/QRHeader.png')); ?>') no-repeat center center; background-size: cover; min-height: 200px;">
+                
             </div>
 
             
             <div class="bg-white rounded-2xl shadow-xl shadow-gray-200/60 p-8 sm:p-10 border border-gray-100">
                 <h2 class="text-2xl font-bold text-gray-900 mb-1">Welcome Back</h2>
-                <p class="text-gray-500 text-sm mb-8">Already have an account? Sign in below, or <a href="<?php echo e(route('home1', request()->only(['utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content']))); ?>#register" class="text-indigo-600 hover:text-indigo-800 font-semibold hover:underline">register here</a>.</p>
+                <p class="text-gray-500 text-sm mb-8">Already have an account? Sign in below, or <a href="<?php echo e(route('home1', request()->only(['utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content']))); ?>#register" style="color:#e91e63;" class="font-semibold hover:underline">register here</a>.</p>
+                <div class="text-center mb-6">
+                    <a href="<?php echo e(route('qr-login.form')); ?>" class="text-sm font-medium hover:underline inline-flex items-center gap-1.5" style="color:#e91e63;">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"/></svg>
+                        Sign in with QR Code
+                    </a>
+                </div>
 
                 
                 <?php if($errors->any()): ?>
@@ -154,14 +100,7 @@
                     </div>
                 <?php endif; ?>
 
-                <?php if(session('error')): ?>
-                    <div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl mb-6 flex items-start gap-3 text-sm">
-                        <svg class="w-5 h-5 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                        </svg>
-                        <span><?php echo e(session('error')); ?></span>
-                    </div>
-                <?php endif; ?>
+                <?php echo $__env->make('admin.partials.notification', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
 
                 <form action="<?php echo e(route('login.attempt')); ?>" method="POST" class="space-y-5">
                     <?php echo csrf_field(); ?>
@@ -203,14 +142,17 @@
                     </div>
 
                     <button type="submit"
-                            class="w-full py-3 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-semibold rounded-xl shadow-lg shadow-indigo-500/25 hover:shadow-indigo-500/40 transition-all duration-200 text-sm tracking-wide">
+                            class="w-full py-3 font-bold text-sm tracking-wide"
+                            style="background:linear-gradient(135deg,#ff3d6e,#e91e63);color:#fff;border-radius:999px;border:none;cursor:pointer;box-shadow:0 8px 24px rgba(233,30,99,0.35);transition:transform 0.25s,box-shadow 0.25s;"
+                            onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 12px 30px rgba(233,30,99,0.5)'"
+                            onmouseout="this.style.transform='';this.style.boxShadow='0 8px 24px rgba(233,30,99,0.35)'">
                         Sign In
                     </button>
                 </form>
             </div>
 
             <p class="text-center text-xs text-gray-400 mt-6">
-                Don&apos;t have an account? <a href="<?php echo e(route('home1', request()->only(['utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content']))); ?>#register" class="text-indigo-600 hover:text-indigo-800 font-semibold hover:underline">Register here</a>
+                
             </p>
             <p class="text-center text-xs text-gray-400 mt-2">
                 &copy; <?php echo e(date('Y')); ?> <?php echo e(config('app.name')); ?>. All rights reserved.

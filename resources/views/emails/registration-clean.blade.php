@@ -3,25 +3,46 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<style>
-    body { margin: 0; padding: 0; background-color: #f4f4f4; }
-    .email-wrapper { width: 100%; max-width: 677px; margin: 0 auto; }
-    @media only screen and (max-width: 600px) {
-        .email-wrapper { width: 100% !important; }
-        table[class=email-table] { width: 100% !important; }
-        td[class=email-content] { padding: 10px !important; }
-    }
-</style>
+<title>Registration Received</title>
 </head>
-<body style="margin:0;padding:0;background-color:#f4f4f4;">
-<div class="email-wrapper">
-<div align=center><table class=MsoNormalTable border=1 cellspacing=0 cellpadding=0 width=677 style="width:100%;max-width:677px;border-collapse:collapse;border:1px solid #E7E6E6;font-family:Arial,sans-serif;"><tr style='mso-yfti-irow:0;mso-yfti-firstrow:yes;height:9.45pt'><td valign=top style='border:none;padding:0cm 0cm 0cm 0cm;height:9.45pt'><p class=MsoNormal align=center style='text-align:center;line-height:105%'><a name="_Hlk13488033"><span lang=EN-US style='font-size:10.0pt;line-height:105%;font-family:"Times New Roman",serif;mso-font-kerning:1.0pt;mso-ansi-language:EN-US;mso-fareast-language:EN-US;mso-no-proof:yes'><img src="{{ banner_url }}" alt="MSD 2026" width="674" style="max-width:100%;height:auto;display:block;"></a><span lang=EN-US style='font-size:10.0pt;line-height:105%;font-family:"Times New Roman",serif;mso-font-kerning:1.0pt;mso-ligatures:standardcontextual;mso-ansi-language:EN-US;mso-fareast-language:EN-US'></p></td></tr><tr style='mso-yfti-irow:1;mso-yfti-lastrow:yes;height:9.45pt'><td style='border:none;padding:0cm 0cm 0cm 0cm;height:9.45pt'><p class=MsoNormal style='line-height:105%'><span lang=EN-US style='font-size:3.0pt;line-height:105%;font-family:Roboto;mso-font-kerning:1.0pt;mso-ligatures:standardcontextual;mso-ansi-language:EN-US;mso-fareast-language:EN-US'>
-</p><p class=MsoNormal style='margin-left:17.25pt;line-height:105%'><span lang=EN-US style='font-family:Roboto;mso-font-kerning:1.0pt;mso-ligatures:standardcontextual;mso-ansi-language:EN-US;mso-fareast-language:EN-US'>
-</p><p class=MsoNormal style='margin-left:17.25pt;line-height:150%'><b><span lang=EN-US style='font-size:10.0pt;line-height:150%;font-family:"Arial",sans-serif;mso-font-kerning:1.0pt;mso-ligatures:standardcontextual;mso-ansi-language:EN-US;mso-fareast-language:EN-US'>Dear Mr./Ms. {{ name }} </b></p><p class=MsoNormal style='line-height:150%'><span lang=EN-US style='font-size:8.0pt;line-height:150%;font-family:"Arial",sans-serif;mso-font-kerning:1.0pt;mso-ligatures:standardcontextual;mso-ansi-language:EN-US;mso-fareast-language:EN-US'>
-</p><p class=MsoNormal style='margin-left:17.25pt;line-height:150%'><b><span style='font-size:10.0pt;line-height:150%;font-family:"Arial",sans-serif;mso-font-kerning:1.0pt;mso-ligatures:standardcontextual;mso-fareast-language:EN-US'>We've received your event registration request. </b></p><p class=MsoNormal style='line-height:150%'><span style='font-size:6.0pt;line-height:150%;font-family:"Arial",sans-serif;mso-font-kerning:1.0pt;mso-ligatures:standardcontextual;mso-fareast-language:EN-US'>
-</p><p class=MsoNormal style='margin-left:17.3pt;line-height:150%'><span style='font-size:10.0pt;line-height:150%;font-family:"Arial",sans-serif;mso-font-kerning:1.0pt;mso-ligatures:standardcontextual;mso-fareast-language:EN-US'>Thank you for your registration request. </p><p class=MsoNormal style='margin-left:17.3pt;line-height:150%'><b><i><span style='font-size:10.0pt;line-height:150%;font-family:"Arial",sans-serif;mso-font-kerning:1.0pt;mso-ligatures:standardcontextual;mso-fareast-language:EN-US'>MSD 2026, </i></b><b><i><span lang=EN-US style='font-size:10.0pt;line-height:150%;font-family:"Arial",sans-serif;mso-font-kerning:1.0pt;mso-ligatures:standardcontextual;mso-ansi-language:EN-US;mso-fareast-language:EN-US'>Winning with AI: Build, Run, and Scale for Measurable Impact</i></b><b><i><span style='font-size:10.0pt;line-height:150%;font-family:"Arial",sans-serif;mso-font-kerning:1.0pt;mso-ligatures:standardcontextual;mso-fareast-language:EN-US'></i></b></p><p class=MsoNormal style='margin-left:17.3pt;line-height:150%'><span style='font-size:10.0pt;line-height:150%;font-family:"Arial",sans-serif;mso-font-kerning:1.0pt;mso-ligatures:standardcontextual;mso-fareast-language:EN-US'>Your registration request has been successfully submitted, and it is currently being processed. </p><p class=MsoNormal style='margin-left:17.3pt;line-height:150%'><span style='font-size:5.0pt;line-height:150%;font-family:"Arial",sans-serif;mso-font-kerning:1.0pt;mso-ligatures:standardcontextual;mso-fareast-language:EN-US'>
-</p><p class=MsoNormal style='margin-left:17.3pt;line-height:150%'><span style='font-size:10.0pt;line-height:150%;font-family:"Arial",sans-serif;mso-font-kerning:1.0pt;mso-ligatures:standardcontextual;mso-fareast-language:EN-US'>You will receive a confirmation email with the QR Code from us once your registration is approved and confirmed. </p><p class=MsoNormal style='margin-left:17.3pt;line-height:150%'><span style='font-size:10.0pt;line-height:150%;font-family:"Arial",sans-serif;mso-font-kerning:1.0pt;mso-ligatures:standardcontextual;mso-fareast-language:EN-US'>Please reach out to <a href="mailto:metrodatasolutionday2026@jovenindo.co.id"><span style='font-size:10.0pt;line-height:150%;font-family:"Arial",sans-serif;mso-font-kerning:1.0pt;mso-ligatures:standardcontextual;mso-fareast-language:EN-US'>metrodatasolutionday2026@jovenindo.co.id</a><span style='font-size:10.0pt;line-height:150%;font-family:"Arial",sans-serif;mso-font-kerning:1.0pt;mso-ligatures:standardcontextual;mso-fareast-language:EN-US'> if you have any questions. </p><p class=MsoNormal style='mso-margin-top-alt:0cm;margin-right:0cm;margin-bottom:6.0pt;margin-left:17.3pt;line-height:150%'><span lang=EN-US style='font-size:8.0pt;line-height:150%;font-family:"Arial",sans-serif;mso-font-kerning:1.0pt;mso-ligatures:standardcontextual;mso-ansi-language:EN-US;mso-fareast-language:EN-US'>
-</p><p class=MsoNormal style='margin-left:17.25pt;line-height:150%'><span lang=EN-US style='font-size:10.0pt;line-height:150%;font-family:"Arial",sans-serif;mso-font-kerning:1.0pt;mso-ligatures:standardcontextual;mso-ansi-language:EN-US;mso-fareast-language:EN-US'>Yours Sincerely, </p><p class=MsoNormal style='margin-left:17.25pt;line-height:150%'><span lang=EN-US style='font-size:10.0pt;line-height:150%;font-family:"Arial",sans-serif;mso-font-kerning:1.0pt;mso-ligatures:standardcontextual;mso-ansi-language:EN-US;mso-fareast-language:EN-US'>PT <span class=SpellE>Metrodata Electronics, <span class=SpellE>Tbk.<span lang=EN-US style='font-family:Roboto;mso-font-kerning:1.0pt;mso-ligatures:standardcontextual;mso-ansi-language:EN-US;mso-fareast-language:EN-US'></p></td></tr></table>
-</div>
+<body style="margin:0;padding:0;background-color:#f4f4f9;font-family:'Inter','Segoe UI',Arial,sans-serif;">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#f4f4f9;">
+<tr><td align="center" style="padding:30px 15px;">
+<table role="presentation" width="100%" style="max-width:600px;background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.06);">
+<tr><td style="padding:0;">
+<img src="{{ asset('img/QRHeader.png') }}" alt="MSD 2026" width="100%" style="display:block;width:100%;height:auto;max-width:600px;">
+</td></tr>
+<tr><td style="padding:40px 36px 24px;">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+<tr><td style="text-align:center;padding-bottom:8px;">
+<h1 style="margin:0;font-size:22px;font-weight:800;color:#050d2a;">Thank You for Registering</h1>
+</td></tr>
+<tr><td style="text-align:center;padding-bottom:20px;">
+<p style="margin:0;font-size:15px;color:#6b7280;line-height:1.6;">Dear Mr./Ms. <strong style="color:#050d2a;">{{ $name ?? $registrant->name ?? '' }}</strong>,</p>
+<p style="margin:12px 0 0;font-size:15px;color:#6b7280;line-height:1.6;">Thank you for your registration request for <strong style="color:#050d2a;">MSD 2026</strong>.</p>
+<p style="margin:12px 0 0;font-size:15px;color:#6b7280;line-height:1.6;"><em>Winning with AI: Build, Run, and Scale for Measurable Impact</em></p>
+<p style="margin:16px 0 0;font-size:15px;color:#6b7280;line-height:1.6;">Your registration request has been successfully submitted, and it is currently being processed.</p>
+<p style="margin:16px 0 0;font-size:15px;color:#6b7280;line-height:1.6;">You will receive a confirmation email with the QR Code once your registration is approved and confirmed.</p>
+</td></tr>
+</table>
+</td></tr>
+<tr><td style="padding:0 36px;">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+<tr><td style="padding:16px 20px;background:#f9fafb;border:1px solid #e5e7eb;border-radius:12px;text-align:center;">
+<p style="margin:0;font-size:14px;color:#374151;">Questions? Email us at <a href="mailto:metrodatasolutionday2026@jovenindo.co.id" style="color:#ff3d6e;text-decoration:underline;">metrodatasolutionday2026@jovenindo.co.id</a></p>
+</td></tr>
+</table>
+</td></tr>
+<tr><td style="padding:20px 36px 32px;">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+<tr><td style="border-top:1px solid #e5e7eb;padding-top:20px;text-align:center;">
+<p style="margin:0;font-size:12px;color:#9ca3af;">Yours Sincerely,</p>
+<p style="margin:4px 0 0;font-size:12px;color:#9ca3af;font-weight:600;">PT Metrodata Electronics, Tbk</p>
+</td></tr>
+</table>
+</td></tr>
+</table>
+</td></tr>
+</table>
 </body>
 </html>

@@ -25,12 +25,7 @@
 </div>
 </header>
 <div class="p-4 sm:p-6 lg:p-8 space-y-6">
-@if (session('success'))
-<div class="bg-emerald-50 border border-emerald-200 text-emerald-800 px-5 py-4 rounded-2xl text-sm">{!! session('success') !!}</div>
-@endif
-@if (session('error'))
-<div class="bg-red-50 border border-red-200 text-red-800 px-5 py-4 rounded-2xl text-sm">{{ session('error') }}</div>
-@endif
+@include('admin.partials.notification')
 
 {{-- Users Table --}}
 <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
@@ -69,7 +64,7 @@
 </td>
 <td class="px-5 py-4"><span class="text-sm text-gray-500">{{ $u->created_at->format('d M Y') }}</span></td>
 <td class="px-5 py-4 text-center">
-<button data-user-id="{{ $u->id }}" data-user-name="{{ $u->name }}" data-user-email="{{ $u->email }}" data-user-role="{{ $u->role }}" data-user-perms='@json($u->permissions ?? \App\Models\User::defaultPermissions($u->role))' onclick="editUserFromData(this)" class="text-xs text-amber-600 hover:text-amber-800 font-medium mr-2">Edit</button>
+<button data-user-id="{{ $u->id }}" data-user-name="{{ $u->name }}" data-user-email="{{ $u->email }}" data-user-role="{{ $u->role }}" data-user-group="{{ $u->group_id }}" data-user-perms='@json($u->permissions ?? \App\Models\User::defaultPermissions($u->role))' onclick="editUserFromData(this)" class="text-xs text-amber-600 hover:text-amber-800 font-medium mr-2">Edit</button>
 @if ($u->id !== auth()->id())
 <form action="{{ route('admin.management.users.destroy', $u) }}" method="POST" class="inline" onsubmit="return confirm('Delete {{ $u->name }}?')">
 @csrf @method('DELETE')
@@ -106,6 +101,15 @@
 <option value="client">Client</option>
 </select>
 <p class="text-xs text-gray-400 mt-1">Permissions auto-adjust when role changes. Super Admin always has full access.</p>
+</div>
+<div><label class="block text-sm font-semibold text-gray-700 mb-1.5">Group <span class="text-gray-400 font-normal">(optional — for client users)</span></label>
+<select id="userGroup" name="group_id" class="w-full px-4 py-2.5 text-sm border border-gray-200 rounded-xl bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500">
+<option value="">— No Group —</option>
+@foreach (\App\Models\Group::all() as $g)
+<option value="{{ $g->id }}">{{ $g->name }}</option>
+@endforeach
+</select>
+<p class="text-xs text-gray-400 mt-1">Group permissions override individual permissions.</p>
 </div>
 
 {{-- Permissions --}}
@@ -184,6 +188,7 @@ document.getElementById('userPassword').value = '';
 document.getElementById('userPassword').required = true;
 document.getElementById('pwdLabel').textContent = '(required for new user)';
 document.getElementById('userRole').value = 'admin';
+document.getElementById('userGroup').value = '';
 onRoleChange();
 document.getElementById('userModal').classList.remove('hidden');
 document.getElementById('userModal').classList.add('flex');
@@ -210,6 +215,12 @@ document.getElementById('userPassword').required = false;
 document.getElementById('pwdLabel').textContent = '(leave blank to keep current)';
 document.getElementById('userRole').value = role;
 setPermissions(perms || roleDefaults[role]);
+const groupId = btn.dataset.userGroup;
+if (groupId) {
+document.getElementById('userGroup').value = groupId;
+} else {
+document.getElementById('userGroup').value = '';
+}
 if (role === 'super_admin') {
 document.getElementById('permissionsSection').style.display = 'none';
 } else {

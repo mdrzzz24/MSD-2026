@@ -27,18 +27,7 @@
         </header>
 
         <div class="p-4 sm:p-6 lg:p-8">
-            @if (session('success'))
-                <div class="flex items-start gap-3 bg-emerald-50 border border-emerald-200 text-emerald-800 px-5 py-4 rounded-2xl mb-6">
-                    <svg class="w-5 h-5 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                    <span class="text-sm">{!! session('success') !!}</span>
-                </div>
-            @endif
-            @if (session('error'))
-                <div class="flex items-start gap-3 bg-red-50 border border-red-200 text-red-800 px-5 py-4 rounded-2xl mb-6">
-                    <svg class="w-5 h-5 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                    <span class="text-sm">{!! session('error') !!}</span>
-                </div>
-            @endif
+            @include('admin.partials.notification')
 
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 {{-- Form --}}
@@ -105,8 +94,8 @@
                     </div>
 
                     <div class="bg-amber-50 rounded-2xl border border-amber-200 p-5">
-                        <h3 class="text-sm font-bold text-amber-800 mb-2">⚠️ Perhatian</h3>
-                        <p class="text-xs text-amber-700">Email akan dikirim ke <strong>semua approved registrants</strong> jika tidak ada yang dipilih. Pastikan template reminder sudah benar sebelum mengirim.</p>
+                        <h3 class="text-sm font-bold text-amber-800 mb-2">⚠️ Attention</h3>
+                        <p class="text-xs text-amber-700">Emails will be sent to <strong>all approved registrants</strong> if none are selected. Make sure the reminder template is correct before sending.</p>
                     </div>
                 </div>
             </div>

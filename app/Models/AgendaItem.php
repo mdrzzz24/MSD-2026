@@ -32,6 +32,7 @@ class AgendaItem extends Model
         'colspan',
         'is_registrable',
         'capacity',
+        'feedback_enabled',
     ];
 
     protected $casts = [
@@ -40,6 +41,7 @@ class AgendaItem extends Model
         'end_time'          => 'string',
         'is_registrable'     => 'boolean',
         'capacity'          => 'integer',
+        'feedback_enabled'   => 'boolean',
     ];
 
     public function scopeOrdered($query)
@@ -72,6 +74,16 @@ class AgendaItem extends Model
     public function track()
     {
         return $this->belongsTo(Track::class);
+    }
+
+    public function feedback()
+    {
+        return $this->hasMany(AgendaFeedback::class, 'agenda_item_id');
+    }
+
+    public function feedbackQuestions()
+    {
+        return $this->hasMany(AgendaItemQuestion::class, 'agenda_item_id')->orderBy('order');
     }
 
     // ── Helpers ──

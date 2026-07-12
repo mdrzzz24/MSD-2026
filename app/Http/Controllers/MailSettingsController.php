@@ -21,6 +21,12 @@ class MailSettingsController extends Controller
             'encryption'  => env('MAIL_ENCRYPTION', 'tls'),
             'from_address'=> env('MAIL_FROM_ADDRESS', ''),
             'from_name'   => env('MAIL_FROM_NAME', ''),
+            'general_password' => \Illuminate\Support\Facades\Cache::get('general_login_password', ''),
+            'bounce_host' => env('BOUNCE_IMAP_HOST', ''),
+            'bounce_port' => env('BOUNCE_IMAP_PORT', '993'),
+            'bounce_username' => env('BOUNCE_IMAP_USERNAME', ''),
+            'bounce_password' => env('BOUNCE_IMAP_PASSWORD', ''),
+            'bounce_mailbox' => env('BOUNCE_IMAP_MAILBOX', 'INBOX'),
         ];
 
         return view('admin.mail-settings', compact('config'));
@@ -40,6 +46,12 @@ class MailSettingsController extends Controller
             'encryption'   => ['nullable', 'in:tls,ssl,null'],
             'from_address' => ['required', 'email', 'max:255'],
             'from_name'    => ['required', 'string', 'max:255'],
+            'bounce_host'      => ['nullable', 'string', 'max:255'],
+            'bounce_port'      => ['nullable', 'string', 'max:10'],
+            'bounce_username'  => ['nullable', 'string', 'max:255'],
+            'bounce_password'  => ['nullable', 'string', 'max:255'],
+            'bounce_mailbox'   => ['nullable', 'string', 'max:255'],
+            'general_password' => ['nullable', 'string', 'max:255'],
         ]);
 
         $envPath = base_path('.env');
@@ -58,6 +70,18 @@ class MailSettingsController extends Controller
         $envContent = $this->setEnvValue($envContent, 'MAIL_ENCRYPTION', $validated['encryption'] ?? 'null');
         $envContent = $this->setEnvValue($envContent, 'MAIL_FROM_ADDRESS', $validated['from_address']);
         $envContent = $this->setEnvValue($envContent, 'MAIL_FROM_NAME', '"' . $validated['from_name'] . '"');
+        $envContent = $this->setEnvValue($envContent, 'BOUNCE_IMAP_HOST', $validated['bounce_host'] ?? '');
+        $envContent = $this->setEnvValue($envContent, 'BOUNCE_IMAP_PORT', $validated['bounce_port'] ?? '993');
+        $envContent = $this->setEnvValue($envContent, 'BOUNCE_IMAP_USERNAME', $validated['bounce_username'] ?? '');
+        $envContent = $this->setEnvValue($envContent, 'BOUNCE_IMAP_PASSWORD', $validated['bounce_password'] ?? '');
+        $envContent = $this->setEnvValue($envContent, 'BOUNCE_IMAP_MAILBOX', $validated['bounce_mailbox'] ?? 'INBOX');
+
+        // Save general password to cache
+        if (!empty($validated['general_password'])) {
+            \Illuminate\Support\Facades\Cache::forever('general_login_password', $validated['general_password']);
+        } else {
+            \Illuminate\Support\Facades\Cache::forget('general_login_password');
+        }
 
         file_put_contents($envPath, $envContent);
 

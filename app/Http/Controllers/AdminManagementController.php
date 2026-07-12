@@ -2,20 +2,23 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Concerns\Exportable;
 use App\Models\Registrant;
 use App\Models\User;
 use App\Models\UtmLink;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 
 class AdminManagementController extends Controller
 {
+    use Exportable;
     // ── UTM Sources ──
 
     public function utmSources()
     {
-        $user = auth()->user();
+        $user = Auth::user();
 
         $sources = Registrant::whereNotNull('utm_source')
             ->selectRaw("utm_source, COUNT(*) as total,
@@ -49,12 +52,24 @@ class AdminManagementController extends Controller
             'checked' => $sources->sum('checked_in'),
         ];
 
-        // UTM Links — scope by admin unless super_admin
-        $utmLinks = UtmLink::when($user->role !== 'super_admin', fn($q) => $q->where('created_by', $user->id))
+        // UTM Links — scope by user unless super_admin
+        $utmLinks = UtmLink::when($user->role !== 'super_admin', function ($q) use ($user) {
+                // If user belongs to a group, show all UTM links from the group
+                if ($user->group_id) {
+                    $groupUserIds = User::where('group_id', $user->group_id)->pluck('id')->toArray();
+                    return $q->whereIn('created_by', $groupUserIds)
+                        ->orWhereHas('sharedWith', fn($sq) => $sq->whereIn('user_id', $groupUserIds));
+                }
+                return $q->where('created_by', $user->id)
+                    ->orWhereHas('sharedWith', fn($sq) => $sq->where('user_id', $user->id));
+            })
+            ->with('sharedWith')
             ->orderBy('created_at', 'desc')
             ->get();
 
-        return view('admin.management.utm', compact('sources', 'totals', 'utmLinks'));
+        $clientUsers = User::where('role', 'client')->orderBy('name')->get();
+
+        return view('admin.management.utm', compact('sources', 'totals', 'utmLinks', 'clientUsers'));
     }
 
     // ── UTM Link CRUD ──
@@ -70,7 +85,7 @@ class AdminManagementController extends Controller
             'utm_content'  => ['nullable', 'string', 'max:100'],
         ]);
 
-        $link = UtmLink::create(array_merge($request->all(), ['created_by' => auth()->id()]));
+        $link = UtmLink::create(array_merge($request->all(), ['created_by' => Auth::id()]));
         $link->update(['full_url' => $link->buildUrl()]);
 
         return redirect()->route('admin.management.utm')
@@ -79,7 +94,7 @@ class AdminManagementController extends Controller
 
     public function updateUtmLink(Request $request, UtmLink $utmLink)
     {
-        $user = auth()->user();
+        $user = Auth::user();
         if ($user->role !== 'super_admin' && $utmLink->created_by !== $user->id) {
             return redirect()->route('admin.management.utm')->with('error', 'You can only edit your own UTM links.');
         }
@@ -102,7 +117,7 @@ class AdminManagementController extends Controller
 
     public function destroyUtmLink(UtmLink $utmLink)
     {
-        $user = auth()->user();
+        $user = Auth::user();
         if ($user->role !== 'super_admin' && $utmLink->created_by !== $user->id) {
             return redirect()->route('admin.management.utm')->with('error', 'You can only delete your own UTM links.');
         }
@@ -148,6 +163,7 @@ class AdminManagementController extends Controller
             'password' => Hash::make($request->password),
             'is_admin' => $request->role !== 'client',
             'role'     => $request->role,
+            'group_id' => $request->group_id ?: null,
         ];
 
         // Set permissions from request, or default for role
@@ -178,6 +194,7 @@ class AdminManagementController extends Controller
             'email'    => $request->email,
             'role'     => $request->role,
             'is_admin' => $request->role !== 'client',
+            'group_id' => $request->group_id ?: null,
         ];
 
         if ($request->filled('password')) {
@@ -204,7 +221,7 @@ class AdminManagementController extends Controller
 
     public function destroyUser(User $user)
     {
-        if ($user->id === auth()->id()) {
+        if ($user->id === Auth::id()) {
             return back()->with('error', 'You cannot delete yourself.');
         }
 
@@ -225,5 +242,112 @@ class AdminManagementController extends Controller
             ->paginate(30);
 
         return view('admin.management.checkin-log', compact('checkedIn'));
+    }
+
+    /**
+     * Export UTM sources detail to CSV — lists all registrants per UTM link.
+     */
+    public function exportUtmCsv()
+    {
+        $utmLinks = UtmLink::with('creator')->latest()->get();
+
+        $headers = ['UTM Name', 'Source', 'Medium', 'Campaign', 'URL',
+                     'Registrant Name', 'Email', 'Phone', 'Company', 'Job Title',
+                     'Status', 'Checked In', 'Registered At'];
+
+        $rows = [];
+        foreach ($utmLinks as $u) {
+            $registrants = \App\Models\Registrant::where('utm_source', $u->utm_source)
+                ->where('utm_medium', $u->utm_medium)
+                ->where('utm_campaign', $u->utm_campaign)
+                ->latest()
+                ->get();
+
+            foreach ($registrants as $r) {
+                $rows[] = [
+                    $u->name,
+                    $u->utm_source,
+                    $u->utm_medium,
+                    $u->utm_campaign,
+                    $u->full_url ?? $u->buildUrl(),
+                    $r->display_name ?: $r->name,
+                    $r->email,
+                    $r->phone ?? '-',
+                    $r->company ?? '-',
+                    $r->job_title ?? '-',
+                    $r->status ?? '-',
+                    $r->checked_in_at ? 'Yes' : 'No',
+                    $r->created_at->format('Y-m-d H:i'),
+                ];
+            }
+        }
+
+        // Also include registrants without UTM as "Direct"
+        $direct = \App\Models\Registrant::whereNull('utm_source')->latest()->get();
+        foreach ($direct as $r) {
+            $rows[] = [
+                '(Direct)',
+                '', '', '', '',
+                $r->display_name ?: $r->name,
+                $r->email,
+                $r->phone ?? '-',
+                $r->company ?? '-',
+                $r->job_title ?? '-',
+                $r->status ?? '-',
+                $r->checked_in_at ? 'Yes' : 'No',
+                $r->created_at->format('Y-m-d H:i'),
+            ];
+        }
+
+        return $this->csvDownload($headers, $rows, 'utm-detail-' . now()->format('YmdHis') . '.csv');
+    }
+
+    /**
+     * Export QR codes list to CSV.
+     */
+    public function exportQrCsv()
+    {
+        $rows = Registrant::approved()
+            ->whereNotNull('qr_token')
+            ->latest()
+            ->get()
+            ->map(fn($r) => [
+                $r->display_name ?: $r->name,
+                $r->email,
+                $r->unique_code ?? '',
+                $r->qr_token ?? '',
+                $r->company ?? '',
+                $r->checked_in_at ? $r->checked_in_at->format('Y-m-d H:i:s') : 'Not checked in',
+            ])->toArray();
+
+        return $this->csvDownload(
+            ['Name', 'Email', 'Unique Code', 'QR Token', 'Company', 'Check-in Status'],
+            $rows,
+            'qr-codes-' . now()->format('YmdHis') . '.csv'
+        );
+    }
+
+    /**
+     * Export check-in log to CSV.
+     */
+    public function exportCheckinCsv()
+    {
+        $rows = Registrant::approved()
+            ->whereNotNull('checked_in_at')
+            ->orderByDesc('checked_in_at')
+            ->get()
+            ->map(fn($r) => [
+                $r->display_name ?: $r->name,
+                $r->email,
+                $r->unique_code ?? '',
+                $r->company ?? '',
+                $r->checked_in_at->format('Y-m-d H:i:s'),
+            ])->toArray();
+
+        return $this->csvDownload(
+            ['Name', 'Email', 'Unique Code', 'Company', 'Checked In At'],
+            $rows,
+            'checkin-log-' . now()->format('YmdHis') . '.csv'
+        );
     }
 }

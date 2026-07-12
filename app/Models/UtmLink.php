@@ -20,6 +20,11 @@ class UtmLink extends Model
         return $this->belongsTo(User::class, 'created_by');
     }
 
+    public function sharedWith()
+    {
+        return $this->belongsToMany(User::class, 'utm_link_user');
+    }
+
     public function buildUrl(): string
     {
         $params = [

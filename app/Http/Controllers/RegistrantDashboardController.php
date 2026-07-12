@@ -15,6 +15,7 @@ class RegistrantDashboardController extends Controller
      */
     public function dashboard()
     {
+        /** @var \App\Models\Registrant $registrant */
         $registrant = Auth::guard('registrant')->user();
 
         // Workshops the registrant has already signed up for (with pivot status)
@@ -44,6 +45,7 @@ class RegistrantDashboardController extends Controller
      */
     public function registerWorkshop(Request $request, Workshop $workshop)
     {
+        /** @var \App\Models\Registrant $registrant */
         $registrant = Auth::guard('registrant')->user();
 
         if (!$workshop->canRegister()) {
@@ -106,7 +108,15 @@ class RegistrantDashboardController extends Controller
      */
     public function unregisterWorkshop(Request $request, Workshop $workshop)
     {
+        /** @var \App\Models\Registrant $registrant */
         $registrant = Auth::guard('registrant')->user();
+
+        // Cannot cancel if already approved by admin
+        $existing = $registrant->workshops()->where('workshop_id', $workshop->id)->first();
+        if ($existing && $existing->pivot->status === 'approved') {
+            return back()->with('error', 'Your registration for this workshop has been approved. Please contact the organizer to cancel.');
+        }
+
         $registrant->workshops()->detach($workshop->id);
 
         return back()->with('success', "Successfully unregistered from workshop <strong>{$workshop->title}</strong>.");
@@ -117,6 +127,7 @@ class RegistrantDashboardController extends Controller
      */
     public function registerAgenda(Request $request, AgendaItem $agendaItem)
     {
+        /** @var \App\Models\Registrant $registrant */
         $registrant = Auth::guard('registrant')->user();
 
         if (!$agendaItem->is_registrable) {
@@ -201,7 +212,15 @@ class RegistrantDashboardController extends Controller
      */
     public function unregisterAgenda(Request $request, AgendaItem $agendaItem)
     {
+        /** @var \App\Models\Registrant $registrant */
         $registrant = Auth::guard('registrant')->user();
+
+        // Cannot cancel if already approved by admin
+        $existing = $registrant->agendaItems()->where('agenda_item_id', $agendaItem->id)->first();
+        if ($existing && $existing->pivot->status === 'approved') {
+            return back()->with('error', 'Your registration for this session has been approved. Please contact the organizer to cancel.');
+        }
+
         $registrant->agendaItems()->detach($agendaItem->id);
 
         // Also unregister from linked workshop

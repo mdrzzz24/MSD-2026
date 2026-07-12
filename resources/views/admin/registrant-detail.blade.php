@@ -256,6 +256,82 @@
                             </div>
                     </div>
 
+                    {{-- Email History --}}
+                    <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+                        <div class="px-5 py-4 border-b border-gray-100">
+                            <h3 class="text-sm font-bold text-gray-800 flex items-center gap-2">
+                                <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                                </svg>
+                                Email History
+                                <span class="text-xs font-normal text-gray-400">({{ $emailLogs->count() }} sent)</span>
+                            </h3>
+                        </div>
+                        <div class="p-5 space-y-4">
+                            {{-- Expected email types (sent & missing) --}}
+                            @if (count($expectedTypes) > 0)
+                                <div class="space-y-2">
+                                    <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Email Status</p>
+                                    @foreach ($expectedTypes as $et)
+                                        <div class="flex items-center justify-between gap-3 p-2.5 rounded-lg {{ $et['sent'] ? 'bg-emerald-50/50' : 'bg-gray-50' }}">
+                                            <div class="flex items-center gap-2.5 min-w-0">
+                                                @if ($et['sent'])
+                                                    <svg class="w-4 h-4 text-emerald-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                                @else
+                                                    <svg class="w-4 h-4 text-gray-300 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                                @endif
+                                                <span class="text-xs font-medium {{ $et['sent'] ? 'text-emerald-800' : 'text-gray-500' }}">{{ $et['label'] }}</span>
+                                            </div>
+                                            @if ($et['sent'])
+                                                <span class="text-xs font-medium text-emerald-600 bg-emerald-100 px-2 py-0.5 rounded-full flex-shrink-0">Sent</span>
+                                            @else
+                                                <span class="text-xs font-medium text-gray-400 bg-gray-200 px-2 py-0.5 rounded-full flex-shrink-0">Not sent</span>
+                                            @endif
+                                        </div>
+                                    @endforeach
+                                </div>
+                            @endif
+
+                            {{-- Detailed email logs --}}
+                            @if ($emailLogs->count() > 0)
+                                <div class="space-y-2">
+                                    <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Log Details</p>
+                                    <div class="space-y-2">
+                                        @foreach ($emailLogs as $log)
+                                            <div class="flex items-start gap-3 p-3 rounded-xl {{ $log->status === 'sent' ? 'bg-emerald-50' : ($log->status === 'failed' ? 'bg-red-50' : ($log->status === 'bounced' ? 'bg-orange-50' : 'bg-gray-50')) }}">
+                                                <div class="flex-shrink-0 mt-0.5">
+                                                    @if ($log->status === 'sent')
+                                                        <svg class="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                                    @elseif ($log->status === 'failed')
+                                                        <svg class="w-4 h-4 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                                    @elseif ($log->status === 'bounced')
+                                                        <svg class="w-4 h-4 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"/></svg>
+                                                    @else
+                                                        <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                                    @endif
+                                                </div>
+                                                <div class="flex-1 min-w-0">
+                                                    <p class="text-xs font-semibold text-gray-800 truncate">{{ $log->subject }}</p>
+                                                    <p class="text-xs text-gray-500 mt-0.5">
+                                                        <span class="capitalize">{{ str_replace('_', ' ', $log->template_type) }}</span>
+                                                        &middot;
+                                                        {{ $log->sent_at?->format('d M Y, H:i') ?? '—' }}
+                                                    </p>
+                                                    @if ($log->status === 'failed' && $log->error_message)
+                                                        <p class="text-xs text-red-500 mt-0.5 truncate">{{ $log->error_message }}</p>
+                                                    @endif
+                                                </div>
+                                                <span class="text-xs font-medium px-2 py-0.5 rounded-full flex-shrink-0 {{ $log->status === 'sent' ? 'bg-emerald-100 text-emerald-700' : ($log->status === 'failed' ? 'bg-red-100 text-red-600' : ($log->status === 'bounced' ? 'bg-orange-100 text-orange-700' : 'bg-gray-100 text-gray-600')) }}">
+                                                    {{ ucfirst($log->status) }}
+                                                </span>
+                                            </div>
+                                        @endforeach
+                                    </div>
+                                </div>
+                            @endif
+                        </div>
+                    </div>
+
                     {{-- Workshops --}}
                     @if ($workshops->count() > 0)
                     <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">

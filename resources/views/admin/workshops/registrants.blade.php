@@ -27,7 +27,7 @@
             <div class="overflow-x-auto">
                 <table class="w-full">
                     <thead><tr class="bg-gray-50/80">
-                        <th class="px-5 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase">Nama</th>
+                        <th class="px-5 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase">Name</th>
                         <th class="px-5 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase">Email</th>
                         <th class="px-5 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase hidden sm:table-cell">Company</th>
                         <th class="px-5 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase hidden md:table-cell">Status</th>

@@ -2,9 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\EmailLog;
+use App\Models\EmailTemplate;
+use App\Models\Registrant;
 use App\Models\Track;
 use App\Models\AgendaItem;
+use App\Services\EmailService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Mail;
 
 class AdminTrackController extends Controller
 {
@@ -79,6 +84,12 @@ class AdminTrackController extends Controller
             return back()->with('error', 'You do not have permission to approve track registrations.');
         }
 
+        // Ensure $registrant is always defined
+        $registrant = Registrant::find($registrantId);
+        if (!$registrant) {
+            return back()->with('error', 'Registrant not found.');
+        }
+
         $agendaItemId = $request->input('agenda_item_id');
         $agendaItem = null;
         if ($agendaItemId) {
@@ -94,7 +105,6 @@ class AdminTrackController extends Controller
                 if ($mw) { $workshopId = $mw->id; $agendaItem->update(['workshop_id' => $mw->id]); }
             }
             if ($workshopId) {
-                $registrant = \App\Models\Registrant::find($registrantId);
                 $existW = $registrant->workshops()->where('workshop_id', $workshopId)->first();
                 if ($existW) {
                     $registrant->workshops()->updateExistingPivot($workshopId, [
@@ -108,10 +118,41 @@ class AdminTrackController extends Controller
             }
         }
 
-        // Send track approval email
-        \App\Services\EmailService::sendByType($registrant, \App\Models\EmailTemplate::TYPE_TRACK_APPROVAL, [
-            'track_name' => $agendaItem->title,
-        ]);
+        // Send track approval email (with fallback)
+        $sessionName = $agendaItem ? $agendaItem->title : $track->title;
+        $tmpl = EmailTemplate::activeOfType(EmailTemplate::TYPE_TRACK_APPROVAL);
+        if ($tmpl) {
+            EmailService::send($registrant, $tmpl, ['track_name' => $sessionName]);
+        } else {
+            try {
+                Mail::send('emails.track-approved', [
+                    'registrant'  => $registrant,
+                    'sessionName' => $sessionName,
+                ], function ($msg) use ($registrant, $sessionName) {
+                    $msg->to($registrant->email)->subject("Session Approved: {$sessionName}");
+                });
+                EmailLog::create([
+                    'registrant_id'   => $registrant->id,
+                    'template_type'   => 'track_approval',
+                    'recipient_email' => $registrant->email,
+                    'recipient_name'  => $registrant->display_name,
+                    'subject'         => "Session Approved: {$sessionName}",
+                    'status'          => 'sent',
+                    'sent_at'         => now(),
+                ]);
+            } catch (\Throwable $e) {
+                EmailLog::create([
+                    'registrant_id'   => $registrant->id,
+                    'template_type'   => 'track_approval',
+                    'recipient_email' => $registrant->email,
+                    'recipient_name'  => $registrant->display_name,
+                    'subject'         => "Session Approved: {$sessionName}",
+                    'status'          => 'failed',
+                    'error_message'   => $e->getMessage(),
+                    'sent_at'         => now(),
+                ]);
+            }
+        }
 
         return back()->with('success', 'Registration approved.');
     }
@@ -125,13 +166,22 @@ class AdminTrackController extends Controller
             return back()->with('error', 'You do not have permission to reject track registrations.');
         }
 
-        $request->validate(['admin_notes' => ['required', 'string', 'max:500']]);
+        $request->validate(['admin_notes' => ['nullable', 'string', 'max:500']]);
+
+        // Ensure $registrant is always defined
+        $registrant = Registrant::find($registrantId);
+        if (!$registrant) {
+            return back()->with('error', 'Registrant not found.');
+        }
+
+        $adminNotes = $request->input('admin_notes', '');
+
         $agendaItemId = $request->input('agenda_item_id');
         $agendaItem = null;
         if ($agendaItemId) {
             $agendaItem = AgendaItem::findOrFail($agendaItemId);
             $agendaItem->registrants()->updateExistingPivot($registrantId, [
-                'status' => 'rejected', 'admin_notes' => $request->admin_notes, 'processed_by' => auth()->id(), 'processed_at' => now(),
+                'status' => 'rejected', 'admin_notes' => $adminNotes, 'processed_by' => auth()->id(), 'processed_at' => now(),
             ]);
 
             // Also sync to workshop pivot if linked
@@ -141,25 +191,58 @@ class AdminTrackController extends Controller
                 if ($mw) { $workshopId = $mw->id; $agendaItem->update(['workshop_id' => $mw->id]); }
             }
             if ($workshopId) {
-                $registrant = \App\Models\Registrant::find($registrantId);
                 $existW = $registrant->workshops()->where('workshop_id', $workshopId)->first();
                 if ($existW) {
                     $registrant->workshops()->updateExistingPivot($workshopId, [
-                        'status' => 'rejected', 'admin_notes' => $request->admin_notes, 'processed_by' => auth()->id(), 'processed_at' => now(),
+                        'status' => 'rejected', 'admin_notes' => $adminNotes, 'processed_by' => auth()->id(), 'processed_at' => now(),
                     ]);
                 } else {
                     $registrant->workshops()->attach($workshopId, [
-                        'status' => 'rejected', 'admin_notes' => $request->admin_notes, 'processed_by' => auth()->id(), 'processed_at' => now(),
+                        'status' => 'rejected', 'admin_notes' => $adminNotes, 'processed_by' => auth()->id(), 'processed_at' => now(),
                     ]);
                 }
             }
         }
 
-        // Send track rejection email
-        \App\Services\EmailService::sendByType($registrant, \App\Models\EmailTemplate::TYPE_TRACK_REJECTION, [
-            'track_name'  => $agendaItem->title,
-            'admin_notes' => $request->admin_notes,
-        ]);
+        // Send track rejection email (with fallback)
+        $sessionName = $agendaItem ? $agendaItem->title : $track->title;
+        $tmpl = EmailTemplate::activeOfType(EmailTemplate::TYPE_TRACK_REJECTION);
+        if ($tmpl) {
+            EmailService::send($registrant, $tmpl, [
+                'track_name'  => $sessionName,
+                'admin_notes' => $adminNotes,
+            ]);
+        } else {
+            try {
+                Mail::send('emails.track-rejected', [
+                    'registrant'  => $registrant,
+                    'sessionName' => $sessionName,
+                    'adminNotes'  => $adminNotes,
+                ], function ($msg) use ($registrant, $sessionName) {
+                    $msg->to($registrant->email)->subject("Session Registration Rejected: {$sessionName}");
+                });
+                EmailLog::create([
+                    'registrant_id'   => $registrant->id,
+                    'template_type'   => 'track_rejection',
+                    'recipient_email' => $registrant->email,
+                    'recipient_name'  => $registrant->display_name,
+                    'subject'         => "Session Registration Rejected: {$sessionName}",
+                    'status'          => 'sent',
+                    'sent_at'         => now(),
+                ]);
+            } catch (\Throwable $e) {
+                EmailLog::create([
+                    'registrant_id'   => $registrant->id,
+                    'template_type'   => 'track_rejection',
+                    'recipient_email' => $registrant->email,
+                    'recipient_name'  => $registrant->display_name,
+                    'subject'         => "Session Registration Rejected: {$sessionName}",
+                    'status'          => 'failed',
+                    'error_message'   => $e->getMessage(),
+                    'sent_at'         => now(),
+                ]);
+            }
+        }
 
         return back()->with('success', 'Registration rejected.');
     }
