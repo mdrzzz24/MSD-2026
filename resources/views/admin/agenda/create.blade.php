@@ -303,10 +303,18 @@ function onExistingSourceSelect(sel) {
 
     if (type === 'track') {
         agendaType.value = 'track';
-        // Don't clear time — keep pre-filled values from URL params
-        room.value = '';
+        // Don't clear time or room — keep pre-filled values from URL params
         capacity.value = '0';
         isReg.checked = false;
+        // Also set the track_id dropdown to match
+        var trackSelect = document.getElementById('trackSelect');
+        var trackId = opt.value.replace('track_', '');
+        for (var i = 0; i < trackSelect.options.length; i++) {
+            if (trackSelect.options[i].value === trackId) {
+                trackSelect.selectedIndex = i;
+                break;
+            }
+        }
     } else if (type === 'workshop') {
         agendaType.value = 'workshop';
         var wsStart = opt.getAttribute('data-start');
@@ -330,11 +338,25 @@ function onExistingSourceSelect(sel) {
         if (wsRegOpen === '1') {
             isReg.checked = true;
         }
+        // Also set the workshop_id dropdown to match
+        var workshopSelect = document.getElementById('workshopSelect');
+        var workshopId = opt.value.replace('workshop_', '');
+        for (var i = 0; i < workshopSelect.options.length; i++) {
+            if (workshopSelect.options[i].value === workshopId) {
+                workshopSelect.selectedIndex = i;
+                break;
+            }
+        }
     }
 }
 
 // ── On load ──
 document.addEventListener('DOMContentLoaded', function() {
+    // Show form fields for the pre-selected mode
+    var checkedMode = document.querySelector('input[name="_mode"]:checked');
+    if (checkedMode) {
+        toggleFormMode(checkedMode.value);
+    }
     var sel = document.getElementById('workshopSelect');
     if (sel && sel.value && sel.value !== '__new__') onWorkshopSelect(sel);
     var tsel = document.getElementById('trackSelect');

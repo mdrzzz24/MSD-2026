@@ -557,7 +557,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (!title || title === '—' || title === 'Time') return;
         var cellTimeSlot = cell.getAttribute('data-timeslot');
         for (const [id, item] of Object.entries(window._agendaData)) {
-            if (item.title === title && (item.is_registrable || (item.speakers && item.speakers.length > 0) || item.description)) {
+            if (item.title === title) {
                 if (cellTimeSlot && item.start_time) {
                     var slotStart = cellTimeSlot.split('-')[0].substring(0,5);
                     var itemStart = item.start_time.substring(0,5);

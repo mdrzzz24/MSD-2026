@@ -143,7 +143,7 @@
                         <option value="">— None —</option>
                         <option value="__new__" style="font-weight:700;color:#4f46e5;">+ Create New Workshop</option>
                         <?php $__currentLoopData = $workshopList; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $ws): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-                            <option value="<?php echo e($ws->id); ?>" data-title="<?php echo e(e($ws->title)); ?>" data-desc="<?php echo e(e($ws->description)); ?>" <?php echo e(old('workshop_id')==$ws->id?'selected':''); ?>><?php echo e($ws->title); ?></option>
+                            <option value="<?php echo e($ws->id); ?>" data-title="<?php echo e(e($ws->title)); ?>" data-desc="<?php echo e(e($ws->description)); ?>" data-room="<?php echo e(e($ws->room ?? '')); ?>" data-start="<?php echo e($ws->start_time); ?>" data-end="<?php echo e($ws->end_time); ?>" data-capacity="<?php echo e($ws->capacity); ?>" <?php echo e(old('workshop_id')==$ws->id?'selected':''); ?>><?php echo e($ws->title); ?></option>
                         <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                     </select>
                     
@@ -209,6 +209,11 @@ function onWorkshopSelect(sel) {
     var newFields = document.getElementById('newWorkshopFields');
     var titleInput = document.getElementById('inputTitle');
     var descInput = document.getElementById('inputDescription');
+    var startTime = document.getElementById('inputStartTime');
+    var endTime = document.getElementById('inputEndTime');
+    var room = document.getElementById('inputRoom');
+    var capacity = document.getElementById('inputCapacity');
+    var isReg = document.getElementById('inputIsRegistrable');
 
     if (sel.value === '__new__') {
         newFields.classList.remove('hidden');
@@ -217,8 +222,23 @@ function onWorkshopSelect(sel) {
         var opt = sel.options[sel.selectedIndex];
         var wsTitle = opt.getAttribute('data-title');
         var wsDesc = opt.getAttribute('data-desc');
+        var wsStart = opt.getAttribute('data-start');
+        var wsEnd = opt.getAttribute('data-end');
+        var wsRoom = opt.getAttribute('data-room');
+        var wsCapacity = opt.getAttribute('data-capacity');
         if (wsTitle) titleInput.value = wsTitle;
         if (wsDesc) descInput.value = wsDesc;
+        if (wsStart) startTime.value = wsStart;
+        if (wsEnd) endTime.value = wsEnd;
+        if (wsRoom) {
+            for (var i = 0; i < room.options.length; i++) {
+                if (room.options[i].value === wsRoom) {
+                    room.selectedIndex = i;
+                    break;
+                }
+            }
+        }
+        if (wsCapacity) capacity.value = wsCapacity;
     } else {
         newFields.classList.add('hidden');
     }
@@ -283,12 +303,18 @@ function onExistingSourceSelect(sel) {
 
     if (type === 'track') {
         agendaType.value = 'track';
-        // Clear workshop-specific fields
-        startTime.value = '';
-        endTime.value = '';
-        room.value = '';
+        // Don't clear time or room — keep pre-filled values from URL params
         capacity.value = '0';
         isReg.checked = false;
+        // Also set the track_id dropdown to match
+        var trackSelect = document.getElementById('trackSelect');
+        var trackId = opt.value.replace('track_', '');
+        for (var i = 0; i < trackSelect.options.length; i++) {
+            if (trackSelect.options[i].value === trackId) {
+                trackSelect.selectedIndex = i;
+                break;
+            }
+        }
     } else if (type === 'workshop') {
         agendaType.value = 'workshop';
         var wsStart = opt.getAttribute('data-start');
@@ -312,11 +338,25 @@ function onExistingSourceSelect(sel) {
         if (wsRegOpen === '1') {
             isReg.checked = true;
         }
+        // Also set the workshop_id dropdown to match
+        var workshopSelect = document.getElementById('workshopSelect');
+        var workshopId = opt.value.replace('workshop_', '');
+        for (var i = 0; i < workshopSelect.options.length; i++) {
+            if (workshopSelect.options[i].value === workshopId) {
+                workshopSelect.selectedIndex = i;
+                break;
+            }
+        }
     }
 }
 
 // ── On load ──
 document.addEventListener('DOMContentLoaded', function() {
+    // Show form fields for the pre-selected mode
+    var checkedMode = document.querySelector('input[name="_mode"]:checked');
+    if (checkedMode) {
+        toggleFormMode(checkedMode.value);
+    }
     var sel = document.getElementById('workshopSelect');
     if (sel && sel.value && sel.value !== '__new__') onWorkshopSelect(sel);
     var tsel = document.getElementById('trackSelect');
