@@ -171,6 +171,7 @@ function onWorkshopSelect(sel) {
     var endTime = document.querySelector('[name="end_time"]');
     var room = document.querySelector('[name="room"]');
     var capacity = document.querySelector('[name="capacity"]');
+    var agendaType = document.querySelector('[name="agenda_type"]');
     if (sel.value === '__new__') { newFields.classList.remove('hidden'); }
     else if (sel.value) {
         newFields.classList.add('hidden');
@@ -192,18 +193,21 @@ function onWorkshopSelect(sel) {
             }
         }
         if (wsCapacity) capacity.value = wsCapacity;
+        if (agendaType) agendaType.value = 'workshop';
     } else { newFields.classList.add('hidden'); }
 }
 function onTrackSelect(sel) {
     var newFields = document.getElementById('newTrackFields');
     var titleInput = document.querySelector('[name="title"]');
     var descInput = document.querySelector('[name="description"]');
+    var agendaType = document.querySelector('[name="agenda_type"]');
     if (sel.value === '__new__') { newFields.classList.remove('hidden'); }
     else if (sel.value) {
         newFields.classList.add('hidden');
         var opt = sel.options[sel.selectedIndex];
         if (opt.getAttribute('data-title')) titleInput.value = opt.getAttribute('data-title');
         if (opt.getAttribute('data-desc')) descInput.value = opt.getAttribute('data-desc');
+        if (agendaType) agendaType.value = 'track';
     } else { newFields.classList.add('hidden'); }
 }
 </script>

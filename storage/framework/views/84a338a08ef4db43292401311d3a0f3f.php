@@ -95,7 +95,7 @@
                         <option value="">— None —</option>
                         <option value="__new__" style="font-weight:700;color:#4f46e5;">+ Create New Workshop</option>
                         <?php $__currentLoopData = $workshopList; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $ws): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-                            <option value="<?php echo e($ws->id); ?>" data-title="<?php echo e(e($ws->title)); ?>" data-desc="<?php echo e(e($ws->description)); ?>" <?php echo e(old('workshop_id', $agendum->workshop_id)==$ws->id?'selected':''); ?>><?php echo e($ws->title); ?></option>
+                            <option value="<?php echo e($ws->id); ?>" data-title="<?php echo e(e($ws->title)); ?>" data-desc="<?php echo e(e($ws->description)); ?>" data-room="<?php echo e(e($ws->room ?? '')); ?>" data-start="<?php echo e($ws->start_time); ?>" data-end="<?php echo e($ws->end_time); ?>" data-capacity="<?php echo e($ws->capacity); ?>" <?php echo e(old('workshop_id', $agendum->workshop_id)==$ws->id?'selected':''); ?>><?php echo e($ws->title); ?></option>
                         <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                     </select>
                     <div id="newWorkshopFields" class="hidden mt-2 p-3 bg-indigo-50 border border-indigo-200 rounded-xl space-y-2">
@@ -167,24 +167,47 @@ function onWorkshopSelect(sel) {
     var newFields = document.getElementById('newWorkshopFields');
     var titleInput = document.querySelector('[name="title"]');
     var descInput = document.querySelector('[name="description"]');
+    var startTime = document.querySelector('[name="start_time"]');
+    var endTime = document.querySelector('[name="end_time"]');
+    var room = document.querySelector('[name="room"]');
+    var capacity = document.querySelector('[name="capacity"]');
+    var agendaType = document.querySelector('[name="agenda_type"]');
     if (sel.value === '__new__') { newFields.classList.remove('hidden'); }
     else if (sel.value) {
         newFields.classList.add('hidden');
         var opt = sel.options[sel.selectedIndex];
         if (opt.getAttribute('data-title')) titleInput.value = opt.getAttribute('data-title');
         if (opt.getAttribute('data-desc')) descInput.value = opt.getAttribute('data-desc');
+        var wsStart = opt.getAttribute('data-start');
+        var wsEnd = opt.getAttribute('data-end');
+        var wsRoom = opt.getAttribute('data-room');
+        var wsCapacity = opt.getAttribute('data-capacity');
+        if (wsStart) startTime.value = wsStart;
+        if (wsEnd) endTime.value = wsEnd;
+        if (wsRoom) {
+            for (var i = 0; i < room.options.length; i++) {
+                if (room.options[i].value === wsRoom) {
+                    room.selectedIndex = i;
+                    break;
+                }
+            }
+        }
+        if (wsCapacity) capacity.value = wsCapacity;
+        if (agendaType) agendaType.value = 'workshop';
     } else { newFields.classList.add('hidden'); }
 }
 function onTrackSelect(sel) {
     var newFields = document.getElementById('newTrackFields');
     var titleInput = document.querySelector('[name="title"]');
     var descInput = document.querySelector('[name="description"]');
+    var agendaType = document.querySelector('[name="agenda_type"]');
     if (sel.value === '__new__') { newFields.classList.remove('hidden'); }
     else if (sel.value) {
         newFields.classList.add('hidden');
         var opt = sel.options[sel.selectedIndex];
         if (opt.getAttribute('data-title')) titleInput.value = opt.getAttribute('data-title');
         if (opt.getAttribute('data-desc')) descInput.value = opt.getAttribute('data-desc');
+        if (agendaType) agendaType.value = 'track';
     } else { newFields.classList.add('hidden'); }
 }
 </script>

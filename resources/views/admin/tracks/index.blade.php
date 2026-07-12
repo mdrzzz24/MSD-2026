@@ -103,7 +103,7 @@
 </div>
 <script>
 function editTrack(id,title,desc){
-    document.getElementById('editForm').action='/2026-Testing/public/admin/tracks/'+id;
+    document.getElementById('editForm').action='{{ route('admin.tracks.update', ['track' => '__ID__']) }}'.replace('__ID__', id);
     document.getElementById('editTitle').value=title;
     document.getElementById('editDesc').value=desc||'';
     document.getElementById('editModal').style.display='flex';
