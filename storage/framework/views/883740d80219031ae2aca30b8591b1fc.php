@@ -1,6 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <!-- Google Tag Manager -->
+    <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+    new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+    j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+    'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+    })(window,document,'script','dataLayer','GTM-T69856QT');</script>
+    <!-- End Google Tag Manager -->
     <link rel="icon" type="image/png" href="<?php echo e(asset('img/metrodata.png')); ?>">
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -31,6 +38,10 @@
 <link rel="stylesheet" href="<?php echo e(asset('css/style.css')); ?>?v=7">
 </head>
 <body>
+<!-- Google Tag Manager (noscript) -->
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-T69856QT"
+height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+<!-- End Google Tag Manager (noscript) -->
 
 <!-- NAV -->
 <nav class="nav">
@@ -513,8 +524,7 @@ function openAgendaModal(id) {
     } else {
         const regStatus = window._agendaRegistrations[id] || null;
         if (regStatus === 'approved') {
-        regSection.innerHTML = '<div style="text-align:center;"><div style="display:inline-flex;align-items:center;gap:8px;padding:8px 20px;border-radius:999px;font-size:13px;font-weight:600;background:rgba(16,185,129,0.15);color:#34d399;border:1px solid rgba(16,185,129,0.2);margin-bottom:14px;"><svg style="width:16px;height:16px;" fill="none" stroke="#34d399" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke-width="2"/><path stroke-width="2.5" d="M8 12l3 3 5-5"/></svg> You are registered</div>' +
-            '<form action="'+window._agendaUnregisterUrl.replace('__ID__',id)+'" method="POST"><?php echo csrf_field(); ?><button style="padding:10px 28px;background:rgba(239,68,68,0.1);color:#ef4444;font-weight:600;font-size:13px;border:1px solid rgba(239,68,68,0.2);border-radius:999px;cursor:pointer;transition:all 0.2s;" onmouseover="this.style.background=\'rgba(239,68,68,0.2)\'" onmouseout="this.style.background=\'rgba(239,68,68,0.1)\'">Cancel Registration</button></form></div>';
+        regSection.innerHTML = '<div style="text-align:center;"><div style="display:inline-flex;align-items:center;gap:8px;padding:8px 20px;border-radius:999px;font-size:13px;font-weight:600;background:rgba(16,185,129,0.15);color:#34d399;border:1px solid rgba(16,185,129,0.2);margin-bottom:14px;"><svg style="width:16px;height:16px;" fill="none" stroke="#34d399" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke-width="2"/><path stroke-width="2.5" d="M8 12l3 3 5-5"/></svg> You are registered</div></div>';
     } else if (regStatus === 'pending') {
         regSection.innerHTML = '<div style="text-align:center;"><div style="display:inline-flex;align-items:center;gap:8px;padding:8px 20px;border-radius:999px;font-size:13px;font-weight:600;background:rgba(251,191,36,0.15);color:#fbbf24;border:1px solid rgba(251,191,36,0.2);margin-bottom:14px;"><svg style="width:16px;height:16px;" fill="none" stroke="#fbbf24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke-width="2"/><path stroke-width="2" d="M12 6v6l4 2"/></svg> Pending Approval</div>' +
             '<form action="'+window._agendaUnregisterUrl.replace('__ID__',id)+'" method="POST"><?php echo csrf_field(); ?><button style="padding:10px 28px;background:rgba(239,68,68,0.1);color:#ef4444;font-weight:600;font-size:13px;border:1px solid rgba(239,68,68,0.2);border-radius:999px;cursor:pointer;transition:all 0.2s;" onmouseover="this.style.background=\'rgba(239,68,68,0.2)\'" onmouseout="this.style.background=\'rgba(239,68,68,0.1)\'">Cancel</button></form></div>';
@@ -558,7 +568,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (!title || title === '—' || title === 'Time') return;
         var cellTimeSlot = cell.getAttribute('data-timeslot');
         for (const [id, item] of Object.entries(window._agendaData)) {
-            if (item.title === title && (item.is_registrable || (item.speakers && item.speakers.length > 0) || item.description)) {
+            if (item.title === title) {
                 if (cellTimeSlot && item.start_time) {
                     var slotStart = cellTimeSlot.split('-')[0].substring(0,5);
                     var itemStart = item.start_time.substring(0,5);
@@ -717,7 +727,9 @@ document.addEventListener('DOMContentLoaded', function() {
         </div>
         <div class="field"><label>Company Name</label><input required name="company" placeholder="Company Name" /><span class="field-err" data-field="company"></span></div>
         <div class="field"><label>Business Email</label><input required type="email" name="email" placeholder="Business Email" /><span class="field-err" data-field="email"></span></div>
-        <div class="field"><label>Mobile Phone</label><input required name="phone" placeholder="Mobile Phone" /><span class="field-err" data-field="phone"></span></div>
+        <div class="field"><label>Mobile Phone</label><div class="phone-wrapper" style="display:flex;align-items:stretch;gap:0;"><span class="phone-prefix" id="phonePrefix1" style="display:flex;align-items:center;padding:12px 10px;background:rgba(255,255,255,.08);border:1px solid var(--line,#d1d5db);border-right:none;border-radius:10px 0 0 10px;font-size:14px;color:rgba(255,255,255,.45);white-space:nowrap;flex-shrink:0;transition:border-color .25s,box-shadow .25s,background .25s;">+62</span><input required name="phone" placeholder="815-xxx-xxxx" class="phone-input" id="phoneInput1" style="flex:1;border-radius:0 10px 10px 0;border-left:none;" oninput="updatePhonePrefix(this)" onfocus="this.parentNode.querySelector('.phone-prefix').style.borderColor='var(--pink,#e91e63)';this.parentNode.querySelector('.phone-prefix').style.boxShadow='0 0 0 3px rgba(233,30,99,.15)';this.parentNode.querySelector('.phone-prefix').style.background='rgba(255,255,255,.12)'" onblur="this.parentNode.querySelector('.phone-prefix').style.borderColor='';this.parentNode.querySelector('.phone-prefix').style.boxShadow='';updatePhonePrefix(this)" /></div><span class="field-err" data-field="phone"></span></div>
+<script>function updatePhonePrefix(el){var v=el.value.replace(/[^0-9]/g,'').replace(/^0/,'');el.value=v;var p=el.parentNode.querySelector('.phone-prefix');if(v){p.style.background='#fff';p.style.color='#374151'}else{p.style.background='rgba(255,255,255,.08)';p.style.color='rgba(255,255,255,.45)'}}
+document.addEventListener('DOMContentLoaded',function(){var e=document.getElementById('phoneInput1');if(e&&e.value)updatePhonePrefix(e)});</script>
         <div class="field">
           <label>Industry</label>
           <select name="industry" required>
