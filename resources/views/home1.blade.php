@@ -615,7 +615,7 @@ document.addEventListener('DOMContentLoaded', function() {
         <div class="sponsor"><img src="{{ asset('img/WORKSHOP/google_cloud.png') }}" alt="Google Cloud"></div>
         <div class="sponsor"><img src="{{ asset('img/WORKSHOP/NetApp.png') }}" alt="NetApp"></div>
         <div class="sponsor"><img src="{{ asset('img/WORKSHOP/REHDAT.png') }}" alt="Red Hat"></div>
-        <div class="sponsor"><img src="{{ asset('img/WORKSHOP/sangfor.png') }}" alt="Sangfor"></div>
+        <div class="sponsor"><img src="{{ asset('img/WORKSHOP/SANGFOR.png') }}" alt="Sangfor"></div>
         <div class="sponsor"><img src="{{ asset('img/WORKSHOP/singleStore.png') }}" alt="SingleStore"></div>
         <div class="sponsor"><img src="{{ asset('img/WORKSHOP/Workday.png') }}" alt="Workday"></div>
       </div>
