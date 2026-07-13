@@ -69,7 +69,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 <!-- HERO -->
 <header class="hero" id="top">
   <div class="hero-light hero-light--blue"></div>
-  <div class="hero-light hero-light--pink"></div>
+  <!-- <div class="hero-light hero-light--pink"></div> -->
   <div class="container hero-content">
     <p class="eyebrow"><strong>Metrodata</strong> Proudly Present</p>
     <div class="hero-title-group">
@@ -628,7 +628,7 @@ document.addEventListener('DOMContentLoaded', function() {
         <div class="sponsor"><img src="{{ asset('img/GOLD/Cyble.png') }}" alt="Cyble"></div>
         <div class="sponsor"><img src="{{ asset('img/GOLD/Datadog.png') }}" alt="Datadog"></div>
         <div class="sponsor"><img src="{{ asset('img/GOLD/Dynatrace.png') }}" alt="Dynatrace"></div>
-        <div class="sponsor"><img src="{{ asset('img/GOLD/EDB.png') }}" alt="EDB Postgres"></div>
+        <div class="sponsor"><img src="{{ asset('img/GOLD/EDB.png?v=2') }}" alt="EDB Postgres"></div>
         <div class="sponsor"><img src="{{ asset('img/GOLD/Fortinet.png') }}" alt="Fortinet"></div>
         <div class="sponsor"><img src="{{ asset('img/GOLD/HPE.png') }}" alt="HPE"></div>
         <div class="sponsor"><img src="{{ asset('img/GOLD/HP.png') }}" alt="HP Inc"></div>
