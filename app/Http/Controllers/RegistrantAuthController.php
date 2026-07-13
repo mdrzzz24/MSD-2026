@@ -22,7 +22,22 @@ class RegistrantAuthController extends Controller
                 'job_role'      => ['required', 'string', 'max:255'],
                 'job_title'     => ['required', 'string', 'max:255'],
                 'company'       => ['required', 'string', 'max:255'],
-                'email'         => ['required', 'email', 'max:255', 'unique:registrants,email'],
+                'email'         => ['required', 'email', 'max:255', 'unique:registrants,email',
+                    function ($attribute, $value, $fail) {
+                        $freeDomains = [
+                            'gmail.com', 'yahoo.com', 'yahoo.co.id', 'ymail.com',
+                            'hotmail.com', 'outlook.com', 'live.com',
+                            'aol.com', 'icloud.com', 'me.com', 'mac.com',
+                            'protonmail.com', 'proton.me', 'mail.com',
+                            'gmx.com', 'gmx.net', 'zoho.com', 'yandex.com',
+                            'tutanota.com', 'fastmail.com', 'rocketmail.com',
+                        ];
+                        $domain = strtolower(substr(strrchr($value, '@'), 1));
+                        if (in_array($domain, $freeDomains)) {
+                            $fail('Please use your company email address. Free email providers (Gmail, Yahoo, etc.) are not accepted.');
+                        }
+                    },
+                ],
                 'phone'         => ['required', 'string', 'max:50'],
                 'industry'      => ['required', 'string', 'max:255'],
                 'employees'     => ['required', 'string', 'max:50'],

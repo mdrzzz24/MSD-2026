@@ -144,11 +144,25 @@ if (statsGrid) {
   statObserver.observe(statsGrid);
 }
 
+// ── Free email domain blocklist ──
+var FREE_EMAIL_DOMAINS = /@(gmail\.com|yahoo\.(com|co\.id)|ymail\.com|hotmail\.com|outlook\.com|live\.com|aol\.com|icloud\.com|me\.com|mac\.com|protonmail\.com|proton\.me|mail\.com|gmx\.(com|net)|zoho\.com|yandex\.com|tutanota\.com|fastmail\.com|rocketmail\.com)$/i;
+
 // Registration form — submit to server, show modal on success
 const regForm = document.getElementById('regForm');
 if (regForm) {
   regForm.addEventListener('submit', async (e) => {
     e.preventDefault();
+
+    // Client-side free email check
+    var emailInput = regForm.querySelector('[name="email"]');
+    if (emailInput && FREE_EMAIL_DOMAINS.test(emailInput.value.trim())) {
+      clearFieldErrors();
+      var errEl = document.querySelector('.field-err[data-field="email"]');
+      if (errEl) errEl.textContent = 'Please use your company email address. Free email providers (Gmail, Yahoo, etc.) are not accepted.';
+      if (emailInput) emailInput.classList.add('field-error');
+      emailInput.focus();
+      return;
+    }
 
     const submitBtn = regForm.querySelector('.btn-submit');
     const originalText = submitBtn.innerHTML;
