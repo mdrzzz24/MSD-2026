@@ -78,14 +78,16 @@ class AdminManagementController extends Controller
     {
         $request->validate([
             'name'         => ['required', 'string', 'max:255'],
-            'base_url'     => ['required', 'url', 'max:500'],
             'utm_source'   => ['required', 'string', 'max:100'],
             'utm_medium'   => ['required', 'string', 'max:100'],
             'utm_campaign' => ['required', 'string', 'max:100'],
             'utm_content'  => ['nullable', 'string', 'max:100'],
         ]);
 
-        $link = UtmLink::create(array_merge($request->all(), ['created_by' => Auth::id()]));
+        $link = UtmLink::create(array_merge($request->all(), [
+            'base_url'   => UtmLink::BASE_URL,
+            'created_by' => Auth::id(),
+        ]));
         $link->update(['full_url' => $link->buildUrl()]);
 
         return redirect()->route('admin.management.utm')
@@ -101,14 +103,15 @@ class AdminManagementController extends Controller
 
         $request->validate([
             'name'         => ['required', 'string', 'max:255'],
-            'base_url'     => ['required', 'url', 'max:500'],
             'utm_source'   => ['required', 'string', 'max:100'],
             'utm_medium'   => ['required', 'string', 'max:100'],
             'utm_campaign' => ['required', 'string', 'max:100'],
             'utm_content'  => ['nullable', 'string', 'max:100'],
         ]);
 
-        $utmLink->update($request->all());
+        $utmLink->update(array_merge($request->all(), [
+            'base_url' => UtmLink::BASE_URL,
+        ]));
         $utmLink->update(['full_url' => $utmLink->buildUrl()]);
 
         return redirect()->route('admin.management.utm')

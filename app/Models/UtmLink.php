@@ -25,6 +25,11 @@ class UtmLink extends Model
         return $this->belongsToMany(User::class, 'utm_link_user');
     }
 
+    /**
+     * Fixed base URL for all UTM links. Cannot be changed.
+     */
+    public const BASE_URL = 'https://metrodatasolutionday.com/2026/';
+
     public function buildUrl(): string
     {
         $params = [
@@ -35,7 +40,7 @@ class UtmLink extends Model
         if ($this->utm_content) {
             $params['utm_content'] = $this->utm_content;
         }
-        return $this->base_url . '?' . http_build_query($params);
+        return self::BASE_URL . '?' . http_build_query($params);
     }
 
     public function registrationsCount(): int
