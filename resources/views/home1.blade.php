@@ -623,7 +623,7 @@ document.addEventListener('DOMContentLoaded', function() {
     <div class="sponsors-block">
       <div class="sponsor-tier">Gold</div>
       <div class="sponsor-grid">
-        <div class="sponsor"><img src="{{ asset('img/GOLD/BytePlus.png') }}" alt="Byteplus"></div>
+        <div class="sponsor"><img src="{{ asset('img/GOLD/BytePlus.png?v=2') }}" alt="Byteplus"></div>
         <div class="sponsor"><img src="{{ asset('img/GOLD/Confluent.png') }}" alt="Confluent"></div>
         <div class="sponsor"><img src="{{ asset('img/GOLD/Cyble.png') }}" alt="Cyble"></div>
         <div class="sponsor"><img src="{{ asset('img/GOLD/Datadog.png') }}" alt="Datadog"></div>
