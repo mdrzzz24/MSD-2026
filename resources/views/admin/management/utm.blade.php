@@ -68,8 +68,13 @@
 @if ($link->utm_content)<span class="text-[10px] font-medium bg-gray-50 text-gray-600 px-1.5 py-0.5 rounded">content:{{ $link->utm_content }}</span>@endif
 </div>
 </td>
-<td class="px-5 py-4 max-w-[200px]">
-<input type="text" value="{{ $link->full_url }}" readonly onclick="this.select()" class="text-xs text-indigo-600 bg-indigo-50 px-2 py-1 rounded w-full cursor-text border-0">
+<td class="px-5 py-4 max-w-[220px]">
+<div class="flex items-center gap-1">
+<input type="text" id="url-{{ $link->id }}" value="{{ $link->full_url }}" readonly onclick="this.select()" class="text-xs text-indigo-600 bg-indigo-50 px-2 py-1 rounded flex-1 min-w-0 border-0 cursor-text">
+<button onclick="copyUrl(this, 'url-{{ $link->id }}')" class="flex-shrink-0 p-1.5 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition" title="Copy URL">
+<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+</button>
+</div>
 </td>
 <td class="px-5 py-4">
 <span class="text-xs text-gray-500">{{ $link->creator?->name ?? '—' }}</span>
@@ -125,10 +130,82 @@
 </div>
 @endif
 
+{{-- Untracked UTM Sources (no UtmLink record yet) --}}
+@if ($unlinkedSources->count())
+<div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+<div class="px-5 py-4 border-b border-gray-100">
+<h2 class="text-base font-bold text-gray-900">Untracked UTM Sources</h2>
+<p class="text-xs text-gray-500 mt-0.5">{{ $untrackedTotals['all'] }} registrants from sources without a UTM Link yet · <a href="#" onclick="event.preventDefault(); document.querySelector('#untrackedSection').scrollIntoView({behavior:'smooth'});" class="text-indigo-600 hover:underline">Convert them below</a></p>
+</div>
+<div class="overflow-x-auto" id="untrackedSection">
+<table class="w-full">
+<thead><tr class="bg-gray-50/80">
+<th class="px-5 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Source</th>
+<th class="px-5 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Registrants</th>
+@if (Auth::user()->isClient())
+<th class="px-5 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Approved</th>
+<th class="px-5 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Pending</th>
+<th class="px-5 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Rejected</th>
+@else
+<th class="px-5 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Checked In</th>
+<th class="px-5 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Rate</th>
+@endif
+<th class="px-5 py-3.5 text-center text-xs font-semibold text-gray-500 uppercase tracking-wider">Actions</th>
+</tr></thead>
+<tbody class="divide-y divide-gray-50">
+@foreach ($unlinkedSources as $src)
+<tr class="hover:bg-amber-50/50">
+<td class="px-5 py-4">
+<a href="{{ route('admin.registrants.index', ['utm_source' => $src->utm_source]) }}" class="text-sm font-semibold text-indigo-600 hover:text-indigo-800 hover:underline">{{ $src->utm_source }}</a>
+</td>
+<td class="px-5 py-4">
+@if ($src->total > 0)
+<a href="{{ route('admin.registrants.index', ['utm_source' => $src->utm_source]) }}" class="text-sm font-bold text-indigo-600 hover:text-indigo-800 hover:underline">{{ $src->total }}</a>
+@else
+<span class="text-sm text-gray-400">0</span>
+@endif
+</td>
+@if (Auth::user()->isClient())
+<td class="px-5 py-4"><span class="text-sm {{ ($src->approved_count ?? 0) > 0 ? 'text-emerald-600 font-bold' : 'text-gray-400' }}">{{ $src->approved_count ?? 0 }}</span></td>
+<td class="px-5 py-4"><span class="text-sm {{ ($src->pending_count ?? 0) > 0 ? 'text-amber-600 font-bold' : 'text-gray-400' }}">{{ $src->pending_count ?? 0 }}</span></td>
+<td class="px-5 py-4"><span class="text-sm {{ ($src->rejected_count ?? 0) > 0 ? 'text-red-600 font-bold' : 'text-gray-400' }}">{{ $src->rejected_count ?? 0 }}</span></td>
+@else
+<td class="px-5 py-4"><span class="text-sm text-gray-600">{{ $src->checked_in }}</span></td>
+<td class="px-5 py-4">
+<div class="flex items-center gap-2">
+<div class="h-2 w-20 bg-gray-100 rounded-full overflow-hidden"><div class="h-full bg-emerald-400 rounded-full" style="width:{{ $src->total > 0 ? $src->checked_in/$src->total*100 : 0 }}%"></div></div>
+<span class="text-xs text-gray-500">{{ $src->total > 0 ? round($src->checked_in/$src->total*100) : 0 }}%</span>
+</div>
+</td>
+@endif
+<td class="px-5 py-4 text-center">
+<div class="flex items-center justify-center gap-1.5">
+<a href="{{ route('admin.registrants.index', ['utm_source' => $src->utm_source]) }}" class="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium rounded-lg bg-indigo-50 text-indigo-700 hover:bg-indigo-100 transition" title="View Registrants">
+<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+View
+</a>
+<button onclick="convertSource('{{ $src->utm_source }}')" class="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium rounded-lg bg-emerald-500 text-white hover:bg-emerald-600 transition shadow-sm" title="Buat UTM Link">
+<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg>
+Convert
+</button>
+</div>
+</td>
+</tr>
+@endforeach
+</tbody>
+</table>
+</div>
+<div class="px-5 py-3 border-t border-gray-100 bg-gray-50/50 flex items-center gap-6 text-xs text-gray-500">
+<span>Total untracked sources: <strong class="text-gray-700">{{ $unlinkedSources->count() }}</strong></span>
+<span>Total registrants: <strong class="text-gray-700">{{ $unlinkedSources->sum('total') }}</strong></span>
+</div>
+</div>
+@endif
+
 {{-- Source breakdown --}}
 @if ($sources->count())
 <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-<div class="px-5 py-4 border-b border-gray-100"><h2 class="text-base font-bold text-gray-900">All Sources (Auto-tracked)</h2><p class="text-xs text-gray-500 mt-0.5">{{ $totals['all'] }} total{{ Auth::user()->isClient() ? '' : ' · ' . $totals['checked'] . ' checked in' }}</p></div>
+<div class="px-5 py-4 border-b border-gray-100"><h2 class="text-base font-bold text-gray-900">Linked Sources (Auto-tracked)</h2><p class="text-xs text-gray-500 mt-0.5">{{ $totals['all'] }} total{{ Auth::user()->isClient() ? '' : ' · ' . $totals['checked'] . ' checked in' }} · Sources that already have a UTM Link</p></div>
 <div class="overflow-x-auto">
 <table class="w-full">
 <thead><tr class="bg-gray-50/80">
@@ -175,13 +252,13 @@
 </td>
 @endif
 <td class="px-5 py-4 text-center">
-@if ($src->total > 0)
-<a href="{{ $src->utm_source ? route('admin.registrants.index', ['utm_source' => $src->utm_source]) : route('admin.registrants.index', ['direct' => 1]) }}" class="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium rounded-lg bg-indigo-50 text-indigo-700 hover:bg-indigo-100 transition" title="View Registrants">
+@if (!$src->utm_source)
+<span class="text-xs text-gray-400">—</span>
+@else
+<a href="{{ route('admin.registrants.index', ['utm_source' => $src->utm_source]) }}" class="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium rounded-lg bg-indigo-50 text-indigo-700 hover:bg-indigo-100 transition" title="View Registrants">
 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
 View
 </a>
-@else
-<span class="text-xs text-gray-400">—</span>
 @endif
 </td>
 </tr>
@@ -247,6 +324,19 @@ document.getElementById('linkModal').classList.remove('hidden');
 document.getElementById('linkModal').classList.add('flex');
 }
 const linkUpdateUrl = '{{ route("admin.management.utm-links.update", ["utmLink" => "LINK_ID"]) }}';
+function convertSource(source) {
+document.getElementById('linkModalTitle').textContent = 'Convert Source to UTM Link';
+document.getElementById('linkForm').action = '{{ route("admin.management.utm-links.store") }}';
+document.getElementById('linkFormMethod').value = 'POST';
+document.getElementById('linkId').value = '';
+document.getElementById('linkName').value = source;
+document.getElementById('linkSource').value = source;
+document.getElementById('linkMedium').value = 'email';
+document.getElementById('linkCampaign').value = 'msd2026';
+document.getElementById('linkContent').value = '';
+document.getElementById('linkModal').classList.remove('hidden');
+document.getElementById('linkModal').classList.add('flex');
+}
 function editLink(id, name, base, source, medium, campaign, content) {
 document.getElementById('linkModalTitle').textContent = 'Edit UTM Link';
 document.getElementById('linkForm').action = linkUpdateUrl.replace('LINK_ID', id);
@@ -259,6 +349,15 @@ document.getElementById('linkCampaign').value = campaign;
 document.getElementById('linkContent').value = content;
 document.getElementById('linkModal').classList.remove('hidden');
 document.getElementById('linkModal').classList.add('flex');
+}
+function copyUrl(btn, inputId) {
+const input = document.getElementById(inputId);
+navigator.clipboard.writeText(input.value).then(() => {
+const orig = btn.innerHTML;
+btn.innerHTML = '<svg class="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>';
+btn.classList.add('pointer-events-none');
+setTimeout(() => { btn.innerHTML = orig; btn.classList.remove('pointer-events-none'); }, 1500);
+});
 }
 function closeLinkModal() {
 document.getElementById('linkModal').classList.add('hidden');

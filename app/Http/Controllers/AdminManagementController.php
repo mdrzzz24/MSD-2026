@@ -30,6 +30,15 @@ class AdminManagementController extends Controller
             ->orderByDesc('total')
             ->get();
 
+        // Mark which sources already have a UtmLink record
+        $linkedSources = UtmLink::whereIn('utm_source', $sources->pluck('utm_source'))
+            ->pluck('utm_source')
+            ->unique()
+            ->toArray();
+        foreach ($sources as $src) {
+            $src->has_link = in_array($src->utm_source, $linkedSources);
+        }
+
         // Add "Direct" row for registrants without UTM
         $directTotal = Registrant::whereNull('utm_source')->count();
         $directChecked = Registrant::whereNull('utm_source')->whereNotNull('checked_in_at')->count();
@@ -47,9 +56,20 @@ class AdminManagementController extends Controller
             ]);
         }
 
+        // Separate unlinked sources (no UtmLink record) into their own section
+        $unlinkedSources = $sources->filter(fn($src) => $src->utm_source && !$src->has_link)->values();
+
+        // Remove unlinked sources from main sources (keep only linked + Direct)
+        $sources = $sources->filter(fn($src) => !$src->utm_source || $src->has_link)->values();
+
         $totals = [
             'all' => $sources->sum('total'),
             'checked' => $sources->sum('checked_in'),
+        ];
+
+        $untrackedTotals = [
+            'all'     => $unlinkedSources->sum('total'),
+            'checked' => $unlinkedSources->sum('checked_in'),
         ];
 
         // UTM Links — scope by user unless super_admin
@@ -69,7 +89,7 @@ class AdminManagementController extends Controller
 
         $clientUsers = User::where('role', 'client')->orderBy('name')->get();
 
-        return view('admin.management.utm', compact('sources', 'totals', 'utmLinks', 'clientUsers'));
+        return view('admin.management.utm', compact('sources', 'totals', 'utmLinks', 'clientUsers', 'unlinkedSources', 'untrackedTotals'));
     }
 
     // ── UTM Link CRUD ──
