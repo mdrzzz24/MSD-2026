@@ -687,6 +687,7 @@ document.addEventListener('DOMContentLoaded', function() {
           <label>Job Title</label>
           <select name="job_title" required>
             <option value="">Select Job Title</option>
+            <option>Intern</option>
             <option>Staff</option>
             <option>Supervisor</option>
             <option>Manager</option>
@@ -704,6 +705,7 @@ document.addEventListener('DOMContentLoaded', function() {
           <label>Job Role</label>
           <select name="job_role" required>
             <option value="">Select Job Role</option>
+            <option>Student</option>
             <option>Sales</option>
             <option>Pre-Sales / Solution Architect</option>
             <option>Engineering</option>
