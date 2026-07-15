@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\ReferralCode;
 use App\Models\Registrant;
+use App\Models\RegistrationLink;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\ValidationException;
@@ -93,6 +94,15 @@ class RegistrantAuthController extends Controller
                 $rc->incrementUses();
             }
         }
+
+        // ── Capture registration link source ──
+        RegistrationLink::create([
+            'registrant_id' => $registrant->id,
+            'source_url'    => $request->headers->get('referer'),
+            'landing_url'   => $request->fullUrl(),
+            'ip_address'    => $request->ip(),
+            'user_agent'    => $request->userAgent(),
+        ]);
 
         // ── Send auto-reply email using Registration template (if toggle is ON) ──
         if (\Illuminate\Support\Facades\Cache::get('auto_registration_email', true)) {

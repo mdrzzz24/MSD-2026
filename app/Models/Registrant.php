@@ -212,6 +212,14 @@ class Registrant extends Authenticatable
     }
 
     /**
+     * Registration link source for this registrant.
+     */
+    public function registrationLink()
+    {
+        return $this->hasOne(RegistrationLink::class);
+    }
+
+    /**
      * Agenda items the registrant has signed up for.
      */
     public function agendaItems()
