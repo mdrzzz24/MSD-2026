@@ -50,17 +50,17 @@
         @if ($allRegistrants->isEmpty())
             <div class="px-5 py-12 text-center text-gray-400 text-sm">No registrants yet.</div>
         @else
-        <div class="overflow-x-auto"><table class="w-full">
+        <div class="overflow-x-auto"><table class="w-full table-fixed">
             <thead><tr class="bg-gray-50/80">
-                <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">#</th>
+                <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase w-10">#</th>
                 <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Name</th>
-                <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Email</th>
-                <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase hidden md:table-cell">Company</th>
-                <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase hidden lg:table-cell">Job Title</th>
+                <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase w-48">Email</th>
+                <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase hidden md:table-cell w-36">Company</th>
+                <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase hidden lg:table-cell w-36">Job Title</th>
                 <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Agenda Item</th>
-                <th class="px-4 py-3 text-center text-xs font-semibold text-gray-500 uppercase">Status</th>
+                <th class="px-4 py-3 text-center text-xs font-semibold text-gray-500 uppercase w-28">Status</th>
                 @if (Auth::user()->canWrite())
-                <th class="px-4 py-3 text-center text-xs font-semibold text-gray-500 uppercase">Action</th>
+                <th class="px-4 py-3 text-center text-xs font-semibold text-gray-500 uppercase w-24">Action</th>
                 @endif
             </tr></thead>
             <tbody class="divide-y divide-gray-50">
@@ -68,11 +68,11 @@
                 @php $ws = $r->pivot->status ?? 'pending'; @endphp
                 <tr class="hover:bg-gray-50/50">
                     <td class="px-4 py-3"><span class="text-sm text-gray-400">{{ $i+1 }}</span></td>
-                    <td class="px-4 py-3"><a href="{{ route('admin.registrants.show', $r) }}" class="text-sm font-semibold text-indigo-600 hover:underline">{{ $r->display_name }}</a></td>
-                    <td class="px-4 py-3"><span class="text-sm text-gray-600">{{ $r->email }}</span></td>
-                    <td class="px-4 py-3 hidden md:table-cell"><span class="text-sm text-gray-600">{{ $r->company ?? '—' }}</span></td>
-                    <td class="px-4 py-3 hidden lg:table-cell"><span class="text-sm text-gray-600">{{ $r->job_title ?? '—' }}</span></td>
-                    <td class="px-4 py-3"><span class="text-xs text-gray-600">{{ $r->agenda_item_title ?? '—' }}</span></td>
+                    <td class="px-4 py-3 max-w-0"><a href="{{ route('admin.registrants.show', $r) }}" class="text-sm font-semibold text-indigo-600 hover:underline truncate block" title="{{ $r->display_name }}">{{ $r->display_name }}</a></td>
+                    <td class="px-4 py-3 max-w-0"><span class="text-sm text-gray-600 truncate block" title="{{ $r->email }}">{{ $r->email }}</span></td>
+                    <td class="px-4 py-3 hidden md:table-cell max-w-0"><span class="text-sm text-gray-600 truncate block" title="{{ $r->company ?? '' }}">{{ $r->company ?? '—' }}</span></td>
+                    <td class="px-4 py-3 hidden lg:table-cell max-w-0"><span class="text-sm text-gray-600 truncate block" title="{{ $r->job_title ?? '' }}">{{ $r->job_title ?? '—' }}</span></td>
+                    <td class="px-4 py-3 max-w-0"><span class="text-xs text-gray-600 truncate block" title="{{ $r->agenda_item_title ?? '' }}">{{ $r->agenda_item_title ?? '—' }}</span></td>
                     <td class="px-4 py-3 text-center">
                         @if ($ws==='approved')<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700"><span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>Approved</span>
                         @elseif ($ws==='rejected')<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-red-50 text-red-700"><span class="w-1.5 h-1.5 rounded-full bg-red-500"></span>Rejected</span>

@@ -351,6 +351,7 @@ class AdminController extends Controller
         $utmMedium   = $request->get('utm_medium');
         $utmCampaign = $request->get('utm_campaign');
         $direct      = $request->get('direct');
+        $search      = $request->get('search');
         $query = Registrant::withCount('emailLogs')->latest();
 
         if ($status === 'pending') {
@@ -359,6 +360,20 @@ class AdminController extends Controller
             $query->approved();
         } elseif ($status === 'rejected') {
             $query->rejected();
+        }
+
+        // Search by name, email, phone, company, job title, or job role
+        if ($search) {
+            $searchTerm = '%' . $search . '%';
+            $query->where(function ($q) use ($searchTerm) {
+                $q->where('name', 'like', $searchTerm)
+                  ->orWhere('email', 'like', $searchTerm)
+                  ->orWhere('phone', 'like', $searchTerm)
+                  ->orWhere('company', 'like', $searchTerm)
+                  ->orWhere('job_title', 'like', $searchTerm)
+                  ->orWhere('job_role', 'like', $searchTerm)
+                  ->orWhere('unique_code', 'like', $searchTerm);
+            });
         }
 
         // Filter by UTM parameters
@@ -379,8 +394,20 @@ class AdminController extends Controller
 
         $registrants = $query->paginate(20)->withQueryString();
 
-        // Stats — scoped to UTM filters if applied
+        // Stats — scoped to current filters
         $statsQuery = Registrant::query();
+        if ($search) {
+            $searchTerm = '%' . $search . '%';
+            $statsQuery->where(function ($q) use ($searchTerm) {
+                $q->where('name', 'like', $searchTerm)
+                  ->orWhere('email', 'like', $searchTerm)
+                  ->orWhere('phone', 'like', $searchTerm)
+                  ->orWhere('company', 'like', $searchTerm)
+                  ->orWhere('job_title', 'like', $searchTerm)
+                  ->orWhere('job_role', 'like', $searchTerm)
+                  ->orWhere('unique_code', 'like', $searchTerm);
+            });
+        }
         if ($utmSource) {
             $statsQuery->where('utm_source', $utmSource);
         }
@@ -402,7 +429,7 @@ class AdminController extends Controller
         $utmFilter = $utmSource ?: null;
         return view('admin.registrants.index', compact(
             'registrants', 'total', 'pending', 'approved', 'rejected',
-            'status', 'utmFilter'
+            'status', 'utmFilter', 'search'
         ));
     }
 
@@ -758,8 +785,8 @@ class AdminController extends Controller
                     $r->unique_code,
                     $r->notes,
                     $r->admin_notes,
-                    $r->created_at?->format('Y-m-d H:i:s'),
-                    $r->processed_at?->format('Y-m-d H:i:s'),
+                    $r->created_at?->copy()->addHours(7)->format('Y-m-d H:i:s'),
+                    $r->processed_at?->copy()->addHours(7)->format('Y-m-d H:i:s'),
                     $r->utm_source ?? '',
                     $r->utm_medium ?? '',
                     $r->utm_campaign ?? '',

@@ -18,6 +18,9 @@
             }
         }
     </script>
+    <style>
+        .table-fixed td, .table-fixed th { min-width: 0; }
+    </style>
 </head>
 <body class="bg-gray-50 font-sans antialiased">
 
@@ -172,19 +175,43 @@
                             </button>
                         </div>
                         @endif
-                        <div class="relative">
-                            <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <form method="GET" action="{{ route('admin.registrants.index') }}" class="relative">
+                            @if (request('status') && request('status') !== 'all')
+                                <input type="hidden" name="status" value="{{ request('status') }}">
+                            @endif
+                            @if (request('utm_source'))
+                                <input type="hidden" name="utm_source" value="{{ request('utm_source') }}">
+                            @endif
+                            @if (request('utm_medium'))
+                                <input type="hidden" name="utm_medium" value="{{ request('utm_medium') }}">
+                            @endif
+                            @if (request('utm_campaign'))
+                                <input type="hidden" name="utm_campaign" value="{{ request('utm_campaign') }}">
+                            @endif
+                            @if (request('direct'))
+                                <input type="hidden" name="direct" value="{{ request('direct') }}">
+                            @endif
+                            <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
                             </svg>
-                            <input type="text" id="tableSearch" placeholder="Search name or email..."
+                            <input type="text" name="search" id="tableSearch" placeholder="Search name, email, company..."
+                                   value="{{ request('search') }}"
                                    class="pl-9 pr-4 py-2 text-sm border border-gray-200 rounded-xl bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 focus:bg-white w-full sm:w-64 transition">
-                        </div>
+                            @if (request('search'))
+                                <a href="{{ route('admin.registrants.index', request()->except('search')) }}"
+                                   class="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-200 transition">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                                    </svg>
+                                </a>
+                            @endif
+                        </form>
                     </div>
                 </div>
 
                 {{-- Table --}}
                 <div class="overflow-x-auto">
-                    <table class="w-full" id="registrantTable">
+                    <table class="w-full table-fixed" id="registrantTable">
                         <thead>
                             <tr class="bg-gray-50/80">
                                 @if (Auth::user()->canWrite())
@@ -192,104 +219,102 @@
                                     <input type="checkbox" id="selectAll" class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500">
                                 </th>
                                 @endif
-                                <th class="px-5 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Name</th>
-                                <th class="px-5 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider hidden md:table-cell">Email</th>
-                                <th class="px-5 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider hidden lg:table-cell">Phone</th>
-                                <th class="px-5 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider hidden xl:table-cell">Job Title</th>
-                                <th class="px-5 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider hidden 2xl:table-cell">Job Role</th>
-                                <th class="px-5 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider hidden xl:table-cell">Company</th>
-                                <th class="px-5 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider hidden sm:table-cell">Source</th>
-                                <th class="px-5 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Status</th>
-                                <th class="px-5 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider hidden sm:table-cell">Date</th>
-                                <th class="px-5 py-3.5 text-center text-xs font-semibold text-gray-500 uppercase tracking-wider hidden sm:table-cell">Email</th>
-                                <th class="px-5 py-3.5 text-center text-xs font-semibold text-gray-500 uppercase tracking-wider">Actions</th>
+                                <th class="px-3 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider w-44">Name</th>
+                                <th class="px-3 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider hidden xl:table-cell w-40">Profile</th>
+                                <th class="px-3 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider hidden sm:table-cell w-20">Source</th>
+                                <th class="px-3 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider w-20">Status</th>
+                                <th class="px-3 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider hidden sm:table-cell w-20">Date</th>
+                                <th class="px-3 py-3 text-center text-xs font-semibold text-gray-500 uppercase tracking-wider hidden sm:table-cell w-14">Email</th>
+                                <th class="px-3 py-3 text-center text-xs font-semibold text-gray-500 uppercase tracking-wider w-20">Actions</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-gray-50">
                             @forelse ($registrants as $r)
                                 <tr class="hover:bg-gray-50/50 transition search-row">
                                     @if (Auth::user()->canWrite())
-                                    <td class="px-5 py-4">
+                                    <td class="px-3 py-3">
                                         <input type="checkbox" class="registrant-checkbox rounded border-gray-300 text-indigo-600 focus:ring-indigo-500" value="{{ $r->id }}">
                                     </td>
                                     @endif
-                                    <td class="px-5 py-4">
-                                        <div class="flex items-center gap-3">
-                                            <div class="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-400 to-purple-500 flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
+                                    <td class="px-3 py-4 max-w-0">
+                                        <div class="flex items-center gap-2">
+                                            <div class="w-7 h-7 rounded-full bg-gradient-to-br from-indigo-400 to-purple-500 flex items-center justify-center text-white text-[10px] font-bold flex-shrink-0">
                                                 {{ strtoupper(substr($r->name, 0, 1)) }}
                                             </div>
-                                            <div>
-                                                <a href="{{ route('admin.registrants.show', $r) }}" class="text-sm font-semibold text-gray-900 hover:text-indigo-600 transition search-name">
+                                            <div class="min-w-0 truncate">
+                                                <a href="{{ route('admin.registrants.show', $r) }}" class="text-sm font-semibold text-gray-900 hover:text-indigo-600 transition search-name truncate block">
                                                     {{ $r->name }}
                                                 </a>
-                                                @if ($r->unique_code)
-                                                    <p class="text-xs text-gray-400">#{{ $r->unique_code }}</p>
+                                                <p class="text-[11px] text-gray-500 truncate search-email">{{ $r->email }}</p>
+                                                @if ($r->phone)
+                                                    <p class="text-[11px] text-gray-400 truncate">{{ $r->phone }}</p>
                                                 @endif
-                                                <p class="text-xs text-gray-500 md:hidden search-email">{{ $r->email }}</p>
                                             </div>
                                         </div>
                                     </td>
-                                    <td class="px-5 py-4 hidden md:table-cell">
-                                        <span class="text-sm text-gray-600">{{ $r->email }}</span>
+                                    <td class="px-3 py-3 hidden xl:table-cell max-w-0">
+                                        <div class="min-w-0 truncate">
+                                            @if ($r->company || $r->job_title || $r->job_role)
+                                                @if ($r->company)
+                                                    <p class="text-sm font-medium text-gray-800 truncate" title="{{ $r->company }}">{{ $r->company }}</p>
+                                                @endif
+                                                @if ($r->job_title)
+                                                    <p class="text-[11px] text-gray-500 truncate" title="{{ $r->job_title }}">{{ $r->job_title }}</p>
+                                                @endif
+                                                @if ($r->job_role)
+                                                    <p class="text-[11px] text-gray-400 truncate" title="{{ $r->job_role }}">{{ $r->job_role }}</p>
+                                                @endif
+                                            @else
+                                                <span class="text-sm text-gray-400">—</span>
+                                            @endif
+                                        </div>
                                     </td>
-                                    <td class="px-5 py-4 hidden lg:table-cell">
-                                        <span class="text-sm text-gray-600">{{ $r->phone ?? '—' }}</span>
-                                    </td>
-                                    <td class="px-5 py-4 hidden xl:table-cell">
-                                        <span class="text-sm text-gray-600">{{ $r->job_title ?? '—' }}</span>
-                                    </td>
-                                    <td class="px-5 py-4 hidden 2xl:table-cell">
-                                        <span class="text-sm text-gray-600">{{ $r->job_role ?? '—' }}</span>
-                                    </td>
-                                    <td class="px-5 py-4 hidden xl:table-cell">
-                                        <span class="text-sm text-gray-600">{{ $r->company ?? '—' }}</span>
-                                    </td>
-                                    <td class="px-5 py-4 hidden sm:table-cell">
+                                    <td class="px-3 py-3 hidden sm:table-cell max-w-0">
                                         @if ($r->utm_source)
-                                            <span class="inline-flex items-center gap-1 text-xs text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-full">
-                                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>
-                                                {{ $r->utm_source }}
+                                            <span class="inline-flex items-center gap-1 text-xs text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-full truncate max-w-full" title="{{ $r->utm_source }}">
+                                                <svg class="w-3 h-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>
+                                                <span class="truncate">{{ $r->utm_source }}</span>
                                             </span>
                                         @else
                                             <span class="text-xs text-gray-400">Direct</span>
                                         @endif
                                     </td>
-                                    <td class="px-5 py-4">
+                                    <td class="px-3 py-3">
                                         @if ($r->status === 'approved')
-                                            <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
-                                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Approved
+                                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 flex-shrink-0"></span> <span class="truncate">Approved</span>
                                             </span>
                                         @elseif ($r->status === 'rejected')
-                                            <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-red-50 text-red-700 border border-red-200">
-                                                <span class="w-1.5 h-1.5 rounded-full bg-red-500"></span> Rejected
+                                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-red-50 text-red-700 border border-red-200">
+                                                <span class="w-1.5 h-1.5 rounded-full bg-red-500 flex-shrink-0"></span> <span class="truncate">Rejected</span>
                                             </span>
                                         @else
-                                            <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-200">
-                                                <span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span> Pending
+                                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-200">
+                                                <span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse flex-shrink-0"></span> <span class="truncate">Pending</span>
                                             </span>
                                         @endif
                                     </td>
-                                    <td class="px-5 py-4 hidden sm:table-cell">
-                                        <span class="text-sm text-gray-500">{{ $r->created_at->format('d M Y') }}</span>
+                                    <td class="px-3 py-3 hidden sm:table-cell">
+                                        <span class="text-sm text-gray-500 whitespace-nowrap">{{ $r->created_at->copy()->addHours(7)->format('d M Y') }}</span>
                                     </td>
-                                    <td class="px-5 py-4 text-center hidden sm:table-cell">
+                                    <td class="px-3 py-3 text-center hidden sm:table-cell">
                                         @if ($r->email_logs_count > 0)
-                                            <span class="inline-flex items-center gap-1 text-xs font-medium text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-200" title="{{ $r->email_logs_count }} email(s) sent">
-                                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+                                            <span class="inline-flex items-center gap-0.5 text-xs font-semibold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded-full" title="{{ $r->email_logs_count }} email(s) sent">
+                                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
                                                 {{ $r->email_logs_count }}
                                             </span>
                                         @else
-                                            <span class="inline-flex items-center gap-1 text-xs text-gray-400" title="No emails sent">
-                                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+                                            <span class="inline-flex items-center gap-0.5 text-xs text-gray-400" title="No emails sent">
+                                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
                                                 <span>0</span>
                                             </span>
                                         @endif
-                                    </td>                                    <td class="px-5 py-4">
-                                        <div class="flex items-center justify-center gap-1.5">
+                                    </td>                                    <td class="px-3 py-3">
+                                        <div class="flex items-center justify-center gap-1">
                                             <a href="{{ route('admin.registrants.show', $r) }}"
-                                               title="View Detail"
-                                               class="p-1.5 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition">
-                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                               title="View"
+                                               class="p-1 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition">
+                                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
                                                 </svg>
@@ -297,8 +322,8 @@
                                             @if (Auth::user()->canWrite())
                                             <a href="{{ route('admin.registrants.edit', $r) }}"
                                                title="Edit"
-                                               class="p-1.5 text-gray-400 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition">
-                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                               class="p-1 text-gray-400 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition">
+                                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
                                                 </svg>
                                             </a>
@@ -308,40 +333,36 @@
                                                     <button type="submit"
                                                             onclick="return confirm('Approve {{ addslashes($r->name) }}?')"
                                                             title="Approve"
-                                                            class="p-1.5 text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition">
-                                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            class="p-1 text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition">
+                                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
                                                         </svg>
                                                     </button>
                                                 </form>
                                                 <button onclick="openRejectModal('{{ $r->id }}', '{{ addslashes($r->name) }}')"
                                                         title="Reject"
-                                                        class="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition">
-                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        class="p-1 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition">
+                                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
                                                     </svg>
                                                 </button>
                                             @endif
                                             @if ($r->status === 'approved')
                                                 <button onclick="resendCredentials('{{ $r->id }}', '{{ addslashes($r->name) }}')"
-                                                        title="Resend Credentials"
-                                                        class="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition">
-                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        title="Resend"
+                                                        class="p-1 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition">
+                                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
                                                     </svg>
                                                 </button>
                                             @endif
-                                            {{-- Quick Assign --}}
-                                            <div class="relative inline-block" x-data="{ open: false }">
-
-                                            </div>
                                             <form action="{{ route('admin.registrants.destroy', $r) }}" method="POST" class="inline" onsubmit="return confirm('Delete {{ addslashes($r->name) }} permanently?')">
                                                 @csrf
                                                 @method('DELETE')
                                                 <button type="submit"
                                                         title="Delete"
-                                                        class="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition">
-                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        class="p-1 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition">
+                                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
                                                     </svg>
                                                 </button>
@@ -569,14 +590,13 @@
         }
     }
 
-    // ---- Table Search ----
+    // ---- Table Search (server-side with debounce) ----
+    let searchTimeout;
     document.getElementById('tableSearch')?.addEventListener('input', function() {
-        const query = this.value.toLowerCase();
-        document.querySelectorAll('.search-row').forEach(row => {
-            const name = (row.querySelector('.search-name')?.textContent || '').toLowerCase();
-            const email = (row.querySelector('.search-email')?.textContent || '').toLowerCase();
-            row.style.display = name.includes(query) || email.includes(query) ? '' : 'none';
-        });
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(() => {
+            this.closest('form').submit();
+        }, 400);
     });
 
     // ---- Close modals on Esc ----

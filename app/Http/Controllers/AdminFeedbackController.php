@@ -62,7 +62,7 @@ class AdminFeedbackController extends Controller
             $row = [
                 $fb->name,
                 $fb->email,
-                $fb->created_at ? $fb->created_at->format('Y-m-d H:i:s') : '',
+                $fb->created_at ? $fb->created_at->copy()->addHours(7)->format('Y-m-d H:i:s') : '',
             ];
 
             foreach ($questions as $q) {
