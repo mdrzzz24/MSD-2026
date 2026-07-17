@@ -113,7 +113,7 @@
                             </div>
                             <div class="bg-gray-50 rounded-xl p-4">
                                 <dt class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Registered At</dt>
-                                <dd class="text-sm font-medium text-gray-900">{{ $registrant->created_at->format('d M Y, H:i') }}</dd>
+                                <dd class="text-sm font-medium text-gray-900">{{ $registrant->created_at->copy()->addHours(7)->format('d M Y, H:i') }}</dd>
                             </div>
                             @if ($registrant->first_name || $registrant->last_name)
                             <div class="bg-gray-50 rounded-xl p-4">
@@ -243,11 +243,11 @@
                             </div>
                             <div>
                                 <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Registered</p>
-                                <p class="text-sm font-bold text-gray-900">{{ $registrant->created_at->format('d M Y, H:i') }}</p>
+                                <p class="text-sm font-bold text-gray-900">{{ $registrant->created_at->copy()->addHours(7)->format('d M Y, H:i') }}</p>
                             </div>
                             <div>
                                 <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Processed</p>
-                                <p class="text-sm font-bold text-gray-900">{{ $registrant->processed_at?->format('d M Y, H:i') ?? '—' }}</p>
+                                <p class="text-sm font-bold text-gray-900">{{ $registrant->processed_at?->copy()->addHours(7)->format('d M Y, H:i') ?? '—' }}</p>
                                 @if ($registrant->status === 'approved' && $registrant->approver)
                                     <p class="text-xs text-gray-500 mt-0.5">by {{ $registrant->approver->name }}</p>
                                 @elseif ($registrant->status === 'rejected' && $registrant->rejecter)
@@ -315,7 +315,7 @@
                                                     <p class="text-xs text-gray-500 mt-0.5">
                                                         <span class="capitalize">{{ str_replace('_', ' ', $log->template_type) }}</span>
                                                         &middot;
-                                                        {{ $log->sent_at?->format('d M Y, H:i') ?? '—' }}
+                                                        {{ $log->sent_at?->copy()->addHours(7)->format('d M Y, H:i') ?? '—' }}
                                                     </p>
                                                     @if ($log->status === 'failed' && $log->error_message)
                                                         <p class="text-xs text-red-500 mt-0.5 truncate">{{ $log->error_message }}</p>
@@ -416,7 +416,7 @@
                             </a>
                             @if ($registrant->checked_in_at)
                                 <p class="text-xs text-emerald-600 font-semibold mt-2">
-                                    ✓ Checked in at {{ $registrant->checked_in_at->format('H:i, d M Y') }}
+                                    ✓ Checked in at {{ $registrant->checked_in_at->copy()->addHours(7)->format('H:i, d M Y') }}
                                 </p>
                             @endif
                         </div>
