@@ -123,7 +123,7 @@ class Registrant extends Authenticatable
     public function getQrCodeUrlAttribute(): string
     {
         $data = $this->unique_code ?? $this->qr_token;
-        return 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=' . urlencode($data);
+        return 'https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=' . urlencode($data);
     }
 
     /**

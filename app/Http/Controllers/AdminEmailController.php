@@ -109,6 +109,10 @@ class AdminEmailController extends Controller
 
         foreach ($adminEmails as $ae) {
             try {
+                $sampleToken = 'TEST' . strtolower(substr(md5(uniqid((string) mt_rand(), true)), 0, 12));
+                $sampleQrUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=' . urlencode($sampleToken);
+                $sampleCheckinUrl = route('registrant.qr-scan', $sampleToken);
+
                 $renderData = [
                     'name' => $ae->name,
                     'email' => $ae->email,
@@ -120,8 +124,8 @@ class AdminEmailController extends Controller
                     'track_name' => 'Sample Track',
                     'event_date' => now()->format('d F Y'),
                     'login_url' => route('login'),
-                    'qr_code' => '',
-                    'qr_checkin_url' => '',
+                    'qr_code' => '<img src="' . $sampleQrUrl . '" alt="QR Code" style="width:150px;height:150px;display:block;margin:16px auto;">',
+                    'qr_checkin_url' => $sampleCheckinUrl,
                 ];
 
                 $htmlContent = $template->render($renderData);
