@@ -29,7 +29,7 @@ class EmailService
             'unique_code' => $registrant->unique_code ?? '',
             'admin_notes' => $registrant->admin_notes ?? '',
             'qr_code'     => $registrant->qr_token
-                ? '<img src="' . $registrant->qr_code_url . '" alt="QR Code" style="width:200px;height:200px;display:block;margin:16px auto;">'
+                ? '<img src="' . $registrant->qr_code_url . '" alt="QR Code" style="width:150px;height:150px;display:block;margin:16px auto;">'
                 : '',
             'qr_checkin_url' => $registrant->qr_checkin_url ?? '',
         ], $extraData);
