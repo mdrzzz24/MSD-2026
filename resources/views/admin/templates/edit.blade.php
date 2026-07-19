@@ -34,7 +34,7 @@
                 <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
                     <div class="flex items-center justify-between mb-2">
                         <label class="text-sm font-semibold text-gray-700">HTML Content</label>
-                        <div class="text-xs text-gray-400">Placeholder: <code class="bg-gray-100 px-1 py-0.5 rounded text-indigo-600">@{{ name }}</code> <code class="bg-gray-100 px-1 py-0.5 rounded text-indigo-600">@{{ email }}</code> <code class="bg-gray-100 px-1 py-0.5 rounded text-indigo-600">@{{ password }}</code> <code class="bg-gray-100 px-1 py-0.5 rounded text-indigo-600">@{{ qr_code }}</code></div>
+                        <div class="text-xs text-gray-400">Placeholder: <code class="bg-gray-100 px-1 py-0.5 rounded text-indigo-600">@{{ name }}</code> <code class="bg-gray-100 px-1 py-0.5 rounded text-indigo-600">@{{ email }}</code> <code class="bg-gray-100 px-1 py-0.5 rounded text-indigo-600">@{{ password }}</code> <code class="bg-gray-100 px-1 py-0.5 rounded text-indigo-600">@{{ status }}</code> <code class="bg-gray-100 px-1 py-0.5 rounded text-indigo-600">@{{ admin_notes }}</code> <code class="bg-gray-100 px-1 py-0.5 rounded text-indigo-600">@{{ workshop_name }}</code> <code class="bg-gray-100 px-1 py-0.5 rounded text-indigo-600">@{{ workshop_title }}</code> <code class="bg-gray-100 px-1 py-0.5 rounded text-indigo-600">@{{ workshop_room }}</code> <code class="bg-gray-100 px-1 py-0.5 rounded text-indigo-600">@{{ workshop_date }}</code> <code class="bg-gray-100 px-1 py-0.5 rounded text-indigo-600">@{{ workshop_time }}</code> <code class="bg-gray-100 px-1 py-0.5 rounded text-indigo-600">@{{ workshop_capacity }}</code> <code class="bg-gray-100 px-1 py-0.5 rounded text-indigo-600">@{{ venue_name }}</code> <code class="bg-gray-100 px-1 py-0.5 rounded text-indigo-600">@{{ qr_code }}</code></div>
                     </div>
                     <textarea name="html_content" id="htmlEditor" rows="24" required class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm font-mono focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition resize-y leading-relaxed">{{ old('html_content', $template->html_content) }}</textarea>
                 </div>
@@ -74,7 +74,13 @@
             .replace(/\{\{\s*status\s*\}\}/g, 'approved')
             .replace(/\{\{\s*unique_code\s*\}\}/g, '100724080000')
             .replace(/\{\{\s*admin_notes\s*\}\}/g, 'Sample note')
-            .replace(/\{\{\s*workshop_name\s*\}\}/g, 'Sample Workshop')
+            .replace(/\{\{\s*workshop_name\s*\}\}/g, 'Sample Workshop Session')
+            .replace(/\{\{\s*workshop_title\s*\}\}/g, 'Sample Workshop Topic')
+            .replace(/\{\{\s*workshop_room\s*\}\}/g, 'Meeting Room A')
+            .replace(/\{\{\s*workshop_date\s*\}\}/g, 'Thursday, 20 August 2026')
+            .replace(/\{\{\s*workshop_time\s*\}\}/g, '09:00 – 12:00')
+            .replace(/\{\{\s*workshop_capacity\s*\}\}/g, '35')
+            .replace(/\{\{\s*venue_name\s*\}\}/g, 'Shangri-La Hotel Jakarta')
             .replace(/\{\{\s*track_name\s*\}\}/g, 'Sample Session')
             .replace(/\{\{\s*event_date\s*\}\}/g, '12 Agustus 2026')
             .replace(/\{\{\s*login_url\s*\}\}/g, window.location.origin + '/login')

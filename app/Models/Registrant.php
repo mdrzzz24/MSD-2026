@@ -151,6 +151,7 @@ class Registrant extends Authenticatable
     public function workshops()
     {
         return $this->belongsToMany(Workshop::class, 'registrant_workshop')
+                    ->withPivot(['status', 'admin_notes', 'processed_by', 'processed_at'])
                     ->withTimestamps();
     }
 

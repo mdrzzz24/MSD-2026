@@ -25,7 +25,7 @@ use App\Models\AgendaItem;
 //     return view('home');
 // });
 Route::get('/', function () {
-    $agendaItems = AgendaItem::ordered()->with('speakers')->get();
+    $agendaItems = AgendaItem::ordered()->with('speakers', 'workshop')->get();
     $timeSlots = \App\Models\TimeSlot::ordered()->get();
     $rooms = \App\Models\Room::ordered()->get();
     // Group items by time slot key
@@ -40,6 +40,10 @@ Route::get('/', function () {
     }])->orderBy('date')->orderBy('start_time')->get();
     return view('home1', compact('agendaItems', 'timeSlots', 'rooms', 'itemMap', 'registrationForcedOpen', 'workshops'));
 })->name('home1');
+// ── Workshop Invitation (public) ──
+Route::get('/invitation/workshop/{token}', [App\Http\Controllers\WorkshopInvitationController::class, 'show'])->name('workshop.invitation');
+Route::post('/invitation/workshop/{token}', [App\Http\Controllers\WorkshopInvitationController::class, 'register']);
+
 Route::get('/home2', function () {
     return view('home2');
 });
@@ -112,6 +116,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::post('/registrants/bulk-reject', [AdminController::class, 'bulkReject'])->name('registrants.bulk-reject');
     Route::get('/registrants/export/csv', [AdminController::class, 'exportCsv'])->name('registrants.export-csv');
     Route::post('/registrants/{registrant}/notes', [AdminController::class, 'updateNotes'])->name('registrants.notes');
+    Route::post('/registrants/{registrant}/send-email/{type}', [AdminController::class, 'sendEmailByType'])->name('registrants.send-email');
 
     // ── Walk-in Registration ──
     Route::get('/walkin', [AdminController::class, 'walkinForm'])->name('walkin.form');
@@ -164,6 +169,10 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::put('/workshops/{workshop}', [AdminWorkshopController::class, 'update'])->name('workshops.update');
     Route::delete('/workshops/{workshop}', [AdminWorkshopController::class, 'destroy'])->name('workshops.destroy');
     Route::post('/workshops/{workshop}/toggle', [AdminWorkshopController::class, 'toggleRegistration'])->name('workshops.toggle');
+    // Workshop Invitations
+    Route::get('/workshops/{workshop}/invitations', [App\Http\Controllers\WorkshopInvitationController::class, 'index'])->name('workshops.invitations');
+    Route::post('/workshops/{workshop}/invitations/generate', [App\Http\Controllers\WorkshopInvitationController::class, 'generate'])->name('workshops.invitations.generate');
+    Route::post('/invitations/{invitation}/toggle', [App\Http\Controllers\WorkshopInvitationController::class, 'toggle'])->name('workshops.invitations.toggle');
     // Agenda management
     Route::get('/agenda', [AdminAgendaController::class, 'index'])->name('agenda.index');
     Route::get('/agenda/create', [AdminAgendaController::class, 'create'])->name('agenda.create');
@@ -235,6 +244,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('/email-logs', [EmailLogController::class, 'index'])->name('email-logs.index');
     Route::get('/email-logs/export/csv', [EmailLogController::class, 'exportCsv'])->name('email-logs.export-csv');
     Route::get('/email-logs/{emailLog}', [EmailLogController::class, 'show'])->name('email-logs.show');
+    Route::post('/email-logs/{emailLog}/resend', [EmailLogController::class, 'resend'])->name('email-logs.resend');
 
     // ── Send Reminder — accessible by users with email_templates permission ──
     Route::get('/send-reminder', [EmailLogController::class, 'reminderForm'])->name('email-logs.reminder-form');
@@ -256,6 +266,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('/workshop-registrants/export/csv', [AdminWorkshopController::class, 'exportCsv'])->name('workshop-registrants.export-csv');
     Route::post('/workshops/{workshop}/registrants/{registrant}/approve', [AdminWorkshopController::class, 'approveRegistrant'])->name('workshops.registrants.approve');
     Route::post('/workshops/{workshop}/registrants/{registrant}/reject', [AdminWorkshopController::class, 'rejectRegistrant'])->name('workshops.registrants.reject');
+    Route::post('/workshops/{workshop}/send-reminder', [AdminWorkshopController::class, 'sendReminder'])->name('workshops.send-reminder');
 
     // ── Agenda Registrants — accessible by all admin roles ──
     Route::get('/agenda-registrants', [AdminAgendaController::class, 'registrantsIndex'])->name('agenda-registrants.index');

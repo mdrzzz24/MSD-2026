@@ -16,13 +16,23 @@
     <?php echo $__env->make('admin.partials.sidebar', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
     <main class="flex-1 lg:ml-64">
         <header class="sticky top-0 z-30 bg-white/80 backdrop-blur border-b border-gray-200">
-            <div class="flex items-center h-16 px-4 sm:px-6 lg:px-8 gap-4">
-                <a href="<?php echo e(route('admin.email-logs.index')); ?>" class="inline-flex items-center gap-1.5 text-sm text-indigo-600 hover:text-indigo-800 font-medium transition">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
-                    Logs
-                </a>
-                <span class="text-gray-300">/</span>
-                <h1 class="text-lg font-bold text-gray-900">Log Detail</h1>
+            <div class="flex items-center justify-between h-16 px-4 sm:px-6 lg:px-8">
+                <div class="flex items-center gap-4">
+                    <a href="<?php echo e(route('admin.email-logs.index')); ?>" class="inline-flex items-center gap-1.5 text-sm text-indigo-600 hover:text-indigo-800 font-medium transition">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+                        Logs
+                    </a>
+                    <span class="text-gray-300">/</span>
+                    <h1 class="text-lg font-bold text-gray-900">Log Detail</h1>
+                </div>
+                <form action="<?php echo e(route('admin.email-logs.resend', $emailLog)); ?>" method="POST" class="inline"
+                      onsubmit="return confirm('Resend this email to <?php echo e(addslashes($emailLog->recipient_email)); ?>?')">
+                    <?php echo csrf_field(); ?>
+                    <button type="submit"
+                            class="px-4 py-2 text-sm font-semibold rounded-xl bg-indigo-500 text-white hover:bg-indigo-600 shadow-sm shadow-indigo-200 transition">
+                        📧 Resend
+                    </button>
+                </form>
             </div>
         </header>
 

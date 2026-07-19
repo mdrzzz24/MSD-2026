@@ -10,6 +10,7 @@ class Workshop extends Model
     use HasFactory;
 
     protected $fillable = [
+        'name',
         'title',
         'description',
         'room',
@@ -43,6 +44,11 @@ class Workshop extends Model
     public function agendaItems()
     {
         return $this->hasMany(AgendaItem::class);
+    }
+
+    public function invitations()
+    {
+        return $this->hasMany(WorkshopInvitation::class);
     }
 
     public function scopeOpen($query)
@@ -89,5 +95,35 @@ class Workshop extends Model
     {
         if (!$this->start_time || !$this->end_time) return '—';
         return date('H:i', strtotime($this->start_time)) . ' – ' . date('H:i', strtotime($this->end_time));
+    }
+
+    /**
+     * Get email placeholder data for this workshop.
+     * Falls back to the first linked agenda item if workshop fields are empty.
+     */
+    public function emailData(): array
+    {
+        $agendaItem = $this->agendaItems()->first();
+
+        $room     = $this->room ?? $agendaItem?->room ?? '';
+        $date     = $this->date ?? $agendaItem?->date;
+        $start    = $this->start_time ?? $agendaItem?->start_time;
+        $end      = $this->end_time ?? $agendaItem?->end_time;
+        $capacity = $this->capacity ?: ($agendaItem?->capacity ?: 0);
+
+        $timeRange = '—';
+        if ($start && $end) {
+            $timeRange = date('H:i', strtotime($start)) . ' – ' . date('H:i', strtotime($end));
+        }
+
+        return [
+            'workshop_name'     => $this->name ?: $this->title,
+            'workshop_title'    => $this->title,
+            'workshop_room'     => $room,
+            'workshop_date'     => $date ? $date->format('l, d F Y') : '',
+            'workshop_time'     => $timeRange,
+            'workshop_capacity' => (string) $capacity,
+            'venue_name'        => 'Shangri-La Hotel Jakarta',
+        ];
     }
 }

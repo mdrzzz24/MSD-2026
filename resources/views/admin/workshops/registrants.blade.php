@@ -14,7 +14,21 @@
 <div class="flex min-h-screen">
 @include('admin.partials.sidebar')
 <main class="flex-1 lg:ml-64">
-<header class="sticky top-0 z-30 bg-white/80 backdrop-blur border-b border-gray-200"><div class="flex items-center h-16 px-4 sm:px-6 lg:px-8 gap-4"><a href="{{ route('admin.workshops.index') }}" class="inline-flex items-center gap-1.5 text-sm text-indigo-600 hover:text-indigo-800 font-medium transition"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>Workshop</a><span class="text-gray-300">/</span><h1 class="text-lg font-bold text-gray-900">Registrants: {{ $workshop->title }}</h1></div></header>
+<header class="sticky top-0 z-30 bg-white/80 backdrop-blur border-b border-gray-200"><div class="flex items-center justify-between h-16 px-4 sm:px-6 lg:px-8">
+    <div class="flex items-center gap-4">
+        <a href="{{ route('admin.workshops.index') }}" class="inline-flex items-center gap-1.5 text-sm text-indigo-600 hover:text-indigo-800 font-medium transition"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>Workshop</a>
+        <span class="text-gray-300">/</span>
+        <h1 class="text-lg font-bold text-gray-900">Registrants: {{ $workshop->title }}</h1>
+    </div>
+    <form action="{{ route('admin.workshops.send-reminder', $workshop) }}" method="POST" class="inline"
+          onsubmit="return confirm('Send Workshop Gentle Reminder to all approved registrants?')">
+        @csrf
+        <button type="submit" class="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-medium rounded-xl bg-fuchsia-500 text-white hover:bg-fuchsia-600 shadow-sm shadow-fuchsia-200 transition">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
+            Send Reminder
+        </button>
+    </form>
+</div></header>
 <div class="p-4 sm:p-6 lg:p-8">
     <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
         <div class="px-5 py-4 border-b border-gray-100">

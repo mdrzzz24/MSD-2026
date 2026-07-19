@@ -47,7 +47,8 @@
                 <tbody class="divide-y divide-gray-50">
                     <?php $__empty_1 = true; $__currentLoopData = $workshops; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $w): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
                         <tr class="hover:bg-gray-50/50">
-                            <td class="px-5 py-4"><p class="text-sm font-semibold text-gray-900"><?php echo e($w->title); ?></p>
+                            <td class="px-5 py-4"><p class="text-sm font-semibold text-gray-900"><?php echo e($w->name ?: $w->title); ?></p>
+                                <?php if($w->name): ?><p class="text-xs text-gray-500 mt-0.5"><?php echo e($w->title); ?></p><?php endif; ?>
                                 <?php if($w->description): ?><p class="text-xs text-gray-400 mt-0.5 truncate max-w-[250px]"><?php echo e($w->description); ?></p><?php endif; ?>
                             </td>
                             <?php if(Auth::user()->canWrite()): ?>
@@ -84,6 +85,7 @@
                                     <a href="<?php echo e(route('admin.workshops.registrants', $w)); ?>" class="px-2.5 py-1.5 text-xs font-medium rounded-lg bg-indigo-50 text-indigo-700 hover:bg-indigo-100 transition">View</a>
                                     <?php if(Auth::user()->canWrite()): ?>
                                     <a href="<?php echo e(route('admin.workshops.edit', $w)); ?>" class="px-2.5 py-1.5 text-xs font-medium rounded-lg bg-amber-100 text-amber-700 hover:bg-amber-200 transition">Edit</a>
+                                    <a href="<?php echo e(route('admin.workshops.invitations', $w)); ?>" class="px-2.5 py-1.5 text-xs font-medium rounded-lg bg-purple-100 text-purple-700 hover:bg-purple-200 transition">Invite</a>
                                     <form action="<?php echo e(route('admin.workshops.toggle', $w)); ?>" method="POST"><?php echo csrf_field(); ?>
                                         <button class="px-2.5 py-1.5 text-xs font-medium rounded-lg <?php echo e($w->registration_open ? 'bg-red-100 text-red-600 hover:bg-red-200' : 'bg-emerald-100 text-emerald-600 hover:bg-emerald-200'); ?> transition">
                                             <?php echo e($w->registration_open ? 'Close' : 'Open'); ?>

@@ -122,6 +122,39 @@ class AdminTrackController extends Controller
                         'status' => 'approved', 'processed_by' => Auth::id(), 'processed_at' => now(),
                     ]);
                 }
+
+                // Auto-reject other pending workshops at the same time
+                $workshop = \App\Models\Workshop::find($workshopId);
+                if ($workshop) {
+                    $wsDate  = $workshop->date ?? $agendaItem->date;
+                    $wsStart = $workshop->start_time ?? $agendaItem->start_time;
+                    $wsEnd   = $workshop->end_time ?? $agendaItem->end_time;
+                    if ($wsDate && $wsStart && $wsEnd) {
+                        $otherPending = $registrant->workshops()
+                            ->where('workshops.id', '!=', $workshopId)
+                            ->wherePivot('status', 'pending')
+                            ->where(function ($q) use ($wsDate, $wsStart, $wsEnd) {
+                                $q->where('date', $wsDate)
+                                  ->where(function ($q2) use ($wsStart, $wsEnd) {
+                                      $q2->whereBetween('start_time', [$wsStart, $wsEnd])
+                                         ->orWhereBetween('end_time', [$wsStart, $wsEnd])
+                                         ->orWhere(function ($q3) use ($wsStart, $wsEnd) {
+                                             $q3->where('start_time', '<=', $wsStart)
+                                                ->where('end_time', '>=', $wsEnd);
+                                         });
+                                  });
+                            })->get();
+
+                        foreach ($otherPending as $other) {
+                            $registrant->workshops()->updateExistingPivot($other->id, [
+                                'status' => 'rejected',
+                                'admin_notes' => 'Auto-rejected: another workshop at the same time was approved.',
+                                'processed_by' => Auth::id(),
+                                'processed_at' => now(),
+                            ]);
+                        }
+                    }
+                }
             }
         }
 

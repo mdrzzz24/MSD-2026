@@ -105,14 +105,14 @@
                 <div class="px-5 py-4 flex items-center justify-between" style="border-bottom:1px solid rgba(255,255,255,.08);">
                     <div>
                         <h2 class="text-base font-bold text-white">My Sessions</h2>
-                        <p class="text-xs" style="color:rgba(255,255,255,.4);">Tracks & workshops you registered for via agenda</p>
+                        <p class="text-xs" style="color:rgba(255,255,255,.4);">All your registered sessions & workshops</p>
                     </div>
                     <a href="{{ route('home1') }}" class="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold btn-pink">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 01-1 1"/></svg>
                         Back to Home
                     </a>
                 </div>
-                @if ($myAgendaItems->isEmpty())
+                @if ($myAgendaItems->isEmpty() && $myWorkshops->isEmpty())
                     <div class="px-5 py-16 text-center" style="color:rgba(255,255,255,.3);">
                         <svg class="w-12 h-12 mx-auto mb-3 opacity-30" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
                         <p class="text-sm">No sessions registered yet.</p>
@@ -134,7 +134,15 @@
                                 @foreach ($myAgendaItems as $item)
                                     @php $agStatus = $item->pivot->status ?? 'pending'; @endphp
                                     <tr>
-                                        <td><p class="font-semibold text-white">{{ $item->title }}</p></td>
+                                        <td>
+                                            @php $wsName = $item->workshop ? ($item->workshop->name ?: $item->workshop->title) : null; @endphp
+                                            @if ($wsName)
+                                                <p class="font-semibold text-white">{{ $wsName }}</p>
+                                                <p class="text-xs" style="color:rgba(255,255,255,.4);">{{ $item->title }}</p>
+                                            @else
+                                                <p class="font-semibold text-white">{{ $item->title }}</p>
+                                            @endif
+                                        </td>
                                         <td>
                                             @php
                                                 $type = $item->agenda_type
@@ -177,6 +185,47 @@
                                         </td>
                                     </tr>
                                 @endforeach
+                                {{-- Workshop registrations (direct or via invitation) --}}
+                                @foreach ($myWorkshops as $w)
+                                    @php
+                                        $wsStatus = $w->pivot->status ?? 'pending';
+                                        $_ai = $w->agendaItems->first();
+                                        $wsRoom = $w->room ?? $_ai?->room ?? '—';
+                                        $_s = $w->start_time ?? $_ai?->start_time;
+                                        $_e = $w->end_time ?? $_ai?->end_time;
+                                        $wsTime = ($_s && $_e) ? date('H:i', strtotime($_s)) . ' – ' . date('H:i', strtotime($_e)) : '—';
+                                    @endphp
+                                    <tr>
+                                        <td>
+                                            <p class="font-semibold text-white">{{ $w->name ?: $w->title }}</p>
+                                            @if ($w->name)
+                                                <p class="text-xs" style="color:rgba(255,255,255,.4);">{{ $w->title }}</p>
+                                            @endif
+                                        </td>
+                                        <td>
+                                            <span class="inline-flex px-2.5 py-0.5 rounded-full text-xs font-semibold badge-workshop">Workshop</span>
+                                        </td>
+                                        <td><span>{{ $wsTime }}</span></td>
+                                        <td class="hidden sm:table-cell"><span>{{ $wsRoom }}</span></td>
+                                        <td class="text-center">
+                                            @if ($wsStatus === 'approved')
+                                                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold badge-approved"><span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>Approved</span>
+                                            @elseif ($wsStatus === 'rejected')
+                                                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold badge-rejected"><span class="w-1.5 h-1.5 rounded-full bg-red-500"></span>Rejected</span>
+                                            @else
+                                                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold badge-pending"><span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>Pending</span>
+                                            @endif
+                                        </td>
+                                        <td class="text-center">
+                                            @if ($wsStatus !== 'approved')
+                                            <form action="{{ route('registrant.workshop.unregister', $w) }}" method="POST" onsubmit="return confirm('Cancel registration for {{ $w->name ?: $w->title }}?')">
+                                                @csrf
+                                                <button class="px-3 py-1.5 text-xs font-medium rounded-lg transition" style="background:rgba(239,68,68,.15); color:#ef4444; border:1px solid rgba(239,68,68,.25);" onmouseover="this.style.background='rgba(239,68,68,.25)'" onmouseout="this.style.background='rgba(239,68,68,.15)'">Cancel</button>
+                                            </form>
+                                            @endif
+                                        </td>
+                                    </tr>
+                                @endforeach
                             </tbody>
                         </table>
                     </div>
@@ -209,11 +258,24 @@
                             </thead>
                             <tbody>
                                 @foreach ($availableWorkshops as $w)
+                                    @php
+                                        $_ai = $w->agendaItems->first();
+                                        $avRoom = $w->room ?? $_ai?->room ?? '—';
+                                        $avDate = $w->date ?? $_ai?->date;
+                                        $_s = $w->start_time ?? $_ai?->start_time;
+                                        $_e = $w->end_time ?? $_ai?->end_time;
+                                        $avTime = ($_s && $_e) ? date('H:i', strtotime($_s)) . ' – ' . date('H:i', strtotime($_e)) : '—';
+                                    @endphp
                                     <tr>
-                                        <td><p class="font-semibold text-white">{{ $w->title }}</p></td>
-                                        <td class="hidden sm:table-cell"><span>{{ $w->room ?? '—' }}</span></td>
-                                        <td><span>{{ $w->date ? $w->date->format('d M Y') : '—' }}</span></td>
-                                        <td><span>{{ $w->timeRange() }}</span></td>
+                                        <td>
+                                            <p class="font-semibold text-white">{{ $w->name ?: $w->title }}</p>
+                                            @if ($w->name)
+                                                <p class="text-xs" style="color:rgba(255,255,255,.4);">{{ $w->title }}</p>
+                                            @endif
+                                        </td>
+                                        <td class="hidden sm:table-cell"><span>{{ $avRoom }}</span></td>
+                                        <td><span>{{ $avDate ? $avDate->format('d M Y') : '—' }}</span></td>
+                                        <td><span>{{ $avTime }}</span></td>
                                         <td class="hidden lg:table-cell">
                                             @if ($w->capacity > 0)
                                                 <span class="{{ $w->isFull() ? 'text-red-400' : '' }}">{{ $w->registrationsCount() }}/{{ $w->capacity }}</span>

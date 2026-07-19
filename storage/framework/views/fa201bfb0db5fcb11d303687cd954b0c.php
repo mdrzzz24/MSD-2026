@@ -4,7 +4,7 @@
     <link rel="icon" type="image/png" href="<?php echo e(asset('img/metrodata.png')); ?>">
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Tambah Admin Email — <?php echo e(config('app.name')); ?></title>
+    <title>Add Admin Email — <?php echo e(config('app.name')); ?></title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
@@ -19,7 +19,7 @@
         <header class="sticky top-0 z-30 bg-white/80 backdrop-blur border-b border-gray-200">
             <div class="flex items-center justify-between h-16 px-4 sm:px-6 lg:px-8">
                 <div>
-                    <h1 class="text-lg font-bold text-gray-900">Tambah Admin Email</h1>
+                    <h1 class="text-lg font-bold text-gray-900">Add Admin Email</h1>
                     <p class="text-xs text-gray-500">Add a new test email recipient</p>
                 </div>
                 <a href="<?php echo e(route('admin.admin-emails.index')); ?>"
@@ -91,7 +91,7 @@ unset($__errorArgs, $__bag); ?>
                     <div class="flex items-center gap-3">
                         <button type="submit"
                                 class="px-5 py-2.5 bg-indigo-500 text-white text-sm font-semibold rounded-xl hover:bg-indigo-600 shadow-sm shadow-indigo-200 transition">
-                            Simpan
+                            Save
                         </button>
                         <a href="<?php echo e(route('admin.admin-emails.index')); ?>"
                            class="px-5 py-2.5 text-sm font-medium text-gray-600 hover:text-gray-800 transition">Cancel</a>

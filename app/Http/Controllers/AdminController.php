@@ -879,5 +879,71 @@ class AdminController extends Controller
 
         return view('admin.walkin-result', compact('registrant'));
     }
+
+    /**
+     * Send an email by template type to a registrant.
+     * Used for re-sending emails that were not sent initially.
+     */
+    public function sendEmailByType(Request $request, Registrant $registrant, string $type)
+    {
+        if (!Auth::user()->hasPermission('registrants')) {
+            return redirect()->back()->with('error', 'You do not have permission.');
+        }
+
+        $validTypes = array_keys(EmailTemplate::types());
+        if (!in_array($type, $validTypes)) {
+            return redirect()->back()->with('error', 'Invalid email type.');
+        }
+
+        $template = EmailTemplate::activeOfType($type);
+        if (!$template) {
+            return redirect()->back()->with('error', 'No active template for this type. Please create a template first.');
+        }
+
+        $extraData = [];
+
+        // Include password for approval/registration types
+        if (in_array($type, [EmailTemplate::TYPE_APPROVAL, EmailTemplate::TYPE_REGISTRATION]) && $registrant->plain_password) {
+            $extraData['password'] = $registrant->plain_password;
+        }
+
+        // Include admin notes for rejection types
+        if (in_array($type, [EmailTemplate::TYPE_REJECTION, EmailTemplate::TYPE_WORKSHOP_REJECTION, EmailTemplate::TYPE_TRACK_REJECTION])) {
+            $extraData['admin_notes'] = $registrant->admin_notes ?? '';
+        }
+
+        // Include workshop data for workshop-related types
+        if (in_array($type, [EmailTemplate::TYPE_WORKSHOP_APPROVAL, EmailTemplate::TYPE_WORKSHOP_REJECTION])) {
+            $workshop = $registrant->workshops()
+                ->wherePivotIn('status', ['approved', 'rejected'])
+                ->first();
+            if ($workshop) {
+                $extraData = array_merge($extraData, $workshop->emailData());
+            }
+        }
+
+        // Include track/session data for track-related types
+        if (in_array($type, [EmailTemplate::TYPE_TRACK_APPROVAL, EmailTemplate::TYPE_TRACK_REJECTION])) {
+            $agendaItem = $registrant->agendaItems()
+                ->wherePivotIn('status', ['approved', 'rejected'])
+                ->first();
+            if ($agendaItem) {
+                $extraData['track_name'] = $agendaItem->title;
+                $extraData['workshop_room'] = $agendaItem->room ?? '';
+                $extraData['workshop_date'] = $agendaItem->date?->format('l, d F Y') ?? '';
+                $extraData['workshop_time'] = ($agendaItem->start_time ? date('H:i', strtotime($agendaItem->start_time)) : '') . ' – ' . ($agendaItem->end_time ? date('H:i', strtotime($agendaItem->end_time)) : '');
+            }
+        }
+
+        $result = EmailService::send($registrant, $template, $extraData);
+
+        if ($result->status === 'sent') {
+            return redirect()->back()
+                ->with('success', 'Email <strong>' . e(EmailTemplate::typeLabel($type)) . '</strong> has been sent to <strong>' . e($registrant->display_name) . '</strong>.');
+        }
+
+        return redirect()->back()
+            ->with('error', 'Failed to send email: ' . e($result->error_message ?? 'Unknown error'));
+    }
 }
 

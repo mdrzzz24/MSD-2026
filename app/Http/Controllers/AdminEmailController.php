@@ -120,7 +120,13 @@ class AdminEmailController extends Controller
                     'password' => 'TestPass123',
                     'unique_code' => 'TEST123456',
                     'admin_notes' => 'This is a test email sent from admin panel.',
-                    'workshop_name' => 'Sample Workshop',
+                    'workshop_name' => 'Sample Workshop Session',
+                    'workshop_title' => 'Sample Workshop Topic',
+                    'workshop_room' => 'Meeting Room A',
+                    'workshop_date' => 'Thursday, 20 August 2026',
+                    'workshop_time' => '09:00 – 12:00',
+                    'workshop_capacity' => '35',
+                    'venue_name' => 'Shangri-La Hotel Jakarta',
                     'track_name' => 'Sample Track',
                     'event_date' => now()->format('d F Y'),
                     'login_url' => route('login'),
@@ -129,10 +135,11 @@ class AdminEmailController extends Controller
                 ];
 
                 $htmlContent = $template->render($renderData);
+                $renderedSubject = $template->renderSubject($renderData);
 
-                Mail::send('emails.html-wrapper', ['htmlContent' => $htmlContent], function ($message) use ($ae, $template) {
+                Mail::send('emails.html-wrapper', ['htmlContent' => $htmlContent], function ($message) use ($ae, $renderedSubject) {
                     $message->to($ae->email, $ae->name)
-                        ->subject('[TEST] ' . $template->subject);
+                        ->subject('[TEST] ' . $renderedSubject);
                 });
 
                 $successCount++;

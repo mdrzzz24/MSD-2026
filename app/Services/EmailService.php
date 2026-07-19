@@ -2,6 +2,8 @@
 
 namespace App\Services;
 
+use App\Mail\RegistrantCredentials;
+use App\Mail\RegistrantRejected;
 use App\Mail\TemplateMail;
 use App\Models\EmailLog;
 use App\Models\EmailTemplate;
@@ -35,6 +37,7 @@ class EmailService
         ], $extraData);
 
         $htmlContent = $template->render($renderData);
+        $renderedSubject = $template->renderSubject($renderData);
 
         $log = EmailLog::create([
             'email_template_id' => $template->id,
@@ -42,7 +45,7 @@ class EmailService
             'template_type'     => $template->type,
             'recipient_email'   => $registrant->email,
             'recipient_name'    => $registrant->display_name,
-            'subject'           => $template->subject,
+            'subject'           => $renderedSubject,
             'html_content'      => $htmlContent,
             'status'            => 'sent',
             'sent_at'           => now(),
@@ -96,5 +99,153 @@ class EmailService
         return EmailLog::with(['template', 'registrant'])
             ->latest('sent_at')
             ->paginate($perPage);
+    }
+
+    /**
+     * Resend an email based on an existing EmailLog record.
+     *
+     * @param EmailLog $log The original email log to resend
+     * @return EmailLog|null The new email log, or null on failure
+     */
+    public static function resend(EmailLog $log): ?EmailLog
+    {
+        $registrant = $log->registrant;
+
+        if (!$registrant) {
+            return null;
+        }
+
+        // ── Template-based resend ──
+        if ($log->email_template_id && $log->template) {
+            $extraData = [];
+
+            // Include password for approval-type emails
+            if (in_array($log->template_type, ['approval', 'registration']) && $registrant->plain_password) {
+                $extraData['password'] = $registrant->plain_password;
+            }
+
+            // Include admin notes for rejection-type emails
+            if (in_array($log->template_type, ['rejection', 'workshop_rejection', 'track_rejection'])) {
+                $extraData['admin_notes'] = $registrant->admin_notes ?? '';
+            }
+
+            // Include workshop data for workshop-related types
+            if (in_array($log->template_type, ['workshop_approval', 'workshop_rejection', 'workshop_reminder'])) {
+                $workshops = $registrant->workshops()
+                    ->wherePivotIn('status', ['approved', 'rejected'])
+                    ->get();
+                $workshop = null;
+
+                // Match the correct workshop by comparing rendered subject
+                foreach ($workshops as $ws) {
+                    $testData = array_merge($extraData, $ws->emailData());
+                    $rendered = $log->template->renderSubject($testData);
+                    if ($rendered === $log->subject) {
+                        $workshop = $ws;
+                        break;
+                    }
+                }
+
+                // Fallback: try matching by name/title appearing in the log subject
+                if (!$workshop) {
+                    foreach ($workshops as $ws) {
+                        $wsName = $ws->name ?: $ws->title;
+                        if (str_contains($log->subject, $wsName) || str_contains($log->subject, $ws->title)) {
+                            $workshop = $ws;
+                            break;
+                        }
+                    }
+                }
+
+                // Final fallback to first workshop
+                if (!$workshop) {
+                    $workshop = $workshops->first();
+                }
+
+                if ($workshop) {
+                    $extraData = array_merge($extraData, $workshop->emailData());
+                }
+            }
+
+            // Include track/session data for track-related types
+            if (in_array($log->template_type, ['track_approval', 'track_rejection'])) {
+                $agendaItems = $registrant->agendaItems()
+                    ->wherePivotIn('status', ['approved', 'rejected'])
+                    ->get();
+                $agendaItem = null;
+
+                // Match the correct agenda item by comparing rendered subject
+                foreach ($agendaItems as $ai) {
+                    $testData = array_merge($extraData, [
+                        'track_name' => $ai->title,
+                        'workshop_room' => $ai->room ?? '',
+                        'workshop_date' => $ai->date?->format('l, d F Y') ?? '',
+                        'workshop_time' => ($ai->start_time ? date('H:i', strtotime($ai->start_time)) : '') . ' – ' . ($ai->end_time ? date('H:i', strtotime($ai->end_time)) : ''),
+                    ]);
+                    $rendered = $log->template->renderSubject($testData);
+                    if ($rendered === $log->subject) {
+                        $agendaItem = $ai;
+                        break;
+                    }
+                }
+
+                // Fallback to first if no match found
+                if (!$agendaItem) {
+                    $agendaItem = $agendaItems->first();
+                }
+
+                if ($agendaItem) {
+                    $extraData['track_name'] = $agendaItem->title;
+                    $extraData['workshop_room'] = $agendaItem->room ?? '';
+                    $extraData['workshop_date'] = $agendaItem->date?->format('l, d F Y') ?? '';
+                    $extraData['workshop_time'] = ($agendaItem->start_time ? date('H:i', strtotime($agendaItem->start_time)) : '') . ' – ' . ($agendaItem->end_time ? date('H:i', strtotime($agendaItem->end_time)) : '');
+                }
+            }
+
+            return self::send($registrant, $log->template, $extraData);
+        }
+
+        // ── Fallback resend (no template) ──
+        try {
+            if ($log->template_type === EmailTemplate::TYPE_APPROVAL && $registrant->plain_password) {
+                Mail::to($registrant->email)->send(
+                    new RegistrantCredentials($registrant, $registrant->plain_password)
+                );
+            } elseif ($log->template_type === EmailTemplate::TYPE_REJECTION) {
+                Mail::to($registrant->email)->send(
+                    new RegistrantRejected($registrant)
+                );
+            } else {
+                // Generic fallback: send raw HTML
+                Mail::to($registrant->email)->send(
+                    new TemplateMail($registrant, $log->template ?? new EmailTemplate(), [])
+                );
+            }
+
+            return EmailLog::create([
+                'email_template_id' => null,
+                'registrant_id'     => $registrant->id,
+                'template_type'     => $log->template_type,
+                'recipient_email'   => $registrant->email,
+                'recipient_name'    => $registrant->display_name,
+                'subject'           => $log->subject,
+                'html_content'      => $log->html_content,
+                'status'            => 'sent',
+                'sent_at'           => now(),
+            ]);
+        } catch (\Throwable $e) {
+            return EmailLog::create([
+                'email_template_id' => null,
+                'registrant_id'     => $registrant->id,
+                'template_type'     => $log->template_type,
+                'recipient_email'   => $registrant->email,
+                'recipient_name'    => $registrant->display_name,
+                'subject'           => $log->subject,
+                'html_content'      => $log->html_content,
+                'status'            => 'failed',
+                'error_message'     => $e->getMessage(),
+                'sent_at'           => now(),
+            ]);
+        }
     }
 }

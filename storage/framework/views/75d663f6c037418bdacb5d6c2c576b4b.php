@@ -60,7 +60,7 @@
                             data-start="<?php echo e($ws->start_time); ?>"
                             data-end="<?php echo e($ws->end_time); ?>"
                             data-capacity="<?php echo e($ws->capacity); ?>"
-                            data-regopen="<?php echo e($ws->registration_open ? '1' : '0'); ?>"><?php echo e($ws->title); ?></option>
+                            data-regopen="<?php echo e($ws->registration_open ? '1' : '0'); ?>"><?php echo e($ws->name ?: $ws->title); ?></option>
                         <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                     </optgroup>
                 </select>
@@ -143,12 +143,13 @@
                         <option value="">— None —</option>
                         <option value="__new__" style="font-weight:700;color:#4f46e5;">+ Create New Workshop</option>
                         <?php $__currentLoopData = $workshopList; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $ws): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-                            <option value="<?php echo e($ws->id); ?>" data-title="<?php echo e(e($ws->title)); ?>" data-desc="<?php echo e(e($ws->description)); ?>" data-room="<?php echo e(e($ws->room ?? '')); ?>" data-start="<?php echo e($ws->start_time); ?>" data-end="<?php echo e($ws->end_time); ?>" data-capacity="<?php echo e($ws->capacity); ?>" <?php echo e(old('workshop_id')==$ws->id?'selected':''); ?>><?php echo e($ws->title); ?></option>
+                            <option value="<?php echo e($ws->id); ?>" data-title="<?php echo e(e($ws->title)); ?>" data-desc="<?php echo e(e($ws->description)); ?>" data-room="<?php echo e(e($ws->room ?? '')); ?>" data-start="<?php echo e($ws->start_time); ?>" data-end="<?php echo e($ws->end_time); ?>" data-capacity="<?php echo e($ws->capacity); ?>" <?php echo e(old('workshop_id')==$ws->id?'selected':''); ?>><?php echo e($ws->name ?: $ws->title); ?></option>
                         <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                     </select>
                     
                     <div id="newWorkshopFields" class="hidden mt-2 p-3 bg-indigo-50 border border-indigo-200 rounded-xl space-y-2">
                         <p class="text-xs font-semibold text-indigo-700">Create New Workshop</p>
+                        <input type="text" name="new_workshop_name" placeholder="Workshop name (appears in agenda)..." class="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500/20">
                         <input type="text" name="new_workshop_title" placeholder="Workshop title..." class="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500/20">
                         <textarea name="new_workshop_desc" rows="2" placeholder="Workshop description..." class="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500/20"></textarea>
                     </div>

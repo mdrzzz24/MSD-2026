@@ -4,7 +4,7 @@
     <link rel="icon" type="image/png" href="{{ asset('img/metrodata.png') }}">
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Registrants: {{ $workshop->title }} — {{ config('app.name') }}</title>
+    <title>Registrants: {{ $workshop->name ?: $workshop->title }} — {{ config('app.name') }}</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
@@ -23,7 +23,7 @@
                 Workshops
             </a>
             <span class="text-gray-300">/</span>
-            <h1 class="text-lg font-bold text-gray-900 truncate">{{ $workshop->title }}</h1>
+            <h1 class="text-lg font-bold text-gray-900 truncate">{{ $workshop->name ?: $workshop->title }}</h1>
         </div>
         <div class="flex items-center gap-2">
             <a href="{{ route('admin.workshops.registrants.export-csv', $workshop) }}"
@@ -53,10 +53,22 @@
                     <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-600">Closed</span>
                 @endif
             </div>
+            <div>
+                <p class="text-xs text-gray-400 uppercase tracking-wider">Last Reminder</p>
+                @if ($lastReminderLog)
+                    <p class="text-sm font-semibold text-gray-900">{{ $lastReminderLog->sent_at->format('d M Y, H:i:s') }}</p>
+                    <p class="text-xs text-gray-400">{{ $lastReminderLog->sent_at->diffForHumans() }}</p>
+                @else
+                    <p class="text-sm text-gray-400">—</p>
+                @endif
+            </div>
         </div>
     </div>
 
     {{-- Registrants Table --}}
+    <form id="reminderForm" method="POST" action="{{ route('admin.workshops.send-reminder', $workshop) }}"
+          onsubmit="return confirmReminder()">
+        @csrf
     <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
         <div class="px-5 py-4 border-b border-gray-100 flex flex-wrap items-center justify-between gap-2">
             <div><h2 class="text-base font-bold text-gray-900">Registrant List</h2><p class="text-xs text-gray-500">Total: <strong>{{ $registrants->count() }}</strong> registrant(s)</p></div>
@@ -66,6 +78,17 @@
                 <span class="text-xs text-gray-400">Rej: <strong class="text-red-600">{{ $registrants->where('pivot.status', 'rejected')->count() }}</strong></span>
             </div>
         </div>
+        <div class="px-5 py-3 border-b border-gray-100 flex items-center gap-3">
+            <button type="button" onclick="toggleAll(true)" class="px-3 py-1.5 text-xs font-medium rounded-lg bg-indigo-100 text-indigo-700 hover:bg-indigo-200 transition">Select All</button>
+            <button type="button" onclick="toggleAll(false)" class="px-3 py-1.5 text-xs font-medium rounded-lg bg-gray-100 text-gray-600 hover:bg-gray-200 transition">Deselect All</button>
+            <span class="text-xs text-gray-400" id="selectedCount">0 selected</span>
+            <button type="submit" id="sendReminderBtn"
+                    class="ml-auto inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold rounded-lg bg-fuchsia-500 text-white hover:bg-fuchsia-600 shadow-sm shadow-fuchsia-200 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                    disabled>
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
+                Send Reminder
+            </button>
+        </div>
 
         @if ($registrants->isEmpty())
             <div class="px-5 py-12 text-center text-gray-400 text-sm">No registrants yet for this workshop.</div>
@@ -73,7 +96,9 @@
             <div class="overflow-x-auto">
                 <table class="w-full table-fixed">
                     <thead><tr class="bg-gray-50/80">
-                        <th class="px-4 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase w-10">#</th>
+                        <th class="px-4 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase w-10">
+                            <input type="checkbox" onchange="toggleAll(this.checked)" class="w-4 h-4 rounded border-gray-300 text-indigo-600">
+                        </th>
                         <th class="px-4 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase">Name</th>
                         <th class="px-4 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase w-48">Email</th>
                         <th class="px-4 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase hidden md:table-cell w-32">Phone</th>
@@ -90,7 +115,12 @@
                         @foreach ($registrants as $i => $r)
                             @php $wsStatus = $r->pivot->status ?? 'pending'; @endphp
                             <tr class="hover:bg-gray-50/50 transition">
-                                <td class="px-4 py-3.5"><span class="text-sm text-gray-400">{{ $i + 1 }}</span></td>
+                                <td class="px-4 py-3.5">
+                                    <input type="checkbox" name="registrant_ids[]" value="{{ $r->id }}"
+                                           class="cb-item w-4 h-4 rounded border-gray-300 text-indigo-600"
+                                           onchange="updateReminderCount()"
+                                           {{ $wsStatus !== 'approved' ? 'disabled' : '' }}>
+                                </td>
                                 <td class="px-4 py-3.5 max-w-0"><a href="{{ route('admin.registrants.show', $r) }}" class="text-sm font-semibold text-indigo-600 hover:text-indigo-800 hover:underline truncate block" title="{{ $r->display_name }}">{{ $r->display_name }}</a></td>
                                 <td class="px-4 py-3.5 max-w-0"><span class="text-sm text-gray-600 truncate block" title="{{ $r->email }}">{{ $r->email }}</span></td>
                                 <td class="px-4 py-3.5 hidden md:table-cell max-w-0"><span class="text-sm text-gray-600 truncate block" title="{{ $r->phone ?? '' }}">{{ $r->phone ?? '—' }}</span></td>
@@ -142,18 +172,20 @@
             </div>
         @endif
     </div>
+    </form>
 </div>
 
-{{-- Reject Modal --}}
+{{-- Reject Confirmation --}}
 <div id="rejectModal" style="display:none;position:fixed;inset:0;z-index:9999;align-items:center;justify-content:center;background:rgba(0,0,0,0.4);backdrop-filter:blur(4px);padding:16px;">
-  <div style="background:#fff;border-radius:16px;box-shadow:0 25px 50px rgba(0,0,0,0.25);width:100%;max-width:448px;overflow:hidden;">
+  <div style="background:#fff;border-radius:16px;box-shadow:0 25px 50px rgba(0,0,0,0.25);width:100%;max-width:400px;overflow:hidden;">
     <form id="rejectForm" method="POST">
       @csrf
-      <div style="padding:24px;">
+      <div style="padding:24px;text-align:center;">
+        <div style="width:48px;height:48px;border-radius:50%;background:#fef2f2;display:flex;align-items:center;justify-content:center;margin:0 auto 12px;">
+          <svg style="width:24px;height:24px;color:#ef4444;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </div>
         <h3 style="font-size:18px;font-weight:700;color:#111827;margin-bottom:4px;">Reject Registration</h3>
-        <p style="font-size:14px;color:#6b7280;margin-bottom:16px;">Reject <strong id="rejectName"></strong>'s workshop registration?</p>
-        <label style="display:block;font-size:14px;font-weight:600;color:#374151;margin-bottom:4px;">Reason <span style="color:#ef4444;">*</span></label>
-        <textarea name="admin_notes" required rows="3" style="width:100%;padding:10px 12px;border:1px solid #d1d5db;border-radius:12px;font-size:14px;resize:vertical;" placeholder="Reason for rejection..."></textarea>
+        <p style="font-size:14px;color:#6b7280;margin-bottom:16px;">Reject <strong id="rejectName"></strong>'s workshop registration? A rejection email will be sent.</p>
         <div style="display:flex;gap:8px;margin-top:16px;">
           <button type="button" onclick="closeRejectModal()" style="flex:1;padding:10px 0;background:#f3f4f6;color:#374151;font-weight:600;font-size:14px;border:none;border-radius:12px;cursor:pointer;">Cancel</button>
           <button type="submit" style="flex:1;padding:10px 0;background:#ef4444;color:#fff;font-weight:600;font-size:14px;border:none;border-radius:12px;cursor:pointer;">Reject</button>
@@ -164,6 +196,24 @@
 </div>
 
 <script>
+function toggleAll(checked) {
+    document.querySelectorAll('.cb-item:not(:disabled)').forEach(cb => cb.checked = checked);
+    document.querySelector('thead input[type="checkbox"]').checked = checked;
+    updateReminderCount();
+}
+function updateReminderCount() {
+    var count = document.querySelectorAll('.cb-item:checked').length;
+    document.getElementById('selectedCount').textContent = count + ' selected';
+    document.getElementById('sendReminderBtn').disabled = count === 0;
+}
+function confirmReminder() {
+    var count = document.querySelectorAll('.cb-item:checked').length;
+    if (count === 0) {
+        alert('Please select at least one registrant.');
+        return false;
+    }
+    return confirm('Send Workshop Gentle Reminder to ' + count + ' selected registrant(s)?');
+}
 function showRejectModal(registrantId, name) {
     document.getElementById('rejectName').textContent = name;
     document.getElementById('rejectForm').action = '{{ route('admin.workshops.registrants.reject', [$workshop, '__ID__']) }}'.replace('__ID__', registrantId);

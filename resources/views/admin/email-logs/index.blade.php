@@ -127,7 +127,7 @@
                                 @php $color = \App\Models\EmailTemplate::typeColor($log->template_type); $label = \App\Models\EmailTemplate::typeLabel($log->template_type); @endphp
                                 <tr class="hover:bg-gray-50/50 transition">
                                     <td class="px-5 py-4 text-sm text-gray-500 whitespace-nowrap">
-                                        {{ $log->sent_at ? $log->sent_at->format('d M H:i') : '-' }}
+                                        {{ $log->sent_at ? $log->sent_at->format('d M H:i:s') : '-' }}
                                     </td>
                                     <td class="px-5 py-4">
                                         <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-{{ $color }}-50 text-{{ $color }}-700 border border-{{ $color }}-200">
@@ -156,10 +156,20 @@
                                         @endif
                                     </td>
                                     <td class="px-5 py-4 text-center">
-                                        <a href="{{ route('admin.email-logs.show', $log) }}"
-                                           class="px-2.5 py-1.5 text-xs font-medium rounded-lg bg-sky-100 text-sky-700 hover:bg-sky-200 transition">
-                                            Detail
-                                        </a>
+                                        <div class="flex items-center justify-center gap-1.5">
+                                            <a href="{{ route('admin.email-logs.show', $log) }}"
+                                               class="px-2.5 py-1.5 text-xs font-medium rounded-lg bg-sky-100 text-sky-700 hover:bg-sky-200 transition">
+                                                Detail
+                                            </a>
+                                            <form action="{{ route('admin.email-logs.resend', $log) }}" method="POST" class="inline"
+                                                  onsubmit="return confirm('Resend this email to {{ addslashes($log->recipient_email) }}?')">
+                                                @csrf
+                                                <button type="submit"
+                                                        class="px-2.5 py-1.5 text-xs font-medium rounded-lg bg-indigo-100 text-indigo-700 hover:bg-indigo-200 transition">
+                                                    Resend
+                                                </button>
+                                            </form>
+                                        </div>
                                     </td>
                                 </tr>
                             @empty

@@ -9,6 +9,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <script>tailwind.config={theme:{extend:{fontFamily:{sans:['Inter','system-ui','sans-serif']}}}}</script>
+    <link href="https://cdn.jsdelivr.net/npm/summernote@0.9.0/dist/summernote-lite.min.css" rel="stylesheet">
 </head>
 <body class="bg-gray-50 font-sans antialiased">
 <div class="flex min-h-screen">
@@ -21,8 +22,10 @@
     @endif
     <form action="{{ route('admin.workshops.store') }}" method="POST" class="space-y-5">
         @csrf
+        <div><label class="block text-sm font-semibold text-gray-700 mb-1.5">Workshop Name</label><input type="text" name="name" value="{{ old('name') }}" placeholder="e.g. Workshop Session 1" class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 focus:bg-white transition"></div>
         <div><label class="block text-sm font-semibold text-gray-700 mb-1.5">Workshop Title</label><input type="text" name="title" value="{{ old('title') }}" required class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 focus:bg-white transition"></div>
-        <div><label class="block text-sm font-semibold text-gray-700 mb-1.5">Description</label><textarea name="description" rows="4" class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 focus:bg-white transition resize-y">{{ old('description') }}</textarea></div>
+        <div><label class="block text-sm font-semibold text-gray-700 mb-1.5">Description <span class="text-xs text-gray-400 font-normal">(HTML supported)</span></label>
+                        <textarea name="description" id="summernote" rows="8" class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 focus:bg-white transition resize-y">{{ old('description') }}</textarea></div>
         <div class="bg-amber-50 border border-amber-200 rounded-xl p-4 text-sm text-amber-700">
             <strong>💡 Note:</strong> Set room, date, time, and capacity in the <strong>Agenda</strong> section when you link this workshop to an agenda slot.
         </div>
@@ -31,5 +34,30 @@
 </div></div></div>
 </main>
 </div>
+
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/summernote@0.9.0/dist/summernote-lite.min.js"></script>
+<script>
+jQuery(document).ready(function() {
+    jQuery('#summernote').summernote({
+        height: 280,
+        toolbar: [
+            ['style', ['bold', 'italic', 'underline', 'clear']],
+            ['para', ['ul', 'ol', 'paragraph']],
+            ['insert', ['link']],
+            ['view', ['codeview']]
+        ],
+        callbacks: {
+            onChange: function(contents) {
+                var text = jQuery('<div>'+contents+'</div>').text();
+                if (text.length > 65000) {
+                    jQuery(this).summernote('undo');
+                    alert('Description is too long.');
+                }
+            }
+        }
+    });
+});
+</script>
 </body>
 </html>

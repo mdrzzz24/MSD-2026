@@ -85,16 +85,24 @@ class EmailTemplateController extends Controller
         $sampleRegistrant->email = '{{ email }}';
 
         $rendered = view($viewName, [
-            'registrant'    => $sampleRegistrant,
-            'plainPassword' => '{{ password }}',
-            'workshopName'  => '{{ workshop_name }}',
-            'sessionName'   => '{{ track_name }}',
-            'adminNotes'    => '{{ admin_notes }}',
-            'name'          => '{{ name }}',
+            'registrant'       => $sampleRegistrant,
+            'plainPassword'    => '{{ password }}',
+            'workshopName'     => '{{ workshop_name }}',
+            'workshop_title'   => '{{ workshop_title }}',
+            'workshop_room'    => '{{ workshop_room }}',
+            'workshop_time'    => '{{ workshop_time }}',
+            'workshop_capacity'=> '{{ workshop_capacity }}',
+            'sessionName'      => '{{ track_name }}',
+            'adminNotes'       => '{{ admin_notes }}',
+            'name'             => '{{ name }}',
         ])->render();
 
         $presetHtml    = $rendered;
-        $presetSubject = $types[$typeKey]['label'] ?? '';
+        $presetSubject = match ($typeKey) {
+            'workshop_approval',
+            'workshop_rejection' => '[CONFIRMATION] Thank you for your Registration : MSD 2026 | {{ workshop_name }} | {{ workshop_date }} | Shangri-La Hotel Jakarta | {{ workshop_room }}',
+            default              => $types[$typeKey]['label'] ?? '',
+        };
         $presetType    = $typeKey;
 
         return view('admin.templates.create', compact('types', 'presetType', 'presetSubject', 'presetHtml'));
@@ -640,18 +648,24 @@ class EmailTemplateController extends Controller
     public function preview(EmailTemplate $template)
     {
         $html = $template->render([
-            'name'          => 'John Doe',
-            'email'         => 'john@example.com',
-            'status'        => 'approved',
-            'unique_code'   => '100724080000',
-            'admin_notes'   => 'Sample admin note.',
-            'password'      => '123456789',
-            'workshop_name' => 'Sample Workshop',
-            'track_name'    => 'Sample Track',
-            'event_date'    => '12 Agustus 2026',
-            'login_url'     => route('registrant.login'),
-            'qr_code'       => '<img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=sample-qr-data" alt="QR Code" style="width:200px;height:200px;display:block;margin:16px auto;">',
-            'qr_checkin_url'=> route('registrant.login'),
+            'name'              => 'John Doe',
+            'email'             => 'john@example.com',
+            'status'            => 'approved',
+            'unique_code'       => '100724080000',
+            'admin_notes'       => 'Sample admin note.',
+            'password'          => '123456789',
+            'workshop_name'     => 'Sample Workshop Name',
+            'workshop_title'    => 'Sample Workshop Title',
+            'workshop_room'     => 'Meeting Room A',
+            'workshop_date'     => 'Thursday, 20 August 2026',
+            'workshop_time'     => '09:00 – 12:00',
+            'workshop_capacity' => '35',
+            'venue_name'        => 'Shangri-La Hotel Jakarta',
+            'track_name'        => 'Sample Track',
+            'event_date'        => '12 Agustus 2026',
+            'login_url'         => route('registrant.login'),
+            'qr_code'           => '<img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=sample-qr-data" alt="QR Code" style="width:200px;height:200px;display:block;margin:16px auto;">',
+            'qr_checkin_url'    => route('registrant.login'),
         ]);
 
         return view('admin.templates.preview', compact('template', 'html'));

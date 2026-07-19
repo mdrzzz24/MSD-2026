@@ -105,14 +105,14 @@
                 <div class="px-5 py-4 flex items-center justify-between" style="border-bottom:1px solid rgba(255,255,255,.08);">
                     <div>
                         <h2 class="text-base font-bold text-white">My Sessions</h2>
-                        <p class="text-xs" style="color:rgba(255,255,255,.4);">Tracks & workshops you registered for via agenda</p>
+                        <p class="text-xs" style="color:rgba(255,255,255,.4);">All your registered sessions & workshops</p>
                     </div>
                     <a href="<?php echo e(route('home1')); ?>" class="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold btn-pink">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 01-1 1"/></svg>
                         Back to Home
                     </a>
                 </div>
-                <?php if($myAgendaItems->isEmpty()): ?>
+                <?php if($myAgendaItems->isEmpty() && $myWorkshops->isEmpty()): ?>
                     <div class="px-5 py-16 text-center" style="color:rgba(255,255,255,.3);">
                         <svg class="w-12 h-12 mx-auto mb-3 opacity-30" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
                         <p class="text-sm">No sessions registered yet.</p>
@@ -134,7 +134,15 @@
                                 <?php $__currentLoopData = $myAgendaItems; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $item): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                                     <?php $agStatus = $item->pivot->status ?? 'pending'; ?>
                                     <tr>
-                                        <td><p class="font-semibold text-white"><?php echo e($item->title); ?></p></td>
+                                        <td>
+                                            <?php $wsName = $item->workshop ? ($item->workshop->name ?: $item->workshop->title) : null; ?>
+                                            <?php if($wsName): ?>
+                                                <p class="font-semibold text-white"><?php echo e($wsName); ?></p>
+                                                <p class="text-xs" style="color:rgba(255,255,255,.4);"><?php echo e($item->title); ?></p>
+                                            <?php else: ?>
+                                                <p class="font-semibold text-white"><?php echo e($item->title); ?></p>
+                                            <?php endif; ?>
+                                        </td>
                                         <td>
                                             <?php
                                                 $type = $item->agenda_type
@@ -177,6 +185,47 @@
                                         </td>
                                     </tr>
                                 <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                                
+                                <?php $__currentLoopData = $myWorkshops; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $w): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                    <?php
+                                        $wsStatus = $w->pivot->status ?? 'pending';
+                                        $_ai = $w->agendaItems->first();
+                                        $wsRoom = $w->room ?? $_ai?->room ?? '—';
+                                        $_s = $w->start_time ?? $_ai?->start_time;
+                                        $_e = $w->end_time ?? $_ai?->end_time;
+                                        $wsTime = ($_s && $_e) ? date('H:i', strtotime($_s)) . ' – ' . date('H:i', strtotime($_e)) : '—';
+                                    ?>
+                                    <tr>
+                                        <td>
+                                            <p class="font-semibold text-white"><?php echo e($w->name ?: $w->title); ?></p>
+                                            <?php if($w->name): ?>
+                                                <p class="text-xs" style="color:rgba(255,255,255,.4);"><?php echo e($w->title); ?></p>
+                                            <?php endif; ?>
+                                        </td>
+                                        <td>
+                                            <span class="inline-flex px-2.5 py-0.5 rounded-full text-xs font-semibold badge-workshop">Workshop</span>
+                                        </td>
+                                        <td><span><?php echo e($wsTime); ?></span></td>
+                                        <td class="hidden sm:table-cell"><span><?php echo e($wsRoom); ?></span></td>
+                                        <td class="text-center">
+                                            <?php if($wsStatus === 'approved'): ?>
+                                                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold badge-approved"><span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>Approved</span>
+                                            <?php elseif($wsStatus === 'rejected'): ?>
+                                                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold badge-rejected"><span class="w-1.5 h-1.5 rounded-full bg-red-500"></span>Rejected</span>
+                                            <?php else: ?>
+                                                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold badge-pending"><span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>Pending</span>
+                                            <?php endif; ?>
+                                        </td>
+                                        <td class="text-center">
+                                            <?php if($wsStatus !== 'approved'): ?>
+                                            <form action="<?php echo e(route('registrant.workshop.unregister', $w)); ?>" method="POST" onsubmit="return confirm('Cancel registration for <?php echo e($w->name ?: $w->title); ?>?')">
+                                                <?php echo csrf_field(); ?>
+                                                <button class="px-3 py-1.5 text-xs font-medium rounded-lg transition" style="background:rgba(239,68,68,.15); color:#ef4444; border:1px solid rgba(239,68,68,.25);" onmouseover="this.style.background='rgba(239,68,68,.25)'" onmouseout="this.style.background='rgba(239,68,68,.15)'">Cancel</button>
+                                            </form>
+                                            <?php endif; ?>
+                                        </td>
+                                    </tr>
+                                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                             </tbody>
                         </table>
                     </div>
@@ -209,11 +258,24 @@
                             </thead>
                             <tbody>
                                 <?php $__currentLoopData = $availableWorkshops; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $w): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                    <?php
+                                        $_ai = $w->agendaItems->first();
+                                        $avRoom = $w->room ?? $_ai?->room ?? '—';
+                                        $avDate = $w->date ?? $_ai?->date;
+                                        $_s = $w->start_time ?? $_ai?->start_time;
+                                        $_e = $w->end_time ?? $_ai?->end_time;
+                                        $avTime = ($_s && $_e) ? date('H:i', strtotime($_s)) . ' – ' . date('H:i', strtotime($_e)) : '—';
+                                    ?>
                                     <tr>
-                                        <td><p class="font-semibold text-white"><?php echo e($w->title); ?></p></td>
-                                        <td class="hidden sm:table-cell"><span><?php echo e($w->room ?? '—'); ?></span></td>
-                                        <td><span><?php echo e($w->date ? $w->date->format('d M Y') : '—'); ?></span></td>
-                                        <td><span><?php echo e($w->timeRange()); ?></span></td>
+                                        <td>
+                                            <p class="font-semibold text-white"><?php echo e($w->name ?: $w->title); ?></p>
+                                            <?php if($w->name): ?>
+                                                <p class="text-xs" style="color:rgba(255,255,255,.4);"><?php echo e($w->title); ?></p>
+                                            <?php endif; ?>
+                                        </td>
+                                        <td class="hidden sm:table-cell"><span><?php echo e($avRoom); ?></span></td>
+                                        <td><span><?php echo e($avDate ? $avDate->format('d M Y') : '—'); ?></span></td>
+                                        <td><span><?php echo e($avTime); ?></span></td>
                                         <td class="hidden lg:table-cell">
                                             <?php if($w->capacity > 0): ?>
                                                 <span class="<?php echo e($w->isFull() ? 'text-red-400' : ''); ?>"><?php echo e($w->registrationsCount()); ?>/<?php echo e($w->capacity); ?></span>

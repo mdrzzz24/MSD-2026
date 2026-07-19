@@ -262,11 +262,12 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
               <tr>
                 <td class="time">{{ $ts->label() }}</td>
                 @if ($fullRow)
-                  <td class="full" colspan="{{ $rooms->count() }}" data-timeslot="{{ $slotKey }}">
+                  <td class="full" colspan="{{ $rooms->count() }}" data-timeslot="{{ $slotKey }}" data-agenda-id="{{ $fullRow->id }}">
+                    @php $fullTitle = $fullRow->workshop ? ($fullRow->workshop->name ?: $fullRow->workshop->title) : $fullRow->title; @endphp
                     @if ($fullRow->category || $fullRow->agenda_type)
-                      <span class="tag {{ \App\Models\AgendaItem::categoryClass($fullRow->category, $fullRow->agenda_type) }}">{{ $fullRow->title }}</span>
+                      <span class="tag {{ \App\Models\AgendaItem::categoryClass($fullRow->category, $fullRow->agenda_type) }}">{{ $fullTitle }}</span>
                     @else
-                      {{ $fullRow->title }}
+                      {{ $fullTitle }}
                     @endif
                   </td>
                 @else
@@ -296,10 +297,11 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                                     }
                                 }
                             }
+                            $displayTitle = $item->workshop ? ($item->workshop->name ?: $item->workshop->title) : $item->title;
                             $tag = ($item->category || $item->agenda_type)
-                                ? '<span class="tag ' . \App\Models\AgendaItem::categoryClass($item->category, $item->agenda_type) . '">' . e($item->title) . '</span>'
-                                : e($item->title);
-                            $cells[] = '<td' . $attrs . ' data-timeslot="' . $slotKey . '">' . $tag . '</td>';
+                                ? '<span class="tag ' . \App\Models\AgendaItem::categoryClass($item->category, $item->agenda_type) . '">' . e($displayTitle) . '</span>'
+                                : e($displayTitle);
+                            $cells[] = '<td' . $attrs . ' data-timeslot="' . $slotKey . '" data-agenda-id="' . $item->id . '">' . $tag . '</td>';
                         } else {
                             $cells[] = '<td data-timeslot="' . $slotKey . '">—</td>';
                         }
@@ -377,11 +379,12 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       {{-- Title --}}
       <h2 style="font-size:22px;font-weight:800;color:#e2e8f0;margin-bottom:18px;line-height:1.35;letter-spacing:-0.02em;" id="modalTitle"></h2>
 
-      {{-- Description --}}
-      <div id="modalDesc" style="font-size:13px;color:#94a3b8;line-height:1.7;margin-bottom:24px;"></div>
-
       {{-- Speakers --}}
       <div id="modalSpeakers" style="margin-bottom:24px;padding:20px;background:rgba(255,255,255,0.04);border-radius:16px;border:1px solid rgba(255,255,255,0.06);"></div>
+
+      {{-- Description --}}
+      <div id="modalDesc" style="font-size:13px;color:#cbd5e1;line-height:1.7;margin-bottom:24px;"></div>
+      <style>#modalDesc, #modalDesc * { color: #cbd5e1 !important; } #modalDesc ul, #modalDesc ol { padding-left: 20px; margin: 8px 0; } #modalDesc li { margin-bottom: 4px; } #modalDesc p { margin: 6px 0; } #modalDesc h4 { font-size: 14px; font-weight: 700; color: #e2e8f0 !important; margin: 12px 0 4px; } #modalDesc strong { color: #e2e8f0 !important; }</style>
 
       {{-- Key Highlights --}}
       <div id="modalHighlights" style="margin-bottom:24px;"></div>
@@ -398,11 +401,21 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
 <script>
 // ── Agenda data for modal (available to all) ──
-window._agendaData = {!! json_encode($agendaItems->keyBy('id'), JSON_UNESCAPED_SLASHES) !!};
+window._agendaData = {!! json_encode($agendaItems->keyBy('id')->map(function ($item) {
+    return array_merge($item->toArray(), [
+        'workshop_name'        => $item->workshop ? ($item->workshop->name ?: $item->workshop->title) : null,
+        'workshop_title'       => $item->workshop ? $item->workshop->title : null,
+        'workshop_description' => $item->workshop ? $item->workshop->description : null,
+    ]);
+}), JSON_UNESCAPED_SLASHES) !!};
 
 @if (Auth::guard('registrant')->check())
 window._agendaRegistrations = {!! json_encode(
     Auth::guard('registrant')->user()->agendaItems()->get()->mapWithKeys(fn($i) => [$i->id => $i->pivot->status]),
+    JSON_UNESCAPED_SLASHES
+) !!};
+window._workshopRegistrations = {!! json_encode(
+    Auth::guard('registrant')->user()->workshops()->get()->mapWithKeys(fn($w) => [$w->id => $w->pivot->status]),
     JSON_UNESCAPED_SLASHES
 ) !!};
 window._agendaRegisterUrl = '{{ route('registrant.agenda.register', ['agendaItem' => '__ID__']) }}';
@@ -423,7 +436,14 @@ function openAgendaModal(id) {
     document.getElementById('modalRoom').innerHTML =
         '<svg style="width:14px;height:14px;flex-shrink:0;" fill="none" stroke="#94a3b8" viewBox="0 0 24 24"><path stroke-width="2" d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/><circle cx="12" cy="9" r="2.5" stroke-width="2"/></svg> ' +
         '<span>Shangri-La Hotel' + (item.room ? ', ' + item.room + ' Room' : '') + '</span>';
-    document.getElementById('modalTitle').textContent = item.title;
+    // Show workshop name + title if linked to a workshop
+    if (item.workshop_name) {
+        var wsHtml = '<span style="font-size:14px;font-weight:500;color:#94a3b8;display:block;margin-bottom:4px;">' + item.workshop_name + '</span>';
+        wsHtml += '<span style="font-size:22px;font-weight:800;color:#e2e8f0;">' + item.title + '</span>';
+        document.getElementById('modalTitle').innerHTML = wsHtml;
+    } else {
+        document.getElementById('modalTitle').textContent = item.title;
+    }
 
     // Type badge with fallback logic
     const badge = document.getElementById('modalTypeBadge');
@@ -458,10 +478,6 @@ function openAgendaModal(id) {
     } else {
         capEl.textContent = '';
     }
-
-    // Description
-    const descEl = document.getElementById('modalDesc');
-    descEl.innerHTML = item.description ? '<strong style="color:#e2e8f0;font-size:13px;text-transform:uppercase;letter-spacing:0.5px;">Session Description</strong><br><br><span style="color:#94a3b8;">' + item.description.replace(/\n/g,'<br>') + '</span>' : '';
 
     // Speakers from relationship with all details
     let speakersHtml = '';
@@ -504,6 +520,20 @@ function openAgendaModal(id) {
     }
     document.getElementById('modalSpeakers').innerHTML = speakersHtml || '<p style="font-size:13px;color:#64748b;text-align:center;">No speaker assigned</p>';
 
+    // Description (workshop description takes precedence if linked)
+    const descEl = document.getElementById('modalDesc');
+    var descText = item.workshop_description || item.description || '';
+    if (descText) {
+        // Strip inline color/font styles from Summernote output
+        descText = descText.replace(/<span[^>]*style="[^"]*color:[^"]*"[^>]*>/gi, '<span>');
+        descText = descText.replace(/style="[^"]*color:[^;"]*[^"]*"/gi, '');
+        descText = descText.replace(/<font[^>]*color[^>]*>/gi, '<span>');
+        descText = descText.replace(/<\/font>/gi, '</span>');
+        descEl.innerHTML = '<strong style="color:#e2e8f0;font-size:13px;text-transform:uppercase;letter-spacing:0.5px;">Session Description</strong><br><br><span style="color:#cbd5e1;">' + descText.replace(/\n/g,'<br>') + '</span>';
+    } else {
+        descEl.innerHTML = '';
+    }
+
     // Hide global highlights section (now per-speaker)
     document.getElementById('modalHighlights').innerHTML = '';
 
@@ -520,7 +550,11 @@ function openAgendaModal(id) {
             '<p style="font-size:13px;color:#94a3b8;">Please <a href="'+loginUrl+'" style="color:#f472b6;font-weight:600;text-decoration:underline;text-underline-offset:2px;">login</a> to register for this session.</p>' +
         '</div>';
     } else {
-        const regStatus = window._agendaRegistrations[id] || null;
+        var regStatus = window._agendaRegistrations[id] || null;
+        // Fallback: check workshop registration status if linked to a workshop
+        if (!regStatus && item.workshop_id && window._workshopRegistrations) {
+            regStatus = window._workshopRegistrations[item.workshop_id] || null;
+        }
         if (regStatus === 'approved') {
         regSection.innerHTML = '<div style="text-align:center;"><div style="display:inline-flex;align-items:center;gap:8px;padding:8px 20px;border-radius:999px;font-size:13px;font-weight:600;background:rgba(16,185,129,0.15);color:#34d399;border:1px solid rgba(16,185,129,0.2);margin-bottom:14px;"><svg style="width:16px;height:16px;" fill="none" stroke="#34d399" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke-width="2"/><path stroke-width="2.5" d="M8 12l3 3 5-5"/></svg> You are registered</div></div>';
     } else if (regStatus === 'pending') {
@@ -555,29 +589,25 @@ document.addEventListener('keydown', function(e) {
     if (e.key === 'Escape') closeAgendaModal();
 });
 
-// ── Make registrable agenda items clickable ──
+// ── Make agenda items clickable ──
 document.addEventListener('DOMContentLoaded', function() {
     const table = document.querySelector('#agenda table');
     if (!table) return;
     table.addEventListener('click', function(e) {
         const cell = e.target.closest('td');
         if (!cell) return;
+        const agendaId = cell.getAttribute('data-agenda-id');
+        if (agendaId && window._agendaData[agendaId]) {
+            openAgendaModal(agendaId);
+            return;
+        }
+        // Fallback: match by text content
         const title = cell.textContent.trim();
         if (!title || title === '—' || title === 'Time') return;
-        var cellTimeSlot = cell.getAttribute('data-timeslot');
         for (const [id, item] of Object.entries(window._agendaData)) {
-            if (item.title === title) {
-                if (cellTimeSlot && item.start_time) {
-                    var slotStart = cellTimeSlot.split('-')[0].substring(0,5);
-                    var itemStart = item.start_time.substring(0,5);
-                    if (slotStart === itemStart) {
-                        openAgendaModal(id);
-                        return;
-                    }
-                } else {
-                    openAgendaModal(id);
-                    return;
-                }
+            if (item.title === title || item.workshop_name === title) {
+                openAgendaModal(id);
+                return;
             }
         }
     });

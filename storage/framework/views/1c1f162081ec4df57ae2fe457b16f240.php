@@ -83,10 +83,11 @@
                             <td class="full" colspan="<?php echo e($rooms->count()); ?>">
                                 <div class="cell-item items-center">
                                     <span class="cell-title">
+                                        <?php $fullDisplay = $fullRow->workshop ? ($fullRow->workshop->name ?: $fullRow->workshop->title) : $fullRow->title; ?>
                                         <?php if($fullRow->category): ?>
-                                            <span class="tag <?php echo e(\App\Models\AgendaItem::categoryClass($fullRow->category)); ?>"><?php echo e($fullRow->title); ?></span>
+                                            <span class="tag <?php echo e(\App\Models\AgendaItem::categoryClass($fullRow->category)); ?>"><?php echo e($fullDisplay); ?></span>
                                         <?php else: ?>
-                                            <?php echo e($fullRow->title); ?>
+                                            <?php echo e($fullDisplay); ?>
 
                                         <?php endif; ?>
                                         <?php if($fullRow->feedback_enabled): ?>
@@ -144,7 +145,8 @@
                                                 }
                                             }
                                         }
-                                        $tag = $item->category ? '<span class="tag ' . \App\Models\AgendaItem::categoryClass($item->category) . '">' . e($item->title) . '</span>' : e($item->title);
+                                        $displayTitle = $item->workshop ? ($item->workshop->name ?: $item->workshop->title) : $item->title;
+                                        $tag = $item->category ? '<span class="tag ' . \App\Models\AgendaItem::categoryClass($item->category) . '">' . e($displayTitle) . '</span>' : e($displayTitle);
                                         $badge = '';
                                         if ($item->rowspan > 1) $badge .= ' <span class="text-[9px] text-indigo-400 font-normal">↕x' . $item->rowspan . '</span>';
                                         if ($item->colspan > 1) $badge .= ' <span class="text-[9px] text-amber-500 font-normal">↔x' . $item->colspan . '</span>';

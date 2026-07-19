@@ -282,11 +282,20 @@
                                                 @endif
                                                 <span class="text-xs font-medium {{ $et['sent'] ? 'text-emerald-800' : 'text-gray-500' }}">{{ $et['label'] }}</span>
                                             </div>
-                                            @if ($et['sent'])
-                                                <span class="text-xs font-medium text-emerald-600 bg-emerald-100 px-2 py-0.5 rounded-full flex-shrink-0">Sent</span>
-                                            @else
-                                                <span class="text-xs font-medium text-gray-400 bg-gray-200 px-2 py-0.5 rounded-full flex-shrink-0">Not sent</span>
-                                            @endif
+                                            <div class="flex items-center gap-2 flex-shrink-0">
+                                                @if ($et['sent'])
+                                                    <span class="text-xs font-medium text-emerald-600 bg-emerald-100 px-2 py-0.5 rounded-full">Sent</span>
+                                                @else
+                                                    <form action="{{ route('admin.registrants.send-email', [$registrant, $et['type']]) }}" method="POST" class="inline"
+                                                          onsubmit="return confirm('Send {{ addslashes($et['label']) }} email to {{ addslashes($registrant->display_name) }}?')">
+                                                        @csrf
+                                                        <button type="submit"
+                                                                class="text-xs font-medium px-2.5 py-1 rounded-lg bg-indigo-100 text-indigo-700 hover:bg-indigo-200 transition">
+                                                            Send Now
+                                                        </button>
+                                                    </form>
+                                                @endif
+                                            </div>
                                         </div>
                                     @endforeach
                                 </div>
@@ -315,15 +324,25 @@
                                                     <p class="text-xs text-gray-500 mt-0.5">
                                                         <span class="capitalize">{{ str_replace('_', ' ', $log->template_type) }}</span>
                                                         &middot;
-                                                        {{ $log->sent_at?->copy()->addHours(7)->format('d M Y, H:i') ?? '—' }}
+                                                        {{ $log->sent_at?->copy()->addHours(7)->format('d M Y, H:i:s') ?? '—' }}
                                                     </p>
                                                     @if ($log->status === 'failed' && $log->error_message)
                                                         <p class="text-xs text-red-500 mt-0.5 truncate">{{ $log->error_message }}</p>
                                                     @endif
                                                 </div>
-                                                <span class="text-xs font-medium px-2 py-0.5 rounded-full flex-shrink-0 {{ $log->status === 'sent' ? 'bg-emerald-100 text-emerald-700' : ($log->status === 'failed' ? 'bg-red-100 text-red-600' : ($log->status === 'bounced' ? 'bg-orange-100 text-orange-700' : 'bg-gray-100 text-gray-600')) }}">
-                                                    {{ ucfirst($log->status) }}
-                                                </span>
+                                                <div class="flex items-center gap-1.5 flex-shrink-0">
+                                                    <span class="text-xs font-medium px-2 py-0.5 rounded-full {{ $log->status === 'sent' ? 'bg-emerald-100 text-emerald-700' : ($log->status === 'failed' ? 'bg-red-100 text-red-600' : ($log->status === 'bounced' ? 'bg-orange-100 text-orange-700' : 'bg-gray-100 text-gray-600')) }}">
+                                                        {{ ucfirst($log->status) }}
+                                                    </span>
+                                                    <form action="{{ route('admin.email-logs.resend', $log) }}" method="POST" class="inline"
+                                                          onsubmit="return confirm('Resend this email?')">
+                                                        @csrf
+                                                        <button type="submit" class="text-xs font-medium px-2 py-0.5 rounded-lg bg-indigo-100 text-indigo-700 hover:bg-indigo-200 transition"
+                                                                title="Resend">
+                                                            ↻
+                                                        </button>
+                                                    </form>
+                                                </div>
                                             </div>
                                         @endforeach
                                     </div>
@@ -351,7 +370,7 @@
                                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/>
                                         </svg>
-                                        {{ $w->title }}
+                                        {{ $w->name ?: $w->title }}
                                         @php $pw = $w->pivot; @endphp
                                         @if ($pw)
                                             <span class="text-xs px-1.5 py-0.5 rounded-full {{ $pw->status === 'approved' ? 'bg-emerald-100 text-emerald-700' : ($pw->status === 'rejected' ? 'bg-red-100 text-red-600' : 'bg-amber-100 text-amber-700') }}">{{ $pw->status }}</span>

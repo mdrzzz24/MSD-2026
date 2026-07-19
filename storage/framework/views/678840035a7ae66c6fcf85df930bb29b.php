@@ -16,9 +16,7 @@
 <main class="flex-1 lg:ml-64">
 <header class="sticky top-0 z-30 bg-white/80 backdrop-blur border-b border-gray-200"><div class="flex items-center h-16 px-4 sm:px-6 lg:px-8 gap-4"><a href="<?php echo e(route('admin.templates.index')); ?>" class="inline-flex items-center gap-1.5 text-sm text-indigo-600 hover:text-indigo-800 font-medium transition"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>Template</a><span class="text-gray-300">/</span><h1 class="text-lg font-bold text-gray-900">Edit: <?php echo e($template->name); ?></h1></div></header>
 <div class="p-4 sm:p-6 lg:p-8">
-    <?php if(session('success')): ?>
-        <div class="flex items-start gap-3 bg-emerald-50 border border-emerald-200 text-emerald-800 px-5 py-4 rounded-2xl mb-6 max-w-7xl mx-auto"><svg class="w-5 h-5 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg><span class="text-sm"><?php echo session('success'); ?></span></div>
-    <?php endif; ?>
+    <?php echo $__env->make('admin.partials.notification', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
     <?php if($errors->any()): ?>
         <div class="flex items-start gap-3 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl mb-6 max-w-7xl mx-auto"><svg class="w-5 h-5 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg><ul class="list-disc list-inside text-sm"><?php $__currentLoopData = $errors->all(); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $e): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?><li><?php echo e($e); ?></li><?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?></ul></div>
     <?php endif; ?>
@@ -27,7 +25,7 @@
         <?php echo csrf_field(); ?> <?php echo method_field('PUT'); ?>
         <div class="flex gap-4 mb-4">
             <div class="flex-1"><label class="block text-sm font-semibold text-gray-700 mb-1.5">Template Name</label><input type="text" name="name" value="<?php echo e(old('name', $template->name)); ?>" required class="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition"></div>
-            <div class="w-48"><label class="block text-sm font-semibold text-gray-700 mb-1.5">Tipe</label><select name="type" required class="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition"><?php $__currentLoopData = $types; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $key => $info): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?><option value="<?php echo e($key); ?>" <?php echo e(old('type', $template->type)===$key?'selected':''); ?>><?php echo e($info['label']); ?></option><?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?></select></div>
+            <div class="w-48"><label class="block text-sm font-semibold text-gray-700 mb-1.5">Type</label><select name="type" required class="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition"><?php $__currentLoopData = $types; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $key => $info): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?><option value="<?php echo e($key); ?>" <?php echo e(old('type', $template->type)===$key?'selected':''); ?>><?php echo e($info['label']); ?></option><?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?></select></div>
             <div class="flex-1"><label class="block text-sm font-semibold text-gray-700 mb-1.5">Subject Email</label><input type="text" name="subject" value="<?php echo e(old('subject', $template->subject)); ?>" required class="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition"></div>
         </div>
         <div class="flex gap-4">
@@ -36,7 +34,7 @@
                 <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
                     <div class="flex items-center justify-between mb-2">
                         <label class="text-sm font-semibold text-gray-700">HTML Content</label>
-                        <div class="text-xs text-gray-400">Placeholder: <code class="bg-gray-100 px-1 py-0.5 rounded text-indigo-600">{{ name }}</code> <code class="bg-gray-100 px-1 py-0.5 rounded text-indigo-600">{{ email }}</code> <code class="bg-gray-100 px-1 py-0.5 rounded text-indigo-600">{{ password }}</code> <code class="bg-gray-100 px-1 py-0.5 rounded text-indigo-600">{{ qr_code }}</code></div>
+                        <div class="text-xs text-gray-400">Placeholder: <code class="bg-gray-100 px-1 py-0.5 rounded text-indigo-600">{{ name }}</code> <code class="bg-gray-100 px-1 py-0.5 rounded text-indigo-600">{{ email }}</code> <code class="bg-gray-100 px-1 py-0.5 rounded text-indigo-600">{{ password }}</code> <code class="bg-gray-100 px-1 py-0.5 rounded text-indigo-600">{{ status }}</code> <code class="bg-gray-100 px-1 py-0.5 rounded text-indigo-600">{{ admin_notes }}</code> <code class="bg-gray-100 px-1 py-0.5 rounded text-indigo-600">{{ workshop_name }}</code> <code class="bg-gray-100 px-1 py-0.5 rounded text-indigo-600">{{ workshop_title }}</code> <code class="bg-gray-100 px-1 py-0.5 rounded text-indigo-600">{{ workshop_room }}</code> <code class="bg-gray-100 px-1 py-0.5 rounded text-indigo-600">{{ workshop_date }}</code> <code class="bg-gray-100 px-1 py-0.5 rounded text-indigo-600">{{ workshop_time }}</code> <code class="bg-gray-100 px-1 py-0.5 rounded text-indigo-600">{{ workshop_capacity }}</code> <code class="bg-gray-100 px-1 py-0.5 rounded text-indigo-600">{{ venue_name }}</code> <code class="bg-gray-100 px-1 py-0.5 rounded text-indigo-600">{{ qr_code }}</code></div>
                     </div>
                     <textarea name="html_content" id="htmlEditor" rows="24" required class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm font-mono focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition resize-y leading-relaxed"><?php echo e(old('html_content', $template->html_content)); ?></textarea>
                 </div>
@@ -76,7 +74,13 @@
             .replace(/\{\{\s*status\s*\}\}/g, 'approved')
             .replace(/\{\{\s*unique_code\s*\}\}/g, '100724080000')
             .replace(/\{\{\s*admin_notes\s*\}\}/g, 'Sample note')
-            .replace(/\{\{\s*workshop_name\s*\}\}/g, 'Sample Workshop')
+            .replace(/\{\{\s*workshop_name\s*\}\}/g, 'Sample Workshop Session')
+            .replace(/\{\{\s*workshop_title\s*\}\}/g, 'Sample Workshop Topic')
+            .replace(/\{\{\s*workshop_room\s*\}\}/g, 'Meeting Room A')
+            .replace(/\{\{\s*workshop_date\s*\}\}/g, 'Thursday, 20 August 2026')
+            .replace(/\{\{\s*workshop_time\s*\}\}/g, '09:00 – 12:00')
+            .replace(/\{\{\s*workshop_capacity\s*\}\}/g, '35')
+            .replace(/\{\{\s*venue_name\s*\}\}/g, 'Shangri-La Hotel Jakarta')
             .replace(/\{\{\s*track_name\s*\}\}/g, 'Sample Session')
             .replace(/\{\{\s*event_date\s*\}\}/g, '12 Agustus 2026')
             .replace(/\{\{\s*login_url\s*\}\}/g, window.location.origin + '/login')

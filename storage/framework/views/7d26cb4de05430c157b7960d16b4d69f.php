@@ -4,7 +4,7 @@
     <link rel="icon" type="image/png" href="<?php echo e(asset('img/metrodata.png')); ?>">
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Buat Template — <?php echo e(config('app.name')); ?></title>
+    <title>Create Template — <?php echo e(config('app.name')); ?></title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
@@ -24,7 +24,7 @@
         <?php echo csrf_field(); ?>
         <div class="flex gap-4 mb-4">
             <div class="flex-1"><label class="block text-sm font-semibold text-gray-700 mb-1.5">Template Name</label><input type="text" name="name" value="<?php echo e(old('name')); ?>" required class="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition"></div>
-            <div class="w-48"><label class="block text-sm font-semibold text-gray-700 mb-1.5">Tipe</label><select name="type" required class="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition"><option value="">-- Pilih --</option><?php $__currentLoopData = $types; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $key => $info): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?><option value="<?php echo e($key); ?>" <?php echo e(old('type', $presetType ?? '')===$key?'selected':''); ?>><?php echo e($info['label']); ?></option><?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?></select></div>
+            <div class="w-48"><label class="block text-sm font-semibold text-gray-700 mb-1.5">Type</label><select name="type" required class="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition"><option value="">-- Select --</option><?php $__currentLoopData = $types; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $key => $info): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?><option value="<?php echo e($key); ?>" <?php echo e(old('type', $presetType ?? '')===$key?'selected':''); ?>><?php echo e($info['label']); ?></option><?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?></select></div>
             <div class="flex-1"><label class="block text-sm font-semibold text-gray-700 mb-1.5">Subject Email</label><input type="text" name="subject" value="<?php echo e(old('subject', $presetSubject ?? '')); ?>" required class="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition"></div>
         </div>
         <div class="flex gap-4">
@@ -33,7 +33,7 @@
                 <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
                     <div class="flex items-center justify-between mb-2">
                         <label class="text-sm font-semibold text-gray-700">HTML Content</label>
-                        <div class="text-xs text-gray-400">Placeholder: <code class="bg-gray-100 px-1 py-0.5 rounded text-indigo-600">{{ name }}</code> <code class="bg-gray-100 px-1 py-0.5 rounded text-indigo-600">{{ email }}</code> <code class="bg-gray-100 px-1 py-0.5 rounded text-indigo-600">{{ password }}</code> <code class="bg-gray-100 px-1 py-0.5 rounded text-indigo-600">{{ admin_notes }}</code></div>
+                        <div class="text-xs text-gray-400">Placeholder: <code class="bg-gray-100 px-1 py-0.5 rounded text-indigo-600">{{ name }}</code> <code class="bg-gray-100 px-1 py-0.5 rounded text-indigo-600">{{ email }}</code> <code class="bg-gray-100 px-1 py-0.5 rounded text-indigo-600">{{ password }}</code> <code class="bg-gray-100 px-1 py-0.5 rounded text-indigo-600">{{ status }}</code> <code class="bg-gray-100 px-1 py-0.5 rounded text-indigo-600">{{ admin_notes }}</code> <code class="bg-gray-100 px-1 py-0.5 rounded text-indigo-600">{{ workshop_name }}</code> <code class="bg-gray-100 px-1 py-0.5 rounded text-indigo-600">{{ workshop_title }}</code> <code class="bg-gray-100 px-1 py-0.5 rounded text-indigo-600">{{ workshop_room }}</code> <code class="bg-gray-100 px-1 py-0.5 rounded text-indigo-600">{{ workshop_date }}</code> <code class="bg-gray-100 px-1 py-0.5 rounded text-indigo-600">{{ workshop_time }}</code> <code class="bg-gray-100 px-1 py-0.5 rounded text-indigo-600">{{ workshop_capacity }}</code> <code class="bg-gray-100 px-1 py-0.5 rounded text-indigo-600">{{ venue_name }}</code> <code class="bg-gray-100 px-1 py-0.5 rounded text-indigo-600">{{ qr_code }}</code></div>
                     </div>
                     <textarea name="html_content" id="htmlEditor" rows="24" required class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm font-mono focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition resize-y leading-relaxed"><?php echo e(old('html_content', $presetHtml ?? '')); ?></textarea>
                 </div>
@@ -74,10 +74,18 @@
             .replace(/\{\{\s*status\s*\}\}/g, 'approved')
             .replace(/\{\{\s*unique_code\s*\}\}/g, '100724080000')
             .replace(/\{\{\s*admin_notes\s*\}\}/g, 'Sample note')
-            .replace(/\{\{\s*workshop_name\s*\}\}/g, 'Sample Workshop')
+            .replace(/\{\{\s*workshop_name\s*\}\}/g, 'Sample Workshop Session')
+            .replace(/\{\{\s*workshop_title\s*\}\}/g, 'Sample Workshop Topic')
+            .replace(/\{\{\s*workshop_room\s*\}\}/g, 'Meeting Room A')
+            .replace(/\{\{\s*workshop_date\s*\}\}/g, 'Thursday, 20 August 2026')
+            .replace(/\{\{\s*workshop_time\s*\}\}/g, '09:00 – 12:00')
+            .replace(/\{\{\s*workshop_capacity\s*\}\}/g, '35')
+            .replace(/\{\{\s*venue_name\s*\}\}/g, 'Shangri-La Hotel Jakarta')
             .replace(/\{\{\s*track_name\s*\}\}/g, 'Sample Session')
-            .replace(/\{\{\s*event_date\s*\}\}/g, '12 Agustus 2026')
-            .replace(/\{\{\s*login_url\s*\}\}/g, window.location.origin + '/login');
+            .replace(/\{\{\s*event_date\s*\}\}/g, '12 August 2026')
+            .replace(/\{\{\s*login_url\s*\}\}/g, window.location.origin + '/login')
+            .replace(/\{\{\s*qr_code\s*\}\}/g, '<img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=sample" alt="QR" style="width:200px;height:200px;display:block;margin:16px auto;">')
+            .replace(/\{\{\s*qr_checkin_url\s*\}\}/g, window.location.origin + '/login');
 
         doc.open();
         doc.write(html);

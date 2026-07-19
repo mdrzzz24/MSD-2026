@@ -114,7 +114,7 @@
                             </div>
                             <div class="bg-gray-50 rounded-xl p-4">
                                 <dt class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Registered At</dt>
-                                <dd class="text-sm font-medium text-gray-900"><?php echo e($registrant->created_at->format('d M Y, H:i')); ?></dd>
+                                <dd class="text-sm font-medium text-gray-900"><?php echo e($registrant->created_at->copy()->addHours(7)->format('d M Y, H:i')); ?></dd>
                             </div>
                             <?php if($registrant->first_name || $registrant->last_name): ?>
                             <div class="bg-gray-50 rounded-xl p-4">
@@ -246,11 +246,11 @@
                             </div>
                             <div>
                                 <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Registered</p>
-                                <p class="text-sm font-bold text-gray-900"><?php echo e($registrant->created_at->format('d M Y, H:i')); ?></p>
+                                <p class="text-sm font-bold text-gray-900"><?php echo e($registrant->created_at->copy()->addHours(7)->format('d M Y, H:i')); ?></p>
                             </div>
                             <div>
                                 <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Processed</p>
-                                <p class="text-sm font-bold text-gray-900"><?php echo e($registrant->processed_at?->format('d M Y, H:i') ?? '—'); ?></p>
+                                <p class="text-sm font-bold text-gray-900"><?php echo e($registrant->processed_at?->copy()->addHours(7)->format('d M Y, H:i') ?? '—'); ?></p>
                                 <?php if($registrant->status === 'approved' && $registrant->approver): ?>
                                     <p class="text-xs text-gray-500 mt-0.5">by <?php echo e($registrant->approver->name); ?></p>
                                 <?php elseif($registrant->status === 'rejected' && $registrant->rejecter): ?>
@@ -285,11 +285,20 @@
                                                 <?php endif; ?>
                                                 <span class="text-xs font-medium <?php echo e($et['sent'] ? 'text-emerald-800' : 'text-gray-500'); ?>"><?php echo e($et['label']); ?></span>
                                             </div>
-                                            <?php if($et['sent']): ?>
-                                                <span class="text-xs font-medium text-emerald-600 bg-emerald-100 px-2 py-0.5 rounded-full flex-shrink-0">Sent</span>
-                                            <?php else: ?>
-                                                <span class="text-xs font-medium text-gray-400 bg-gray-200 px-2 py-0.5 rounded-full flex-shrink-0">Not sent</span>
-                                            <?php endif; ?>
+                                            <div class="flex items-center gap-2 flex-shrink-0">
+                                                <?php if($et['sent']): ?>
+                                                    <span class="text-xs font-medium text-emerald-600 bg-emerald-100 px-2 py-0.5 rounded-full">Sent</span>
+                                                <?php else: ?>
+                                                    <form action="<?php echo e(route('admin.registrants.send-email', [$registrant, $et['type']])); ?>" method="POST" class="inline"
+                                                          onsubmit="return confirm('Send <?php echo e(addslashes($et['label'])); ?> email to <?php echo e(addslashes($registrant->display_name)); ?>?')">
+                                                        <?php echo csrf_field(); ?>
+                                                        <button type="submit"
+                                                                class="text-xs font-medium px-2.5 py-1 rounded-lg bg-indigo-100 text-indigo-700 hover:bg-indigo-200 transition">
+                                                            Send Now
+                                                        </button>
+                                                    </form>
+                                                <?php endif; ?>
+                                            </div>
                                         </div>
                                     <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                                 </div>
@@ -318,17 +327,27 @@
                                                     <p class="text-xs text-gray-500 mt-0.5">
                                                         <span class="capitalize"><?php echo e(str_replace('_', ' ', $log->template_type)); ?></span>
                                                         &middot;
-                                                        <?php echo e($log->sent_at?->format('d M Y, H:i') ?? '—'); ?>
+                                                        <?php echo e($log->sent_at?->copy()->addHours(7)->format('d M Y, H:i:s') ?? '—'); ?>
 
                                                     </p>
                                                     <?php if($log->status === 'failed' && $log->error_message): ?>
                                                         <p class="text-xs text-red-500 mt-0.5 truncate"><?php echo e($log->error_message); ?></p>
                                                     <?php endif; ?>
                                                 </div>
-                                                <span class="text-xs font-medium px-2 py-0.5 rounded-full flex-shrink-0 <?php echo e($log->status === 'sent' ? 'bg-emerald-100 text-emerald-700' : ($log->status === 'failed' ? 'bg-red-100 text-red-600' : ($log->status === 'bounced' ? 'bg-orange-100 text-orange-700' : 'bg-gray-100 text-gray-600'))); ?>">
-                                                    <?php echo e(ucfirst($log->status)); ?>
+                                                <div class="flex items-center gap-1.5 flex-shrink-0">
+                                                    <span class="text-xs font-medium px-2 py-0.5 rounded-full <?php echo e($log->status === 'sent' ? 'bg-emerald-100 text-emerald-700' : ($log->status === 'failed' ? 'bg-red-100 text-red-600' : ($log->status === 'bounced' ? 'bg-orange-100 text-orange-700' : 'bg-gray-100 text-gray-600'))); ?>">
+                                                        <?php echo e(ucfirst($log->status)); ?>
 
-                                                </span>
+                                                    </span>
+                                                    <form action="<?php echo e(route('admin.email-logs.resend', $log)); ?>" method="POST" class="inline"
+                                                          onsubmit="return confirm('Resend this email?')">
+                                                        <?php echo csrf_field(); ?>
+                                                        <button type="submit" class="text-xs font-medium px-2 py-0.5 rounded-lg bg-indigo-100 text-indigo-700 hover:bg-indigo-200 transition"
+                                                                title="Resend">
+                                                            ↻
+                                                        </button>
+                                                    </form>
+                                                </div>
                                             </div>
                                         <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                                     </div>
@@ -356,7 +375,7 @@
                                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/>
                                         </svg>
-                                        <?php echo e($w->title); ?>
+                                        <?php echo e($w->name ?: $w->title); ?>
 
                                         <?php $pw = $w->pivot; ?>
                                         <?php if($pw): ?>
@@ -423,7 +442,7 @@
                             </a>
                             <?php if($registrant->checked_in_at): ?>
                                 <p class="text-xs text-emerald-600 font-semibold mt-2">
-                                    ✓ Checked in at <?php echo e($registrant->checked_in_at->format('H:i, d M Y')); ?>
+                                    ✓ Checked in at <?php echo e($registrant->checked_in_at->copy()->addHours(7)->format('H:i, d M Y')); ?>
 
                                 </p>
                             <?php endif; ?>

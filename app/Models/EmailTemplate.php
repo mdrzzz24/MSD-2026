@@ -18,6 +18,7 @@ class EmailTemplate extends Model
     public const TYPE_TRACK_APPROVAL      = 'track_approval';
     public const TYPE_TRACK_REJECTION     = 'track_rejection';
     public const TYPE_REMINDER            = 'reminder';
+    public const TYPE_WORKSHOP_REMINDER    = 'workshop_reminder';
 
     /**
      * All available template types with labels and descriptions.
@@ -49,6 +50,11 @@ class EmailTemplate extends Model
                 'label'       => 'Workshop Rejection',
                 'description' => 'Dikirim saat admin menolak pendaftaran workshop.',
                 'color'       => 'rose',
+            ],
+            self::TYPE_WORKSHOP_REMINDER => [
+                'label'       => 'Workshop Gentle Reminder',
+                'description' => 'Pengingat untuk menghadiri workshop (dikirim manual oleh admin).',
+                'color'       => 'fuchsia',
             ],
             self::TYPE_TRACK_APPROVAL => [
                 'label'       => 'Track / Session Approval',
@@ -130,11 +136,45 @@ class EmailTemplate extends Model
     }
 
     /**
+     * Replace placeholders in subject string.
+     *
+     * Supported placeholders:
+     *   {{ name }}, {{ email }}, {{ status }}, {{ password }},
+     *   {{ unique_code }}, {{ admin_notes }}, {{ workshop_name }},
+     *   {{ workshop_title }}, {{ workshop_room }}, {{ workshop_date }},
+     *   {{ workshop_time }}, {{ workshop_capacity }}, {{ venue_name }},
+     *   {{ track_name }}, {{ event_date }}, {{ login_url }},
+     *   {{ qr_code }}, {{ qr_checkin_url }}
+     */
+    public function renderSubject(array $data = []): string
+    {
+        $subject = $this->subject;
+
+        $defaults = [
+            'event_date' => '12 Agustus 2026',
+            'login_url'  => route('registrant.login'),
+            'venue_name' => 'Shangri-La Hotel Jakarta',
+            'qr_code'    => '',
+            'qr_checkin_url' => '',
+        ];
+        $data = array_merge($defaults, $data);
+
+        foreach ($data as $key => $value) {
+            $subject = str_replace('{{ ' . $key . ' }}', (string) $value, $subject);
+            $subject = str_replace('{{' . $key . '}}', (string) $value, $subject);
+        }
+
+        return $subject;
+    }
+
+    /**
      * Replace placeholders with actual data.
      *
      * Supported placeholders:
      *   {{ name }}, {{ email }}, {{ status }}, {{ password }},
      *   {{ unique_code }}, {{ admin_notes }}, {{ workshop_name }},
+     *   {{ workshop_title }}, {{ workshop_room }}, {{ workshop_date }},
+     *   {{ workshop_time }}, {{ workshop_capacity }}, {{ venue_name }},
      *   {{ track_name }}, {{ event_date }}, {{ login_url }},
      *   {{ qr_code }}, {{ qr_checkin_url }}
      */
@@ -146,6 +186,7 @@ class EmailTemplate extends Model
         $defaults = [
             'event_date' => '12 Agustus 2026',
             'login_url'  => route('registrant.login'),
+            'venue_name' => 'Shangri-La Hotel Jakarta',
             'qr_code'    => '',
             'qr_checkin_url' => '',
         ];

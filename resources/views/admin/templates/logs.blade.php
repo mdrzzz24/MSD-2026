@@ -52,7 +52,7 @@
                             @forelse ($logs as $log)
                                 <tr class="hover:bg-gray-50/50 transition cursor-pointer" onclick="showEmail({{ $log->id }})">
                                     <td class="px-5 py-3.5 whitespace-nowrap">
-                                        <p class="text-sm font-medium text-gray-900">{{ $log->sent_at->format('d M Y, H:i') }}</p>
+                                        <p class="text-sm font-medium text-gray-900">{{ $log->sent_at->format('d M Y, H:i:s') }}</p>
                                         <p class="text-xs text-gray-400">{{ $log->sent_at->diffForHumans() }}</p>
                                     </td>
                                     <td class="px-5 py-3.5">

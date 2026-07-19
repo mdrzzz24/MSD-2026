@@ -59,7 +59,7 @@
                         @foreach ($workshops as $w)
                             <tr class="hover:bg-gray-50/50 transition">
                                 <td class="px-5 py-4">
-                                    <p class="text-sm font-semibold text-gray-900">{{ $w->title }}</p>
+                                    <p class="text-sm font-semibold text-gray-900">{{ $w->name ?: $w->title }}</p>
                                     @if (!$w->registration_open)
                                         <span class="inline-flex items-center gap-1 mt-1 px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-600">Registration Closed</span>
                                     @endif

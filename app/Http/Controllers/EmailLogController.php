@@ -84,6 +84,32 @@ class EmailLogController extends Controller
     }
 
     /**
+     * Resend an email based on an existing log entry.
+     */
+    public function resend(EmailLog $emailLog)
+    {
+        if (!auth()->user()->hasPermission('email_templates')) {
+            return redirect()->route('admin.dashboard')
+                ->with('error', 'You do not have permission to resend emails.');
+        }
+
+        $result = EmailService::resend($emailLog);
+
+        if (!$result) {
+            return redirect()->back()
+                ->with('error', 'Failed to resend email: registrant not found.');
+        }
+
+        if ($result->status === 'sent') {
+            return redirect()->back()
+                ->with('success', 'Email successfully resent to <strong>' . e($result->recipient_name) . '</strong>.');
+        }
+
+        return redirect()->back()
+            ->with('error', 'Failed to resend email: ' . e($result->error_message ?? 'Unknown error'));
+    }
+
+    /**
      * Show send reminder form with list of approved registrants.
      */
     public function reminderForm()

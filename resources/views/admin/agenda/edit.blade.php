@@ -95,11 +95,12 @@
                         <option value="">— None —</option>
                         <option value="__new__" style="font-weight:700;color:#4f46e5;">+ Create New Workshop</option>
                         @foreach ($workshopList as $ws)
-                            <option value="{{ $ws->id }}" data-title="{{ e($ws->title) }}" data-desc="{{ e($ws->description) }}" data-room="{{ e($ws->room ?? '') }}" data-start="{{ $ws->start_time }}" data-end="{{ $ws->end_time }}" data-capacity="{{ $ws->capacity }}" {{ old('workshop_id', $agendum->workshop_id)==$ws->id?'selected':'' }}>{{ $ws->title }}</option>
+                            <option value="{{ $ws->id }}" data-title="{{ e($ws->title) }}" data-desc="{{ e($ws->description) }}" data-room="{{ e($ws->room ?? '') }}" data-start="{{ $ws->start_time }}" data-end="{{ $ws->end_time }}" data-capacity="{{ $ws->capacity }}" {{ old('workshop_id', $agendum->workshop_id)==$ws->id?'selected':'' }}>{{ $ws->name ?: $ws->title }}</option>
                         @endforeach
                     </select>
                     <div id="newWorkshopFields" class="hidden mt-2 p-3 bg-indigo-50 border border-indigo-200 rounded-xl space-y-2">
                         <p class="text-xs font-semibold text-indigo-700">Create New Workshop</p>
+                        <input type="text" name="new_workshop_name" placeholder="Workshop name (appears in agenda)..." class="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500/20">
                         <input type="text" name="new_workshop_title" placeholder="Workshop title..." class="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500/20">
                         <textarea name="new_workshop_desc" rows="2" placeholder="Workshop description..." class="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500/20"></textarea>
                     </div>

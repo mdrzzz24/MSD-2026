@@ -14,7 +14,7 @@ class AdminAgendaController extends Controller
 {
     public function index()
     {
-        $items = AgendaItem::ordered()->get();
+        $items = AgendaItem::ordered()->with('workshop')->get();
         $rooms = Room::ordered()->get();
         $timeSlots = TimeSlot::ordered()->get();
 
@@ -32,7 +32,7 @@ class AdminAgendaController extends Controller
     {
         $rooms = Room::ordered()->get();
         $tracks = \App\Models\Track::orderBy('title')->get(['id', 'title', 'description']);
-        $workshops = \App\Models\Workshop::orderBy('title')->get(['id', 'title', 'description', 'room', 'start_time', 'end_time', 'capacity', 'registration_open']);
+        $workshops = \App\Models\Workshop::orderBy('title')->get(['id', 'name', 'title', 'description', 'room', 'start_time', 'end_time', 'capacity', 'registration_open']);
         return view('admin.agenda.create', compact('rooms', 'tracks', 'workshops'));
     }
 
@@ -82,6 +82,7 @@ class AdminAgendaController extends Controller
         // Handle inline workshop creation
         if ($request->input('workshop_id') === '__new__' && $request->input('new_workshop_title')) {
             $workshop = \App\Models\Workshop::create([
+                'name' => $request->input('new_workshop_name') ?: $request->input('new_workshop_title'),
                 'title' => $request->input('new_workshop_title'),
                 'description' => $request->input('new_workshop_desc'),
                 'registration_open' => true,
@@ -171,6 +172,7 @@ class AdminAgendaController extends Controller
         // Handle inline workshop creation
         if ($request->input('workshop_id') === '__new__' && $request->input('new_workshop_title')) {
             $workshop = \App\Models\Workshop::create([
+                'name' => $request->input('new_workshop_name') ?: $request->input('new_workshop_title'),
                 'title' => $request->input('new_workshop_title'),
                 'description' => $request->input('new_workshop_desc'),
                 'registration_open' => true,
