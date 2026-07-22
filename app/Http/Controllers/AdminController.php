@@ -44,7 +44,8 @@ class AdminController extends Controller
             DB::raw('DATE(created_at) as date'),
             DB::raw('COUNT(*) as total'),
             DB::raw("SUM(CASE WHEN status = 'approved' THEN 1 ELSE 0 END) as approved_count"),
-            DB::raw("SUM(CASE WHEN status = 'pending' THEN 1 ELSE 0 END) as pending_count")
+            DB::raw("SUM(CASE WHEN status = 'pending' THEN 1 ELSE 0 END) as pending_count"),
+            DB::raw("SUM(CASE WHEN status = 'rejected' THEN 1 ELSE 0 END) as rejected_count")
         )
         ->where('created_at', '>=', now()->subDays(14))
         ->groupBy('date')
@@ -61,12 +62,14 @@ class AdminController extends Controller
             $count = $stats ? (int) $stats->total : 0;
             $approvedCount = $stats ? (int) $stats->approved_count : 0;
             $pendingCount = $stats ? (int) $stats->pending_count : 0;
+            $rejectedCount = $stats ? (int) $stats->rejected_count : 0;
             $chartData[] = [
                 'day'      => $day,
                 'date'     => $date,
                 'total'    => $count,
                 'approved' => $approvedCount,
                 'pending'  => $pendingCount,
+                'rejected' => $rejectedCount,
             ];
             if ($count > $maxDaily) $maxDaily = $count;
         }
