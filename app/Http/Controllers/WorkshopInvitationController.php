@@ -154,13 +154,13 @@ class WorkshopInvitationController extends Controller
 
         $request->validate([
             'email' => ['nullable', 'email', 'max:255'],
-            'max_uses' => ['nullable', 'integer', 'min:1', 'max:100'],
+            'max_uses' => ['nullable', 'integer', 'min:0'],
         ]);
 
         $invitation = WorkshopInvitation::create([
             'workshop_id' => $workshop->id,
             'email' => $request->input('email'),
-            'max_uses' => $request->input('max_uses', 1),
+            'max_uses' => $request->input('max_uses', 0),
             'is_active' => true,
         ]);
 
@@ -194,5 +194,29 @@ class WorkshopInvitationController extends Controller
         $invitation->update(['is_active' => !$invitation->is_active]);
 
         return back()->with('success', 'Invitation ' . ($invitation->is_active ? 'activated' : 'deactivated') . '.');
+    }
+
+    /**
+     * Admin: Update max_uses for an existing invitation.
+     */
+    public function updateMaxUses(Request $request, WorkshopInvitation $invitation)
+    {
+        if (!Auth::user()->hasPermission('workshops')) {
+            return back()->with('error', 'You do not have permission to manage invitations.');
+        }
+
+        $request->validate([
+            'max_uses' => ['required', 'integer', 'min:0'],
+        ]);
+
+        $oldValue = $invitation->max_uses;
+        $newValue = $request->input('max_uses');
+
+        $invitation->update(['max_uses' => $newValue]);
+
+        $oldLabel = $oldValue === 0 ? 'Unlimited' : $oldValue;
+        $newLabel = $newValue === 0 ? 'Unlimited' : $newValue;
+
+        return back()->with('success', "Invitation limit updated from {$oldLabel} to {$newLabel}.");
     }
 }

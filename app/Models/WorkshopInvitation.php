@@ -38,7 +38,16 @@ class WorkshopInvitation extends Model
 
     public function isValid(): bool
     {
-        return $this->is_active && $this->use_count < $this->max_uses;
+        if (!$this->is_active) {
+            return false;
+        }
+        // max_uses = 0 berarti unlimited
+        return $this->max_uses === 0 || $this->use_count < $this->max_uses;
+    }
+
+    public function isUnlimited(): bool
+    {
+        return $this->max_uses === 0;
     }
 
     public function incrementUse(): void

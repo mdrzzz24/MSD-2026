@@ -37,7 +37,8 @@
             </div>
             <div class="w-32">
                 <label class="block text-xs font-semibold text-gray-600 mb-1">Max Uses</label>
-                <input type="number" name="max_uses" value="1" min="1" max="100" class="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 focus:bg-white transition">
+                <input type="number" name="max_uses" value="0" min="0" placeholder="0 = Unlimited" class="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 focus:bg-white transition">
+                <p class="text-xs text-gray-400 mt-1">0 = tanpa batas</p>
             </div>
             <button type="submit" class="px-5 py-2.5 bg-indigo-600 text-white text-sm font-semibold rounded-xl hover:bg-indigo-700 shadow-sm transition">Generate</button>
         </form>
@@ -73,9 +74,26 @@
                                 </div>
                             </td>
                             <td class="px-5 py-4 text-sm text-gray-600">{{ $inv->email ?? '—' }}</td>
-                            <td class="px-5 py-4 text-sm text-center text-gray-600">{{ $inv->use_count }}/{{ $inv->max_uses }}</td>
+                            <td class="px-5 py-4 text-sm text-center text-gray-600">
+                                <span class="inline-flex items-center gap-1">
+                                    <span>{{ $inv->use_count }}/{{ $inv->isUnlimited() ? '∞' : $inv->max_uses }}</span>
+                                    <button onclick="toggleEditLimit({{ $inv->id }})" class="p-1 text-gray-400 hover:text-indigo-600 transition" title="Change limit">
+                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
+                                    </button>
+                                </span>
+                                {{-- Inline edit form --}}
+                                <form id="edit-limit-form-{{ $inv->id }}" action="{{ route('admin.workshops.invitations.update-max-uses', $inv) }}" method="POST" class="hidden mt-1">
+                                    @csrf
+                                    <div class="flex items-center gap-1">
+                                        <input type="number" name="max_uses" value="{{ $inv->max_uses }}" min="0"
+                                               class="w-16 px-2 py-1 text-xs border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-indigo-500">
+                                        <button type="submit" class="px-2 py-1 text-xs font-medium bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition">Save</button>
+                                        <button type="button" onclick="toggleEditLimit({{ $inv->id }})" class="px-2 py-1 text-xs font-medium text-gray-500 hover:text-gray-700 transition">Cancel</button>
+                                    </div>
+                                </form>
+                            </td>
                             <td class="px-5 py-4 text-center">
-                                @if ($inv->is_active && $inv->use_count < $inv->max_uses)
+                                @if ($inv->is_active && ($inv->isUnlimited() || $inv->use_count < $inv->max_uses))
                                     <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
                                         <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Active
                                     </span>
@@ -130,6 +148,11 @@ function copyLink(btn, url) {
     }).catch(function() {
         alert('Failed to copy link');
     });
+}
+
+function toggleEditLimit(id) {
+    var form = document.getElementById('edit-limit-form-' + id);
+    form.classList.toggle('hidden');
 }
 </script>
 </body>

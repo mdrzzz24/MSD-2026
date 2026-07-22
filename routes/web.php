@@ -173,6 +173,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('/workshops/{workshop}/invitations', [App\Http\Controllers\WorkshopInvitationController::class, 'index'])->name('workshops.invitations');
     Route::post('/workshops/{workshop}/invitations/generate', [App\Http\Controllers\WorkshopInvitationController::class, 'generate'])->name('workshops.invitations.generate');
     Route::post('/invitations/{invitation}/toggle', [App\Http\Controllers\WorkshopInvitationController::class, 'toggle'])->name('workshops.invitations.toggle');
+    Route::post('/invitations/{invitation}/update-max-uses', [App\Http\Controllers\WorkshopInvitationController::class, 'updateMaxUses'])->name('workshops.invitations.update-max-uses');
     // Agenda management
     Route::get('/agenda', [AdminAgendaController::class, 'index'])->name('agenda.index');
     Route::get('/agenda/create', [AdminAgendaController::class, 'create'])->name('agenda.create');
