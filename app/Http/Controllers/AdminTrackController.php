@@ -23,8 +23,9 @@ class AdminTrackController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
+            'name'        => ['nullable', 'string', 'max:255'],
             'title'       => ['required', 'string', 'max:255'],
-            'description' => ['nullable', 'string', 'max:2000'],
+            'description' => ['nullable', 'string', 'max:65535'],
         ]);
         Track::create($validated + ['is_active' => true]);
         return back()->with('success', 'Track created.');
@@ -33,8 +34,9 @@ class AdminTrackController extends Controller
     public function update(Request $request, Track $track)
     {
         $validated = $request->validate([
+            'name'        => ['nullable', 'string', 'max:255'],
             'title'       => ['required', 'string', 'max:255'],
-            'description' => ['nullable', 'string', 'max:2000'],
+            'description' => ['nullable', 'string', 'max:65535'],
         ]);
         $track->update($validated);
 

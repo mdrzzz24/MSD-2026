@@ -16,7 +16,7 @@
     <div class="flex items-center justify-between h-16 px-4 sm:px-6 lg:px-8">
         <div>
             <h1 class="text-lg font-bold text-gray-900">
-                @if(isset($track)) Track Registrants: {{ $track->title }} @else Agenda Registrants @endif
+                @if(isset($track)) Track Registrants: {{ $track->name ?: $track->title }} @else Agenda Registrants @endif
             </h1>
             <p class="text-xs text-gray-500">
                 @if(isset($track)) Agenda sessions linked to this track @else Track & Workshop registrations from agenda @endif

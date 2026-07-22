@@ -3,7 +3,7 @@
 <head>
     <link rel="icon" type="image/png" href="{{ asset('img/metrodata.png') }}">
     <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Registrants: {{ $track->title }} — {{ config('app.name') }}</title>
+    <title>Registrants: {{ $track->name ?: $track->title }} — {{ config('app.name') }}</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <script>tailwind.config={theme:{extend:{fontFamily:{sans:['Inter','system-ui','sans-serif']}}}}</script>
@@ -16,7 +16,7 @@
     <div class="flex items-center h-16 px-4 sm:px-6 lg:px-8 gap-4">
         <a href="{{ route('admin.tracks.index') }}" class="inline-flex items-center gap-1.5 text-sm text-indigo-600 hover:text-indigo-800 font-medium">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>Tracks</a>
-        <span class="text-gray-300">/</span><h1 class="text-lg font-bold text-gray-900 truncate">{{ $track->title }}</h1>
+        <span class="text-gray-300">/</span><h1 class="text-lg font-bold text-gray-900 truncate">{{ $track->name ?: $track->title }}</h1>
     </div>
 </header>
 <div class="p-4 sm:p-6 lg:p-8">

@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <link rel="icon" type="image/png" href="{{ asset('img/metrodata.png') }}">
+    <link rel="icon" type="image/png" href="<?php echo e(asset('img/metrodata.png')); ?>">
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Manage Tracks — {{ config('app.name') }}</title>
+    <title>Manage Tracks — <?php echo e(config('app.name')); ?></title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
@@ -13,28 +13,28 @@
 </head>
 <body class="bg-gray-50 font-sans antialiased">
 <div class="flex min-h-screen">
-@include('admin.partials.sidebar')
+<?php echo $__env->make('admin.partials.sidebar', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
 <main class="flex-1 lg:ml-64">
 <header class="sticky top-0 z-30 bg-white/80 backdrop-blur border-b border-gray-200">
     <div class="flex items-center justify-between h-16 px-4 sm:px-6 lg:px-8">
         <div><h1 class="text-lg font-bold text-gray-900">Manage Tracks</h1><p class="text-xs text-gray-500">Manage event tracks</p></div>
         <div class="flex items-center gap-2">
-            @if (Auth::user()->canWrite())
+            <?php if(Auth::user()->canWrite()): ?>
             <button onclick="toggleAddForm()"
                     class="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-medium bg-indigo-500 text-white rounded-xl hover:bg-indigo-600 shadow-sm shadow-indigo-200 transition">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
                 Add Track
             </button>
-            @endif
+            <?php endif; ?>
         </div>
     </div>
 </header>
 <div class="p-4 sm:p-6 lg:p-8">
-    @include('admin.partials.notification')
+    <?php echo $__env->make('admin.partials.notification', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
 
     <div id="addForm" class="hidden bg-white rounded-2xl border border-gray-100 shadow-sm p-6 mb-6">
-        <form action="{{ route('admin.tracks.store') }}" method="POST" class="space-y-3">
-            @csrf
+        <form action="<?php echo e(route('admin.tracks.store')); ?>" method="POST" class="space-y-3">
+            <?php echo csrf_field(); ?>
             <div><label class="block text-xs font-semibold text-gray-700 mb-1">Track Name</label><input type="text" name="name" placeholder="e.g. Track Session 1" class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"></div>
             <div><label class="block text-xs font-semibold text-gray-700 mb-1">Track Title *</label><input type="text" name="title" required class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"></div>
             <div><label class="block text-xs font-semibold text-gray-700 mb-1">Description <span class="text-xs text-gray-400 font-normal">(HTML supported)</span></label><textarea name="description" id="addDesc" rows="4" class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 focus:bg-white transition"></textarea></div>
@@ -47,72 +47,73 @@
             <table class="w-full">
                 <thead><tr class="bg-gray-50/80">
                     <th class="px-5 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase">Track</th>
-                    @if (Auth::user()->canWrite())
+                    <?php if(Auth::user()->canWrite()): ?>
                     <th class="px-5 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase hidden lg:table-cell">Linked Agenda</th>
-                    @endif
+                    <?php endif; ?>
                     <th class="px-5 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase hidden md:table-cell">Registrants</th>
                     <th class="px-5 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase">Status</th>
                     <th class="px-5 py-3.5 text-center text-xs font-semibold text-gray-500 uppercase">Actions</th>
                 </tr></thead>
                 <tbody class="divide-y divide-gray-50">
-                    @forelse ($tracks as $tr)
+                    <?php $__empty_1 = true; $__currentLoopData = $tracks; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $tr): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
                         <tr class="hover:bg-gray-50/50">
-                            <td class="px-5 py-4"><p class="text-sm font-semibold text-gray-900">{{ $tr->name ?: $tr->title }}</p>
-                                @if($tr->name)<p class="text-xs text-gray-500 mt-0.5">{{ $tr->title }}</p>@endif
-                                @if($tr->description)<p class="text-xs text-gray-400 mt-0.5 truncate max-w-[250px]">{{ $tr->description }}</p>@endif
+                            <td class="px-5 py-4"><p class="text-sm font-semibold text-gray-900"><?php echo e($tr->name ?: $tr->title); ?></p>
+                                <?php if($tr->name): ?><p class="text-xs text-gray-500 mt-0.5"><?php echo e($tr->title); ?></p><?php endif; ?>
+                                <?php if($tr->description): ?><p class="text-xs text-gray-400 mt-0.5 truncate max-w-[250px]"><?php echo e($tr->description); ?></p><?php endif; ?>
                             </td>
-                            @if (Auth::user()->canWrite())
+                            <?php if(Auth::user()->canWrite()): ?>
                             <td class="px-5 py-4 hidden lg:table-cell">
-                                @php $linked = $tr->agendaItems; @endphp
-                                @if ($linked->isNotEmpty())
-                                    @foreach ($linked as $ai)
-                                        <span class="inline-block px-2 py-0.5 rounded text-xs font-medium bg-indigo-50 text-indigo-700 mb-1">{{ $ai->title }}</span>
-                                    @endforeach
-                                @else
+                                <?php $linked = $tr->agendaItems; ?>
+                                <?php if($linked->isNotEmpty()): ?>
+                                    <?php $__currentLoopData = $linked; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $ai): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                        <span class="inline-block px-2 py-0.5 rounded text-xs font-medium bg-indigo-50 text-indigo-700 mb-1"><?php echo e($ai->title); ?></span>
+                                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                                <?php else: ?>
                                     <span class="text-xs text-gray-400">—</span>
-                                @endif
+                                <?php endif; ?>
                             </td>
-                            @endif
+                            <?php endif; ?>
                             <td class="px-5 py-4 hidden md:table-cell">
-                                @php $total = $tr->registrantsCount() + $tr->pendingCount() + $tr->rejectedCount(); @endphp
-                                @if ($total > 0)
+                                <?php $total = $tr->registrantsCount() + $tr->pendingCount() + $tr->rejectedCount(); ?>
+                                <?php if($total > 0): ?>
                                     <div class="flex items-center gap-2 text-xs">
-                                        <a href="{{ route('admin.tracks.registrants', $tr) }}" class="font-bold text-indigo-600 hover:text-indigo-800">{{ $total }} total</a>
-                                        <span class="text-emerald-600">✓{{ $tr->registrantsCount() }}</span>
-                                        <span class="text-amber-600">⏳{{ $tr->pendingCount() }}</span>
-                                        <span class="text-red-500">✕{{ $tr->rejectedCount() }}</span>
+                                        <a href="<?php echo e(route('admin.tracks.registrants', $tr)); ?>" class="font-bold text-indigo-600 hover:text-indigo-800"><?php echo e($total); ?> total</a>
+                                        <span class="text-emerald-600">✓<?php echo e($tr->registrantsCount()); ?></span>
+                                        <span class="text-amber-600">⏳<?php echo e($tr->pendingCount()); ?></span>
+                                        <span class="text-red-500">✕<?php echo e($tr->rejectedCount()); ?></span>
                                     </div>
-                                @else
+                                <?php else: ?>
                                     <span class="text-sm text-gray-400">—</span>
-                                @endif
+                                <?php endif; ?>
                             </td>
                             <td class="px-5 py-4">
-                                @if ($tr->is_active)
+                                <?php if($tr->is_active): ?>
                                     <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200"><span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Active</span>
-                                @else
+                                <?php else: ?>
                                     <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-gray-100 text-gray-500 border border-gray-200"><span class="w-1.5 h-1.5 rounded-full bg-gray-400"></span> Inactive</span>
-                                @endif
+                                <?php endif; ?>
                             </td>
                             <td class="px-5 py-4 text-center">
                                 <div class="flex justify-center gap-1.5">
-                                    <a href="{{ route('admin.tracks.registrants', $tr) }}" class="px-2.5 py-1.5 text-xs font-medium rounded-lg bg-indigo-50 text-indigo-700 hover:bg-indigo-100 transition">View</a>
-                                    @if (Auth::user()->canWrite())
-                                    <button onclick="editTrack({{ $tr->id }},'{{ e($tr->name) }}','{{ e($tr->title) }}','{{ e($tr->description) }}')" class="px-2.5 py-1.5 text-xs font-medium rounded-lg bg-amber-100 text-amber-700 hover:bg-amber-200 transition">Edit</button>
-                                    <form action="{{ route('admin.tracks.toggle', $tr) }}" method="POST">@csrf
-                                        <button class="px-2.5 py-1.5 text-xs font-medium rounded-lg {{ $tr->is_active ? 'bg-red-100 text-red-600 hover:bg-red-200' : 'bg-emerald-100 text-emerald-600 hover:bg-emerald-200' }} transition">
-                                            {{ $tr->is_active ? 'Disable' : 'Enable' }}
+                                    <a href="<?php echo e(route('admin.tracks.registrants', $tr)); ?>" class="px-2.5 py-1.5 text-xs font-medium rounded-lg bg-indigo-50 text-indigo-700 hover:bg-indigo-100 transition">View</a>
+                                    <?php if(Auth::user()->canWrite()): ?>
+                                    <button onclick="editTrack(<?php echo e($tr->id); ?>,'<?php echo e(e($tr->name)); ?>','<?php echo e(e($tr->title)); ?>','<?php echo e(e($tr->description)); ?>')" class="px-2.5 py-1.5 text-xs font-medium rounded-lg bg-amber-100 text-amber-700 hover:bg-amber-200 transition">Edit</button>
+                                    <form action="<?php echo e(route('admin.tracks.toggle', $tr)); ?>" method="POST"><?php echo csrf_field(); ?>
+                                        <button class="px-2.5 py-1.5 text-xs font-medium rounded-lg <?php echo e($tr->is_active ? 'bg-red-100 text-red-600 hover:bg-red-200' : 'bg-emerald-100 text-emerald-600 hover:bg-emerald-200'); ?> transition">
+                                            <?php echo e($tr->is_active ? 'Disable' : 'Enable'); ?>
+
                                         </button>
                                     </form>
-                                    <form action="{{ route('admin.tracks.destroy', $tr) }}" method="POST" onsubmit="return confirm('Delete track {{ $tr->title }}?')">@csrf @method('DELETE')
+                                    <form action="<?php echo e(route('admin.tracks.destroy', $tr)); ?>" method="POST" onsubmit="return confirm('Delete track <?php echo e($tr->title); ?>?')"><?php echo csrf_field(); ?> <?php echo method_field('DELETE'); ?>
                                         <button class="px-2.5 py-1.5 text-xs font-medium rounded-lg bg-gray-100 text-gray-600 hover:bg-gray-200 transition">Delete</button>
                                     </form>
-                                    @endif
+                                    <?php endif; ?>
                                 </div>
                             </td>
                         </tr>
-                    @empty
+                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
                         <tr><td colspan="5" class="px-5 py-16 text-center"><p class="text-gray-400 font-medium">No tracks yet</p><p class="text-xs text-gray-400">Create your first track</p></td></tr>
-                    @endforelse
+                    <?php endif; ?>
                 </tbody>
             </table>
         </div>
@@ -124,7 +125,7 @@
 <div id="editModal" style="display:none;position:fixed;inset:0;z-index:9999;align-items:center;justify-content:center;background:rgba(0,0,0,0.4);backdrop-filter:blur(4px);padding:16px;">
   <div style="background:#fff;border-radius:16px;width:100%;max-width:440px;padding:24px;">
     <h3 class="text-lg font-bold text-gray-900 mb-4">Edit Track</h3>
-    <form id="editForm" method="POST" class="space-y-3">@csrf @method('PUT')
+    <form id="editForm" method="POST" class="space-y-3"><?php echo csrf_field(); ?> <?php echo method_field('PUT'); ?>
         <div><label class="block text-xs font-semibold text-gray-700 mb-1">Track Name</label><input type="text" name="name" id="editName" placeholder="e.g. Track Session 1" class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"></div>
         <div><label class="block text-xs font-semibold text-gray-700 mb-1">Track Title *</label><input type="text" name="title" id="editTitle" required class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"></div>
         <div><label class="block text-xs font-semibold text-gray-700 mb-1">Description <span class="text-xs text-gray-400 font-normal">(HTML supported)</span></label><textarea name="description" id="editDesc" rows="4" class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 focus:bg-white transition"></textarea></div>
@@ -173,7 +174,7 @@ function editTrack(id,name,title,desc){
     if (window._editSn) {
         $('#editDesc').summernote('destroy');
     }
-    document.getElementById('editForm').action='{{ route('admin.tracks.update', ['track' => '__ID__']) }}'.replace('__ID__', id);
+    document.getElementById('editForm').action='<?php echo e(route('admin.tracks.update', ['track' => '__ID__'])); ?>'.replace('__ID__', id);
     document.getElementById('editName').value=name||'';
     document.getElementById('editTitle').value=title;
     document.getElementById('editModal').style.display='flex';
@@ -214,3 +215,4 @@ document.getElementById('editModal').addEventListener('click',function(e){if(e.t
 </script>
 </body>
 </html>
+<?php /**PATH C:\xampp\htdocs\2026-Testing\resources\views/admin/tracks/index.blade.php ENDPATH**/ ?>

@@ -25,7 +25,7 @@ use App\Models\AgendaItem;
 //     return view('home');
 // });
 Route::get('/', function () {
-    $agendaItems = AgendaItem::ordered()->with('speakers', 'workshop')->get();
+    $agendaItems = AgendaItem::ordered()->with('speakers', 'workshop', 'track')->get();
     $timeSlots = \App\Models\TimeSlot::ordered()->get();
     $rooms = \App\Models\Room::ordered()->get();
     // Group items by time slot key

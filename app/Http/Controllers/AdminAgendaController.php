@@ -31,7 +31,7 @@ class AdminAgendaController extends Controller
     public function create()
     {
         $rooms = Room::ordered()->get();
-        $tracks = \App\Models\Track::orderBy('title')->get(['id', 'title', 'description']);
+        $tracks = \App\Models\Track::orderBy('title')->get(['id', 'name', 'title', 'description']);
         $workshops = \App\Models\Workshop::orderBy('title')->get(['id', 'name', 'title', 'description', 'room', 'start_time', 'end_time', 'capacity', 'registration_open']);
         return view('admin.agenda.create', compact('rooms', 'tracks', 'workshops'));
     }
@@ -93,6 +93,7 @@ class AdminAgendaController extends Controller
         // Handle inline track creation
         if ($request->input('track_id') === '__new__' && $request->input('new_track_title')) {
             $track = \App\Models\Track::create([
+                'name' => $request->input('new_track_name') ?: null,
                 'title' => $request->input('new_track_title'),
                 'description' => $request->input('new_track_desc'),
                 'is_active' => true,
@@ -148,6 +149,7 @@ class AdminAgendaController extends Controller
             'track_id'          => ['nullable', 'string'],
             'new_workshop_title' => ['nullable', 'string', 'max:255'],
             'new_workshop_desc'  => ['nullable', 'string', 'max:2000'],
+            'new_track_name'   => ['nullable', 'string', 'max:255'],
             'new_track_title'   => ['nullable', 'string', 'max:255'],
             'new_track_desc'    => ['nullable', 'string', 'max:2000'],
             'speaker_ids'       => ['nullable', 'array'],
@@ -183,6 +185,7 @@ class AdminAgendaController extends Controller
         // Handle inline track creation
         if ($request->input('track_id') === '__new__' && $request->input('new_track_title')) {
             $track = \App\Models\Track::create([
+                'name' => $request->input('new_track_name') ?: null,
                 'title' => $request->input('new_track_title'),
                 'description' => $request->input('new_track_desc'),
                 'is_active' => true,
