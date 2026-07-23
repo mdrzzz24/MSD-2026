@@ -401,8 +401,23 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
 <script>
 // ── Agenda data for modal (available to all) ──
-window._agendaData = {!! json_encode($agendaItems->keyBy('id')->map(function ($item) {
+window._agendaData = {!! json_encode($agendaItems->keyBy('id')->map(function ($item) use ($timeSlots) {
+    // Calculate display end_time based on rowspan
+    $displayEndTime = $item->end_time;
+    if ($item->rowspan > 1 && $timeSlots->isNotEmpty()) {
+        $slotIndex = $timeSlots->search(function ($ts) use ($item) {
+            return $ts->start_time === $item->start_time && $ts->end_time === $item->end_time;
+        });
+        if ($slotIndex !== false) {
+            $lastSlotIndex = min($slotIndex + $item->rowspan - 1, $timeSlots->count() - 1);
+            $lastSlot = $timeSlots->get($lastSlotIndex);
+            if ($lastSlot) {
+                $displayEndTime = $lastSlot->end_time;
+            }
+        }
+    }
     return array_merge($item->toArray(), [
+        'display_end_time'     => $displayEndTime,
         'workshop_name'        => $item->workshop ? ($item->workshop->name ?: $item->workshop->title) : null,
         'workshop_title'       => $item->workshop ? $item->workshop->title : null,
         'workshop_description' => $item->workshop ? $item->workshop->description : null,
@@ -435,7 +450,7 @@ function openAgendaModal(id) {
         '<span>' + (item.date || '20 August 2026') + '</span>' +
         '<span style="color:#475569;">·</span>' +
         '<svg style="width:14px;height:14px;flex-shrink:0;" fill="none" stroke="#f472b6" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke-width="2"/><path stroke-width="2" d="M12 6v6l4 2"/></svg> ' +
-        '<span>' + (item.start_time || '').substring(0,5) + ' – ' + (item.end_time || '').substring(0,5) + '</span>';
+        '<span>' + (item.start_time || '').substring(0,5) + ' – ' + ((item.display_end_time || item.end_time) || '').substring(0,5) + '</span>';
     document.getElementById('modalRoom').innerHTML =
         '<svg style="width:14px;height:14px;flex-shrink:0;" fill="none" stroke="#94a3b8" viewBox="0 0 24 24"><path stroke-width="2" d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/><circle cx="12" cy="9" r="2.5" stroke-width="2"/></svg> ' +
         '<span>Shangri-La Hotel' + (item.room ? ', ' + item.room + ' Room' : '') + '</span>';
