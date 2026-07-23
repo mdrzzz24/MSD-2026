@@ -303,11 +303,22 @@ class AdminTrackController extends Controller
      */
     private function getTrackEmailExtraData($track, $agendaItem, $workshop = null): array
     {
-        $ai = $agendaItem ?? $track->agendaItems()->first();
         $ws = $workshop ?? $track->workshop;
-        $wsAi = $ws?->agendaItems()->first(); // workshop's first agenda item as fallback
 
-        // Priority: track's own time > track's agenda item > workshop's agenda item > workshop
+        // Find the best agenda item:
+        // 1. Passed agendaItem (from track page approval)
+        // 2. Track's directly linked agenda items
+        // 3. Workshop's agenda items that have track_id = this track
+        // 4. Workshop's first agenda item
+        // 5. null
+        $ai = $agendaItem
+            ?? $track->agendaItems()->first()
+            ?? $ws?->agendaItems()->where('track_id', $track->id)->first()
+            ?? $ws?->agendaItems()->first();
+
+        $wsAi = $ws?->agendaItems()->first();
+
+        // Priority: track's own time > best agenda item > workshop's first agenda item > workshop
         $start    = $track->start_time ?? $ai?->start_time ?? $wsAi?->start_time ?? $ws?->start_time;
         $end      = $track->end_time ?? $ai?->end_time ?? $wsAi?->end_time ?? $ws?->end_time;
         $room     = $ai?->room ?? $wsAi?->room ?? $ws?->room ?? '';
