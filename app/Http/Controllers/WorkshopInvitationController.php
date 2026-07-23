@@ -126,7 +126,7 @@ class WorkshopInvitationController extends Controller
             $this->syncWorkshopRegistration($registrant, $workshop, 'pending', $track->id);
 
             $invitation->incrementUse();
-            return redirect($redirectUrl)->with('success', 'Successfully registered for track <strong>' . e($track->name) . '</strong>. Waiting for admin approval.');
+            return redirect($redirectUrl)->with('success', 'Successfully registered. Waiting for admin approval.');
         }
 
         // ── Workshop-level registration (no track, fallback to original behavior) ──
