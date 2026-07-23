@@ -92,10 +92,21 @@
 
         <?php
             $agendaItem = $workshop->agendaItems->first();
-            $room = $workshop->room ?? $agendaItem?->room ?? '—';
-            $date = $workshop->date ?? $agendaItem?->date;
-            $start = $workshop->start_time ?? $agendaItem?->start_time;
-            $end = $workshop->end_time ?? $agendaItem?->end_time;
+            $trackAi = $track?->agendaItems->first();
+            $wsAi = $agendaItem;
+
+            // Priority for track-specific invitations: track's own time > track's agenda item > workshop's agenda item > workshop
+            if ($track) {
+                $start = $track->start_time ?? $trackAi?->start_time ?? $wsAi?->start_time ?? $workshop->start_time;
+                $end   = $track->end_time ?? $trackAi?->end_time ?? $wsAi?->end_time ?? $workshop->end_time;
+                $room  = $trackAi?->room ?? $wsAi?->room ?? $workshop->room ?? '—';
+                $date  = $trackAi?->date ?? $wsAi?->date ?? $workshop->date;
+            } else {
+                $room  = $workshop->room ?? $wsAi?->room ?? '—';
+                $date  = $workshop->date ?? $wsAi?->date;
+                $start = $workshop->start_time ?? $wsAi?->start_time;
+                $end   = $workshop->end_time ?? $wsAi?->end_time;
+            }
             $timeRange = '—';
             if ($start && $end) {
                 $timeRange = date('H:i', strtotime($start)) . ' – ' . date('H:i', strtotime($end));
