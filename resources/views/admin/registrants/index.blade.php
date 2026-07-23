@@ -327,26 +327,27 @@
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
                                                 </svg>
                                             </a>
-                                            @if ($r->isPending())
-                                                <form action="{{ route('admin.registrants.approve', $r) }}" method="POST" class="inline">
-                                                    @csrf
-                                                    <button type="submit"
-                                                            onclick="return confirm('Approve {{ addslashes($r->name) }}?')"
-                                                            title="Approve"
-                                                            class="p-1 text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition">
-                                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-                                                        </svg>
-                                                    </button>
-                                                </form>
-                                                <button onclick="openRejectModal('{{ $r->id }}', '{{ addslashes($r->name) }}')"
-                                                        title="Reject"
-                                                        class="p-1 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition">
+                                            {{-- Approve - always available --}}
+                                            <form action="{{ route('admin.registrants.approve', $r) }}" method="POST" class="inline">
+                                                @csrf
+                                                <button type="submit"
+                                                        onclick="return confirm('Approve {{ addslashes($r->name) }}?')"
+                                                        title="Approve"
+                                                        class="p-1 text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition">
                                                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
                                                     </svg>
                                                 </button>
-                                            @endif
+                                            </form>
+                                            {{-- Reject - always available --}}
+                                            <button onclick="openRejectModal('{{ $r->id }}', '{{ addslashes($r->name) }}')"
+                                                    title="Reject"
+                                                    class="p-1 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition">
+                                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                                                </svg>
+                                            </button>
+                                            {{-- Resend credentials - only for approved --}}
                                             @if ($r->status === 'approved')
                                                 <button onclick="resendCredentials('{{ $r->id }}', '{{ addslashes($r->name) }}')"
                                                         title="Resend"
@@ -422,6 +423,10 @@
             </p>
             <form id="rejectForm" method="POST">
                 @csrf
+                <div class="mb-4">
+                    <label class="block text-xs font-semibold text-gray-600 mb-1.5">Admin Notes <span class="text-gray-400">(optional)</span></label>
+                    <textarea name="admin_notes" rows="2" class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500" placeholder="Reason for rejection..."></textarea>
+                </div>
                 <div class="flex justify-end gap-2.5">
                     <button type="button" onclick="closeRejectModal()"
                             class="px-5 py-2.5 text-sm font-medium rounded-xl bg-gray-100 text-gray-700 hover:bg-gray-200 transition">Cancel</button>
