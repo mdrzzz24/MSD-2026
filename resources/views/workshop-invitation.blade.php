@@ -80,6 +80,14 @@
         @if ($workshop->name && $workshop->title)
             <p style="text-align:center;font-size:14px;color:#94a3b8;margin:0 0 16px;">{{ $workshop->title }}</p>
         @endif
+        @if ($track)
+            <div style="text-align:center;margin-bottom:16px;">
+                <span style="display:inline-flex;align-items:center;gap:6px;padding:6px 16px;border-radius:999px;font-size:13px;font-weight:600;background:rgba(244,114,182,0.15);color:#f472b6;border:1px solid rgba(244,114,182,0.2);">
+                    <svg style="width:14px;height:14px;" fill="none" stroke="#f472b6" viewBox="0 0 24 24"><path stroke-width="2" d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7"/></svg>
+                    Track: {{ $track->name }}
+                </span>
+            </div>
+        @endif
 
         @php
             $agendaItem = $workshop->agendaItems->first();
@@ -100,14 +108,17 @@
         </div>
 
         {{-- Speakers --}}
-        @php $speakers = $agendaItem?->speakers ?? collect(); @endphp
-        @if ($speakers->isNotEmpty())
+        @php
+            // Use track-level speakers if available, fall back to agenda-item speakers
+            $displaySpeakers = $speakers ?? $agendaItem?->speakers ?? collect();
+        @endphp
+        @if ($displaySpeakers->isNotEmpty())
             <div style="margin-bottom:24px;">
                 <h4 style="font-size:12px;font-weight:700;color:#94a3b8;margin:0 0 14px;text-transform:uppercase;letter-spacing:1px;">
                     <svg style="width:14px;height:14px;vertical-align:-2px;margin-right:6px;" fill="none" stroke="#94a3b8" viewBox="0 0 24 24"><path stroke-width="2" d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path stroke-width="2" d="M19 10v2a7 7 0 0 1-14 0v-2"/><line stroke-width="2" x1="12" y1="19" x2="12" y2="23"/><line stroke-width="2" x1="8" y1="23" x2="16" y2="23"/></svg>
                     Speaker{{ $speakers->count() > 1 ? 's' : '' }}
                 </h4>
-                @foreach ($speakers as $sp)
+                @foreach ($displaySpeakers as $sp)
                     <div style="display:flex;align-items:flex-start;gap:14px;margin-bottom:16px;padding-bottom:14px;border-bottom:1px solid rgba(255,255,255,0.06);">
                         @if ($sp->photo)
                             @php $photoUrl = str_starts_with($sp->photo, 'http') || str_starts_with($sp->photo, '/') ? $sp->photo : asset('storage/' . $sp->photo); @endphp
@@ -164,7 +175,7 @@
                 <label for="email">Enter your email to register</label>
                 <input type="email" name="email" id="email" value="{{ old('email', $email) }}" placeholder="yourname@company.com" required autocomplete="email">
                 @error('email')<p style="color:#ef4444;font-size:13px;margin-top:6px;">{{ $message }}</p>@enderror
-                <button type="submit" class="btn-submit">Register for Workshop</button>
+                <button type="submit" class="btn-submit">Register{{ $track ? ' for ' . e($track->name) : '' }} Track</button>
             </form>
         @else
             <div style="text-align:center;padding:16px 0;margin-top:8px;border-top:1px solid rgba(255,255,255,0.06);">

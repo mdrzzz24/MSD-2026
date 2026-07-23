@@ -123,7 +123,7 @@
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-gray-50">
-                            <?php $__empty_1 = true; $__currentLoopData = $logs; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $log): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
+                            <?php $__empty_2 = true; $__currentLoopData = $logs; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $log): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_2 = false; ?>
                                 <?php $color = \App\Models\EmailTemplate::typeColor($log->template_type); $label = \App\Models\EmailTemplate::typeLabel($log->template_type); ?>
                                 <tr class="hover:bg-gray-50/50 transition">
                                     <td class="px-5 py-4 text-sm text-gray-500 whitespace-nowrap">
@@ -174,7 +174,7 @@
                                         </div>
                                     </td>
                                 </tr>
-                            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
+                            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_2): ?>
                                 <tr>
                                     <td colspan="6" class="px-5 py-16 text-center">
                                         <div class="flex flex-col items-center gap-2">

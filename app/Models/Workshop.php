@@ -32,7 +32,7 @@ class Workshop extends Model
     {
         return $this->belongsToMany(Registrant::class, 'registrant_workshop')
                     ->withTimestamps()
-                    ->withPivot(['status', 'admin_notes', 'processed_by', 'processed_at', 'id']);
+                    ->withPivot(['status', 'admin_notes', 'processed_by', 'processed_at', 'id', 'track_id']);
     }
 
     public function waitlist()
@@ -44,6 +44,11 @@ class Workshop extends Model
     public function agendaItems()
     {
         return $this->hasMany(AgendaItem::class);
+    }
+
+    public function tracks()
+    {
+        return $this->hasMany(Track::class);
     }
 
     public function invitations()
@@ -105,11 +110,11 @@ class Workshop extends Model
     {
         $agendaItem = $this->agendaItems()->first();
 
-        $room     = $this->room ?? $agendaItem?->room ?? '';
-        $date     = $this->date ?? $agendaItem?->date;
-        $start    = $this->start_time ?? $agendaItem?->start_time;
-        $end      = $this->end_time ?? $agendaItem?->end_time;
-        $capacity = $this->capacity ?: ($agendaItem?->capacity ?: 0);
+        $room     = $agendaItem?->room ?? $this->room ?? '';
+        $date     = $agendaItem?->date ?? $this->date;
+        $start    = $agendaItem?->start_time ?? $this->start_time;
+        $end      = $agendaItem?->end_time ?? $this->end_time;
+        $capacity = $agendaItem?->capacity ?: ($this->capacity ?: 0);
 
         $timeRange = '—';
         if ($start && $end) {

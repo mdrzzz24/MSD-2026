@@ -32,12 +32,7 @@
             </div>
         </header>
         <div class="p-4 sm:p-6 lg:p-8">
-            <?php if(session('success')): ?>
-                <div class="flex items-start gap-3 bg-emerald-50 border border-emerald-200 text-emerald-800 px-5 py-4 rounded-2xl mb-6" x-data="{ show: true }" x-show="show">
-                    <svg class="w-5 h-5 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                    <span class="text-sm"><?php echo e(session('success')); ?></span>
-                </div>
-            <?php endif; ?>
+            <?php echo $__env->make('admin.partials.notification', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
             <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
                 <div class="overflow-x-auto">
                     <table class="w-full">

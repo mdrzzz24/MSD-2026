@@ -33,7 +33,7 @@
     </div>
 
     
-    <?php $__empty_1 = true; $__currentLoopData = $floors; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $floor): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
+    <?php $__empty_2 = true; $__currentLoopData = $floors; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $floor): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_2 = false; ?>
     <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden mb-4">
         
         <div class="flex items-center justify-between px-5 py-3 bg-gray-50/80 border-b">
@@ -65,7 +65,7 @@
                     <th class="px-5 py-2 text-center">Actions</th>
                 </tr></thead>
                 <tbody class="divide-y divide-gray-50">
-                    <?php $__empty_2 = true; $__currentLoopData = $floor->rooms; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $r): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_2 = false; ?>
+                    <?php $__empty_3 = true; $__currentLoopData = $floor->rooms; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $r): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_3 = false; ?>
                     <tr class="hover:bg-gray-50/50">
                         <td class="px-5 py-2.5 text-sm font-medium text-gray-800"><?php echo e($r->name); ?></td>
                         <td class="px-5 py-2.5 text-sm text-gray-500"><?php echo e($r->order); ?></td>
@@ -85,7 +85,7 @@
                             </div>
                         </td>
                     </tr>
-                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_2): ?>
+                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_3): ?>
                     <tr><td colspan="3" class="px-5 py-6 text-center text-gray-400 text-sm">No rooms in this floor. Add one below.</td></tr>
                     <?php endif; ?>
                 </tbody>
@@ -103,7 +103,7 @@
             </form>
         </div>
     </div>
-    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
+    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_2): ?>
     <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-8 text-center text-gray-400">
         No floors yet. Create one above.
     </div>

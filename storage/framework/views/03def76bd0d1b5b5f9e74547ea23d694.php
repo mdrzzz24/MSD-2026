@@ -72,7 +72,7 @@
                     <h2 class="text-sm font-bold text-gray-800">Questions (<?php echo e($questions->count()); ?>)</h2>
                 </div>
                 <div class="divide-y divide-gray-50">
-                    <?php $__empty_1 = true; $__currentLoopData = $questions; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $q): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
+                    <?php $__empty_2 = true; $__currentLoopData = $questions; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $q): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_2 = false; ?>
                         <div class="px-6 py-3 flex items-center justify-between">
                             <div>
                                 <p class="text-sm text-gray-800"><?php echo e($q->question_text); ?></p>
@@ -86,7 +86,7 @@
                                 <span><?php echo e($answerCount); ?> answers</span>
                             </div>
                         </div>
-                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
+                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_2): ?>
                         <div class="px-6 py-10 text-center text-sm text-gray-400">
                             No questions set.
                             <a href="<?php echo e(route('admin.agenda.feedback.questions', $agendum)); ?>" class="text-indigo-600 hover:underline ml-1">Set up questions →</a>
@@ -101,7 +101,7 @@
                     <h2 class="text-sm font-bold text-gray-800">Feedback Responses</h2>
                 </div>
                 <div class="divide-y divide-gray-50">
-                    <?php $__empty_1 = true; $__currentLoopData = $feedbacks; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $fb): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
+                    <?php $__empty_2 = true; $__currentLoopData = $feedbacks; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $fb): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_2 = false; ?>
                         <div class="p-5 hover:bg-gray-50/50 transition">
                             <div class="flex items-start justify-between gap-4">
                                 <div>
@@ -143,7 +143,7 @@
                                 </div>
                             <?php endif; ?>
                         </div>
-                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
+                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_2): ?>
                         <div class="p-10 text-center">
                             <svg class="w-12 h-12 mx-auto text-gray-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
                             <p class="text-sm text-gray-400 mt-3">No feedback responses yet.</p>

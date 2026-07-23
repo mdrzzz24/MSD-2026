@@ -138,10 +138,57 @@ class AdminWorkshopController extends Controller
      */
     public function registrants(Workshop $workshop)
     {
+        $workshop->load(['tracks.agendaItems', 'agendaItems.track']);
+
         $registrants = $workshop->registrants()
             ->with(['workshops', 'workshopWaitlists'])
             ->orderBy('name')
             ->get();
+
+        // ── Resolve which track each registrant registered for ──
+        // Build a track lookup map
+        $trackLookup = $workshop->tracks->keyBy('id')->map(fn($t) => $t->name);
+
+        foreach ($registrants as $r) {
+            // Priority 1: track_id stored directly in registrant_workshop pivot
+            $pivotTrackId = $r->pivot->track_id ?? null;
+            if ($pivotTrackId && isset($trackLookup[$pivotTrackId])) {
+                $r->registered_track_name = $trackLookup[$pivotTrackId];
+                continue;
+            }
+
+            // Priority 2: check agenda_item_registrant for this workshop's agenda items
+            if ($workshop->agendaItems->isNotEmpty()) {
+                $wsAiIds = $workshop->agendaItems->pluck('id')->toArray();
+                $tr = \DB::table('agenda_item_registrant')
+                    ->whereIn('agenda_item_id', $wsAiIds)
+                    ->where('registrant_id', $r->id)
+                    ->first();
+
+                if ($tr) {
+                    // Check if that agenda item belongs to a track
+                    $ai = $workshop->agendaItems->firstWhere('id', $tr->agenda_item_id);
+                    if ($ai && $ai->track && isset($trackLookup[$ai->track_id])) {
+                        $r->registered_track_name = $trackLookup[$ai->track_id];
+                        continue;
+                    }
+                }
+            }
+
+            // Priority 3: check track-level agenda items
+            foreach ($workshop->tracks as $t) {
+                foreach ($t->agendaItems as $ai) {
+                    $tr = \DB::table('agenda_item_registrant')
+                        ->where('agenda_item_id', $ai->id)
+                        ->where('registrant_id', $r->id)
+                        ->first();
+                    if ($tr) {
+                        $r->registered_track_name = $t->name;
+                        break 2;
+                    }
+                }
+            }
+        }
 
         // Get the latest workshop reminder log for this workshop's registrants
         $registrantIds = $registrants->pluck('id');
@@ -167,6 +214,13 @@ class AdminWorkshopController extends Controller
         if (!$registrant) {
             return back()->with('error', 'Registrant not found.');
         }
+
+        // Get pivot data (track_id) before updating
+        $existingPivot = \DB::table('registrant_workshop')
+            ->where('workshop_id', $workshop->id)
+            ->where('registrant_id', $registrantId)
+            ->first();
+        $pivotTrackId = $existingPivot?->track_id;
 
         $workshop->registrants()->updateExistingPivot($registrantId, [
             'status'       => 'approved',
@@ -218,7 +272,15 @@ class AdminWorkshopController extends Controller
 
         // Send workshop approval email (with fallback)
         $tmpl = EmailTemplate::activeOfType(EmailTemplate::TYPE_WORKSHOP_APPROVAL);
-        $extraData = $workshop->emailData();
+
+        // If registrant has a track, use track's agenda item time instead of workshop default
+        if ($pivotTrackId && ($track = \App\Models\Track::find($pivotTrackId))) {
+            $trackAi = $track->agendaItems()->first();
+            $extraData = $this->getTrackEmailExtraData($track, $trackAi, $workshop);
+        } else {
+            $extraData = $workshop->emailData();
+        }
+
         if ($tmpl) {
             EmailService::send($registrant, $tmpl, $extraData);
         } else {
@@ -300,8 +362,22 @@ class AdminWorkshopController extends Controller
 
         // Send workshop rejection email (with fallback)
         $tmpl = EmailTemplate::activeOfType(EmailTemplate::TYPE_WORKSHOP_REJECTION);
-        $extraData = $workshop->emailData();
+
+        // Get track_id from pivot (registrant loaded via find() doesn't have pivot)
+        $rejectPivot = \DB::table('registrant_workshop')
+            ->where('workshop_id', $workshop->id)
+            ->where('registrant_id', $registrantId)
+            ->first();
+        $pivotTrackId = $rejectPivot?->track_id;
+
+        if ($pivotTrackId && ($track = \App\Models\Track::find($pivotTrackId))) {
+            $trackAi = $track->agendaItems()->first();
+            $extraData = $this->getTrackEmailExtraData($track, $trackAi, $workshop);
+        } else {
+            $extraData = $workshop->emailData();
+        }
         $extraData['admin_notes'] = '';
+
         if ($tmpl) {
             EmailService::send($registrant, $tmpl, $extraData);
         } else {
@@ -389,8 +465,6 @@ class AdminWorkshopController extends Controller
             return redirect()->back()->with('error', 'No active template for Workshop Gentle Reminder. Create one first.');
         }
 
-        $extraData = $workshop->emailData();
-
         // If specific registrant IDs are provided, send only to those
         if ($request->filled('registrant_ids')) {
             $registrantIds = $request->input('registrant_ids', []);
@@ -411,6 +485,16 @@ class AdminWorkshopController extends Controller
 
         foreach ($registrants as $registrant) {
             try {
+                // If registrant has a track, use track-specific time data
+                // Note: registrants here are loaded via workshop->registrants() so pivot IS available
+                $pivotTrackId = $registrant->pivot->track_id ?? null;
+                if ($pivotTrackId && ($track = \App\Models\Track::find($pivotTrackId))) {
+                    $trackAi = $track->agendaItems()->first();
+                    $extraData = $this->getTrackEmailExtraData($track, $trackAi, $workshop);
+                } else {
+                    $extraData = $workshop->emailData();
+                }
+
                 $result = EmailService::send($registrant, $template, $extraData);
                 if ($result && $result->status === 'sent') {
                     $successCount++;
@@ -452,5 +536,40 @@ class AdminWorkshopController extends Controller
         ])->toArray();
 
         return $this->csvDownload($headers, $rows, 'workshop-' . $workshop->id . '-' . now()->format('YmdHis') . '.csv');
+    }
+
+    /**
+     * Build email extra data using track's agenda item time/date/room,
+     * falling back to workshop data if available.
+     */
+    private function getTrackEmailExtraData($track, $agendaItem, $workshop = null): array
+    {
+        $ai = $agendaItem ?? $track->agendaItems()->first();
+        $ws = $workshop ?? $track->workshop;
+        $wsAi = $ws?->agendaItems()->first(); // workshop's first agenda item as fallback
+
+        // Priority: track's own time > track's agenda item > workshop's agenda item > workshop
+        $start    = $track->start_time ?? $ai?->start_time ?? $wsAi?->start_time ?? $ws?->start_time;
+        $end      = $track->end_time ?? $ai?->end_time ?? $wsAi?->end_time ?? $ws?->end_time;
+        $room     = $ai?->room ?? $wsAi?->room ?? $ws?->room ?? '';
+        $date     = $ai?->date ?? $wsAi?->date ?? $ws?->date;
+        $capacity = $ai?->capacity ?? $wsAi?->capacity ?? $ws?->capacity ?? 0;
+
+        $timeRange = '—';
+        if ($start && $end) {
+            $timeRange = date('H:i', strtotime($start)) . ' – ' . date('H:i', strtotime($end));
+        }
+
+        return [
+            'track_name'        => $track->name,
+            'track_title'       => $track->title,
+            'workshop_name'     => $ws?->name ?: $ws?->title ?: ($ai?->title ?? $wsAi?->title ?? ''),
+            'workshop_title'    => $ws?->title ?? ($ai?->title ?? $wsAi?->title ?? ''),
+            'workshop_room'     => $room,
+            'workshop_date'     => $date ? $date->format('l, d F Y') : '',
+            'workshop_time'     => $timeRange,
+            'workshop_capacity' => (string) $capacity,
+            'venue_name'        => 'Shangri-La Hotel Jakarta',
+        ];
     }
 }

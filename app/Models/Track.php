@@ -9,13 +9,35 @@ class Track extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['name', 'title', 'description', 'is_active'];
+    protected $fillable = ['workshop_id', 'name', 'title', 'description', 'is_active', 'start_time', 'end_time'];
 
-    protected $casts = ['is_active' => 'boolean'];
+    protected $casts = [
+        'is_active'  => 'boolean',
+        'start_time' => 'string',
+        'end_time'   => 'string',
+    ];
+
+    public function workshop()
+    {
+        return $this->belongsTo(Workshop::class);
+    }
 
     public function agendaItems()
     {
         return $this->hasMany(AgendaItem::class);
+    }
+
+    public function speakers()
+    {
+        return $this->belongsToMany(Speaker::class, 'track_speaker')
+                    ->withPivot('order')
+                    ->withTimestamps()
+                    ->orderByPivot('order');
+    }
+
+    public function invitations()
+    {
+        return $this->hasMany(WorkshopInvitation::class);
     }
 
     public function registrantsCount(): int

@@ -162,9 +162,14 @@ class AdminTrackController extends Controller
 
         // Send track approval email (with fallback)
         $sessionName = $agendaItem ? $agendaItem->title : $track->title;
+
+        // Pass track-specific time data for email template placeholders
+        $trackEmailData = $this->getTrackEmailExtraData($track, $agendaItem, $workshop ?? null);
+        $trackEmailData['track_name'] = $sessionName;
+
         $tmpl = EmailTemplate::activeOfType(EmailTemplate::TYPE_TRACK_APPROVAL);
         if ($tmpl) {
-            EmailService::send($registrant, $tmpl, ['track_name' => $sessionName]);
+            EmailService::send($registrant, $tmpl, $trackEmailData);
         } else {
             try {
                 Mail::send('emails.track-approved', [
@@ -248,12 +253,15 @@ class AdminTrackController extends Controller
 
         // Send track rejection email (with fallback)
         $sessionName = $agendaItem ? $agendaItem->title : $track->title;
+
+        // Pass track-specific time data for email template placeholders
+        $trackEmailData = $this->getTrackEmailExtraData($track, $agendaItem, $workshop ?? null);
+        $trackEmailData['track_name'] = $sessionName;
+        $trackEmailData['admin_notes'] = $adminNotes;
+
         $tmpl = EmailTemplate::activeOfType(EmailTemplate::TYPE_TRACK_REJECTION);
         if ($tmpl) {
-            EmailService::send($registrant, $tmpl, [
-                'track_name'  => $sessionName,
-                'admin_notes' => $adminNotes,
-            ]);
+            EmailService::send($registrant, $tmpl, $trackEmailData);
         } else {
             try {
                 Mail::send('emails.track-rejected', [
@@ -287,5 +295,40 @@ class AdminTrackController extends Controller
         }
 
         return back()->with('success', 'Registration rejected.');
+    }
+
+    /**
+     * Build email extra data using track's agenda item time/date/room,
+     * falling back to workshop data if available.
+     */
+    private function getTrackEmailExtraData($track, $agendaItem, $workshop = null): array
+    {
+        $ai = $agendaItem ?? $track->agendaItems()->first();
+        $ws = $workshop ?? $track->workshop;
+        $wsAi = $ws?->agendaItems()->first(); // workshop's first agenda item as fallback
+
+        // Priority: track's own time > track's agenda item > workshop's agenda item > workshop
+        $start    = $track->start_time ?? $ai?->start_time ?? $wsAi?->start_time ?? $ws?->start_time;
+        $end      = $track->end_time ?? $ai?->end_time ?? $wsAi?->end_time ?? $ws?->end_time;
+        $room     = $ai?->room ?? $wsAi?->room ?? $ws?->room ?? '';
+        $date     = $ai?->date ?? $wsAi?->date ?? $ws?->date;
+        $capacity = $ai?->capacity ?? $wsAi?->capacity ?? $ws?->capacity ?? 0;
+
+        $timeRange = '—';
+        if ($start && $end) {
+            $timeRange = date('H:i', strtotime($start)) . ' – ' . date('H:i', strtotime($end));
+        }
+
+        return [
+            'track_name'        => $track->name,
+            'track_title'       => $track->title,
+            'workshop_name'     => $ws?->name ?: $ws?->title ?: ($ai?->title ?? $wsAi?->title ?? ''),
+            'workshop_title'    => $ws?->title ?? ($ai?->title ?? $wsAi?->title ?? ''),
+            'workshop_room'     => $room,
+            'workshop_date'     => $date ? $date->format('l, d F Y') : '',
+            'workshop_time'     => $timeRange,
+            'workshop_capacity' => (string) $capacity,
+            'venue_name'        => 'Shangri-La Hotel Jakarta',
+        ];
     }
 }

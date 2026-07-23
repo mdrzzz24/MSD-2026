@@ -85,6 +85,7 @@
                                     <a href="{{ route('admin.workshops.registrants', $w) }}" class="px-2.5 py-1.5 text-xs font-medium rounded-lg bg-indigo-50 text-indigo-700 hover:bg-indigo-100 transition">View</a>
                                     @if (Auth::user()->canWrite())
                                     <a href="{{ route('admin.workshops.edit', $w) }}" class="px-2.5 py-1.5 text-xs font-medium rounded-lg bg-amber-100 text-amber-700 hover:bg-amber-200 transition">Edit</a>
+                                    <a href="{{ route('admin.workshops.tracks', $w) }}" class="px-2.5 py-1.5 text-xs font-medium rounded-lg bg-teal-100 text-teal-700 hover:bg-teal-200 transition">Tracks</a>
                                     <a href="{{ route('admin.workshops.invitations', $w) }}" class="px-2.5 py-1.5 text-xs font-medium rounded-lg bg-purple-100 text-purple-700 hover:bg-purple-200 transition">Invite</a>
                                     <form action="{{ route('admin.workshops.toggle', $w) }}" method="POST">@csrf
                                         <button class="px-2.5 py-1.5 text-xs font-medium rounded-lg {{ $w->registration_open ? 'bg-red-100 text-red-600 hover:bg-red-200' : 'bg-emerald-100 text-emerald-600 hover:bg-emerald-200' }} transition">

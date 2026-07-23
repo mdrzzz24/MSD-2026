@@ -54,31 +54,31 @@
             </div>
         <?php else: ?>
             <div class="overflow-x-auto">
-                <table class="w-full">
+                <table class="w-full table-fixed">
                     <thead><tr class="bg-gray-50/80">
-                        <th class="px-4 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase">#</th>
+                        <th class="px-4 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase w-10">#</th>
                         <th class="px-4 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase">Name</th>
-                        <th class="px-4 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase">Email</th>
-                        <th class="px-4 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase hidden md:table-cell">Phone</th>
-                        <th class="px-4 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase hidden lg:table-cell">Company</th>
-                        <th class="px-4 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase hidden xl:table-cell">Job Title</th>
+                        <th class="px-4 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase w-48">Email</th>
+                        <th class="px-4 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase hidden md:table-cell w-32">Phone</th>
+                        <th class="px-4 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase hidden lg:table-cell w-36">Company</th>
+                        <th class="px-4 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase hidden xl:table-cell w-36">Job Title</th>
                         <th class="px-4 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase">Visited At</th>
                     </tr></thead>
                     <tbody class="divide-y divide-gray-50">
                         <?php $__currentLoopData = $visits; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $i => $visit): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                         <tr class="hover:bg-gray-50/50 transition">
                             <td class="px-4 py-3.5"><span class="text-sm text-gray-400"><?php echo e($visits->firstItem() + $i); ?></span></td>
-                            <td class="px-4 py-3.5">
-                                <a href="<?php echo e(route('admin.registrants.show', $visit->registrant)); ?>" class="text-sm font-semibold text-indigo-600 hover:text-indigo-800 hover:underline">
+                            <td class="px-4 py-3.5 max-w-0">
+                                <a href="<?php echo e(route('admin.registrants.show', $visit->registrant)); ?>" class="text-sm font-semibold text-indigo-600 hover:text-indigo-800 hover:underline truncate block" title="<?php echo e($visit->registrant->display_name ?: $visit->registrant->name); ?>">
                                     <?php echo e($visit->registrant->display_name ?: $visit->registrant->name); ?>
 
                                 </a>
                             </td>
-                            <td class="px-4 py-3.5"><span class="text-sm text-gray-600"><?php echo e($visit->registrant->email); ?></span></td>
-                            <td class="px-4 py-3.5 hidden md:table-cell"><span class="text-sm text-gray-600"><?php echo e($visit->registrant->phone ?? '—'); ?></span></td>
-                            <td class="px-4 py-3.5 hidden lg:table-cell"><span class="text-sm text-gray-600"><?php echo e($visit->registrant->company ?? '—'); ?></span></td>
-                            <td class="px-4 py-3.5 hidden xl:table-cell"><span class="text-sm text-gray-600"><?php echo e($visit->registrant->job_title ?? '—'); ?></span></td>
-                            <td class="px-4 py-3.5"><span class="text-sm text-gray-600"><?php echo e($visit->visited_at ? $visit->visited_at->format('d M Y, H:i') : '—'); ?></span></td>
+                            <td class="px-4 py-3.5 max-w-0"><span class="text-sm text-gray-600 truncate block" title="<?php echo e($visit->registrant->email); ?>"><?php echo e($visit->registrant->email); ?></span></td>
+                            <td class="px-4 py-3.5 hidden md:table-cell max-w-0"><span class="text-sm text-gray-600 truncate block" title="<?php echo e($visit->registrant->phone ?? ''); ?>"><?php echo e($visit->registrant->phone ?? '—'); ?></span></td>
+                            <td class="px-4 py-3.5 hidden lg:table-cell max-w-0"><span class="text-sm text-gray-600 truncate block" title="<?php echo e($visit->registrant->company ?? ''); ?>"><?php echo e($visit->registrant->company ?? '—'); ?></span></td>
+                            <td class="px-4 py-3.5 hidden xl:table-cell max-w-0"><span class="text-sm text-gray-600 truncate block" title="<?php echo e($visit->registrant->job_title ?? ''); ?>"><?php echo e($visit->registrant->job_title ?? '—'); ?></span></td>
+                            <td class="px-4 py-3.5"><span class="text-sm text-gray-600 whitespace-nowrap"><?php echo e($visit->visited_at ? $visit->visited_at->format('d M Y, H:i') : '—'); ?></span></td>
                         </tr>
                         <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                     </tbody>

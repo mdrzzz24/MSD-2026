@@ -22,6 +22,14 @@ class Speaker extends Model
                     ->orderByPivot('order');
     }
 
+    public function tracks()
+    {
+        return $this->belongsToMany(Track::class, 'track_speaker')
+                    ->withPivot('order')
+                    ->withTimestamps()
+                    ->orderByPivot('order');
+    }
+
     public function scopeActive($query)
     {
         return $query->where('is_active', true);

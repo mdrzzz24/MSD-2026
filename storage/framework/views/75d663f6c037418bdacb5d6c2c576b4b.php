@@ -47,7 +47,11 @@
                     <option value="">— Select —</option>
                     <optgroup label="🗂️ Tracks">
                         <?php $__currentLoopData = $tracks; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $tr): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-                        <option value="track_<?php echo e($tr->id); ?>" data-title="<?php echo e(e($tr->title)); ?>" data-desc="<?php echo e(e($tr->description)); ?>" data-type="track"><?php echo e($tr->title); ?></option>
+                        <option value="track_<?php echo e($tr->id); ?>"
+                            data-name="<?php echo e(e($tr->name)); ?>"
+                            data-title="<?php echo e(e($tr->title)); ?>"
+                            data-desc="<?php echo e(e($tr->description)); ?>"
+                            data-type="track"><?php echo e($tr->name ?: $tr->title); ?></option>
                         <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                     </optgroup>
                     <optgroup label="🔧 Workshops">

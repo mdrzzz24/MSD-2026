@@ -9,6 +9,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <script>tailwind.config={theme:{extend:{fontFamily:{sans:['Inter','system-ui','sans-serif']}}}}</script>
+    <link href="https://cdn.jsdelivr.net/npm/summernote@0.9.0/dist/summernote-lite.min.css" rel="stylesheet">
 </head>
 <body class="bg-gray-50 font-sans antialiased">
 <div class="flex min-h-screen">
@@ -19,7 +20,7 @@
         <div><h1 class="text-lg font-bold text-gray-900">Manage Tracks</h1><p class="text-xs text-gray-500">Manage event tracks</p></div>
         <div class="flex items-center gap-2">
             <?php if(Auth::user()->canWrite()): ?>
-            <button onclick="document.getElementById('addForm').classList.toggle('hidden')"
+            <button onclick="toggleAddForm()"
                     class="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-medium bg-indigo-500 text-white rounded-xl hover:bg-indigo-600 shadow-sm shadow-indigo-200 transition">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
                 Add Track
@@ -34,8 +35,9 @@
     <div id="addForm" class="hidden bg-white rounded-2xl border border-gray-100 shadow-sm p-6 mb-6">
         <form action="<?php echo e(route('admin.tracks.store')); ?>" method="POST" class="space-y-3">
             <?php echo csrf_field(); ?>
-            <div><label class="block text-xs font-semibold text-gray-700 mb-1">Title *</label><input type="text" name="title" required class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"></div>
-            <div><label class="block text-xs font-semibold text-gray-700 mb-1">Description</label><textarea name="description" rows="2" class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"></textarea></div>
+            <div><label class="block text-xs font-semibold text-gray-700 mb-1">Track Name</label><input type="text" name="name" placeholder="e.g. Track Session 1" class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"></div>
+            <div><label class="block text-xs font-semibold text-gray-700 mb-1">Track Title *</label><input type="text" name="title" required class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"></div>
+            <div><label class="block text-xs font-semibold text-gray-700 mb-1">Description <span class="text-xs text-gray-400 font-normal">(HTML supported)</span></label><textarea name="description" id="addDesc" rows="4" class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 focus:bg-white transition"></textarea></div>
             <button class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-lg transition">Save Track</button>
         </form>
     </div>
@@ -55,7 +57,8 @@
                 <tbody class="divide-y divide-gray-50">
                     <?php $__empty_1 = true; $__currentLoopData = $tracks; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $tr): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
                         <tr class="hover:bg-gray-50/50">
-                            <td class="px-5 py-4"><p class="text-sm font-semibold text-gray-900"><?php echo e($tr->title); ?></p>
+                            <td class="px-5 py-4"><p class="text-sm font-semibold text-gray-900"><?php echo e($tr->name ?: $tr->title); ?></p>
+                                <?php if($tr->name): ?><p class="text-xs text-gray-500 mt-0.5"><?php echo e($tr->title); ?></p><?php endif; ?>
                                 <?php if($tr->description): ?><p class="text-xs text-gray-400 mt-0.5 truncate max-w-[250px]"><?php echo e($tr->description); ?></p><?php endif; ?>
                             </td>
                             <?php if(Auth::user()->canWrite()): ?>
@@ -94,7 +97,7 @@
                                 <div class="flex justify-center gap-1.5">
                                     <a href="<?php echo e(route('admin.tracks.registrants', $tr)); ?>" class="px-2.5 py-1.5 text-xs font-medium rounded-lg bg-indigo-50 text-indigo-700 hover:bg-indigo-100 transition">View</a>
                                     <?php if(Auth::user()->canWrite()): ?>
-                                    <button onclick="editTrack(<?php echo e($tr->id); ?>,'<?php echo e(e($tr->title)); ?>','<?php echo e(e($tr->description)); ?>')" class="px-2.5 py-1.5 text-xs font-medium rounded-lg bg-amber-100 text-amber-700 hover:bg-amber-200 transition">Edit</button>
+                                    <button onclick="editTrack(<?php echo e($tr->id); ?>,'<?php echo e(e($tr->name)); ?>','<?php echo e(e($tr->title)); ?>','<?php echo e(e($tr->description)); ?>')" class="px-2.5 py-1.5 text-xs font-medium rounded-lg bg-amber-100 text-amber-700 hover:bg-amber-200 transition">Edit</button>
                                     <form action="<?php echo e(route('admin.tracks.toggle', $tr)); ?>" method="POST"><?php echo csrf_field(); ?>
                                         <button class="px-2.5 py-1.5 text-xs font-medium rounded-lg <?php echo e($tr->is_active ? 'bg-red-100 text-red-600 hover:bg-red-200' : 'bg-emerald-100 text-emerald-600 hover:bg-emerald-200'); ?> transition">
                                             <?php echo e($tr->is_active ? 'Disable' : 'Enable'); ?>
@@ -123,8 +126,9 @@
   <div style="background:#fff;border-radius:16px;width:100%;max-width:440px;padding:24px;">
     <h3 class="text-lg font-bold text-gray-900 mb-4">Edit Track</h3>
     <form id="editForm" method="POST" class="space-y-3"><?php echo csrf_field(); ?> <?php echo method_field('PUT'); ?>
-        <div><label class="block text-xs font-semibold text-gray-700 mb-1">Title *</label><input type="text" name="title" id="editTitle" required class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"></div>
-        <div><label class="block text-xs font-semibold text-gray-700 mb-1">Description</label><textarea name="description" id="editDesc" rows="2" class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"></textarea></div>
+        <div><label class="block text-xs font-semibold text-gray-700 mb-1">Track Name</label><input type="text" name="name" id="editName" placeholder="e.g. Track Session 1" class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"></div>
+        <div><label class="block text-xs font-semibold text-gray-700 mb-1">Track Title *</label><input type="text" name="title" id="editTitle" required class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"></div>
+        <div><label class="block text-xs font-semibold text-gray-700 mb-1">Description <span class="text-xs text-gray-400 font-normal">(HTML supported)</span></label><textarea name="description" id="editDesc" rows="4" class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 focus:bg-white transition"></textarea></div>
         <div class="flex gap-2">
             <button type="button" onclick="closeEditModal()" class="flex-1 px-4 py-2 bg-gray-100 text-gray-700 text-sm font-semibold rounded-lg hover:bg-gray-200 transition">Cancel</button>
             <button type="submit" class="flex-1 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-lg transition">Update</button>
@@ -132,14 +136,81 @@
     </form>
   </div>
 </div>
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/summernote@0.9.0/dist/summernote-lite.min.js"></script>
 <script>
-function editTrack(id,title,desc){
-    document.getElementById('editForm').action='<?php echo e(route('admin.tracks.update', ['track' => '__ID__'])); ?>'.replace('__ID__', id);
-    document.getElementById('editTitle').value=title;
-    document.getElementById('editDesc').value=desc||'';
-    document.getElementById('editModal').style.display='flex';
+var addSnInitialized = false;
+
+function toggleAddForm() {
+    var form = document.getElementById('addForm');
+    form.classList.toggle('hidden');
+    if (!form.classList.contains('hidden') && !addSnInitialized) {
+        setTimeout(function() {
+            $('#addDesc').summernote({
+                height: 200,
+                toolbar: [
+                    ['style', ['bold', 'italic', 'underline', 'clear']],
+                    ['para', ['ul', 'ol', 'paragraph']],
+                    ['insert', ['link']],
+                    ['view', ['codeview']]
+                ],
+                callbacks: {
+                    onChange: function(contents) {
+                        var text = $('<div>'+contents+'</div>').text();
+                        if (text.length > 65000) {
+                            $(this).summernote('undo');
+                            alert('Description is too long.');
+                        }
+                    }
+                }
+            });
+            addSnInitialized = true;
+        }, 200);
+    }
 }
-function closeEditModal(){document.getElementById('editModal').style.display='none';}
+
+function editTrack(id,name,title,desc){
+    // Destroy previous edit Summernote instance if any
+    if (window._editSn) {
+        $('#editDesc').summernote('destroy');
+    }
+    document.getElementById('editForm').action='<?php echo e(route('admin.tracks.update', ['track' => '__ID__'])); ?>'.replace('__ID__', id);
+    document.getElementById('editName').value=name||'';
+    document.getElementById('editTitle').value=title;
+    document.getElementById('editModal').style.display='flex';
+    // Init Summernote after modal is visible
+    setTimeout(function() {
+        $('#editDesc').summernote({
+            height: 200,
+            toolbar: [
+                ['style', ['bold', 'italic', 'underline', 'clear']],
+                ['para', ['ul', 'ol', 'paragraph']],
+                ['insert', ['link']],
+                ['view', ['codeview']]
+            ],
+            callbacks: {
+                onChange: function(contents) {
+                    var text = $('<div>'+contents+'</div>').text();
+                    if (text.length > 65000) {
+                        $(this).summernote('undo');
+                        alert('Description is too long.');
+                    }
+                }
+            }
+        });
+        $('#editDesc').summernote('code', desc||'');
+        window._editSn = true;
+    }, 100);
+}
+
+function closeEditModal(){
+    if (window._editSn) {
+        $('#editDesc').summernote('destroy');
+        window._editSn = false;
+    }
+    document.getElementById('editModal').style.display='none';
+}
+
 document.getElementById('editModal').addEventListener('click',function(e){if(e.target===this)closeEditModal();});
 </script>
 </body>

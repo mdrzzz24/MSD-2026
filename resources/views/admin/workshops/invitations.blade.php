@@ -31,6 +31,18 @@
         <h2 class="text-sm font-bold text-gray-800 mb-3">Generate Invitation Link</h2>
         <form action="{{ route('admin.workshops.invitations.generate', $workshop) }}" method="POST" class="flex items-end gap-3">
             @csrf
+            @php $workshopTracks = $workshop->tracks()->where('is_active', true)->get(); @endphp
+            @if ($workshopTracks->isNotEmpty())
+                <div class="w-40">
+                    <label class="block text-xs font-semibold text-gray-600 mb-1">Track <span class="text-gray-400">(optional)</span></label>
+                    <select name="track_id" class="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 focus:bg-white transition">
+                        <option value="">— All / No track —</option>
+                        @foreach ($workshopTracks as $t)
+                            <option value="{{ $t->id }}">{{ $t->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+            @endif
             <div class="flex-1">
                 <label class="block text-xs font-semibold text-gray-600 mb-1">Target Email <span class="text-gray-400">(optional)</span></label>
                 <input type="email" name="email" placeholder="invitee@company.com" class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 focus:bg-white transition">
@@ -51,6 +63,7 @@
                 <thead>
                     <tr class="bg-gray-50/80">
                         <th class="px-5 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase">Link</th>
+                        <th class="px-5 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase">Track</th>
                         <th class="px-5 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase">Target Email</th>
                         <th class="px-5 py-3.5 text-center text-xs font-semibold text-gray-500 uppercase">Uses</th>
                         <th class="px-5 py-3.5 text-center text-xs font-semibold text-gray-500 uppercase">Status</th>
@@ -72,6 +85,15 @@
                                         Copy
                                     </button>
                                 </div>
+                            </td>
+                            <td class="px-5 py-4 text-center">
+                                @if ($inv->track)
+                                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-teal-100 text-teal-700 border border-teal-200">
+                                        {{ $inv->track->name }}
+                                    </span>
+                                @else
+                                    <span class="text-xs text-gray-400">—</span>
+                                @endif
                             </td>
                             <td class="px-5 py-4 text-sm text-gray-600">{{ $inv->email ?? '—' }}</td>
                             <td class="px-5 py-4 text-sm text-center text-gray-600">
@@ -115,7 +137,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="6" class="px-5 py-16 text-center">
+                            <td colspan="7" class="px-5 py-16 text-center">
                                 <p class="text-gray-400 font-medium">No invitations yet</p>
                                 <p class="text-xs text-gray-400 mt-1">Generate an invitation link above to get started.</p>
                             </td>

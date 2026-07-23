@@ -31,13 +31,26 @@
         <h2 class="text-sm font-bold text-gray-800 mb-3">Generate Invitation Link</h2>
         <form action="<?php echo e(route('admin.workshops.invitations.generate', $workshop)); ?>" method="POST" class="flex items-end gap-3">
             <?php echo csrf_field(); ?>
+            <?php $workshopTracks = $workshop->tracks()->where('is_active', true)->get(); ?>
+            <?php if($workshopTracks->isNotEmpty()): ?>
+                <div class="w-40">
+                    <label class="block text-xs font-semibold text-gray-600 mb-1">Track <span class="text-gray-400">(optional)</span></label>
+                    <select name="track_id" class="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 focus:bg-white transition">
+                        <option value="">— All / No track —</option>
+                        <?php $__currentLoopData = $workshopTracks; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $t): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                            <option value="<?php echo e($t->id); ?>"><?php echo e($t->name); ?></option>
+                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                    </select>
+                </div>
+            <?php endif; ?>
             <div class="flex-1">
                 <label class="block text-xs font-semibold text-gray-600 mb-1">Target Email <span class="text-gray-400">(optional)</span></label>
                 <input type="email" name="email" placeholder="invitee@company.com" class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 focus:bg-white transition">
             </div>
             <div class="w-32">
                 <label class="block text-xs font-semibold text-gray-600 mb-1">Max Uses</label>
-                <input type="number" name="max_uses" value="1" min="1" max="100" class="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 focus:bg-white transition">
+                <input type="number" name="max_uses" value="0" min="0" placeholder="0 = Unlimited" class="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 focus:bg-white transition">
+                <p class="text-xs text-gray-400 mt-1">0 = tanpa batas</p>
             </div>
             <button type="submit" class="px-5 py-2.5 bg-indigo-600 text-white text-sm font-semibold rounded-xl hover:bg-indigo-700 shadow-sm transition">Generate</button>
         </form>
@@ -50,6 +63,7 @@
                 <thead>
                     <tr class="bg-gray-50/80">
                         <th class="px-5 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase">Link</th>
+                        <th class="px-5 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase">Track</th>
                         <th class="px-5 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase">Target Email</th>
                         <th class="px-5 py-3.5 text-center text-xs font-semibold text-gray-500 uppercase">Uses</th>
                         <th class="px-5 py-3.5 text-center text-xs font-semibold text-gray-500 uppercase">Status</th>
@@ -73,10 +87,37 @@
                                     </button>
                                 </div>
                             </td>
-                            <td class="px-5 py-4 text-sm text-gray-600"><?php echo e($inv->email ?? '—'); ?></td>
-                            <td class="px-5 py-4 text-sm text-center text-gray-600"><?php echo e($inv->use_count); ?>/<?php echo e($inv->max_uses); ?></td>
                             <td class="px-5 py-4 text-center">
-                                <?php if($inv->is_active && $inv->use_count < $inv->max_uses): ?>
+                                <?php if($inv->track): ?>
+                                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-teal-100 text-teal-700 border border-teal-200">
+                                        <?php echo e($inv->track->name); ?>
+
+                                    </span>
+                                <?php else: ?>
+                                    <span class="text-xs text-gray-400">—</span>
+                                <?php endif; ?>
+                            </td>
+                            <td class="px-5 py-4 text-sm text-gray-600"><?php echo e($inv->email ?? '—'); ?></td>
+                            <td class="px-5 py-4 text-sm text-center text-gray-600">
+                                <span class="inline-flex items-center gap-1">
+                                    <span><?php echo e($inv->use_count); ?>/<?php echo e($inv->isUnlimited() ? '∞' : $inv->max_uses); ?></span>
+                                    <button onclick="toggleEditLimit(<?php echo e($inv->id); ?>)" class="p-1 text-gray-400 hover:text-indigo-600 transition" title="Change limit">
+                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
+                                    </button>
+                                </span>
+                                
+                                <form id="edit-limit-form-<?php echo e($inv->id); ?>" action="<?php echo e(route('admin.workshops.invitations.update-max-uses', $inv)); ?>" method="POST" class="hidden mt-1">
+                                    <?php echo csrf_field(); ?>
+                                    <div class="flex items-center gap-1">
+                                        <input type="number" name="max_uses" value="<?php echo e($inv->max_uses); ?>" min="0"
+                                               class="w-16 px-2 py-1 text-xs border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-indigo-500">
+                                        <button type="submit" class="px-2 py-1 text-xs font-medium bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition">Save</button>
+                                        <button type="button" onclick="toggleEditLimit(<?php echo e($inv->id); ?>)" class="px-2 py-1 text-xs font-medium text-gray-500 hover:text-gray-700 transition">Cancel</button>
+                                    </div>
+                                </form>
+                            </td>
+                            <td class="px-5 py-4 text-center">
+                                <?php if($inv->is_active && ($inv->isUnlimited() || $inv->use_count < $inv->max_uses)): ?>
                                     <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
                                         <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Active
                                     </span>
@@ -100,7 +141,7 @@
                         </tr>
                     <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
                         <tr>
-                            <td colspan="6" class="px-5 py-16 text-center">
+                            <td colspan="7" class="px-5 py-16 text-center">
                                 <p class="text-gray-400 font-medium">No invitations yet</p>
                                 <p class="text-xs text-gray-400 mt-1">Generate an invitation link above to get started.</p>
                             </td>
@@ -133,6 +174,11 @@ function copyLink(btn, url) {
     }).catch(function() {
         alert('Failed to copy link');
     });
+}
+
+function toggleEditLimit(id) {
+    var form = document.getElementById('edit-limit-form-' + id);
+    form.classList.toggle('hidden');
 }
 </script>
 </body>

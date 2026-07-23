@@ -28,7 +28,7 @@
                 <th class="px-4 py-3">Start</th><th class="px-4 py-3">End</th><th class="px-4 py-3">Order</th><th class="px-4 py-3 text-center">Actions</th>
             </tr></thead>
             <tbody class="divide-y">
-                <?php $__empty_1 = true; $__currentLoopData = $slots; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $s): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
+                <?php $__empty_2 = true; $__currentLoopData = $slots; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $s): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_2 = false; ?>
                 <tr class="hover:bg-gray-50/50">
                     <td class="px-4 py-3 text-sm font-mono"><?php echo e($s->start_time); ?></td>
                     <td class="px-4 py-3 text-sm font-mono"><?php echo e($s->end_time); ?></td>
@@ -49,7 +49,7 @@
                         </div>
                     </td>
                 </tr>
-                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
+                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_2): ?>
                 <tr><td colspan="4" class="px-4 py-8 text-center text-gray-400">No time slots.</td></tr>
                 <?php endif; ?>
             </tbody>

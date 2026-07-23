@@ -19,25 +19,43 @@ class WorkshopInvitationController extends Controller
     public function show($token)
     {
         $invitation = WorkshopInvitation::where('token', $token)
-            ->with('workshop.agendaItems.speakers')
+            ->with(['workshop.agendaItems.speakers', 'track.speakers'])
             ->firstOrFail();
 
         $workshop = $invitation->workshop;
+        $track = $invitation->track;
         $email = old('email', request('email', $invitation->email ?? ''));
 
-        // Check if this email is already registered for this workshop
+        // Determine which speakers to show
+        $speakers = $track?->speakers ?? $workshop->agendaItems->first()?->speakers ?? collect();
+
+        // Check if this email is already registered for this workshop/track
         $registrationStatus = null;
         if ($email) {
             $registrant = \App\Models\Registrant::where('email', $email)->first();
             if ($registrant) {
-                $existing = $registrant->workshops()->where('workshop_id', $workshop->id)->first();
-                if ($existing) {
-                    $registrationStatus = $existing->pivot->status;
+                if ($track) {
+                    // Check track-level registration
+                    $trackAgendaItems = $track->agendaItems;
+                    foreach ($trackAgendaItems as $ai) {
+                        $existing = $registrant->agendaItems()->where('agenda_item_id', $ai->id)->first();
+                        if ($existing) {
+                            $registrationStatus = $existing->pivot->status;
+                            break;
+                        }
+                    }
+                }
+                // Fallback to workshop-level check
+                if (!$registrationStatus) {
+                    $existing = $registrant->workshops()->where('workshop_id', $workshop->id)->first();
+                    if ($existing) {
+                        $registrationStatus = $existing->pivot->status;
+                    }
                 }
             }
         }
 
-        return view('workshop-invitation', compact('workshop', 'invitation', 'email', 'registrationStatus'));
+        return view('workshop-invitation', compact('workshop', 'track', 'invitation', 'email', 'registrationStatus', 'speakers'));
     }
 
     /**
@@ -46,7 +64,7 @@ class WorkshopInvitationController extends Controller
     public function register(Request $request, $token)
     {
         $invitation = WorkshopInvitation::where('token', $token)
-            ->with('workshop')
+            ->with(['workshop', 'track'])
             ->firstOrFail();
 
         if (!$invitation->isValid()) {
@@ -59,6 +77,7 @@ class WorkshopInvitationController extends Controller
         ]);
 
         $workshop = $invitation->workshop;
+        $track = $invitation->track;
         $email = $request->input('email');
         $redirectUrl = route('workshop.invitation', $token) . '?email=' . urlencode($email);
 
@@ -74,6 +93,43 @@ class WorkshopInvitationController extends Controller
             return redirect($redirectUrl)->withInput()->with('error', 'Your registration needs to be approved first before you can join a workshop.');
         }
 
+        // ── Track-specific registration ──
+        if ($track) {
+            $track->load('agendaItems');
+            $workshop->load('agendaItems');
+
+            // Try to find an agenda item linked to this track, or fallback to workshop's first agenda item
+            $agendaItem = $track->agendaItems->first() ?? $workshop->agendaItems->first();
+
+            // Register at agenda item level (for track tracking)
+            if ($agendaItem) {
+                $existingAi = $registrant->agendaItems()->where('agenda_item_id', $agendaItem->id)->first();
+                if ($existingAi) {
+                    $status = $existingAi->pivot->status;
+                    if ($status === 'approved') {
+                        return redirect($redirectUrl)->with('info', 'You are already registered for this track.');
+                    } elseif ($status === 'pending') {
+                        return redirect($redirectUrl)->with('info', 'Your registration for this track is pending approval.');
+                    }
+                    $registrant->agendaItems()->updateExistingPivot($agendaItem->id, [
+                        'status' => 'pending',
+                        'admin_notes' => null,
+                        'processed_by' => null,
+                        'processed_at' => null,
+                    ]);
+                } else {
+                    $registrant->agendaItems()->attach($agendaItem->id, ['status' => 'pending']);
+                }
+            }
+
+            // Also sync to workshop-level pivot with track_id
+            $this->syncWorkshopRegistration($registrant, $workshop, 'pending', $track->id);
+
+            $invitation->incrementUse();
+            return redirect($redirectUrl)->with('success', 'Successfully registered for track <strong>' . e($track->name) . '</strong>. Waiting for admin approval.');
+        }
+
+        // ── Workshop-level registration (no track, fallback to original behavior) ──
         // Check existing workshop registration
         $existing = $registrant->workshops()->where('workshop_id', $workshop->id)->first();
 
@@ -144,6 +200,25 @@ class WorkshopInvitationController extends Controller
     }
 
     /**
+     * Sync workshop-level registration pivot.
+     */
+    private function syncWorkshopRegistration(Registrant $registrant, Workshop $workshop, string $status, ?int $trackId = null): void
+    {
+        $existing = $registrant->workshops()->where('workshop_id', $workshop->id)->first();
+        if ($existing) {
+            $registrant->workshops()->updateExistingPivot($workshop->id, [
+                'status' => $status,
+                'track_id' => $trackId ?? $existing->pivot->track_id,
+            ]);
+        } else {
+            $registrant->workshops()->attach($workshop->id, [
+                'status' => $status,
+                'track_id' => $trackId,
+            ]);
+        }
+    }
+
+    /**
      * Admin: Generate a new invitation link for a workshop.
      */
     public function generate(Request $request, Workshop $workshop)
@@ -153,20 +228,32 @@ class WorkshopInvitationController extends Controller
         }
 
         $request->validate([
-            'email' => ['nullable', 'email', 'max:255'],
+            'email'    => ['nullable', 'email', 'max:255'],
             'max_uses' => ['nullable', 'integer', 'min:0'],
+            'track_id' => ['nullable', 'exists:tracks,id'],
         ]);
+
+        // Verify track belongs to this workshop
+        if ($request->filled('track_id')) {
+            $track = \App\Models\Track::findOrFail($request->input('track_id'));
+            if ($track->workshop_id !== $workshop->id) {
+                return back()->with('error', 'Track does not belong to this workshop.');
+            }
+        }
 
         $invitation = WorkshopInvitation::create([
             'workshop_id' => $workshop->id,
-            'email' => $request->input('email'),
-            'max_uses' => $request->input('max_uses', 0),
-            'is_active' => true,
+            'track_id'    => $request->input('track_id'),
+            'email'       => $request->input('email'),
+            'max_uses'    => $request->input('max_uses', 0),
+            'is_active'   => true,
         ]);
 
         $link = route('workshop.invitation', $invitation->token);
+        $trackName = $invitation->track?->name;
+        $label = $trackName ? " ({$trackName})" : '';
 
-        return back()->with('success', "Invitation link generated: <a href=\"{$link}\" target=\"_blank\" style=\"color:#4f46e5;font-weight:600;text-decoration:underline;\">{$link}</a>");
+        return back()->with('success', "Invitation link{$label} generated: <a href=\"{$link}\" target=\"_blank\" style=\"color:#4f46e5;font-weight:600;text-decoration:underline;\">{$link}</a>");
     }
 
     /**
@@ -178,7 +265,7 @@ class WorkshopInvitationController extends Controller
             return back()->with('error', 'You do not have permission to view invitations.');
         }
 
-        $invitations = $workshop->invitations()->latest()->get();
+        $invitations = $workshop->invitations()->with('track')->latest()->get();
         return view('admin.workshops.invitations', compact('workshop', 'invitations'));
     }
 

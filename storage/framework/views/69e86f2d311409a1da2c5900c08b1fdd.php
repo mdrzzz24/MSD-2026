@@ -38,8 +38,39 @@
                 <strong>💡 Not linked to any agenda yet.</strong> Go to <strong>Agenda</strong> → Create/Edit to link this workshop.
             </div>
         <?php endif; ?>
-        <button type="submit" class="w-full py-3 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-semibold rounded-xl shadow-lg shadow-indigo-500/25 transition-all text-sm">Update Workshop</button>
+        <div class="flex gap-3">
+            <button type="submit" class="flex-1 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-semibold rounded-xl shadow-lg shadow-indigo-500/25 transition-all text-sm">Update Workshop</button>
+            <a href="<?php echo e(route('admin.workshops.tracks', $workshop)); ?>" class="flex-none px-5 py-3 bg-teal-50 border border-teal-200 text-teal-700 font-semibold rounded-xl hover:bg-teal-100 transition-all text-sm text-center">
+                Manage Tracks
+            </a>
+        </div>
     </form>
+
+    <?php $workshopTracks = $workshop->tracks()->with('speakers')->get(); ?>
+    <?php if($workshopTracks->isNotEmpty()): ?>
+        <div class="mt-6 pt-6 border-t border-gray-100">
+            <h3 class="text-sm font-bold text-gray-800 mb-3">Tracks in this Workshop</h3>
+            <div class="space-y-2">
+                <?php $__currentLoopData = $workshopTracks; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $t): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                    <div class="flex items-center justify-between p-3 rounded-xl bg-gray-50 border border-gray-100">
+                        <div class="flex items-center gap-3">
+                            <span class="px-2 py-0.5 rounded text-xs font-bold bg-teal-100 text-teal-700"><?php echo e($t->name); ?></span>
+                            <?php if($t->speakers->isNotEmpty()): ?>
+                                <span class="text-xs text-gray-500">
+                                    <?php $__currentLoopData = $t->speakers; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $sp): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                        <?php echo e($sp->name); ?><?php if(!$loop->last): ?>, <?php endif; ?>
+                                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                                </span>
+                            <?php endif; ?>
+                        </div>
+                        <?php if(!$t->is_active): ?>
+                            <span class="text-xs text-gray-400 italic">Inactive</span>
+                        <?php endif; ?>
+                    </div>
+                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+            </div>
+        </div>
+    <?php endif; ?>
 </div></div></div>
 </main>
 </div>

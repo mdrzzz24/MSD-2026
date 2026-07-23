@@ -42,7 +42,7 @@
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-gray-50">
-                            <?php $__empty_1 = true; $__currentLoopData = $agendaItems; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $item): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
+                            <?php $__empty_2 = true; $__currentLoopData = $agendaItems; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $item): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_2 = false; ?>
                                 <tr class="hover:bg-gray-50/50 transition">
                                     <td class="px-5 py-4">
                                         <a href="<?php echo e(route('admin.agenda.feedback.show', $item)); ?>" class="text-sm font-semibold text-gray-900 hover:text-indigo-600 transition"><?php echo e($item->title); ?></a>
@@ -85,7 +85,7 @@
                                         </div>
                                     </td>
                                 </tr>
-                            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
+                            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_2): ?>
                                 <tr>
                                     <td colspan="5" class="px-5 py-10 text-center text-sm text-gray-400">No agenda items found.</td>
                                 </tr>

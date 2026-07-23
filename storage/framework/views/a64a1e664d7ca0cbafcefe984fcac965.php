@@ -81,7 +81,7 @@
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-gray-50">
-                                <?php $__empty_1 = true; $__currentLoopData = $registrants; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $r): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
+                                <?php $__empty_2 = true; $__currentLoopData = $registrants; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $r): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_2 = false; ?>
                                     <tr class="hover:bg-gray-50/50 transition">
                                         <td class="px-5 py-3">
                                             <input type="checkbox" name="registrant_ids[]" value="<?php echo e($r->id); ?>"
@@ -92,7 +92,7 @@
                                         <td class="px-5 py-3 text-sm text-gray-600"><?php echo e($r->email); ?></td>
                                         <td class="px-5 py-3 text-sm text-gray-400 font-mono"><?php echo e($r->unique_code); ?></td>
                                     </tr>
-                                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
+                                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_2): ?>
                                     <tr>
                                         <td colspan="4" class="px-5 py-16 text-center">
                                             <p class="text-gray-400 font-medium">No approved registrants yet.</p>

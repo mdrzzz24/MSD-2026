@@ -9,6 +9,7 @@ class WorkshopInvitation extends Model
 {
     protected $fillable = [
         'workshop_id',
+        'track_id',
         'token',
         'email',
         'max_uses',
@@ -34,6 +35,11 @@ class WorkshopInvitation extends Model
     public function workshop()
     {
         return $this->belongsTo(Workshop::class);
+    }
+
+    public function track()
+    {
+        return $this->belongsTo(Track::class);
     }
 
     public function isValid(): bool

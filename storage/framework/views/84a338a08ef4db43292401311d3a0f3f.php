@@ -79,11 +79,12 @@
                         <option value="">— None —</option>
                         <option value="__new__" style="font-weight:700;color:#4f46e5;">+ Create New Track</option>
                         <?php $__currentLoopData = $trackList; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $tr): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-                            <option value="<?php echo e($tr->id); ?>" data-title="<?php echo e(e($tr->title)); ?>" data-desc="<?php echo e(e($tr->description)); ?>" <?php echo e(old('track_id', $agendum->track_id)==$tr->id?'selected':''); ?>><?php echo e($tr->title); ?></option>
+                            <option value="<?php echo e($tr->id); ?>" data-name="<?php echo e(e($tr->name)); ?>" data-title="<?php echo e(e($tr->title)); ?>" data-desc="<?php echo e(e($tr->description)); ?>" <?php echo e(old('track_id', $agendum->track_id)==$tr->id?'selected':''); ?>><?php echo e($tr->name ?: $tr->title); ?></option>
                         <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                     </select>
                     <div id="newTrackFields" class="hidden mt-2 p-3 bg-indigo-50 border border-indigo-200 rounded-xl space-y-2">
                         <p class="text-xs font-semibold text-indigo-700">Create New Track</p>
+                        <input type="text" name="new_track_name" placeholder="Track name..." class="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500/20">
                         <input type="text" name="new_track_title" placeholder="Track title..." class="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500/20">
                         <textarea name="new_track_desc" rows="2" placeholder="Track description..." class="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500/20"></textarea>
                     </div>

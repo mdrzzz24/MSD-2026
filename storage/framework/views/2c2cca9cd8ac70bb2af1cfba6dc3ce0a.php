@@ -66,9 +66,6 @@
     </div>
 
     
-    <form id="reminderForm" method="POST" action="<?php echo e(route('admin.workshops.send-reminder', $workshop)); ?>"
-          onsubmit="return confirmReminder()">
-        <?php echo csrf_field(); ?>
     <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
         <div class="px-5 py-4 border-b border-gray-100 flex flex-wrap items-center justify-between gap-2">
             <div><h2 class="text-base font-bold text-gray-900">Registrant List</h2><p class="text-xs text-gray-500">Total: <strong><?php echo e($registrants->count()); ?></strong> registrant(s)</p></div>
@@ -82,7 +79,8 @@
             <button type="button" onclick="toggleAll(true)" class="px-3 py-1.5 text-xs font-medium rounded-lg bg-indigo-100 text-indigo-700 hover:bg-indigo-200 transition">Select All</button>
             <button type="button" onclick="toggleAll(false)" class="px-3 py-1.5 text-xs font-medium rounded-lg bg-gray-100 text-gray-600 hover:bg-gray-200 transition">Deselect All</button>
             <span class="text-xs text-gray-400" id="selectedCount">0 selected</span>
-            <button type="submit" id="sendReminderBtn"
+            <button type="button" onclick="sendReminder()"
+                    id="sendReminderBtn"
                     class="ml-auto inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold rounded-lg bg-fuchsia-500 text-white hover:bg-fuchsia-600 shadow-sm shadow-fuchsia-200 transition disabled:opacity-50 disabled:cursor-not-allowed"
                     disabled>
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
@@ -104,6 +102,7 @@
                         <th class="px-4 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase hidden md:table-cell w-32">Phone</th>
                         <th class="px-4 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase hidden lg:table-cell w-36">Company</th>
                         <th class="px-4 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase hidden xl:table-cell w-36">Job Title</th>
+                        <th class="px-4 py-3.5 text-center text-xs font-semibold text-gray-500 uppercase w-20">Track</th>
                         <th class="px-4 py-3.5 text-center text-xs font-semibold text-gray-500 uppercase w-28">WS Status</th>
                         <th class="px-4 py-3.5 text-center text-xs font-semibold text-gray-500 uppercase w-24">Reg Status</th>
                         <th class="px-4 py-3.5 text-center text-xs font-semibold text-gray-500 uppercase w-24">Check-in</th>
@@ -126,6 +125,16 @@
                                 <td class="px-4 py-3.5 hidden md:table-cell max-w-0"><span class="text-sm text-gray-600 truncate block" title="<?php echo e($r->phone ?? ''); ?>"><?php echo e($r->phone ?? '—'); ?></span></td>
                                 <td class="px-4 py-3.5 hidden lg:table-cell max-w-0"><span class="text-sm text-gray-600 truncate block" title="<?php echo e($r->company ?? ''); ?>"><?php echo e($r->company ?? '—'); ?></span></td>
                                 <td class="px-4 py-3.5 hidden xl:table-cell max-w-0"><span class="text-sm text-gray-600 truncate block" title="<?php echo e($r->job_title ?? ''); ?>"><?php echo e($r->job_title ?? '—'); ?></span></td>
+                                <td class="px-4 py-3.5 text-center">
+                                    <?php if(isset($r->registered_track_name)): ?>
+                                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-teal-100 text-teal-700 border border-teal-200">
+                                            <?php echo e($r->registered_track_name); ?>
+
+                                        </span>
+                                    <?php else: ?>
+                                        <span class="text-xs text-gray-400">—</span>
+                                    <?php endif; ?>
+                                </td>
                                 <td class="px-4 py-3.5 text-center">
                                     <?php if($wsStatus === 'approved'): ?>
                                         <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200"><span class="w-1.5 h-1.5 rounded-full bg-emerald-500 flex-shrink-0"></span><span class="truncate">Approved</span></span>
@@ -173,7 +182,6 @@
             </div>
         <?php endif; ?>
     </div>
-    </form>
 </div>
 
 
@@ -207,13 +215,33 @@ function updateReminderCount() {
     document.getElementById('selectedCount').textContent = count + ' selected';
     document.getElementById('sendReminderBtn').disabled = count === 0;
 }
-function confirmReminder() {
-    var count = document.querySelectorAll('.cb-item:checked').length;
-    if (count === 0) {
+function sendReminder() {
+    var checked = document.querySelectorAll('.cb-item:checked');
+    if (checked.length === 0) {
         alert('Please select at least one registrant.');
-        return false;
+        return;
     }
-    return confirm('Send Workshop Gentle Reminder to ' + count + ' selected registrant(s)?');
+    if (!confirm('Send Workshop Gentle Reminder to ' + checked.length + ' selected registrant(s)?')) return;
+
+    var form = document.createElement('form');
+    form.method = 'POST';
+    form.action = '<?php echo e(route('admin.workshops.send-reminder', $workshop)); ?>';
+    form.style.display = 'none';
+
+    var csrf = document.createElement('input');
+    csrf.name = '_token';
+    csrf.value = '<?php echo e(csrf_token()); ?>';
+    form.appendChild(csrf);
+
+    checked.forEach(function(cb) {
+        var input = document.createElement('input');
+        input.name = 'registrant_ids[]';
+        input.value = cb.value;
+        form.appendChild(input);
+    });
+
+    document.body.appendChild(form);
+    form.submit();
 }
 function showRejectModal(registrantId, name) {
     document.getElementById('rejectName').textContent = name;
