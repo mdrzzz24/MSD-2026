@@ -80,16 +80,6 @@
         <?php if($workshop->name && $workshop->title): ?>
             <p style="text-align:center;font-size:14px;color:#94a3b8;margin:0 0 16px;"><?php echo e($workshop->title); ?></p>
         <?php endif; ?>
-        <?php if($track): ?>
-            <div style="text-align:center;margin-bottom:16px;">
-                <span style="display:inline-flex;align-items:center;gap:6px;padding:6px 16px;border-radius:999px;font-size:13px;font-weight:600;background:rgba(244,114,182,0.15);color:#f472b6;border:1px solid rgba(244,114,182,0.2);">
-                    <svg style="width:14px;height:14px;" fill="none" stroke="#f472b6" viewBox="0 0 24 24"><path stroke-width="2" d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7"/></svg>
-                    Track: <?php echo e($track->name); ?>
-
-                </span>
-            </div>
-        <?php endif; ?>
-
         <?php
             $agendaItem = $workshop->agendaItems->first();
             $trackAi = $track?->agendaItems->first();
@@ -196,7 +186,7 @@ $message = $__bag->first($__errorArgs[0]); ?><p style="color:#ef4444;font-size:1
 if (isset($__messageOriginal)) { $message = $__messageOriginal; }
 endif;
 unset($__errorArgs, $__bag); ?>
-                <button type="submit" class="btn-submit">Register<?php echo e($track ? ' for ' . e($track->name) : ''); ?> Track</button>
+                <button type="submit" class="btn-submit">Register for Workshop</button>
             </form>
         <?php else: ?>
             <div style="text-align:center;padding:16px 0;margin-top:8px;border-top:1px solid rgba(255,255,255,0.06);">
