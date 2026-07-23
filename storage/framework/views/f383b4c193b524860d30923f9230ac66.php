@@ -427,10 +427,6 @@
             </p>
             <form id="rejectForm" method="POST">
                 <?php echo csrf_field(); ?>
-                <div class="mb-4">
-                    <label class="block text-xs font-semibold text-gray-600 mb-1.5">Admin Notes <span class="text-gray-400">(optional)</span></label>
-                    <textarea name="admin_notes" rows="2" class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500" placeholder="Reason for rejection..."></textarea>
-                </div>
                 <div class="flex justify-end gap-2.5">
                     <button type="button" onclick="closeRejectModal()"
                             class="px-5 py-2.5 text-sm font-medium rounded-xl bg-gray-100 text-gray-700 hover:bg-gray-200 transition">Cancel</button>
