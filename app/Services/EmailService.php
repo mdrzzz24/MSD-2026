@@ -8,6 +8,8 @@ use App\Mail\TemplateMail;
 use App\Models\EmailLog;
 use App\Models\EmailTemplate;
 use App\Models\Registrant;
+use App\Models\Track;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 
 class EmailService
@@ -163,7 +165,42 @@ class EmailService
                 }
 
                 if ($workshop) {
-                    $extraData = array_merge($extraData, $workshop->emailData());
+                    // Check if registrant has a track_id in pivot
+                    $trackId = DB::table('registrant_workshop')
+                        ->where('workshop_id', $workshop->id)
+                        ->where('registrant_id', $registrant->id)
+                        ->value('track_id');
+
+                    if ($trackId && ($track = Track::with('agendaItems')->find($trackId))) {
+                        // Use track-specific time data
+                        $trackAi = $track->agendaItems->first()
+                            ?? $workshop->agendaItems()->where('track_id', $track->id)->first()
+                            ?? $workshop->agendaItems()->first();
+
+                        $start = $track->start_time ?? $trackAi?->start_time ?? $workshop->start_time;
+                        $end   = $track->end_time ?? $trackAi?->end_time ?? $workshop->end_time;
+                        $room  = $trackAi?->room ?? $workshop->room ?? '';
+                        $date  = $trackAi?->date ?? $workshop->date;
+
+                        $timeRange = '—';
+                        if ($start && $end) {
+                            $timeRange = date('H:i', strtotime($start)) . ' – ' . date('H:i', strtotime($end));
+                        }
+
+                        $extraData = array_merge($extraData, [
+                            'track_name'        => $track->name,
+                            'track_title'       => $track->title,
+                            'workshop_name'     => $workshop->name ?: $workshop->title,
+                            'workshop_title'    => $workshop->title,
+                            'workshop_room'     => $room,
+                            'workshop_date'     => $date ? $date->format('l, d F Y') : '',
+                            'workshop_time'     => $timeRange,
+                            'workshop_capacity' => (string) ($workshop->capacity ?: 0),
+                            'venue_name'        => 'Shangri-La Hotel Jakarta',
+                        ]);
+                    } else {
+                        $extraData = array_merge($extraData, $workshop->emailData());
+                    }
                 }
             }
 
