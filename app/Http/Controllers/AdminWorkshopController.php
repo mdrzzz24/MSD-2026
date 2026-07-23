@@ -423,17 +423,25 @@ class AdminWorkshopController extends Controller
      */
     public function exportCsv()
     {
-        $workshops = Workshop::with('registrants')->orderBy('title')->get();
+        $workshops = Workshop::with(['registrants', 'tracks'])->orderBy('title')->get();
 
-        $headers = ['Workshop', 'Date', 'Time', 'Registrant Name', 'Email', 'Phone', 'Company', 'Job Title', 'Status', 'Registered At', 'UTM Source', 'UTM Medium', 'UTM Campaign'];
+        $headers = ['Workshop', 'Date', 'Time', 'Track', 'Registrant Name', 'Email', 'Phone', 'Company', 'Job Title', 'Status', 'Registered At', 'UTM Source', 'UTM Medium', 'UTM Campaign'];
         $rows = [];
 
         foreach ($workshops as $w) {
+            $trackLookup = $w->tracks->keyBy('id');
             foreach ($w->registrants as $r) {
+                $trackName = '';
+                $pivotTrackId = $r->pivot->track_id ?? null;
+                if ($pivotTrackId && isset($trackLookup[$pivotTrackId])) {
+                    $trackName = $trackLookup[$pivotTrackId]->name;
+                }
+
                 $rows[] = [
-                    $w->title,
+                    $w->name ?: $w->title,
                     $w->date ? $w->date->format('Y-m-d') : '-',
                     ($w->start_time ? substr($w->start_time, 0, 5) : '') . ' - ' . ($w->end_time ? substr($w->end_time, 0, 5) : ''),
+                    $trackName,
                     $r->display_name ?: $r->name,
                     $r->email,
                     $r->phone ?? '-',
@@ -519,15 +527,21 @@ class AdminWorkshopController extends Controller
      */
     public function exportWorkshopCsv(Workshop $workshop)
     {
+        $workshop->load('tracks');
+        $trackLookup = $workshop->tracks->keyBy('id');
+
         $registrants = $workshop->registrants()->orderBy('name')->get();
 
-        $headers = ['Registrant Name', 'Email', 'Phone', 'Company', 'Job Title', 'Status', 'Registered At', 'UTM Source', 'UTM Medium', 'UTM Campaign'];
+        $workshopName = $workshop->name ?: $workshop->title;
+        $headers = ['Workshop', 'Registrant Name', 'Email', 'Phone', 'Company', 'Job Title', 'Track', 'Status', 'Registered At', 'UTM Source', 'UTM Medium', 'UTM Campaign'];
         $rows = $registrants->map(fn($r) => [
+            $workshopName,
             $r->display_name ?: $r->name,
             $r->email,
             $r->phone ?? '-',
             $r->company ?? '-',
             $r->job_title ?? '-',
+            isset($trackLookup[$r->pivot->track_id]) ? $trackLookup[$r->pivot->track_id]->name : '',
             $r->pivot->status ?? '-',
             $r->created_at->copy()->addHours(7)->format('Y-m-d H:i'),
             $r->utm_source ?? '',
