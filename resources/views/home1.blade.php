@@ -358,7 +358,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     <div style="position:sticky;top:0;z-index:10;display:flex;align-items:center;justify-content:space-between;padding:16px 24px;background:linear-gradient(135deg,#050d2a,#0e2461);border-radius:24px 24px 0 0;border-bottom:1px solid rgba(255,255,255,0.06);">
       <div style="display:flex;align-items:center;gap:10px;">
         <img src="{{ asset('img/logo-msd.png') }}" style="height:22px;width:auto;filter:brightness(0) invert(1);">
-        <span style="font-size:10px;font-weight:700;color:rgba(255,255,255,0.6);letter-spacing:1.5px;">MSD 2026</span>
+        {{-- <span style="font-size:10px;font-weight:700;color:rgba(255,255,255,0.6);letter-spacing:1.5px;">MSD 2026</span> --}}
       </div>
       <button onclick="closeAgendaModal()" style="width:30px;height:30px;border-radius:50%;border:none;background:rgba(255,255,255,0.08);font-size:15px;cursor:pointer;color:rgba(255,255,255,0.6);display:flex;align-items:center;justify-content:center;transition:all 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.15)';this.style.color='#fff'" onmouseout="this.style.background='rgba(255,255,255,0.08)';this.style.color='rgba(255,255,255,0.6)'">✕</button>
     </div>

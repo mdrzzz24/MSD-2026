@@ -263,7 +263,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                 <td class="time"><?php echo e($ts->label()); ?></td>
                 <?php if($fullRow): ?>
                   <td class="full" colspan="<?php echo e($rooms->count()); ?>" data-timeslot="<?php echo e($slotKey); ?>" data-agenda-id="<?php echo e($fullRow->id); ?>">
-                    <?php $fullTitle = $fullRow->workshop ? ($fullRow->workshop->name ?: $fullRow->workshop->title) : $fullRow->title; ?>
+                    <?php $fullTitle = $fullRow->workshop ? ($fullRow->workshop->name ?: $fullRow->workshop->title) : ($fullRow->track ? ($fullRow->track->name ?: $fullRow->track->title) : $fullRow->title); ?>
                     <?php if($fullRow->category || $fullRow->agenda_type): ?>
                       <span class="tag <?php echo e(\App\Models\AgendaItem::categoryClass($fullRow->category, $fullRow->agenda_type)); ?>"><?php echo e($fullTitle); ?></span>
                     <?php else: ?>
@@ -298,7 +298,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                                     }
                                 }
                             }
-                            $displayTitle = $item->workshop ? ($item->workshop->name ?: $item->workshop->title) : $item->title;
+                            $displayTitle = $item->workshop ? ($item->workshop->name ?: $item->workshop->title) : ($item->track ? ($item->track->name ?: $item->track->title) : $item->title);
                             $tag = ($item->category || $item->agenda_type)
                                 ? '<span class="tag ' . \App\Models\AgendaItem::categoryClass($item->category, $item->agenda_type) . '">' . e($displayTitle) . '</span>'
                                 : e($displayTitle);
@@ -408,6 +408,9 @@ window._agendaData = <?php echo json_encode($agendaItems->keyBy('id')->map(funct
         'workshop_name'        => $item->workshop ? ($item->workshop->name ?: $item->workshop->title) : null,
         'workshop_title'       => $item->workshop ? $item->workshop->title : null,
         'workshop_description' => $item->workshop ? $item->workshop->description : null,
+        'track_name'           => $item->track ? ($item->track->name ?: $item->track->title) : null,
+        'track_title'          => $item->track ? $item->track->title : null,
+        'track_description'    => $item->track ? $item->track->description : null,
     ]);
 }), JSON_UNESCAPED_SLASHES); ?>;
 
@@ -438,11 +441,15 @@ function openAgendaModal(id) {
     document.getElementById('modalRoom').innerHTML =
         '<svg style="width:14px;height:14px;flex-shrink:0;" fill="none" stroke="#94a3b8" viewBox="0 0 24 24"><path stroke-width="2" d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/><circle cx="12" cy="9" r="2.5" stroke-width="2"/></svg> ' +
         '<span>Shangri-La Hotel' + (item.room ? ', ' + item.room + ' Room' : '') + '</span>';
-    // Show workshop name + title if linked to a workshop
+    // Show workshop/track name as main title, agenda item title as subtitle
     if (item.workshop_name) {
-        var wsHtml = '<span style="font-size:14px;font-weight:500;color:#94a3b8;display:block;margin-bottom:4px;">' + item.workshop_name + '</span>';
-        wsHtml += '<span style="font-size:22px;font-weight:800;color:#e2e8f0;">' + item.title + '</span>';
-        document.getElementById('modalTitle').innerHTML = wsHtml;
+        document.getElementById('modalTitle').innerHTML =
+            '<span style="font-size:22px;font-weight:800;color:#e2e8f0;">' + item.workshop_name + '</span>' +
+            '<span style="font-size:14px;font-weight:500;color:#94a3b8;display:block;margin-top:4px;">' + item.title + '</span>';
+    } else if (item.track_name) {
+        document.getElementById('modalTitle').innerHTML =
+            '<span style="font-size:22px;font-weight:800;color:#e2e8f0;">' + item.track_name + '</span>' +
+            '<span style="font-size:14px;font-weight:500;color:#94a3b8;display:block;margin-top:4px;">' + item.title + '</span>';
     } else {
         document.getElementById('modalTitle').textContent = item.title;
     }
@@ -524,7 +531,7 @@ function openAgendaModal(id) {
 
     // Description (workshop description takes precedence if linked)
     const descEl = document.getElementById('modalDesc');
-    var descText = item.workshop_description || item.description || '';
+    var descText = item.workshop_description || item.track_description || item.description || '';
     if (descText) {
         // Strip inline color/font styles from Summernote output
         descText = descText.replace(/<span[^>]*style="[^"]*color:[^"]*"[^>]*>/gi, '<span>');
@@ -607,7 +614,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const title = cell.textContent.trim();
         if (!title || title === '—' || title === 'Time') return;
         for (const [id, item] of Object.entries(window._agendaData)) {
-            if (item.title === title || item.workshop_name === title) {
+            if (item.title === title || item.workshop_name === title || item.track_name === title) {
                 openAgendaModal(id);
                 return;
             }

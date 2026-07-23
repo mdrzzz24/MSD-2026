@@ -26,7 +26,9 @@ class AdminSpeakerController extends Controller
 
         // Handle photo upload
         if ($request->hasFile('photo')) {
-            $validated['photo'] = $request->file('photo')->store('speakers', 'public');
+            $path = $request->file('photo')->store('speakers', 'public');
+            $this->fillTransparentWithWhite($path);
+            $validated['photo'] = $path;
         }
 
         Speaker::create($validated + ['is_active' => true]);
@@ -51,7 +53,9 @@ class AdminSpeakerController extends Controller
             if ($speaker->photo && Storage::disk('public')->exists($speaker->photo)) {
                 Storage::disk('public')->delete($speaker->photo);
             }
-            $validated['photo'] = $request->file('photo')->store('speakers', 'public');
+            $path = $request->file('photo')->store('speakers', 'public');
+            $this->fillTransparentWithWhite($path);
+            $validated['photo'] = $path;
         } elseif ($request->input('remove_photo')) {
             // Remove photo
             if ($speaker->photo && Storage::disk('public')->exists($speaker->photo)) {
@@ -84,5 +88,69 @@ class AdminSpeakerController extends Controller
     {
         $speaker->update(['is_active' => !$speaker->is_active]);
         return back()->with('success', 'Speaker status toggled.');
+    }
+
+    /**
+     * Replace transparent pixels with white background in an uploaded image.
+     * Useful for PNG headshots with transparent backgrounds.
+     */
+    private function fillTransparentWithWhite(string $path): void
+    {
+        $fullPath = storage_path('app/public/' . $path);
+
+        if (!file_exists($fullPath)) {
+            return;
+        }
+
+        $info = getimagesize($fullPath);
+        if (!$info) {
+            return;
+        }
+
+        // Only process if the image has transparency (PNG or WebP)
+        $mime = $info['mime'];
+        if (!in_array($mime, ['image/png', 'image/webp'])) {
+            return;
+        }
+
+        // Create image from file
+        switch ($mime) {
+            case 'image/png':
+                $src = @imagecreatefrompng($fullPath);
+                break;
+            case 'image/webp':
+                $src = @imagecreatefromwebp($fullPath);
+                break;
+            default:
+                return;
+        }
+
+        if (!$src) {
+            return;
+        }
+
+        $width = imagesx($src);
+        $height = imagesy($src);
+
+        // Create a new truecolor image with white background
+        $whiteBg = imagecreatetruecolor($width, $height);
+        $white = imagecolorallocate($whiteBg, 255, 255, 255);
+        imagefill($whiteBg, 0, 0, $white);
+
+        // Copy the original image onto the white background (preserves alpha blending)
+        imagecopy($whiteBg, $src, 0, 0, 0, 0, $width, $height);
+
+        // Save over the original file — preserve format
+        switch ($mime) {
+            case 'image/png':
+                imagepng($whiteBg, $fullPath);
+                break;
+            case 'image/webp':
+                imagewebp($whiteBg, $fullPath);
+                break;
+        }
+
+        imagedestroy($src);
+        imagedestroy($whiteBg);
     }
 }

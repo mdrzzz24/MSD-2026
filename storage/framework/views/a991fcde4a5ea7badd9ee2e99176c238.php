@@ -214,35 +214,51 @@
                         </div>
                         <div class="flex items-center gap-3 text-xs">
                             <span class="flex items-center gap-1.5">
-                                <span class="w-2.5 h-2.5 rounded-full bg-indigo-500"></span> Total
+                                <span class="w-2.5 h-2.5 rounded-full bg-emerald-400"></span> Approved
                             </span>
                             <span class="flex items-center gap-1.5">
-                                <span class="w-2.5 h-2.5 rounded-full bg-emerald-400"></span> Approved
+                                <span class="w-2.5 h-2.5 rounded-full bg-indigo-400"></span> Pending
+                            </span>
+                            <span class="flex items-center gap-1.5">
+                                <span class="w-2.5 h-2.5 rounded-full bg-red-400"></span> Rejected
                             </span>
                         </div>
                     </div>
-                    <div class="flex items-end gap-1.5 h-36" id="realtime-chart">
+                    <div class="flex items-end gap-1.5 h-36 relative" id="realtime-chart">
                         <?php $__currentLoopData = $chartData; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $bar): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-                            <div class="flex-1 flex flex-col items-center gap-1 group relative chart-bar" data-date="<?php echo e($bar['date']); ?>">
+                            <div class="flex-1 flex flex-col items-center gap-1 group relative chart-bar"
+                                 data-date="<?php echo e($bar['date']); ?>"
+                                 data-total="<?php echo e($bar['total']); ?>"
+                                 data-approved="<?php echo e($bar['approved']); ?>"
+                                 data-pending="<?php echo e($bar['pending']); ?>"
+                                 data-rejected="<?php echo e($bar['rejected']); ?>">
                                 <div class="w-full flex flex-col-reverse" style="height: 140px;">
                                     <?php if($bar['approved'] > 0): ?>
                                         <div class="w-full bg-emerald-400 rounded-t transition-all duration-500 hover:bg-emerald-500 chart-bar-approved"
-                                             style="height: <?php echo e(max(2, $bar['approved'] / $maxDaily * 130)); ?>px"
-                                             title="<?php echo e($bar['date']); ?>: <?php echo e($bar['approved']); ?> approved"></div>
+                                             style="height: <?php echo e(max(2, $bar['approved'] / $maxDaily * 130)); ?>px"></div>
                                     <?php endif; ?>
-                                    <?php $pendingBar = $bar['total'] - $bar['approved']; ?>
-                                    <?php if($pendingBar > 0): ?>
+                                    <?php if($bar['rejected'] > 0): ?>
+                                        <div class="w-full bg-red-400 rounded-t transition-all duration-500 hover:bg-red-500 chart-bar-rejected"
+                                             style="height: <?php echo e(max(2, $bar['rejected'] / $maxDaily * 130)); ?>px"></div>
+                                    <?php endif; ?>
+                                    <?php if($bar['pending'] > 0): ?>
                                         <div class="w-full bg-indigo-400 rounded-t transition-all duration-500 hover:bg-indigo-500 chart-bar-pending"
-                                             style="height: <?php echo e(max(2, $pendingBar / $maxDaily * 130)); ?>px"
-                                             title="<?php echo e($bar['date']); ?>: <?php echo e($pendingBar); ?> pending"></div>
+                                             style="height: <?php echo e(max(2, $bar['pending'] / $maxDaily * 130)); ?>px"></div>
                                     <?php endif; ?>
                                     <?php if($bar['total'] === 0): ?>
                                         <div class="w-full bg-gray-100 rounded-t chart-bar-empty" style="height: 2px"></div>
                                     <?php endif; ?>
                                 </div>
-                                <span class="text-[10px] text-gray-400 font-medium"><?php echo e($bar['day']); ?></span>
+                                
+                                <div class="chart-bar-label text-[9px] font-bold text-gray-700 opacity-0 group-hover:opacity-100 transition-opacity duration-200 leading-none mt-0.5">
+                                    <?php echo e($bar['total']); ?>
+
+                                </div>
+                                <span class="text-[10px] text-gray-400 font-medium -mt-0.5"><?php echo e($bar['day']); ?></span>
                             </div>
                         <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                        
+                        <div id="chartTooltip" class="absolute z-50 hidden pointer-events-none bg-gray-900 text-white text-xs rounded-lg shadow-lg px-3 py-2.5 leading-relaxed transition-opacity duration-150" style="min-width: 140px;"></div>
                     </div>
                 </div>
 
@@ -517,6 +533,31 @@
         0% { background-color: rgba(239, 68, 68, 0.3); }
         100% { background-color: transparent; }
     }
+
+    /* ── Chart Tooltip ── */
+    #chartTooltip {
+        font-family: 'Inter', system-ui, sans-serif;
+    }
+    #chartTooltip::after {
+        content: '';
+        position: absolute;
+        bottom: -4px;
+        left: 50%;
+        transform: translateX(-50%) rotate(45deg);
+        width: 8px;
+        height: 8px;
+        background: #111827;
+    }
+
+    /* ── Chart bar click active state ── */
+    .chart-bar.show-labels .chart-bar-label {
+        opacity: 1 !important;
+    }
+    .chart-bar.show-labels .chart-bar-approved,
+    .chart-bar.show-labels .chart-bar-pending,
+    .chart-bar.show-labels .chart-bar-rejected {
+        filter: brightness(1.05);
+    }
 </style>
 
 
@@ -578,37 +619,66 @@
             var bars = document.querySelectorAll('#realtime-chart .chart-bar');
             data.chartData.forEach(function(item, i) {
                 if (bars[i]) {
+                    // Update data attributes for tooltip
+                    bars[i].setAttribute('data-date', item.date);
+                    bars[i].setAttribute('data-total', item.total);
+                    bars[i].setAttribute('data-approved', item.approved);
+                    bars[i].setAttribute('data-pending', item.pending);
+                    bars[i].setAttribute('data-rejected', item.rejected);
+
+                    // Update number label
+                    var label = bars[i].querySelector('.chart-bar-label');
+                    if (label) {
+                        label.textContent = item.total;
+                    }
+
                     var approvedBar = bars[i].querySelector('.chart-bar-approved');
+                    var rejectedBar = bars[i].querySelector('.chart-bar-rejected');
                     var pendingBar = bars[i].querySelector('.chart-bar-pending');
                     var emptyBar = bars[i].querySelector('.chart-bar-empty');
                     var maxH = data.maxDaily || 1;
+                    var container = bars[i].querySelector('.w-full');
 
+                    // Approved (bottom of stack)
                     if (item.approved > 0) {
                         if (!approvedBar) {
                             approvedBar = document.createElement('div');
-                            approvedBar.className = 'w-full bg-emerald-400 rounded-t transition-all duration-500';
-                            bars[i].querySelector('.w-full').appendChild(approvedBar);
+                            approvedBar.className = 'w-full bg-emerald-400 rounded-t transition-all duration-500 chart-bar-approved';
+                            container.appendChild(approvedBar);
                         }
                         approvedBar.style.height = Math.max(2, item.approved / maxH * 130) + 'px';
-                        approvedBar.title = item.date + ': ' + item.approved + ' approved';
                     } else if (approvedBar) { approvedBar.style.height = '0px'; }
 
-                    var pendingCount = item.total - item.approved;
-                    if (pendingCount > 0) {
+                    // Rejected (middle of stack)
+                    if (item.rejected > 0) {
+                        if (!rejectedBar) {
+                            rejectedBar = document.createElement('div');
+                            rejectedBar.className = 'w-full bg-red-400 rounded-t transition-all duration-500 chart-bar-rejected';
+                            // Insert after approvedBar (before pendingBar)
+                            if (pendingBar) {
+                                container.insertBefore(rejectedBar, pendingBar);
+                            } else {
+                                container.appendChild(rejectedBar);
+                            }
+                        }
+                        rejectedBar.style.height = Math.max(2, item.rejected / maxH * 130) + 'px';
+                    } else if (rejectedBar) { rejectedBar.style.height = '0px'; }
+
+                    // Pending (top of stack)
+                    if (item.pending > 0) {
                         if (!pendingBar) {
                             pendingBar = document.createElement('div');
-                            pendingBar.className = 'w-full bg-indigo-400 rounded-t transition-all duration-500';
-                            bars[i].querySelector('.w-full').prepend(pendingBar);
+                            pendingBar.className = 'w-full bg-indigo-400 rounded-t transition-all duration-500 chart-bar-pending';
+                            container.appendChild(pendingBar);
                         }
-                        pendingBar.style.height = Math.max(2, pendingCount / maxH * 130) + 'px';
-                        pendingBar.title = item.date + ': ' + pendingCount + ' pending';
+                        pendingBar.style.height = Math.max(2, item.pending / maxH * 130) + 'px';
                     } else if (pendingBar) { pendingBar.style.height = '0px'; }
 
                     if (item.total === 0 && !emptyBar) {
                         emptyBar = document.createElement('div');
                         emptyBar.className = 'w-full bg-gray-100 rounded-t chart-bar-empty';
                         emptyBar.style.height = '2px';
-                        bars[i].querySelector('.w-full').appendChild(emptyBar);
+                        container.appendChild(emptyBar);
                     } else if (item.total > 0 && emptyBar) { emptyBar.remove(); }
                 }
             });
@@ -664,6 +734,106 @@
         // Force reflow
         void el.offsetWidth;
         el.classList.add('realtime-updated');
+    }
+
+    // ═══════════════════════════════════════════════
+    //  Chart Tooltip & Click Interaction
+    // ═══════════════════════════════════════════════
+
+    var chartEl = document.getElementById('realtime-chart');
+    var tooltipEl = document.getElementById('chartTooltip');
+
+    function initChartTooltip() {
+        if (!chartEl || !tooltipEl) return;
+
+        // Remove old listeners by cloning (to avoid duplicates after polling refresh)
+        // We use event delegation on the chart container instead
+    }
+
+    // Delegate mouse events on the chart container
+    chartEl.addEventListener('mouseover', function(e) {
+        var bar = e.target.closest('.chart-bar');
+        if (!bar) { hideTooltip(); return; }
+        showTooltip(bar, e);
+    });
+
+    chartEl.addEventListener('mousemove', function(e) {
+        var bar = e.target.closest('.chart-bar');
+        if (!bar) { hideTooltip(); return; }
+        positionTooltip(bar, e);
+    });
+
+    chartEl.addEventListener('mouseleave', function(e) {
+        // Only hide if not leaving to a child of chart
+        if (e.relatedTarget && chartEl.contains(e.relatedTarget)) return;
+        hideTooltip();
+    });
+
+    // Click to toggle persistent number labels
+    chartEl.addEventListener('click', function(e) {
+        var bar = e.target.closest('.chart-bar');
+        if (!bar) return;
+        e.stopPropagation();
+
+        // Toggle .show-labels on this bar
+        var wasActive = bar.classList.contains('show-labels');
+        // Remove from all other bars
+        chartEl.querySelectorAll('.chart-bar.show-labels').forEach(function(b) {
+            b.classList.remove('show-labels');
+        });
+        if (!wasActive) {
+            bar.classList.add('show-labels');
+        }
+    });
+
+    // Click outside chart to remove all active labels
+    document.addEventListener('click', function(e) {
+        if (chartEl && !chartEl.contains(e.target)) {
+            chartEl.querySelectorAll('.chart-bar.show-labels').forEach(function(b) {
+                b.classList.remove('show-labels');
+            });
+        }
+    });
+
+    function showTooltip(bar, event) {
+        var date = bar.getAttribute('data-date') || '';
+        var total = bar.getAttribute('data-total') || '0';
+        var approved = bar.getAttribute('data-approved') || '0';
+        var pending = bar.getAttribute('data-pending') || '0';
+        var rejected = bar.getAttribute('data-rejected') || '0';
+
+        tooltipEl.innerHTML = ''
+            + '<div class="font-semibold text-gray-100 mb-1.5">' + escapeHtml(date) + '</div>'
+            + '<div class="flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-emerald-400 inline-block"></span> Approved: <span class="font-semibold">' + approved + '</span></div>'
+            + '<div class="flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-indigo-400 inline-block"></span> Pending: <span class="font-semibold">' + pending + '</span></div>'
+            + '<div class="flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-red-400 inline-block"></span> Rejected: <span class="font-semibold">' + rejected + '</span></div>'
+            + '<div class="border-t border-gray-700 mt-1.5 pt-1.5 flex items-center gap-2"><span class="font-semibold">Total:</span> <span class="font-bold text-white">' + total + '</span></div>';
+
+        tooltipEl.classList.remove('hidden');
+        positionTooltip(bar, event);
+    }
+
+    function positionTooltip(bar, event) {
+        var rect = bar.getBoundingClientRect();
+        var chartRect = chartEl.getBoundingClientRect();
+        var tooltipRect = tooltipEl.getBoundingClientRect();
+
+        // Position: centered above the bar, but use mouse X for horizontal
+        var x = event.clientX - chartRect.left - tooltipRect.width / 2;
+        var y = rect.top - chartRect.top - tooltipRect.height - 8;
+
+        // Clamp horizontal so tooltip stays within chart
+        if (x < 4) x = 4;
+        if (x + tooltipRect.width > chartRect.width - 4) x = chartRect.width - tooltipRect.width - 4;
+
+        tooltipEl.style.left = x + 'px';
+        tooltipEl.style.top = y + 'px';
+    }
+
+    function hideTooltip() {
+        if (tooltipEl) {
+            tooltipEl.classList.add('hidden');
+        }
     }
 
     // ── Poll setiap N detik ──
