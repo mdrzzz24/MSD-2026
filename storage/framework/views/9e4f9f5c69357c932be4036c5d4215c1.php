@@ -23,7 +23,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="preload" as="image" href="<?php echo e(asset('img/website-bg.jpg')); ?>" fetchpriority="high">
+    <link rel="preload" as="image" href="<?php echo e(asset('img/Website-BG.jpg')); ?>" fetchpriority="high">
     <link rel="stylesheet" href="<?php echo e(asset('css/style.css')); ?>?v=7">
     <style>
         body { margin:0;padding:0;background:#050d2a;font-family:'Inter',system-ui,sans-serif;color:#e2e8f0;min-height:100vh;display:flex;flex-direction:column; }

@@ -22,7 +22,7 @@ html{overflow-x:hidden;scroll-behavior:smooth}
 body{
   font-family:'Inter',system-ui,-apple-system,sans-serif;
   color:var(--ink);
-  background:#050d2a url('../img/website-bg.jpg') top/cover no-repeat;
+  background:#050d2a url('../img/Website-BG.jpg') top/cover no-repeat;
   line-height:1.6;
   -webkit-font-smoothing:antialiased;
 }

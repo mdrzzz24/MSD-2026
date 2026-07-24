@@ -34,7 +34,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="preload" as="image" href="<?php echo e(asset('img/website-bg.jpg')); ?>" fetchpriority="high">
+<link rel="preload" as="image" href="<?php echo e(asset('img/Website-BG.jpg')); ?>" fetchpriority="high">
 <link rel="stylesheet" href="<?php echo e(asset('css/style.css')); ?>?v=7">
 </head>
 <body>
@@ -179,15 +179,15 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         $floorGroups = $rooms->groupBy(fn($r) => $r->floorRelation?->name ?? 'Other');
       ?>
       <div class="table-wrap" style="position:relative;">
-        
+
         <div id="agendaOverlay" style="position:absolute;inset:-4px;z-index:50;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(5,13,42,0.88);backdrop-filter:blur(8px);border-radius:20px;cursor:pointer;transition:opacity 0.6s,transform 0.6s;">
-          
+
           <div id="overlayDesktop" style="display:flex;flex-direction:column;align-items:center;">
             <img src="https://img.icons8.com/?size=100&id=pGqqobAPSa_u&format=png&color=000000" style="width:48px;height:48px;margin-bottom:14px;opacity:0.7;filter:brightness(0) invert(1);">
             <p style="font-size:15px;font-weight:700;color:#e2e8f0;margin-bottom:4px;letter-spacing:-0.01em;">Tap any session to explore</p>
             <p style="font-size:13px;color:#94a3b8;max-width:300px;text-align:center;line-height:1.6;">Click on a <strong style="color:#f472b6;">workshop</strong> or <strong style="color:#818cf8;">track</strong> in the table to view details.</p>
           </div>
-          
+
           <div id="overlayMobile" style="display:none;flex-direction:column;align-items:center;padding:0 16px;">
             <img src="https://img.icons8.com/?size=100&id=xP7ywSliik10&format=png&color=000000" style="width:44px;height:44px;margin-bottom:12px;opacity:0.7;filter:brightness(0) invert(1);">
             <p style="font-size:15px;font-weight:700;color:#e2e8f0;margin-bottom:4px;letter-spacing:-0.01em;text-align:center;">Swipe to explore</p>
@@ -356,42 +356,42 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
 <div id="agendaModal" style="display:none;position:fixed;inset:0;z-index:9999;align-items:center;justify-content:center;background:rgba(5,13,42,0.85);backdrop-filter:blur(12px);padding:20px;overflow-y:auto;">
   <div style="background:rgba(255,255,255,0.05);backdrop-filter:blur(16px);border-radius:24px;box-shadow:0 30px 80px rgba(0,0,0,0.5),inset 0 1px 0 rgba(255,255,255,0.08);width:100%;max-width:600px;max-height:90vh;overflow-y:auto;animation:msdFadeIn 0.35s ease-out;border:1px solid rgba(255,255,255,0.08);">
-    
+
     <div style="position:sticky;top:0;z-index:10;display:flex;align-items:center;justify-content:space-between;padding:16px 24px;background:linear-gradient(135deg,#050d2a,#0e2461);border-radius:24px 24px 0 0;border-bottom:1px solid rgba(255,255,255,0.06);">
       <div style="display:flex;align-items:center;gap:10px;">
         <img src="<?php echo e(asset('img/logo-msd.png')); ?>" style="height:22px;width:auto;filter:brightness(0) invert(1);">
-        
+
       </div>
       <button onclick="closeAgendaModal()" style="width:30px;height:30px;border-radius:50%;border:none;background:rgba(255,255,255,0.08);font-size:15px;cursor:pointer;color:rgba(255,255,255,0.6);display:flex;align-items:center;justify-content:center;transition:all 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.15)';this.style.color='#fff'" onmouseout="this.style.background='rgba(255,255,255,0.08)';this.style.color='rgba(255,255,255,0.6)'">✕</button>
     </div>
 
     <div style="padding:28px 28px 32px;">
-      
+
       <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:14px;font-size:12px;">
         <div id="modalDateTime" style="display:flex;align-items:center;gap:6px;color:#f472b6;font-weight:500;"></div>
         <div id="modalRoom" style="display:flex;align-items:center;gap:6px;color:#94a3b8;"></div>
       </div>
 
-      
+
       <div style="margin-bottom:16px;">
         <span id="modalTypeBadge" style="display:inline-block;font-size:10px;font-weight:700;text-transform:uppercase;padding:3px 10px;border-radius:20px;letter-spacing:0.8px;"></span>
         <span id="modalCapacity" style="display:inline-block;font-size:12px;color:#94a3b8;margin-left:10px;"></span>
       </div>
 
-      
+
       <h2 style="font-size:22px;font-weight:800;color:#e2e8f0;margin-bottom:18px;line-height:1.35;letter-spacing:-0.02em;" id="modalTitle"></h2>
 
-      
+
       <div id="modalSpeakers" style="margin-bottom:24px;padding:20px;background:rgba(255,255,255,0.04);border-radius:16px;border:1px solid rgba(255,255,255,0.06);"></div>
 
-      
+
       <div id="modalDesc" style="font-size:13px;color:#cbd5e1;line-height:1.7;margin-bottom:24px;"></div>
       <style>#modalDesc, #modalDesc * { color: #cbd5e1 !important; } #modalDesc ul, #modalDesc ol { padding-left: 20px; margin: 8px 0; } #modalDesc li { margin-bottom: 4px; } #modalDesc p { margin: 6px 0; } #modalDesc h4 { font-size: 14px; font-weight: 700; color: #e2e8f0 !important; margin: 12px 0 4px; } #modalDesc strong { color: #e2e8f0 !important; }</style>
 
-      
+
       <div id="modalHighlights" style="margin-bottom:24px;"></div>
 
-      
+
       <div id="modalRegSection" style="border-top:1px solid rgba(255,255,255,0.08);padding-top:20px;margin-top:12px;"></div>
     </div>
   </div>
@@ -841,7 +841,7 @@ document.addEventListener('DOMContentLoaded',function(){var e=document.getElemen
             <span>By submitting this form, I understand Metrodata will process my personal information in accordance with their <strong><a href="https://www.metrodata.co.id/privacy-policy" target="_blank">Privacy Notice</a></strong>. Additionally, I consent to my information being shared with <strong><a href="https://jovenindo.com/privacy-policy" target="_blank">Event Partners</a></strong> in accordance. I understand I may withdraw my consent or update my information at any time.</span>
           </label>
         </div>
-        
+
         <input type="hidden" name="utm_source" id="utm_source" value="">
         <input type="hidden" name="utm_medium" id="utm_medium" value="">
         <input type="hidden" name="utm_campaign" id="utm_campaign" value="">
