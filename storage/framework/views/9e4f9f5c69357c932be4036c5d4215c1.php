@@ -23,7 +23,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="preload" as="image" href="<?php echo e(asset('img/Website-BG.jpeg')); ?>" fetchpriority="high">
+    <link rel="preload" as="image" href="<?php echo e(asset('img/website-bg.jpg')); ?>" fetchpriority="high">
     <link rel="stylesheet" href="<?php echo e(asset('css/style.css')); ?>?v=7">
     <style>
         body { margin:0;padding:0;background:#050d2a;font-family:'Inter',system-ui,sans-serif;color:#e2e8f0;min-height:100vh;display:flex;flex-direction:column; }
@@ -109,7 +109,7 @@
             <div><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;vertical-align:-2px;margin-right:6px;"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/><circle cx="12" cy="9" r="2.5"/></svg> <?php echo e($room); ?> Room</div>
         </div>
 
-        
+
         <?php
             // Use track-level speakers if available, fall back to agenda-item speakers
             $displaySpeakers = $speakers ?? $agendaItem?->speakers ?? collect();
