@@ -163,7 +163,7 @@
         @endif
 
         {{-- ═══ System ═══ --}}
-        @if (Auth::user()->hasPermission('checkin_log') || Auth::user()->hasPermission('admin_users'))
+        @if (Auth::user()->hasPermission('checkin_log') || Auth::user()->hasPermission('admin_users') || Auth::user()->hasPermission('login_logs'))
         <div class="pt-4">
             <p class="px-3 mb-2 text-xs font-semibold text-gray-400 uppercase tracking-widest">System</p>
         </div>
@@ -173,6 +173,13 @@
            class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium {{ request()->routeIs('admin.management.checkin') ? 'bg-indigo-50 text-indigo-700' : 'text-gray-600 hover:bg-gray-100' }} transition">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
             Check-in Log
+        </a>
+        @endif
+        @if (Auth::user()->hasPermission('login_logs'))
+        <a href="{{ route('admin.management.login-logs') }}"
+           class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium {{ request()->routeIs('admin.management.login-logs') ? 'bg-indigo-50 text-indigo-700' : 'text-gray-600 hover:bg-gray-100' }} transition">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+            Login Logs
         </a>
         @endif
         @if (Auth::user()->hasPermission('admin_users'))

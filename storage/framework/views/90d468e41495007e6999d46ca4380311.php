@@ -64,13 +64,16 @@
     <?php endif; ?>
 
     
-    <?php if(Auth::user()->hasPermission('checkin_log') || Auth::user()->hasPermission('admin_users')): ?>
+    <?php if(Auth::user()->hasPermission('checkin_log') || Auth::user()->hasPermission('admin_users') || Auth::user()->hasPermission('login_logs')): ?>
     <div class="pt-4">
       <p class="px-3 mb-2 text-xs font-semibold text-gray-400 uppercase tracking-widest">System</p>
     </div>
     <?php endif; ?>
     <?php if(Auth::user()->hasPermission('checkin_log')): ?>
     <a href="<?php echo e(route('admin.management.checkin')); ?>" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-gray-600 hover:bg-gray-100"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>Check-in Log</a>
+    <?php endif; ?>
+    <?php if(Auth::user()->hasPermission('login_logs')): ?>
+    <a href="<?php echo e(route('admin.management.login-logs')); ?>" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-gray-600 hover:bg-gray-100"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>Login Logs</a>
     <?php endif; ?>
     <?php if(Auth::user()->hasPermission('admin_users')): ?>
     <a href="<?php echo e(route('admin.management.users')); ?>" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-gray-600 hover:bg-gray-100"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"/></svg>Admin Users</a>

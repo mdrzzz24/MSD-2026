@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\LoginLog;
 use App\Models\Registrant;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -35,6 +36,19 @@ class AuthController extends Controller
             // Allow admin users AND client users
             if ($user->is_admin || $user->role === 'client') {
                 $request->session()->regenerate();
+
+                // Log login activity
+                LoginLog::create([
+                    'user_type'  => 'admin',
+                    'user_id'    => $user->id,
+                    'name'       => $user->name,
+                    'email'      => $user->email,
+                    'ip_address' => $request->ip(),
+                    'user_agent' => $request->userAgent(),
+                    'login_at'   => now(),
+                    'session_id' => $request->session()->getId(),
+                ]);
+
                 return redirect()->intended(route('admin.dashboard'));
             }
 
@@ -49,6 +63,19 @@ class AuthController extends Controller
 
             if ($registrant->isApproved()) {
                 $request->session()->regenerate();
+
+                // Log login activity
+                LoginLog::create([
+                    'user_type'  => 'registrant',
+                    'user_id'    => $registrant->id,
+                    'name'       => $registrant->name,
+                    'email'      => $registrant->email,
+                    'ip_address' => $request->ip(),
+                    'user_agent' => $request->userAgent(),
+                    'login_at'   => now(),
+                    'session_id' => $request->session()->getId(),
+                ]);
+
                 return redirect()->intended(route('home1'));
             }
 
@@ -66,6 +93,19 @@ class AuthController extends Controller
             if ($registrant && $registrant->isApproved()) {
                 Auth::guard('registrant')->login($registrant);
                 $request->session()->regenerate();
+
+                // Log login activity
+                LoginLog::create([
+                    'user_type'  => 'registrant',
+                    'user_id'    => $registrant->id,
+                    'name'       => $registrant->name,
+                    'email'      => $registrant->email,
+                    'ip_address' => $request->ip(),
+                    'user_agent' => $request->userAgent(),
+                    'login_at'   => now(),
+                    'session_id' => $request->session()->getId(),
+                ]);
+
                 return redirect()->intended(route('home1'));
             }
         }
@@ -78,6 +118,19 @@ class AuthController extends Controller
 
     public function logout(Request $request)
     {
+        // Update login_log for the current admin session
+        $sessionId = $request->session()->getId();
+        LoginLog::where('session_id', $sessionId)
+            ->where('user_type', 'admin')
+            ->whereNull('logout_at')
+            ->update(['logout_at' => now()]);
+
+        // Update login_log for the current registrant session
+        LoginLog::where('session_id', $sessionId)
+            ->where('user_type', 'registrant')
+            ->whereNull('logout_at')
+            ->update(['logout_at' => now()]);
+
         // Log out from both guards (admin & registrant)
         Auth::logout();
         Auth::guard('registrant')->logout();

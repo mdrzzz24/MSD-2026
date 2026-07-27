@@ -84,6 +84,7 @@ class User extends Authenticatable
             'admin_users'         => 'Admin Users',
             'booths'              => 'Booths',
             'booth_visits'        => 'Booth Visits',
+            'login_logs'          => 'Login Logs',
         ];
     }
 

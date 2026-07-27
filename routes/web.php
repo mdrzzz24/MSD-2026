@@ -306,10 +306,13 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         Route::get('/qr-codes', [App\Http\Controllers\AdminManagementController::class, 'qrCodes'])->name('qr');
         Route::get('/qr-codes/export/csv', [App\Http\Controllers\AdminManagementController::class, 'exportQrCsv'])->name('qr.export-csv');
 
-        // Check-in, Users — super_admin only
-        Route::middleware('super_admin')->group(function () {
-            Route::get('/checkin-log', [App\Http\Controllers\AdminManagementController::class, 'checkinLog'])->name('checkin');
-            Route::get('/checkin-log/export/csv', [App\Http\Controllers\AdminManagementController::class, 'exportCheckinCsv'])->name('checkin.export-csv');
+            // Check-in, Users, Login Logs — super_admin only
+            Route::middleware('super_admin')->group(function () {
+                Route::get('/checkin-log', [App\Http\Controllers\AdminManagementController::class, 'checkinLog'])->name('checkin');
+                Route::get('/checkin-log/export/csv', [App\Http\Controllers\AdminManagementController::class, 'exportCheckinCsv'])->name('checkin.export-csv');
+                // Login Logs
+                Route::get('/login-logs', [App\Http\Controllers\AdminLoginLogController::class, 'index'])->name('login-logs');
+                Route::get('/login-logs/export/csv', [App\Http\Controllers\AdminLoginLogController::class, 'exportCsv'])->name('login-logs.export-csv');
             Route::get('/users', [App\Http\Controllers\AdminManagementController::class, 'users'])->name('users');
             Route::post('/users', [App\Http\Controllers\AdminManagementController::class, 'storeUser'])->name('users.store');
             Route::put('/users/{user}', [App\Http\Controllers\AdminManagementController::class, 'updateUser'])->name('users.update');

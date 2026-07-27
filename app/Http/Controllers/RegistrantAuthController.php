@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\LoginLog;
 use App\Models\ReferralCode;
 use App\Models\Registrant;
 use App\Models\RegistrationLink;
@@ -176,6 +177,13 @@ class RegistrantAuthController extends Controller
      */
     public function logout(Request $request)
     {
+        // Update login_log for the registrant session
+        $sessionId = $request->session()->getId();
+        LoginLog::where('session_id', $sessionId)
+            ->where('user_type', 'registrant')
+            ->whereNull('logout_at')
+            ->update(['logout_at' => now()]);
+
         Auth::guard('registrant')->logout();
 
         $request->session()->invalidate();
