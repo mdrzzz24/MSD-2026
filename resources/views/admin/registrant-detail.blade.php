@@ -231,6 +231,7 @@
 
                 {{-- Sidebar column --}}
                 <div class="xl:col-span-1 space-y-5">
+                    @unless(auth()->user()->isClient())
                     {{-- Quick stats --}}
                     <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
                         <div class="px-5 py-4 border-b border-gray-100">
@@ -350,6 +351,7 @@
                             @endif
                         </div>
                     </div>
+                    @endunless
 
                     {{-- Workshops --}}
                     @if ($workshops->count() > 0)
