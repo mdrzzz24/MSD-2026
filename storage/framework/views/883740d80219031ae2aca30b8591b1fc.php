@@ -696,6 +696,15 @@ document.addEventListener('DOMContentLoaded', function() {
 
 
     <div class="sponsors-block">
+      <div class="sponsor-tier">Exhibitor</div>
+      <div class="sponsor-grid">
+        <!-- <div class="sponsor"><img src="<?php echo e(asset('img/metrodata.png')); ?>" alt="Metrodata Electronics"></div> -->
+        <div class="sponsor"><img src="<?php echo e(asset('img/EXHIBITOR/Asus-Business.png')); ?>" alt="Asus Business"></div>
+        <div class="sponsor"><img src="<?php echo e(asset('img/EXHIBITOR/FanRuan.png')); ?>" alt="FanRuan"></div>
+        <div class="sponsor"><img src="<?php echo e(asset('img/EXHIBITOR/Snowflake.png')); ?>" alt="Snowflake"></div>
+      </div>
+    </div>
+    <div class="sponsors-block">
       <div class="sponsor-tier">Proud Collaborators</div>
       <div class="sponsor-grid">
         <!-- <div class="sponsor"><img src="<?php echo e(asset('img/metrodata.png')); ?>" alt="Metrodata Electronics"></div> -->
