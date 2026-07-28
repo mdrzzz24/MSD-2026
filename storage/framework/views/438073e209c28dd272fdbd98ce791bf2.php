@@ -94,7 +94,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     <?php endif; ?>
   </div>
 </header>
-
+<div id="postHeroContent">
 <!-- OVERVIEW -->
 <section id="overview" class="reveal">
   <div class="container">
@@ -891,7 +891,9 @@ document.addEventListener('DOMContentLoaded',function(){var e=document.getElemen
   </div>
 </footer>
 
-<script src="<?php echo e(asset('js/main.js')); ?>?v=10"></script>
+</div>
+
+<script src="<?php echo e(asset('js/main.js')); ?>?v=10"></>
 <style>
 .field-err { display:block; font-size:12px; color:#ef4444; margin-top:2px; min-height:0; }
 .field-err:empty { display:none; }
@@ -950,18 +952,71 @@ document.addEventListener('DOMContentLoaded', function() {
 <?php endif; ?>
 </script>
 
+<script>
+// ── Mobile: Hero-only on scroll-to-top (smooth parallax-style) ──
+(function() {
+  var postContent = document.getElementById('postHeroContent');
+  if (!postContent) return;
+
+  var ticking = false;
+
+  function updateHeroMode() {
+    if (window.innerWidth > 767) {
+      postContent.style.transform = '';
+      postContent.style.pointerEvents = '';
+      document.body.classList.remove('mobile-hero-only');
+      return;
+    }
+
+    var scrollY = window.scrollY;
+    var vh = window.innerHeight;
+
+    if (scrollY < vh) {
+      // Content slides up proportionally to scroll — no jumps
+      var translateY = vh - scrollY;
+      postContent.style.transform = 'translateY(' + translateY + 'px)';
+      postContent.style.pointerEvents = 'none';
+
+      if (scrollY < 5) {
+        document.body.classList.add('mobile-hero-only');
+        if (scrollY === 0) window.scrollTo(0, 0);
+      } else {
+        document.body.classList.remove('mobile-hero-only');
+      }
+    } else {
+      postContent.style.transform = '';
+      postContent.style.pointerEvents = '';
+      document.body.classList.remove('mobile-hero-only');
+    }
+  }
+
+  // Init
+  updateHeroMode();
+
+  window.addEventListener('scroll', function() {
+    if (!ticking) {
+      window.requestAnimationFrame(function() {
+        updateHeroMode();
+        ticking = false;
+      });
+      ticking = true;
+    }
+  }, { passive: true });
+
+  window.addEventListener('resize', updateHeroMode);
+})();
+</script>
+
 <style>
   @keyframes fadeInUp { from { opacity:0; transform:scale(0.9); } to { opacity:1; transform:scale(1); } }
 
-  /* ── Mobile: Hero sticky — covers content below until user scrolls past ── */
+  /* ── Mobile: hide post-hero content when at top ── */
   @media (max-width: 767px) {
-    .hero {
-      position: sticky !important;
-      top: 0 !important;
-      z-index: 10;
+    #postHeroContent {
+      will-change: transform;
+    }
+    body.mobile-hero-only .hero {
       min-height: 100dvh;
-      height: 100dvh;
-      background: #050d2a;
     }
   }
 </style>
