@@ -19,13 +19,15 @@ class Workshop extends Model
         'end_time',
         'capacity',
         'registration_open',
+        'invitation_bypass_approval',
     ];
 
     protected $casts = [
-        'date'              => 'date',
-        'start_time'        => 'string',
-        'end_time'          => 'string',
-        'registration_open' => 'boolean',
+        'date'                       => 'date',
+        'start_time'                 => 'string',
+        'end_time'                   => 'string',
+        'registration_open'          => 'boolean',
+        'invitation_bypass_approval' => 'boolean',
     ];
 
     public function registrants()

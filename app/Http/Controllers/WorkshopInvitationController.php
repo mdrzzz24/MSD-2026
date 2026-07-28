@@ -88,8 +88,8 @@ class WorkshopInvitationController extends Controller
             return redirect($redirectUrl)->withInput()->with('error', 'No registration found with this email. Please register for MSD 2026 first.');
         }
 
-        // Check if registrant is approved
-        if ($registrant->status !== 'approved') {
+        // Check if registrant is approved (skip if workshop bypasses approval)
+        if (!$workshop->invitation_bypass_approval && $registrant->status !== 'approved') {
             return redirect($redirectUrl)->withInput()->with('error', 'Your registration needs to be approved first before you can join a workshop.');
         }
 

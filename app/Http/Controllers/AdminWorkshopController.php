@@ -115,6 +115,22 @@ class AdminWorkshopController extends Controller
     }
 
     /**
+     * Toggle invitation bypass approval.
+     * When enabled, registrants can register via invitation even if their registration is not yet approved.
+     */
+    public function toggleInvitationBypass(Workshop $workshop)
+    {
+        $workshop->update(['invitation_bypass_approval' => !$workshop->invitation_bypass_approval]);
+
+        $status = $workshop->invitation_bypass_approval ? 'opened' : 'closed';
+        return redirect()->route('admin.workshops.index')
+            ->with('success', "Invitation bypass for workshop <strong>{$workshop->title}</strong> has been {$status}. " .
+                ($workshop->invitation_bypass_approval
+                    ? 'Registrants can now join via invitation without prior approval.'
+                    : 'Registrants must now be approved before joining via invitation.'));
+    }
+
+    /**
      * List all workshops with registrant counts (accessible by all admin roles).
      */
     public function workshopRegistrants()

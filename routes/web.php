@@ -169,6 +169,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::put('/workshops/{workshop}', [AdminWorkshopController::class, 'update'])->name('workshops.update');
     Route::delete('/workshops/{workshop}', [AdminWorkshopController::class, 'destroy'])->name('workshops.destroy');
     Route::post('/workshops/{workshop}/toggle', [AdminWorkshopController::class, 'toggleRegistration'])->name('workshops.toggle');
+    Route::post('/workshops/{workshop}/toggle-bypass', [AdminWorkshopController::class, 'toggleInvitationBypass'])->name('workshops.toggle-bypass');
     // Workshop Invitations
     Route::get('/workshops/{workshop}/invitations', [App\Http\Controllers\WorkshopInvitationController::class, 'index'])->name('workshops.invitations');
     Route::post('/workshops/{workshop}/invitations/generate', [App\Http\Controllers\WorkshopInvitationController::class, 'generate'])->name('workshops.invitations.generate');

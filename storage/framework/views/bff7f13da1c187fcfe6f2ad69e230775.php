@@ -93,6 +93,16 @@
 
                                         </button>
                                     </form>
+                                    <form action="<?php echo e(route('admin.workshops.toggle-bypass', $w)); ?>" method="POST" class="relative group"><?php echo csrf_field(); ?>
+                                        <button class="px-2.5 py-1.5 text-xs font-medium rounded-lg <?php echo e($w->invitation_bypass_approval ? 'bg-orange-100 text-orange-700 hover:bg-orange-200' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'); ?> transition">
+                                            <?php echo e($w->invitation_bypass_approval ? 'Bypass ON' : 'Bypass'); ?>
+
+                                        </button>
+                                        <div class="absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 px-2 py-1 text-xs text-white bg-gray-800 rounded shadow-sm opacity-0 group-hover:opacity-100 transition whitespace-nowrap pointer-events-none z-10">
+                                            <?php echo e($w->invitation_bypass_approval ? 'Invitation bypasses approval' : 'Registrants must be approved first'); ?>
+
+                                        </div>
+                                    </form>
                                     <form action="<?php echo e(route('admin.workshops.destroy', $w)); ?>" method="POST" onsubmit="return confirm('Delete workshop <?php echo e($w->title); ?>?')"><?php echo csrf_field(); ?> <?php echo method_field('DELETE'); ?>
                                         <button class="px-2.5 py-1.5 text-xs font-medium rounded-lg bg-gray-100 text-gray-600 hover:bg-gray-200 transition">Delete</button>
                                     </form>
