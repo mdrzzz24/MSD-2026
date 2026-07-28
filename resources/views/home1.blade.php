@@ -951,42 +951,31 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 
 <script>
-// ── Mobile: Hero-only on scroll-to-top (smooth parallax-style) ──
+// ── Mobile: Hero-only on scroll-to-top ──
 (function() {
   var postContent = document.getElementById('postHeroContent');
   if (!postContent) return;
 
   var ticking = false;
+  var REVEAL_PX = 200; // content fully revealed after scrolling this far
 
   function updateHeroMode() {
     if (window.innerWidth > 767) {
-      postContent.style.transform = '';
-      postContent.style.pointerEvents = '';
+      postContent.style.clipPath = '';
       document.body.classList.remove('mobile-hero-only');
       return;
     }
 
     var scrollY = window.scrollY;
-    var vh = window.innerHeight;
 
-    // Content slides up ~4x faster than scroll, so it's fully visible
-    // after scrolling only ~¼ of the viewport (≈200px on mobile).
-    var SPEED = 4;
-    var translateY = Math.max(0, vh - scrollY * SPEED);
+    // Clip content progressively — follows scroll, no jumps
+    var clipPct = Math.max(0, 100 - scrollY * (100 / REVEAL_PX));
+    postContent.style.clipPath = 'inset(' + clipPct + '% 0 0 0)';
 
-    if (translateY > 0) {
-      postContent.style.transform = 'translateY(' + translateY + 'px)';
-      postContent.style.pointerEvents = 'none';
-
-      if (scrollY < 5) {
-        document.body.classList.add('mobile-hero-only');
-        if (scrollY === 0) window.scrollTo(0, 0);
-      } else {
-        document.body.classList.remove('mobile-hero-only');
-      }
+    if (scrollY < 5) {
+      document.body.classList.add('mobile-hero-only');
+      if (scrollY === 0) window.scrollTo(0, 0);
     } else {
-      postContent.style.transform = '';
-      postContent.style.pointerEvents = '';
       document.body.classList.remove('mobile-hero-only');
     }
   }
@@ -1013,8 +1002,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
   /* ── Mobile: hide post-hero content when at top ── */
   @media (max-width: 767px) {
-    #postHeroContent {
-      will-change: transform;
+    body.mobile-hero-only #postHeroContent {
+      pointer-events: none !important;
     }
     body.mobile-hero-only .hero {
       min-height: 100dvh;
