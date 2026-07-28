@@ -969,9 +969,12 @@ document.addEventListener('DOMContentLoaded', function() {
     var scrollY = window.scrollY;
     var vh = window.innerHeight;
 
-    if (scrollY < vh) {
-      // Content slides up proportionally to scroll — no jumps
-      var translateY = vh - scrollY;
+    // Content slides up ~4x faster than scroll, so it's fully visible
+    // after scrolling only ~¼ of the viewport (≈200px on mobile).
+    var SPEED = 4;
+    var translateY = Math.max(0, vh - scrollY * SPEED);
+
+    if (translateY > 0) {
       postContent.style.transform = 'translateY(' + translateY + 'px)';
       postContent.style.pointerEvents = 'none';
 
