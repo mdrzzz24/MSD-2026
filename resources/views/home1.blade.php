@@ -94,7 +94,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     @endunless
   </div>
 </header>
-
+<div id="postHeroContent">
 <!-- OVERVIEW -->
 <section id="overview" class="reveal">
   <div class="container">
@@ -889,6 +889,8 @@ document.addEventListener('DOMContentLoaded',function(){var e=document.getElemen
   </div>
 </footer>
 
+</div>
+
 <script src="{{ asset('js/main.js') }}?v=10"></script>
 <style>
 .field-err { display:block; font-size:12px; color:#ef4444; margin-top:2px; min-height:0; }
@@ -948,8 +950,55 @@ document.addEventListener('DOMContentLoaded', function() {
 @endif
 </script>
 
+<script>
+// ── Mobile: Hero-only on scroll-to-top ──
+(function() {
+  function updateHeroMode() {
+    if (window.innerWidth > 767) {
+      document.body.classList.remove('mobile-hero-only');
+      return;
+    }
+    if (window.scrollY < 10) {
+      document.body.classList.add('mobile-hero-only');
+      window.scrollTo(0, 0);
+    } else {
+      document.body.classList.remove('mobile-hero-only');
+    }
+  }
+
+  // Set initial state
+  if (window.innerWidth <= 767) {
+    document.body.classList.add('mobile-hero-only');
+  }
+
+  var ticking = false;
+  window.addEventListener('scroll', function() {
+    if (!ticking) {
+      window.requestAnimationFrame(function() {
+        updateHeroMode();
+        ticking = false;
+      });
+      ticking = true;
+    }
+  });
+
+  window.addEventListener('resize', updateHeroMode);
+})();
+</script>
+
 <style>
   @keyframes fadeInUp { from { opacity:0; transform:scale(0.9); } to { opacity:1; transform:scale(1); } }
+
+  /* ── Mobile: hide post-hero content when at top ── */
+  @media (max-width: 767px) {
+    body.mobile-hero-only #postHeroContent {
+      transform: translateY(100vh) !important;
+      pointer-events: none !important;
+    }
+    body.mobile-hero-only .hero {
+      min-height: 100dvh;
+    }
+  }
 </style>
 
 </body>
