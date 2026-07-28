@@ -700,6 +700,7 @@ document.addEventListener('DOMContentLoaded', function() {
         <div class="sponsor"><img src="{{ asset('img/EXHIBITOR/Asus-Business.png') }}" alt="Asus Business"></div>
         <div class="sponsor"><img src="{{ asset('img/EXHIBITOR/FanRuan.png') }}" alt="FanRuan"></div>
         <div class="sponsor"><img src="{{ asset('img/EXHIBITOR/Snowflake.png') }}" alt="Snowflake"></div>
+        <div class="sponsor"><img src="{{ asset('img/EXHIBITOR/Splunk.png') }}" alt="Splunk"></div>
       </div>
     </div>
     <div class="sponsors-block">
