@@ -75,7 +75,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     <div class="hero-title-group">
       <img src="{{ asset('img/logo-msd.png') }}" alt="MSD" class="logo-glow" style="height:clamp(60px,10vw,100px);width:auto">
     </div>
-    <h1>Winning with AI:<br>Build, Run, and Scale for Measurable Impact</h1>
+    <h1>Winning with AI:<br>Build, Run, and Scale <span class="br-mobile"></span>for Measurable Impact</h1>
     <p class="tagline">Accelerating AI for Real Business and Operational Value</p>
     <div class="hero-meta">
       <span>
@@ -950,64 +950,17 @@ document.addEventListener('DOMContentLoaded', function() {
 @endif
 </script>
 
-<script>
-// ── Mobile: Hero-only on scroll-to-top ──
-(function() {
-  var postContent = document.getElementById('postHeroContent');
-  if (!postContent) return;
-
-  var ticking = false;
-  var REVEAL_PX = 200; // content fully revealed after scrolling this far
-
-  function updateHeroMode() {
-    if (window.innerWidth > 767) {
-      postContent.style.clipPath = '';
-      document.body.classList.remove('mobile-hero-only');
-      return;
-    }
-
-    var scrollY = window.scrollY;
-
-    // Clip content progressively — follows scroll, no jumps
-    var clipPct = Math.max(0, 100 - scrollY * (100 / REVEAL_PX));
-    postContent.style.clipPath = 'inset(' + clipPct + '% 0 0 0)';
-
-    if (scrollY < 5) {
-      document.body.classList.add('mobile-hero-only');
-      if (scrollY === 0) window.scrollTo(0, 0);
-    } else {
-      document.body.classList.remove('mobile-hero-only');
-    }
-  }
-
-  // Init
-  updateHeroMode();
-
-  window.addEventListener('scroll', function() {
-    if (!ticking) {
-      window.requestAnimationFrame(function() {
-        updateHeroMode();
-        ticking = false;
-      });
-      ticking = true;
-    }
-  }, { passive: true });
-
-  window.addEventListener('resize', updateHeroMode);
-})();
-</script>
-
 <style>
   @keyframes fadeInUp { from { opacity:0; transform:scale(0.9); } to { opacity:1; transform:scale(1); } }
 
-  /* ── Mobile: hide post-hero content when at top ── */
+  /* ── Mobile: hero fills viewport, content starts below fold naturally ── */
+  .br-mobile { display: none; }
   @media (max-width: 767px) {
-    body.mobile-hero-only #postHeroContent {
-      pointer-events: none !important;
-    }
-    body.mobile-hero-only .hero {
+    .hero {
       min-height: 100dvh;
+      overflow: hidden;
     }
+    .br-mobile { display: block; }
   }
 </style>
 
