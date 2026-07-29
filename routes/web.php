@@ -336,6 +336,12 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
             Route::get('/impersonate', [App\Http\Controllers\AdminImpersonateController::class, 'index'])->name('impersonate.index');
             Route::post('/impersonate/registrant/{registrant}', [App\Http\Controllers\AdminImpersonateController::class, 'impersonateRegistrant'])->name('impersonate.registrant');
             Route::post('/impersonate/{user}', [App\Http\Controllers\AdminImpersonateController::class, 'impersonate'])->name('impersonate.start');
+            // Database Backup & Restore
+            Route::get('/backup', [App\Http\Controllers\AdminBackupController::class, 'index'])->name('backup.index');
+            Route::post('/backup', [App\Http\Controllers\AdminBackupController::class, 'store'])->name('backup.store');
+            Route::get('/backup/{filename}/download', [App\Http\Controllers\AdminBackupController::class, 'download'])->name('backup.download');
+            Route::delete('/backup/{filename}', [App\Http\Controllers\AdminBackupController::class, 'destroy'])->name('backup.destroy');
+            Route::post('/backup/restore', [App\Http\Controllers\AdminBackupController::class, 'restore'])->name('backup.restore');
         });
     });
 });

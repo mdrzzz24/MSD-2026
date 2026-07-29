@@ -198,6 +198,15 @@
                             </svg>
                             Export Data
                         </a>
+                        @if (Auth::user()->isSuperAdmin())
+                        <a href="{{ route('admin.management.backup.index') }}"
+                           class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-purple-700 bg-purple-50 hover:bg-purple-100 transition">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 1.657 3.582 3 8 3s8-1.343 8-3V7M4 7c0 1.657 3.582 3 8 3s8-1.343 8-3M4 7c0-1.657 3.582-3 8-3s8 1.343 8 3m0 5c0 1.657-3.582 3-8 3s-8-1.343-8-3"/>
+                            </svg>
+                            Database Backup
+                        </a>
+                        @endif
                     </div>
                 </div>
             </div>
