@@ -96,6 +96,10 @@ Route::middleware('auth:registrant')->prefix('registrant')->name('registrant.')-
     Route::post('/agenda/{agendaItem}/unregister', [RegistrantDashboardController::class, 'unregisterAgenda'])->name('agenda.unregister');
 });
 
+// ── Impersonate leave (no auth — controller handles session logic) ──
+Route::match(['get', 'post'], '/admin/management/impersonate/leave', [App\Http\Controllers\AdminImpersonateController::class, 'leave'])
+    ->name('admin.management.impersonate.leave');
+
 // ── Admin routes (protected by admin middleware) ──
 Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
 
@@ -328,6 +332,10 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
             Route::get('/groups/{group}/edit', [App\Http\Controllers\AdminGroupController::class, 'edit'])->name('groups.edit');
             Route::put('/groups/{group}', [App\Http\Controllers\AdminGroupController::class, 'update'])->name('groups.update');
             Route::delete('/groups/{group}', [App\Http\Controllers\AdminGroupController::class, 'destroy'])->name('groups.destroy');
+            // Impersonate
+            Route::get('/impersonate', [App\Http\Controllers\AdminImpersonateController::class, 'index'])->name('impersonate.index');
+            Route::post('/impersonate/registrant/{registrant}', [App\Http\Controllers\AdminImpersonateController::class, 'impersonateRegistrant'])->name('impersonate.registrant');
+            Route::post('/impersonate/{user}', [App\Http\Controllers\AdminImpersonateController::class, 'impersonate'])->name('impersonate.start');
         });
     });
 });

@@ -16,6 +16,7 @@ class LoginLog extends Model
         'login_at',
         'logout_at',
         'session_id',
+        'impersonated_by',
     ];
 
     protected $casts = [

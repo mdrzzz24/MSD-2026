@@ -6,6 +6,7 @@
 --
 -- Notifikasi mengambang (fixed) di pojok kanan atas, tidak menggeser halaman.
 --}}
+{{-- Impersonation Banner (only for authenticated users) --}}
 @if (session('success') || session('error'))
     @php
         $type = session('success') ? 'success' : 'error';

@@ -13,6 +13,29 @@ class AuthController extends Controller
 {
     public function showLoginForm()
     {
+        // Already authenticated as admin/client (session or remember-me cookie) — skip the form
+        if (Auth::check()) {
+            $user = Auth::user();
+
+            if ($user->is_admin || $user->role === 'client') {
+                return redirect()->route('admin.dashboard');
+            }
+
+            Auth::logout();
+        }
+
+        // Already authenticated as an approved registrant — skip the form
+        if (Auth::guard('registrant')->check()) {
+            /** @var Registrant $registrant */
+            $registrant = Auth::guard('registrant')->user();
+
+            if ($registrant->isApproved()) {
+                return redirect()->route('home1');
+            }
+
+            Auth::guard('registrant')->logout();
+        }
+
         return view('auth.login');
     }
 
@@ -49,6 +72,12 @@ class AuthController extends Controller
                     'session_id' => $request->session()->getId(),
                 ]);
 
+                // Ensure remember token is set
+                if ($remember && !$user->getRememberToken()) {
+                    $user->setRememberToken(\Illuminate\Support\Str::random(60));
+                    $user->save();
+                }
+
                 return redirect()->intended(route('admin.dashboard'));
             }
 
@@ -75,6 +104,12 @@ class AuthController extends Controller
                     'login_at'   => now(),
                     'session_id' => $request->session()->getId(),
                 ]);
+
+                // Ensure remember token is set for registrant
+                if ($remember && !$registrant->getRememberToken()) {
+                    $registrant->setRememberToken(\Illuminate\Support\Str::random(60));
+                    $registrant->save();
+                }
 
                 return redirect()->intended(route('home1'));
             }
@@ -118,6 +153,11 @@ class AuthController extends Controller
 
     public function logout(Request $request)
     {
+        // If impersonating, redirect to leave impersonation instead
+        if (session()->has('impersonating')) {
+            return redirect()->route('admin.management.impersonate.leave');
+        }
+
         // Update login_log for the current admin session
         $sessionId = $request->session()->getId();
         LoginLog::where('session_id', $sessionId)

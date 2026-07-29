@@ -24,6 +24,7 @@
 _ide_helper.php
 graphify-out/
 **/graphify-out/
+.graphify/
 graph.json
 graph.html
 GRAPH_REPORT.md

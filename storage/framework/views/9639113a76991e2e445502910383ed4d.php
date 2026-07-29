@@ -46,6 +46,8 @@
     </style>
 </head>
 <body class="font-sans antialiased text-white">
+<?php echo $__env->make('partials.impersonation-banner', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
+
 
 <div class="flex min-h-screen">
 
@@ -99,6 +101,72 @@
         <div class="p-4 sm:p-6 lg:p-8 space-y-6" style="max-width:1280px;">
 
             <?php echo $__env->make('admin.partials.notification', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
+
+            
+            <div class="card-msd rounded-2xl overflow-hidden glow-pink">
+                <div class="px-5 py-4 flex items-center justify-between" style="border-bottom:1px solid rgba(255,255,255,.08);">
+                    <div>
+                        <h2 class="text-base font-bold text-white">Your QR Code</h2>
+                    </div>
+                </div>
+                <div class="p-6 flex flex-col sm:flex-row items-center gap-6">
+                    <div class="flex-shrink-0 bg-white rounded-2xl p-3 shadow-lg">
+                        <img src="<?php echo e($registrant->qr_code_url); ?>" alt="QR Code" class="w-32 h-32">
+                    </div>
+                    <div class="flex-1 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 w-full">
+                        <div class="text-center sm:text-left">
+                            <p class="text-sm font-semibold text-white"><?php echo e($registrant->display_name); ?></p>
+                            <p class="text-xs" style="color:rgba(255,255,255,.4);"><?php echo e($registrant->email); ?></p>
+                        </div>
+                        <button onclick="openQrModal()"
+                                class="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold btn-pink">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                            </svg>
+                            Show QR Code
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            
+            <div id="qrModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/60 backdrop-blur-sm" style="display:none;">
+                <div class="relative bg-white rounded-3xl p-8 shadow-2xl max-w-sm w-full mx-4">
+                    <button onclick="closeQrModal()" class="absolute top-3 right-3 p-1.5 rounded-full text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                        </svg>
+                    </button>
+                    <div class="text-center">
+                        <p class="text-sm font-semibold text-gray-900 mb-1"><?php echo e($registrant->display_name); ?></p>
+                        <p class="text-xs text-gray-500 mb-5"><?php echo e($registrant->email); ?></p>
+                        <div class="inline-block bg-gray-100 rounded-2xl p-4 mb-4">
+                            <img src="<?php echo e($registrant->qr_code_url); ?>" alt="QR Code" class="w-48 h-48 mx-auto">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <script>
+                function openQrModal() {
+                    document.getElementById('qrModal').classList.remove('hidden');
+                    document.getElementById('qrModal').style.display = 'flex';
+                    document.body.style.overflow = 'hidden';
+                }
+                function closeQrModal() {
+                    document.getElementById('qrModal').classList.add('hidden');
+                    document.getElementById('qrModal').style.display = 'none';
+                    document.body.style.overflow = '';
+                }
+                document.addEventListener('click', function(e) {
+                    const modal = document.getElementById('qrModal');
+                    if (e.target === modal) closeQrModal();
+                });
+                document.addEventListener('keydown', function(e) {
+                    if (e.key === 'Escape') closeQrModal();
+                });
+            </script>
 
             
             <div class="card-msd rounded-2xl overflow-hidden glow-pink">

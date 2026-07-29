@@ -1,4 +1,5 @@
 
+
 <?php if(session('success') || session('error')): ?>
     <?php
         $type = session('success') ? 'success' : 'error';

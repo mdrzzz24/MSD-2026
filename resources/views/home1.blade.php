@@ -37,8 +37,7 @@
 <link rel="preload" as="image" href="{{ asset('img/Website-BG.jpg?v2') }}" fetchpriority="high">
 <link rel="stylesheet" href="{{ asset('css/style.css') }}?v=7">
 </head>
-<body>
-<!-- Google Tag Manager (noscript) -->
+<body>@include('partials.impersonation-banner')<!-- Google Tag Manager (noscript) -->
 <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-T69856QT"
 height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 <!-- End Google Tag Manager (noscript) -->

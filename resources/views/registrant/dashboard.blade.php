@@ -46,6 +46,8 @@
     </style>
 </head>
 <body class="font-sans antialiased text-white">
+@include('partials.impersonation-banner')
+
 
 <div class="flex min-h-screen">
 

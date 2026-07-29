@@ -37,8 +37,7 @@
 <link rel="preload" as="image" href="<?php echo e(asset('img/Website-BG.jpg?v2')); ?>" fetchpriority="high">
 <link rel="stylesheet" href="<?php echo e(asset('css/style.css')); ?>?v=7">
 </head>
-<body>
-<!-- Google Tag Manager (noscript) -->
+<body><?php echo $__env->make('partials.impersonation-banner', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><!-- Google Tag Manager (noscript) -->
 <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-T69856QT"
 height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 <!-- End Google Tag Manager (noscript) -->
@@ -702,6 +701,7 @@ document.addEventListener('DOMContentLoaded', function() {
         <div class="sponsor"><img src="<?php echo e(asset('img/EXHIBITOR/Asus-Business.png')); ?>" alt="Asus Business"></div>
         <div class="sponsor"><img src="<?php echo e(asset('img/EXHIBITOR/FanRuan.png')); ?>" alt="FanRuan"></div>
         <div class="sponsor"><img src="<?php echo e(asset('img/EXHIBITOR/Snowflake.png')); ?>" alt="Snowflake"></div>
+        <div class="sponsor"><img src="<?php echo e(asset('img/EXHIBITOR/Splunk.png')); ?>" alt="Splunk"></div>
       </div>
     </div>
     <div class="sponsors-block">
