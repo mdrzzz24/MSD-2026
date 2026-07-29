@@ -140,14 +140,14 @@ class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500">
 <?php echo $__env->make('admin.partials.mobile-sidebar', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
 <script>
 const defaultPerms = {
-registrants: true, workshops: true, workshop_registrants: false,
+registrants: true, workshops: false, workshop_registrants: true,
 tracks: false, agenda: false, speakers: false, time_slots: false,
 rooms: false, email_templates: false, utm_sources: true,
 qr_codes: true, checkin_log: false, admin_users: false
 };
 const roleDefaults = {
 admin: {
-registrants: true, workshops: true, workshop_registrants: true,
+registrants: true, workshops: false, workshop_registrants: true,
 tracks: true, agenda: false, speakers: false, time_slots: false,
 rooms: false, email_templates: false, utm_sources: true,
 qr_codes: true, checkin_log: false, admin_users: false
@@ -156,7 +156,7 @@ super_admin: Object.fromEntries(
 Object.keys(defaultPerms).map(k => [k, true])
 ),
 client: {
-registrants: true, workshops: true, workshop_registrants: false,
+registrants: true, workshops: false, workshop_registrants: true,
 tracks: false, agenda: false, speakers: false, time_slots: false,
 rooms: false, email_templates: false, utm_sources: true,
 qr_codes: true, checkin_log: false, admin_users: false

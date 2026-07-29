@@ -33,7 +33,7 @@ class AdminBackupController extends Controller
     {
         $db = $this->mysqlConnection();
         if (! $db) {
-            return back()->with('error', 'Backup hanya didukung untuk koneksi database MySQL.');
+            return back()->with('error', 'Backup is only supported for MySQL database connections.');
         }
 
         Storage::disk(self::DISK)->makeDirectory(self::DIR);
@@ -66,13 +66,13 @@ class AdminBackupController extends Controller
                 @unlink($fullPath);
                 Log::error('Database backup failed: ' . $result->errorOutput());
 
-                return back()->with('error', 'Backup gagal dijalankan. Periksa log server untuk detail.');
+                return back()->with('error', 'Backup failed to run. Check the server log for details.');
             }
         } finally {
             @unlink($defaultsFile);
         }
 
-        return back()->with('success', 'Backup berhasil dibuat: <strong>' . e($filename) . '</strong>');
+        return back()->with('success', 'Backup created successfully: <strong>' . e($filename) . '</strong>');
     }
 
     public function download(string $filename)
@@ -92,7 +92,7 @@ class AdminBackupController extends Controller
         $this->validateFilename($filename);
         Storage::disk(self::DISK)->delete(self::DIR . '/' . $filename);
 
-        return back()->with('success', 'File backup dihapus.');
+        return back()->with('success', 'Backup file deleted.');
     }
 
     public function restore(Request $request)
@@ -105,7 +105,7 @@ class AdminBackupController extends Controller
 
         $db = $this->mysqlConnection();
         if (! $db) {
-            return back()->with('error', 'Restore hanya didukung untuk koneksi database MySQL.');
+            return back()->with('error', 'Restore is only supported for MySQL database connections.');
         }
 
         if ($request->hasFile('backup_file')) {
@@ -116,13 +116,13 @@ class AdminBackupController extends Controller
             $path = self::DIR . '/' . $filename;
 
             if (! Storage::disk(self::DISK)->exists($path)) {
-                return back()->with('error', 'File backup tidak ditemukan.');
+                return back()->with('error', 'Backup file not found.');
             }
 
             $sqlPath = Storage::disk(self::DISK)->path($path);
         } else {
             throw ValidationException::withMessages([
-                'backup_file' => 'Pilih file backup yang ingin di-restore.',
+                'backup_file' => 'Select a backup file to restore.',
             ]);
         }
 
@@ -142,13 +142,13 @@ class AdminBackupController extends Controller
             if (! $result->successful()) {
                 Log::error('Database restore failed: ' . $result->errorOutput());
 
-                return back()->with('error', 'Restore gagal dijalankan. Periksa log server untuk detail.');
+                return back()->with('error', 'Restore failed to run. Check the server log for details.');
             }
         } finally {
             @unlink($defaultsFile);
         }
 
-        return back()->with('success', 'Database berhasil di-restore dari backup.');
+        return back()->with('success', 'Database restored successfully from backup.');
     }
 
     private function mysqlConnection(): ?array
@@ -186,7 +186,7 @@ class AdminBackupController extends Controller
     private function validateFilename(string $filename): void
     {
         if (! preg_match(self::FILENAME_PATTERN, $filename)) {
-            abort(400, 'Nama file backup tidak valid.');
+            abort(400, 'Invalid backup file name.');
         }
     }
 }

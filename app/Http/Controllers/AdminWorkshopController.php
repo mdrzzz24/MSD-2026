@@ -20,6 +20,11 @@ class AdminWorkshopController extends Controller
      */
     public function index()
     {
+        if (! Auth::user()->hasPermission('workshops')) {
+            return redirect()->route('admin.workshop-registrants.index')
+                ->with('error', 'You do not have permission to manage workshops.');
+        }
+
         $workshops = Workshop::with('agendaItems')->withCount(['registrants as approved_count' => function ($q) {
                 $q->where('registrant_workshop.status', 'approved');
             }])
@@ -141,6 +146,10 @@ class AdminWorkshopController extends Controller
             ->withCount(['registrants as pending_count' => function ($q) {
                 $q->where('registrant_workshop.status', 'pending');
             }])
+            ->withCount(['registrants as rejected_count' => function ($q) {
+                $q->where('registrant_workshop.status', 'rejected');
+            }])
+            ->withCount('registrants as total_count')
             ->withCount('waitlist')
             ->orderBy('date')
             ->orderBy('start_time')
@@ -441,7 +450,7 @@ class AdminWorkshopController extends Controller
     {
         $workshops = Workshop::with(['registrants', 'tracks'])->orderBy('title')->get();
 
-        $headers = ['Workshop', 'Date', 'Time', 'Track', 'Registrant Name', 'Email', 'Phone', 'Company', 'Job Title', 'Status', 'Registered At', 'UTM Source', 'UTM Medium', 'UTM Campaign'];
+        $headers = ['Workshop', 'Date', 'Time', 'Track', 'Registrant Name', 'Email', 'Phone', 'Company', 'Job Title', 'Status', 'Joined Workshop At', 'Registered to Event At', 'UTM Source', 'UTM Medium', 'UTM Campaign'];
         $rows = [];
 
         foreach ($workshops as $w) {
@@ -464,6 +473,7 @@ class AdminWorkshopController extends Controller
                     $r->company ?? '-',
                     $r->job_title ?? '-',
                     $r->pivot->status ?? '-',
+                    $r->pivot->created_at?->copy()->addHours(7)->format('Y-m-d H:i') ?? '-',
                     $r->created_at->copy()->addHours(7)->format('Y-m-d H:i'),
                     $r->utm_source ?? '',
                     $r->utm_medium ?? '',
@@ -549,7 +559,7 @@ class AdminWorkshopController extends Controller
         $registrants = $workshop->registrants()->orderBy('name')->get();
 
         $workshopName = $workshop->name ?: $workshop->title;
-        $headers = ['Workshop', 'Registrant Name', 'Email', 'Phone', 'Company', 'Job Title', 'Track', 'Status', 'Registered At', 'UTM Source', 'UTM Medium', 'UTM Campaign'];
+        $headers = ['Workshop', 'Registrant Name', 'Email', 'Phone', 'Company', 'Job Title', 'Track', 'Status', 'Joined Workshop At', 'Registered to Event At', 'UTM Source', 'UTM Medium', 'UTM Campaign'];
         $rows = $registrants->map(fn($r) => [
             $workshopName,
             $r->display_name ?: $r->name,
@@ -559,6 +569,7 @@ class AdminWorkshopController extends Controller
             $r->job_title ?? '-',
             isset($trackLookup[$r->pivot->track_id]) ? $trackLookup[$r->pivot->track_id]->name : '',
             $r->pivot->status ?? '-',
+            $r->pivot->created_at?->copy()->addHours(7)->format('Y-m-d H:i') ?? '-',
             $r->created_at->copy()->addHours(7)->format('Y-m-d H:i'),
             $r->utm_source ?? '',
             $r->utm_medium ?? '',

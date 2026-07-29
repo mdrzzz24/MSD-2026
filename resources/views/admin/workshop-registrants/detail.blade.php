@@ -105,6 +105,7 @@
                         <th class="px-4 py-3.5 text-center text-xs font-semibold text-gray-500 uppercase w-20">Track</th>
                         <th class="px-4 py-3.5 text-center text-xs font-semibold text-gray-500 uppercase w-28">WS Status</th>
                         <th class="px-4 py-3.5 text-center text-xs font-semibold text-gray-500 uppercase w-24">Reg Status</th>
+                        <th class="px-4 py-3.5 text-center text-xs font-semibold text-gray-500 uppercase w-32">Joined Workshop</th>
                         <th class="px-4 py-3.5 text-center text-xs font-semibold text-gray-500 uppercase w-24">Check-in</th>
                         @if (Auth::user()->canWrite())
                         <th class="px-4 py-3.5 text-center text-xs font-semibold text-gray-500 uppercase w-24">Action</th>
@@ -147,6 +148,13 @@
                                     @if ($r->status === 'approved')<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-700"><span class="truncate">Approved</span></span>
                                     @elseif ($r->status === 'rejected')<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-700"><span class="truncate">Rejected</span></span>
                                     @else<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-600"><span class="truncate">Pending</span></span>
+                                    @endif
+                                </td>
+                                <td class="px-4 py-3.5 text-center">
+                                    @if ($r->pivot->created_at)
+                                        @php $joinedAt = $r->pivot->created_at->copy()->addHours(7); @endphp
+                                        <span class="text-xs text-gray-600" title="{{ $joinedAt->format('d M Y H:i') }}">{{ $joinedAt->format('d M, H:i') }}</span>
+                                    @else<span class="text-xs text-gray-400">—</span>
                                     @endif
                                 </td>
                                 <td class="px-4 py-3.5 text-center">

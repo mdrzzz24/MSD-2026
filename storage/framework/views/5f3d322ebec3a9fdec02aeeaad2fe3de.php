@@ -113,7 +113,7 @@
                                 </dd>
                             </div>
                             <div class="bg-gray-50 rounded-xl p-4">
-                                <dt class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Registered At</dt>
+                                <dt class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Registered to Event At</dt>
                                 <dd class="text-sm font-medium text-gray-900"><?php echo e($registrant->created_at->copy()->addHours(7)->format('d M Y, H:i')); ?></dd>
                             </div>
                             <?php if($registrant->first_name || $registrant->last_name): ?>
@@ -372,14 +372,15 @@
                         <div class="p-5">
                             <div class="flex flex-wrap gap-2">
                                 <?php $__currentLoopData = $workshops; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $w): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                    <?php $pw = $w->pivot; ?>
                                     <a href="<?php echo e(route('admin.workshops.registrants', $w)); ?>"
-                                       class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-indigo-50 text-indigo-700 rounded-lg hover:bg-indigo-100 transition">
+                                       class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-indigo-50 text-indigo-700 rounded-lg hover:bg-indigo-100 transition"
+                                       <?php if($pw && $pw->created_at): ?> title="Joined workshop: <?php echo e($pw->created_at->copy()->addHours(7)->format('d M Y, H:i')); ?>" <?php endif; ?>>
                                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/>
                                         </svg>
                                         <?php echo e($w->name ?: $w->title); ?>
 
-                                        <?php $pw = $w->pivot; ?>
                                         <?php if($pw): ?>
                                             <span class="text-xs px-1.5 py-0.5 rounded-full <?php echo e($pw->status === 'approved' ? 'bg-emerald-100 text-emerald-700' : ($pw->status === 'rejected' ? 'bg-red-100 text-red-600' : 'bg-amber-100 text-amber-700')); ?>"><?php echo e($pw->status); ?></span>
                                         <?php endif; ?>

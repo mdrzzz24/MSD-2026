@@ -52,7 +52,9 @@
                         <th class="px-5 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase hidden lg:table-cell">Linked Agenda</th>
                         <th class="px-5 py-3.5 text-center text-xs font-semibold text-gray-500 uppercase">Approved</th>
                         <th class="px-5 py-3.5 text-center text-xs font-semibold text-gray-500 uppercase">Pending</th>
+                        <th class="px-5 py-3.5 text-center text-xs font-semibold text-gray-500 uppercase">Rejected</th>
                         <th class="px-5 py-3.5 text-center text-xs font-semibold text-gray-500 uppercase">Waitlist</th>
+                        <th class="px-5 py-3.5 text-center text-xs font-semibold text-gray-500 uppercase">Total</th>
                         <th class="px-5 py-3.5 text-center text-xs font-semibold text-gray-500 uppercase">Action</th>
                     </tr></thead>
                     <tbody class="divide-y divide-gray-50">
@@ -88,11 +90,21 @@
                                     <?php endif; ?>
                                 </td>
                                 <td class="px-5 py-4 text-center">
+                                    <?php if($w->rejected_count > 0): ?>
+                                        <span class="inline-flex items-center justify-center w-8 h-8 rounded-full text-sm font-bold bg-red-50 text-red-700"><?php echo e($w->rejected_count); ?></span>
+                                    <?php else: ?>
+                                        <span class="text-sm text-gray-400">—</span>
+                                    <?php endif; ?>
+                                </td>
+                                <td class="px-5 py-4 text-center">
                                     <?php if($w->waitlist_count > 0): ?>
                                         <span class="inline-flex items-center justify-center w-8 h-8 rounded-full text-sm font-bold bg-amber-50 text-amber-700"><?php echo e($w->waitlist_count); ?></span>
                                     <?php else: ?>
                                         <span class="text-sm text-gray-400">—</span>
                                     <?php endif; ?>
+                                </td>
+                                <td class="px-5 py-4 text-center">
+                                    <span class="inline-flex items-center justify-center w-8 h-8 rounded-full text-sm font-bold bg-indigo-50 text-indigo-700"><?php echo e($w->total_count); ?></span>
                                 </td>
                                 <td class="px-5 py-4 text-center">
                                     <a href="<?php echo e(route('admin.workshops.registrants', $w)); ?>"

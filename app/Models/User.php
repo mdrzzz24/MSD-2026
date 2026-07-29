@@ -97,11 +97,11 @@ class User extends Authenticatable
         return match ($role) {
             'super_admin' => array_combine($all, array_fill(0, count($all), true)),
             'admin' => [
-                'registrants' => true, 'workshops' => true, 'workshop_registrants' => true,
+                'registrants' => true, 'workshop_registrants' => true,
                 'tracks' => true, 'utm_sources' => true, 'qr_codes' => true,
             ] + array_combine($all, array_fill(0, count($all), false)),
             'client' => [
-                'workshops' => true, 'utm_sources' => true, 'qr_codes' => true,
+                'workshop_registrants' => true, 'utm_sources' => true, 'qr_codes' => true,
             ] + array_combine($all, array_fill(0, count($all), false)),
             default => [],
         };

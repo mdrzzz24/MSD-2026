@@ -20,7 +20,7 @@
 <button id="sidebarToggle" class="lg:hidden p-2 -ml-2 text-gray-500 hover:text-gray-700 rounded-lg hover:bg-gray-100">
 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
 </button>
-<div><h1 class="text-lg font-bold text-gray-900">Database Backup</h1><p class="text-xs text-gray-500">Backup &amp; restore seluruh data database</p></div>
+<div><h1 class="text-lg font-bold text-gray-900">Database Backup</h1><p class="text-xs text-gray-500">Backup &amp; restore the entire database</p></div>
 </div>
 </div>
 </header>
@@ -30,14 +30,14 @@
 {{-- One-click Backup --}}
 <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 flex items-center justify-between flex-wrap gap-4">
 <div>
-<h2 class="text-base font-bold text-gray-900">Buat Backup Baru</h2>
-<p class="text-sm text-gray-500 mt-1">Membuat dump lengkap seluruh tabel database saat ini. Proses bisa memakan waktu beberapa menit tergantung ukuran data.</p>
+<h2 class="text-base font-bold text-gray-900">Create New Backup</h2>
+<p class="text-sm text-gray-500 mt-1">Creates a full dump of every table in the current database. This may take a few minutes depending on the data size.</p>
 </div>
 <form action="{{ route('admin.management.backup.store') }}" method="POST" onsubmit="return startBackup(this)">
 @csrf
 <button type="submit" id="backupBtn" class="px-5 py-2.5 text-sm font-semibold rounded-xl bg-indigo-500 text-white hover:bg-indigo-600 transition flex items-center gap-2">
 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 7v10c0 1.657 3.582 3 8 3s8-1.343 8-3V7M4 7c0 1.657 3.582 3 8 3s8-1.343 8-3M4 7c0-1.657 3.582-3 8-3s8 1.343 8 3m0 5c0 1.657-3.582 3-8 3s-8-1.343-8-3"/></svg>
-<span id="backupBtnText">Backup Sekarang</span>
+<span id="backupBtnText">Backup Now</span>
 </button>
 </form>
 </div>
@@ -45,16 +45,16 @@
 {{-- Backup List --}}
 <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
 <div class="flex items-center justify-between px-5 py-4 border-b border-gray-100">
-<h2 class="text-base font-bold text-gray-900">Riwayat Backup</h2>
-<span class="text-xs text-gray-400">{{ $files->count() }} file</span>
+<h2 class="text-base font-bold text-gray-900">Backup History</h2>
+<span class="text-xs text-gray-400">{{ $files->count() }} file(s)</span>
 </div>
 <div class="overflow-x-auto">
 <table class="w-full">
 <thead><tr class="bg-gray-50/80">
-<th class="px-5 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Nama File</th>
-<th class="px-5 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Ukuran</th>
-<th class="px-5 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Dibuat</th>
-<th class="px-5 py-3.5 text-center text-xs font-semibold text-gray-500 uppercase tracking-wider">Aksi</th>
+<th class="px-5 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">File Name</th>
+<th class="px-5 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Size</th>
+<th class="px-5 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Created</th>
+<th class="px-5 py-3.5 text-center text-xs font-semibold text-gray-500 uppercase tracking-wider">Actions</th>
 </tr></thead>
 <tbody class="divide-y divide-gray-50">
 @forelse ($files as $file)
@@ -65,14 +65,14 @@
 <td class="px-5 py-4 text-center">
 <a href="{{ route('admin.management.backup.download', $file['name']) }}" class="text-xs text-indigo-600 hover:text-indigo-800 font-medium mr-3">Download</a>
 <button type="button" onclick="useForRestore('{{ $file['name'] }}')" class="text-xs text-amber-600 hover:text-amber-800 font-medium mr-3">Restore</button>
-<form action="{{ route('admin.management.backup.destroy', $file['name']) }}" method="POST" class="inline" onsubmit="return confirm('Hapus file backup {{ $file['name'] }}?')">
+<form action="{{ route('admin.management.backup.destroy', $file['name']) }}" method="POST" class="inline" onsubmit="return confirm('Delete backup file {{ $file['name'] }}?')">
 @csrf @method('DELETE')
-<button type="submit" class="text-xs text-red-600 hover:text-red-800 font-medium">Hapus</button>
+<button type="submit" class="text-xs text-red-600 hover:text-red-800 font-medium">Delete</button>
 </form>
 </td>
 </tr>
 @empty
-<tr><td colspan="4" class="px-5 py-10 text-center text-sm text-gray-400">Belum ada backup. Klik "Backup Sekarang" untuk membuat yang pertama.</td></tr>
+<tr><td colspan="4" class="px-5 py-10 text-center text-sm text-gray-400">No backups yet. Click "Backup Now" to create your first one.</td></tr>
 @endforelse
 </tbody>
 </table>
@@ -86,26 +86,26 @@
 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z"/></svg>
 Restore Database
 </h2>
-<p class="text-sm text-red-600 mt-1">Tindakan ini akan <strong>menimpa seluruh data</strong> di database saat ini dengan isi file backup. Tidak dapat dibatalkan — pastikan Anda sudah membuat backup terbaru sebelum melanjutkan.</p>
+<p class="text-sm text-red-600 mt-1">This action will <strong>overwrite all current data</strong> in the database with the contents of the backup file. This cannot be undone — make sure you have a recent backup before continuing.</p>
 </div>
 <form action="{{ route('admin.management.backup.restore') }}" method="POST" enctype="multipart/form-data" class="p-5 space-y-4" onsubmit="return confirmRestore(this)">
 @csrf
 <div>
-<label class="block text-sm font-semibold text-gray-700 mb-1.5">Pilih backup dari riwayat</label>
+<label class="block text-sm font-semibold text-gray-700 mb-1.5">Select a backup from history</label>
 <select id="existingFileSelect" name="existing_file" class="w-full px-4 py-2.5 text-sm border border-gray-200 rounded-xl bg-gray-50 focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500">
-<option value="">— Atau upload file di bawah —</option>
+<option value="">— Or upload a file below —</option>
 @foreach ($files as $file)
 <option value="{{ $file['name'] }}">{{ $file['name'] }} ({{ number_format($file['size'] / 1048576, 2) }} MB)</option>
 @endforeach
 </select>
 </div>
 <div>
-<label class="block text-sm font-semibold text-gray-700 mb-1.5">Atau upload file .sql</label>
+<label class="block text-sm font-semibold text-gray-700 mb-1.5">Or upload a .sql file</label>
 <input type="file" name="backup_file" accept=".sql" class="w-full text-sm text-gray-600 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-red-50 file:text-red-700 hover:file:bg-red-100">
-<p class="text-xs text-gray-400 mt-1">Batas ukuran upload mengikuti konfigurasi server (upload_max_filesize / post_max_size).</p>
+<p class="text-xs text-gray-400 mt-1">Upload size limit follows the server configuration (upload_max_filesize / post_max_size).</p>
 </div>
 <div>
-<label class="block text-sm font-semibold text-gray-700 mb-1.5">Ketik <code class="px-1 py-0.5 bg-gray-100 rounded">RESTORE</code> untuk konfirmasi</label>
+<label class="block text-sm font-semibold text-gray-700 mb-1.5">Type <code class="px-1 py-0.5 bg-gray-100 rounded">RESTORE</code> to confirm</label>
 <input type="text" name="confirm" required autocomplete="off" class="w-full px-4 py-2.5 text-sm border border-gray-200 rounded-xl bg-gray-50 focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500">
 </div>
 <div class="flex justify-end">
@@ -127,23 +127,23 @@ function useForRestore(name) {
 function confirmRestore(form) {
     const confirmInput = form.querySelector('input[name=confirm]').value;
     if (confirmInput !== 'RESTORE') {
-        alert('Ketik "RESTORE" persis untuk melanjutkan.');
+        alert('Type "RESTORE" exactly to continue.');
         return false;
     }
     const hasExisting = form.querySelector('select[name=existing_file]').value;
     const hasUpload = form.querySelector('input[name=backup_file]').files.length > 0;
     if (!hasExisting && !hasUpload) {
-        alert('Pilih backup dari riwayat atau upload file .sql terlebih dahulu.');
+        alert('Select a backup from history or upload a .sql file first.');
         return false;
     }
-    return confirm('Yakin ingin restore? Semua data saat ini akan ditimpa dan tidak dapat dikembalikan.');
+    return confirm('Are you sure you want to restore? All current data will be overwritten and cannot be recovered.');
 }
 function startBackup(form) {
     const btn = document.getElementById('backupBtn');
     const text = document.getElementById('backupBtnText');
     btn.disabled = true;
     btn.classList.add('opacity-60', 'cursor-not-allowed');
-    text.textContent = 'Membuat backup...';
+    text.textContent = 'Creating backup...';
     return true;
 }
 document.getElementById('sidebarToggle')?.addEventListener('click', () => {
