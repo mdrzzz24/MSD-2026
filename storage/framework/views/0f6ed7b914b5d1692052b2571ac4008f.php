@@ -109,7 +109,7 @@
 <option value="<?php echo e($g->id); ?>"><?php echo e($g->name); ?></option>
 <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
 </select>
-<p class="text-xs text-gray-400 mt-1">Group permissions override individual permissions.</p>
+<p class="text-xs text-gray-400 mt-1">Group permissions act as the baseline. Individual checks here can override group permissions for this user.</p>
 </div>
 
 

@@ -42,7 +42,7 @@
 
                     <div class="mb-6">
                         <label class="block text-sm font-semibold text-gray-700 mb-3">Permissions</label>
-                        <p class="text-xs text-gray-400 mb-3">Members of this group will inherit these permissions.</p>
+                        <p class="text-xs text-gray-400 mb-3">Members of this group get these permissions as the default baseline. Individual user settings can override specific permissions if needed.</p>
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
                             @php
                                 $currentPerms = old('permissions', []);

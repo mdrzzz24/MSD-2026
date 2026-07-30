@@ -34,17 +34,20 @@ class User extends Authenticatable
             return true;
         }
 
-        // Check group permissions first
+        // Start with group permissions as baseline
+        $effectivePerms = [];
         if ($this->group) {
             $groupPerms = $this->group->permissions ?? [];
-            if (isset($groupPerms[$key])) {
-                return filter_var($groupPerms[$key], FILTER_VALIDATE_BOOLEAN);
-            }
+            $effectivePerms = $groupPerms;
         }
 
-        // Fall back to individual permissions
-        $perms = $this->permissions ?? [];
-        return filter_var($perms[$key] ?? false, FILTER_VALIDATE_BOOLEAN);
+        // Individual permissions can override group on a per-key basis
+        $userPerms = $this->permissions ?? [];
+        foreach ($userPerms as $k => $v) {
+            $effectivePerms[$k] = filter_var($v, FILTER_VALIDATE_BOOLEAN);
+        }
+
+        return filter_var($effectivePerms[$key] ?? false, FILTER_VALIDATE_BOOLEAN);
     }
 
     /**
