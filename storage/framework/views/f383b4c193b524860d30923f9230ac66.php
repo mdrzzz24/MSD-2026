@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <link rel="icon" type="image/png" href="{{ asset('img/metrodata.png') }}">
+    <link rel="icon" type="image/png" href="<?php echo e(asset('img/metrodata.png')); ?>">
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Registrants — {{ config('app.name') }}</title>
+    <title>Registrants — <?php echo e(config('app.name')); ?></title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -25,10 +25,10 @@
 <body class="bg-gray-50 font-sans antialiased">
 
 <div class="flex min-h-screen">
-    @include('admin.partials.sidebar')
+    <?php echo $__env->make('admin.partials.sidebar', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
 
     <main class="flex-1 lg:ml-64">
-        {{-- Top bar --}}
+        
         <header class="sticky top-0 z-30 bg-white/80 backdrop-blur border-b border-gray-200">
             <div class="flex items-center justify-between h-16 px-4 sm:px-6 lg:px-8">
                 <div class="flex items-center gap-4">
@@ -43,14 +43,14 @@
                     </div>
                 </div>
                 <div class="flex items-center gap-2">
-                    <a href="{{ route('admin.registrants.export-csv', request()->only(['status', 'utm_source', 'utm_medium', 'utm_campaign', 'direct'])) }}"
+                    <a href="<?php echo e(route('admin.registrants.export-csv', request()->only(['status', 'utm_source', 'utm_medium', 'utm_campaign', 'direct']))); ?>"
                        class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-lg transition">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                         </svg>
                         Export CSV
                     </a>
-                    <a href="{{ route('admin.dashboard') }}"
+                    <a href="<?php echo e(route('admin.dashboard')); ?>"
                        class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-indigo-600 bg-indigo-50 hover:bg-indigo-100 rounded-lg transition">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-4 0a1 1 0 01-1-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 01-1 1"/>
@@ -63,30 +63,30 @@
 
         <div class="p-4 sm:p-6 lg:p-8 space-y-6">
 
-            @include('admin.partials.notification')
+            <?php echo $__env->make('admin.partials.notification', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
 
-            {{-- UTM Filter Badge --}}
-            @if (request('utm_source') || request('direct'))
+            
+            <?php if(request('utm_source') || request('direct')): ?>
             <div class="flex items-center gap-3 bg-indigo-50 border border-indigo-200 text-indigo-800 px-5 py-3 rounded-2xl">
                 <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>
                 <span class="text-sm">
                     Filtered by UTM:
-                    @if (request('direct'))
+                    <?php if(request('direct')): ?>
                         <strong>Direct</strong> (no UTM source)
-                    @else
-                        <strong>{{ request('utm_source') }}</strong>
-                        @if (request('utm_medium')) / <strong>{{ request('utm_medium') }}</strong> @endif
-                        @if (request('utm_campaign')) / <strong>{{ request('utm_campaign') }}</strong> @endif
-                    @endif
+                    <?php else: ?>
+                        <strong><?php echo e(request('utm_source')); ?></strong>
+                        <?php if(request('utm_medium')): ?> / <strong><?php echo e(request('utm_medium')); ?></strong> <?php endif; ?>
+                        <?php if(request('utm_campaign')): ?> / <strong><?php echo e(request('utm_campaign')); ?></strong> <?php endif; ?>
+                    <?php endif; ?>
                 </span>
-                <a href="{{ route('admin.registrants.index') }}" class="ml-auto text-xs font-medium text-indigo-600 hover:text-indigo-800 hover:underline">Clear filter</a>
+                <a href="<?php echo e(route('admin.registrants.index')); ?>" class="ml-auto text-xs font-medium text-indigo-600 hover:text-indigo-800 hover:underline">Clear filter</a>
             </div>
-            @endif
+            <?php endif; ?>
 
-            {{-- Stats cards --}}
+            
             <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
-                <a href="{{ route('admin.registrants.index', ['status' => 'all']) }}"
-                   class="group bg-white rounded-2xl p-5 border border-gray-100 shadow-sm hover:shadow-md transition-shadow {{ $status === 'all' ? 'ring-2 ring-indigo-500' : '' }}">
+                <a href="<?php echo e(route('admin.registrants.index', ['status' => 'all'])); ?>"
+                   class="group bg-white rounded-2xl p-5 border border-gray-100 shadow-sm hover:shadow-md transition-shadow <?php echo e($status === 'all' ? 'ring-2 ring-indigo-500' : ''); ?>">
                     <div class="flex items-center justify-between mb-3">
                         <span class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Total</span>
                         <div class="w-9 h-9 bg-gray-100 rounded-xl flex items-center justify-center group-hover:bg-gray-200 transition">
@@ -95,12 +95,12 @@
                             </svg>
                         </div>
                     </div>
-                    <p class="text-3xl font-bold text-gray-900" data-stat="total">{{ $total }}</p>
+                    <p class="text-3xl font-bold text-gray-900" data-stat="total"><?php echo e($total); ?></p>
                     <p class="text-xs text-gray-500 mt-1">All registrants</p>
                 </a>
 
-                <a href="{{ route('admin.registrants.index', ['status' => 'pending']) }}"
-                   class="group bg-white rounded-2xl p-5 border border-yellow-100 shadow-sm hover:shadow-md transition-shadow {{ $status === 'pending' ? 'ring-2 ring-yellow-500' : '' }}">
+                <a href="<?php echo e(route('admin.registrants.index', ['status' => 'pending'])); ?>"
+                   class="group bg-white rounded-2xl p-5 border border-yellow-100 shadow-sm hover:shadow-md transition-shadow <?php echo e($status === 'pending' ? 'ring-2 ring-yellow-500' : ''); ?>">
                     <div class="flex items-center justify-between mb-3">
                         <span class="text-xs font-semibold text-yellow-600 uppercase tracking-wider">Pending</span>
                         <div class="w-9 h-9 bg-yellow-100 rounded-xl flex items-center justify-center group-hover:bg-yellow-200 transition">
@@ -109,12 +109,12 @@
                             </svg>
                         </div>
                     </div>
-                    <p class="text-3xl font-bold text-yellow-700" data-stat="pending">{{ $pending }}</p>
+                    <p class="text-3xl font-bold text-yellow-700" data-stat="pending"><?php echo e($pending); ?></p>
                     <p class="text-xs text-yellow-500 mt-1">Awaiting review</p>
                 </a>
 
-                <a href="{{ route('admin.registrants.index', ['status' => 'approved']) }}"
-                   class="group bg-white rounded-2xl p-5 border border-emerald-100 shadow-sm hover:shadow-md transition-shadow {{ $status === 'approved' ? 'ring-2 ring-emerald-500' : '' }}">
+                <a href="<?php echo e(route('admin.registrants.index', ['status' => 'approved'])); ?>"
+                   class="group bg-white rounded-2xl p-5 border border-emerald-100 shadow-sm hover:shadow-md transition-shadow <?php echo e($status === 'approved' ? 'ring-2 ring-emerald-500' : ''); ?>">
                     <div class="flex items-center justify-between mb-3">
                         <span class="text-xs font-semibold text-emerald-600 uppercase tracking-wider">Approved</span>
                         <div class="w-9 h-9 bg-emerald-100 rounded-xl flex items-center justify-center group-hover:bg-emerald-200 transition">
@@ -123,12 +123,12 @@
                             </svg>
                         </div>
                     </div>
-                    <p class="text-3xl font-bold text-emerald-700" data-stat="approved">{{ $approved }}</p>
+                    <p class="text-3xl font-bold text-emerald-700" data-stat="approved"><?php echo e($approved); ?></p>
                     <p class="text-xs text-emerald-500 mt-1">Approved</p>
                 </a>
 
-                <a href="{{ route('admin.registrants.index', ['status' => 'rejected']) }}"
-                   class="group bg-white rounded-2xl p-5 border border-red-100 shadow-sm hover:shadow-md transition-shadow {{ $status === 'rejected' ? 'ring-2 ring-red-500' : '' }}">
+                <a href="<?php echo e(route('admin.registrants.index', ['status' => 'rejected'])); ?>"
+                   class="group bg-white rounded-2xl p-5 border border-red-100 shadow-sm hover:shadow-md transition-shadow <?php echo e($status === 'rejected' ? 'ring-2 ring-red-500' : ''); ?>">
                     <div class="flex items-center justify-between mb-3">
                         <span class="text-xs font-semibold text-red-500 uppercase tracking-wider">Rejected</span>
                         <div class="w-9 h-9 bg-red-100 rounded-xl flex items-center justify-center group-hover:bg-red-200 transition">
@@ -137,32 +137,32 @@
                             </svg>
                         </div>
                     </div>
-                    <p class="text-3xl font-bold text-red-600" data-stat="rejected">{{ $rejected }}</p>
+                    <p class="text-3xl font-bold text-red-600" data-stat="rejected"><?php echo e($rejected); ?></p>
                     <p class="text-xs text-red-400 mt-1">Rejected</p>
                 </a>
             </div>
 
-            {{-- Registrants table with bulk actions --}}
+            
             <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-                {{-- Header with search and bulk actions --}}
+                
                 <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 px-5 py-4 border-b border-gray-100">
                     <div class="flex items-center gap-3">
                         <h2 class="text-base font-bold text-gray-900">
-                            @if ($status === 'pending')
+                            <?php if($status === 'pending'): ?>
                                 Pending Registrants
-                            @elseif ($status === 'approved')
+                            <?php elseif($status === 'approved'): ?>
                                 Approved Registrants
-                            @elseif ($status === 'rejected')
+                            <?php elseif($status === 'rejected'): ?>
                                 Rejected Registrants
-                            @else
+                            <?php else: ?>
                                 All Registrants
-                            @endif
+                            <?php endif; ?>
                         </h2>
-                        <span class="text-xs text-gray-400">({{ $registrants->total() }})</span>
+                        <span class="text-xs text-gray-400">(<?php echo e($registrants->total()); ?>)</span>
                     </div>
                     <div class="flex items-center gap-2">
-                        {{-- Bulk action buttons --}}
-                        @if (Auth::user()->canWrite())
+                        
+                        <?php if(Auth::user()->canWrite()): ?>
                         <div id="bulkActions" class="hidden items-center gap-2">
                             <span class="text-xs text-gray-500" id="selectedCount">0 selected</span>
                             <button onclick="bulkApprove()"
@@ -174,51 +174,51 @@
                                 Reject Selected
                             </button>
                         </div>
-                        @endif
-                        <form method="GET" action="{{ route('admin.registrants.index') }}" class="relative">
-                            @if (request('status') && request('status') !== 'all')
-                                <input type="hidden" name="status" value="{{ request('status') }}">
-                            @endif
-                            @if (request('utm_source'))
-                                <input type="hidden" name="utm_source" value="{{ request('utm_source') }}">
-                            @endif
-                            @if (request('utm_medium'))
-                                <input type="hidden" name="utm_medium" value="{{ request('utm_medium') }}">
-                            @endif
-                            @if (request('utm_campaign'))
-                                <input type="hidden" name="utm_campaign" value="{{ request('utm_campaign') }}">
-                            @endif
-                            @if (request('direct'))
-                                <input type="hidden" name="direct" value="{{ request('direct') }}">
-                            @endif
+                        <?php endif; ?>
+                        <form method="GET" action="<?php echo e(route('admin.registrants.index')); ?>" class="relative">
+                            <?php if(request('status') && request('status') !== 'all'): ?>
+                                <input type="hidden" name="status" value="<?php echo e(request('status')); ?>">
+                            <?php endif; ?>
+                            <?php if(request('utm_source')): ?>
+                                <input type="hidden" name="utm_source" value="<?php echo e(request('utm_source')); ?>">
+                            <?php endif; ?>
+                            <?php if(request('utm_medium')): ?>
+                                <input type="hidden" name="utm_medium" value="<?php echo e(request('utm_medium')); ?>">
+                            <?php endif; ?>
+                            <?php if(request('utm_campaign')): ?>
+                                <input type="hidden" name="utm_campaign" value="<?php echo e(request('utm_campaign')); ?>">
+                            <?php endif; ?>
+                            <?php if(request('direct')): ?>
+                                <input type="hidden" name="direct" value="<?php echo e(request('direct')); ?>">
+                            <?php endif; ?>
                             <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
                             </svg>
                             <input type="text" name="search" id="tableSearch" placeholder="Search name, email, company..."
-                                   value="{{ request('search') }}"
+                                   value="<?php echo e(request('search')); ?>"
                                    class="pl-9 pr-4 py-2 text-sm border border-gray-200 rounded-xl bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 focus:bg-white w-full sm:w-64 transition">
-                            @if (request('search'))
-                                <a href="{{ route('admin.registrants.index', request()->except('search')) }}"
+                            <?php if(request('search')): ?>
+                                <a href="<?php echo e(route('admin.registrants.index', request()->except('search'))); ?>"
                                    class="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-200 transition">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
                                     </svg>
                                 </a>
-                            @endif
+                            <?php endif; ?>
                         </form>
                     </div>
                 </div>
 
-                {{-- Table --}}
+                
                 <div class="overflow-x-auto">
                     <table class="w-full table-fixed" id="registrantTable">
                         <thead>
                             <tr class="bg-gray-50/80">
-                                @if (Auth::user()->canWrite())
+                                <?php if(Auth::user()->canWrite()): ?>
                                 <th class="px-5 py-3.5 text-left w-10">
                                     <input type="checkbox" id="selectAll" class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500">
                                 </th>
-                                @endif
+                                <?php endif; ?>
                                 <th class="px-3 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider w-44">Name</th>
                                 <th class="px-3 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider hidden xl:table-cell w-40">Profile</th>
                                 <th class="px-3 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider hidden sm:table-cell w-20">Source</th>
@@ -229,97 +229,102 @@
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-gray-50">
-                            @forelse ($registrants as $r)
+                            <?php $__empty_1 = true; $__currentLoopData = $registrants; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $r): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
                                 <tr class="hover:bg-gray-50/50 transition search-row">
-                                    @if (Auth::user()->canWrite())
+                                    <?php if(Auth::user()->canWrite()): ?>
                                     <td class="px-3 py-3">
-                                        <input type="checkbox" class="registrant-checkbox rounded border-gray-300 text-indigo-600 focus:ring-indigo-500" value="{{ $r->id }}">
+                                        <input type="checkbox" class="registrant-checkbox rounded border-gray-300 text-indigo-600 focus:ring-indigo-500" value="<?php echo e($r->id); ?>">
                                     </td>
-                                    @endif
+                                    <?php endif; ?>
                                     <td class="px-3 py-4 max-w-0">
                                         <div class="flex items-center gap-2">
                                             <div class="w-7 h-7 rounded-full bg-gradient-to-br from-indigo-400 to-purple-500 flex items-center justify-center text-white text-[10px] font-bold flex-shrink-0">
-                                                {{ strtoupper(substr($r->name, 0, 1)) }}
+                                                <?php echo e(strtoupper(substr($r->name, 0, 1))); ?>
+
                                             </div>
                                             <div class="min-w-0 truncate">
-                                                <a href="{{ route('admin.registrants.show', $r) }}" class="text-sm font-semibold text-gray-900 hover:text-indigo-600 transition search-name truncate block">
-                                                    {{ $r->name }}
+                                                <a href="<?php echo e(route('admin.registrants.show', $r)); ?>" class="text-sm font-semibold text-gray-900 hover:text-indigo-600 transition search-name truncate block">
+                                                    <?php echo e($r->name); ?>
+
                                                 </a>
-                                                <p class="text-[11px] text-gray-500 truncate search-email">{{ $r->email }}</p>
-                                                @if ($r->phone)
-                                                    <p class="text-[11px] text-gray-400 truncate">{{ $r->phone }}</p>
-                                                @endif
+                                                <p class="text-[11px] text-gray-500 truncate search-email"><?php echo e($r->email); ?></p>
+                                                <?php if($r->phone): ?>
+                                                    <p class="text-[11px] text-gray-400 truncate"><?php echo e($r->phone); ?></p>
+                                                <?php endif; ?>
                                             </div>
                                         </div>
                                     </td>
                                     <td class="px-3 py-3 hidden xl:table-cell max-w-0">
                                         <div class="min-w-0 truncate">
-                                            @if ($r->company || $r->job_title || $r->job_role)
-                                                @if ($r->company)
-                                                    <p class="text-sm font-medium text-gray-800 truncate" title="{{ $r->company }}">{{ $r->company }}</p>
-                                                @endif
-                                                @if ($r->job_title)
-                                                    <p class="text-[11px] text-gray-500 truncate" title="{{ $r->job_title }}">{{ $r->job_title }}</p>
-                                                @endif
-                                                @if ($r->job_role)
-                                                    <p class="text-[11px] text-gray-400 truncate" title="{{ $r->job_role }}">{{ $r->job_role }}</p>
-                                                @endif
-                                            @else
+                                            <?php if($r->company || $r->job_title || $r->job_role): ?>
+                                                <?php if($r->company): ?>
+                                                    <p class="text-sm font-medium text-gray-800 truncate" title="<?php echo e($r->company); ?>"><?php echo e($r->company); ?></p>
+                                                <?php endif; ?>
+                                                <?php if($r->job_title): ?>
+                                                    <p class="text-[11px] text-gray-500 truncate" title="<?php echo e($r->job_title); ?>"><?php echo e($r->job_title); ?></p>
+                                                <?php endif; ?>
+                                                <?php if($r->job_role): ?>
+                                                    <p class="text-[11px] text-gray-400 truncate" title="<?php echo e($r->job_role); ?>"><?php echo e($r->job_role); ?></p>
+                                                <?php endif; ?>
+                                            <?php else: ?>
                                                 <span class="text-sm text-gray-400">—</span>
-                                            @endif
+                                            <?php endif; ?>
                                         </div>
                                     </td>
                                     <td class="px-3 py-3 hidden sm:table-cell max-w-0">
-                                        @if ($r->utm_source)
-                                            <span class="inline-flex items-center gap-1 text-xs text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-full truncate max-w-full" title="{{ $r->utm_source }}">
+                                        <?php if($r->utm_source): ?>
+                                            <span class="inline-flex items-center gap-1 text-xs text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-full truncate max-w-full" title="<?php echo e($r->utm_source); ?>">
                                                 <svg class="w-3 h-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>
-                                                <span class="truncate">{{ $r->utm_source }}</span>
+                                                <span class="truncate"><?php echo e($r->utm_source); ?></span>
                                             </span>
-                                        @else
+                                        <?php else: ?>
                                             <span class="text-xs text-gray-400">Direct</span>
-                                        @endif
+                                        <?php endif; ?>
                                     </td>
                                     <td class="px-3 py-3">
-                                        @if ($r->status === 'approved')
+                                        <?php if($r->status === 'approved'): ?>
                                             <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
                                                 <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 flex-shrink-0"></span> <span class="truncate">Approved</span>
                                             </span>
-                                        @elseif ($r->status === 'rejected')
+                                        <?php elseif($r->status === 'rejected'): ?>
                                             <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-red-50 text-red-700 border border-red-200">
                                                 <span class="w-1.5 h-1.5 rounded-full bg-red-500 flex-shrink-0"></span> <span class="truncate">Rejected</span>
                                             </span>
-                                        @else
+                                        <?php else: ?>
                                             <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-200">
                                                 <span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse flex-shrink-0"></span> <span class="truncate">Pending</span>
                                             </span>
-                                        @endif
-                                        @if ($r->hasClientRemark())
-                                            <div class="mt-1 text-[10px] {{ $r->client_remark_action === 'approve' ? 'text-emerald-600' : 'text-red-600' }}">
-                                                {{ $r->client_remark_action === 'approve' ? '✅ Approve' : '❌ Reject' }}
-                                                @if ($r->clientRemarkedBy)
-                                                    by {{ $r->clientRemarkedBy->name }}
-                                                @endif
+                                        <?php endif; ?>
+                                        <?php if($r->hasClientRemark()): ?>
+                                            <div class="mt-1 text-[10px] <?php echo e($r->client_remark_action === 'approve' ? 'text-emerald-600' : 'text-red-600'); ?>">
+                                                <?php echo e($r->client_remark_action === 'approve' ? '✅ Approve' : '❌ Reject'); ?>
+
+                                                <?php if($r->clientRemarkedBy): ?>
+                                                    by <?php echo e($r->clientRemarkedBy->name); ?>
+
+                                                <?php endif; ?>
                                             </div>
-                                        @endif
+                                        <?php endif; ?>
                                     </td>
                                     <td class="px-3 py-3 hidden sm:table-cell">
-                                        <span class="text-sm text-gray-500 whitespace-nowrap">{{ $r->created_at->copy()->addHours(7)->format('d M Y') }}</span>
+                                        <span class="text-sm text-gray-500 whitespace-nowrap"><?php echo e($r->created_at->copy()->addHours(7)->format('d M Y')); ?></span>
                                     </td>
                                     <td class="px-3 py-3 text-center hidden sm:table-cell">
-                                        @if ($r->email_logs_count > 0)
-                                            <span class="inline-flex items-center gap-0.5 text-xs font-semibold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded-full" title="{{ $r->email_logs_count }} email(s) sent">
+                                        <?php if($r->email_logs_count > 0): ?>
+                                            <span class="inline-flex items-center gap-0.5 text-xs font-semibold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded-full" title="<?php echo e($r->email_logs_count); ?> email(s) sent">
                                                 <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
-                                                {{ $r->email_logs_count }}
+                                                <?php echo e($r->email_logs_count); ?>
+
                                             </span>
-                                        @else
+                                        <?php else: ?>
                                             <span class="inline-flex items-center gap-0.5 text-xs text-gray-400" title="No emails sent">
                                                 <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
                                                 <span>0</span>
                                             </span>
-                                        @endif
+                                        <?php endif; ?>
                                     </td>                                    <td class="px-3 py-3">
                                         <div class="flex items-center justify-center gap-1">
-                                            <a href="{{ route('admin.registrants.show', $r) }}"
+                                            <a href="<?php echo e(route('admin.registrants.show', $r)); ?>"
                                                title="View"
                                                class="p-1 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition">
                                                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -327,37 +332,37 @@
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
                                                 </svg>
                                             </a>
-                                            @if (!Auth::user()->canWrite() && $r->isPending())
+                                            <?php if(!Auth::user()->canWrite() && $r->isPending()): ?>
                                             <div class="flex items-center gap-1">
-                                                <button @if(!$r->hasClientRemark()) onclick="submitMustBe({{ $r->id }},'approve')" @endif
-                                                        id="mustbe-approve-{{ $r->id }}"
+                                                <button <?php if(!$r->hasClientRemark()): ?> onclick="submitMustBe(<?php echo e($r->id); ?>,'approve')" <?php endif; ?>
+                                                        id="mustbe-approve-<?php echo e($r->id); ?>"
                                                         class="px-2 py-1 rounded-lg text-xs font-semibold transition whitespace-nowrap
-                                                        {{ $r->hasClientRemark() && $r->client_remark_action === 'approve' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200 cursor-default' : ($r->hasClientRemark() ? 'bg-gray-50 text-gray-300 border border-gray-100 cursor-default' : 'bg-gray-50 text-gray-500 border border-gray-200 hover:bg-emerald-50 hover:text-emerald-600 hover:border-emerald-200') }}"
-                                                        {{ $r->hasClientRemark() ? 'disabled' : '' }}>
+                                                        <?php echo e($r->hasClientRemark() && $r->client_remark_action === 'approve' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200 cursor-default' : ($r->hasClientRemark() ? 'bg-gray-50 text-gray-300 border border-gray-100 cursor-default' : 'bg-gray-50 text-gray-500 border border-gray-200 hover:bg-emerald-50 hover:text-emerald-600 hover:border-emerald-200')); ?>"
+                                                        <?php echo e($r->hasClientRemark() ? 'disabled' : ''); ?>>
                                                     ✅
                                                 </button>
-                                                <button @if(!$r->hasClientRemark()) onclick="submitMustBe({{ $r->id }},'reject')" @endif
-                                                        id="mustbe-reject-{{ $r->id }}"
+                                                <button <?php if(!$r->hasClientRemark()): ?> onclick="submitMustBe(<?php echo e($r->id); ?>,'reject')" <?php endif; ?>
+                                                        id="mustbe-reject-<?php echo e($r->id); ?>"
                                                         class="px-2 py-1 rounded-lg text-xs font-semibold transition whitespace-nowrap
-                                                        {{ $r->hasClientRemark() && $r->client_remark_action === 'reject' ? 'bg-red-50 text-red-700 border border-red-200 cursor-default' : ($r->hasClientRemark() ? 'bg-gray-50 text-gray-300 border border-gray-100 cursor-default' : 'bg-gray-50 text-gray-500 border border-gray-200 hover:bg-red-50 hover:text-red-600 hover:border-red-200') }}"
-                                                        {{ $r->hasClientRemark() ? 'disabled' : '' }}>
+                                                        <?php echo e($r->hasClientRemark() && $r->client_remark_action === 'reject' ? 'bg-red-50 text-red-700 border border-red-200 cursor-default' : ($r->hasClientRemark() ? 'bg-gray-50 text-gray-300 border border-gray-100 cursor-default' : 'bg-gray-50 text-gray-500 border border-gray-200 hover:bg-red-50 hover:text-red-600 hover:border-red-200')); ?>"
+                                                        <?php echo e($r->hasClientRemark() ? 'disabled' : ''); ?>>
                                                     ❌
                                                 </button>
                                             </div>
-                                            @endif
-                                            @if (Auth::user()->canWrite())
-                                            <a href="{{ route('admin.registrants.edit', $r) }}"
+                                            <?php endif; ?>
+                                            <?php if(Auth::user()->canWrite()): ?>
+                                            <a href="<?php echo e(route('admin.registrants.edit', $r)); ?>"
                                                title="Edit"
                                                class="p-1 text-gray-400 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition">
                                                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
                                                 </svg>
                                             </a>
-                                            {{-- Approve - always available --}}
-                                            <form action="{{ route('admin.registrants.approve', $r) }}" method="POST" class="inline">
-                                                @csrf
+                                            
+                                            <form action="<?php echo e(route('admin.registrants.approve', $r)); ?>" method="POST" class="inline">
+                                                <?php echo csrf_field(); ?>
                                                 <button type="submit"
-                                                        onclick="return confirm('Approve {{ addslashes($r->name) }}?')"
+                                                        onclick="return confirm('Approve <?php echo e(addslashes($r->name)); ?>?')"
                                                         title="Approve"
                                                         class="p-1 text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition">
                                                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -365,27 +370,27 @@
                                                     </svg>
                                                 </button>
                                             </form>
-                                            {{-- Reject - always available --}}
-                                            <button onclick="openRejectModal('{{ $r->id }}', '{{ addslashes($r->name) }}')"
+                                            
+                                            <button onclick="openRejectModal('<?php echo e($r->id); ?>', '<?php echo e(addslashes($r->name)); ?>')"
                                                     title="Reject"
                                                     class="p-1 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition">
                                                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
                                                 </svg>
                                             </button>
-                                            {{-- Resend credentials - only for approved --}}
-                                            @if ($r->status === 'approved')
-                                                <button onclick="resendCredentials('{{ $r->id }}', '{{ addslashes($r->name) }}')"
+                                            
+                                            <?php if($r->status === 'approved'): ?>
+                                                <button onclick="resendCredentials('<?php echo e($r->id); ?>', '<?php echo e(addslashes($r->name)); ?>')"
                                                         title="Resend"
                                                         class="p-1 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition">
                                                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
                                                     </svg>
                                                 </button>
-                                            @endif
-                                            <form action="{{ route('admin.registrants.destroy', $r) }}" method="POST" class="inline" onsubmit="return confirm('Delete {{ addslashes($r->name) }} permanently?')">
-                                                @csrf
-                                                @method('DELETE')
+                                            <?php endif; ?>
+                                            <form action="<?php echo e(route('admin.registrants.destroy', $r)); ?>" method="POST" class="inline" onsubmit="return confirm('Delete <?php echo e(addslashes($r->name)); ?> permanently?')">
+                                                <?php echo csrf_field(); ?>
+                                                <?php echo method_field('DELETE'); ?>
                                                 <button type="submit"
                                                         title="Delete"
                                                         class="p-1 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition">
@@ -394,11 +399,11 @@
                                                     </svg>
                                                 </button>
                                             </form>
-                                            @endif
+                                            <?php endif; ?>
                                         </div>
                                     </td>
                                 </tr>
-                            @empty
+                            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
                                 <tr>
                                     <td colspan="8" class="px-5 py-16 text-center">
                                         <div class="flex flex-col items-center gap-2">
@@ -410,23 +415,24 @@
                                         </div>
                                     </td>
                                 </tr>
-                            @endforelse
+                            <?php endif; ?>
                         </tbody>
                     </table>
                 </div>
 
-                {{-- Pagination --}}
-                @if ($registrants->hasPages())
+                
+                <?php if($registrants->hasPages()): ?>
                     <div class="px-5 py-4 border-t border-gray-100 bg-gray-50/50">
-                        {{ $registrants->links() }}
+                        <?php echo e($registrants->links()); ?>
+
                     </div>
-                @endif
+                <?php endif; ?>
             </div>
         </div>
     </main>
 </div>
 
-{{-- ==================== REJECT MODAL (Single) ==================== --}}
+
 <div id="rejectModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/40 backdrop-blur-sm p-4">
     <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden animate-fade-in">
         <div class="bg-red-50 px-6 py-4 border-b border-red-100">
@@ -447,13 +453,13 @@
                 You are about to reject <strong id="rejectName" class="text-red-600"></strong>'s registration.
                 A rejection email will be sent automatically.
             </p>
-            {{-- Client remark info (shown if available) --}}
+            
             <div id="rejectClientRemark" class="hidden mb-4 p-3 bg-indigo-50 border border-indigo-200 rounded-xl">
                 <p class="text-xs font-semibold text-indigo-600 uppercase tracking-wider mb-1">Client Recommendation</p>
                 <p class="text-sm text-gray-800" id="rejectClientRemarkText"></p>
             </div>
             <form id="rejectForm" method="POST">
-                @csrf
+                <?php echo csrf_field(); ?>
                 <div class="flex justify-end gap-2.5">
                     <button type="button" onclick="closeRejectModal()"
                             class="px-5 py-2.5 text-sm font-medium rounded-xl bg-gray-100 text-gray-700 hover:bg-gray-200 transition">Cancel</button>
@@ -465,7 +471,7 @@
     </div>
 </div>
 
-{{-- ==================== BULK REJECT MODAL ==================== --}}
+
 <div id="bulkRejectModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/40 backdrop-blur-sm p-4">
     <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden animate-fade-in">
         <div class="bg-red-50 px-6 py-4 border-b border-red-100">
@@ -486,8 +492,8 @@
                 Reject <strong id="bulkRejectCount" class="font-bold text-red-600">0</strong> selected registrants?
                 A rejection email will be sent automatically to each.
             </p>
-            <form id="bulkRejectForm" method="POST" action="{{ route('admin.registrants.bulk-reject') }}">
-                @csrf
+            <form id="bulkRejectForm" method="POST" action="<?php echo e(route('admin.registrants.bulk-reject')); ?>">
+                <?php echo csrf_field(); ?>
                 <div id="bulkRejectIds"></div>
                 <div class="flex justify-end gap-2.5">
                     <button type="button" onclick="closeBulkRejectModal()"
@@ -500,12 +506,12 @@
     </div>
 </div>
 
-{{-- ==================== RECOMMEND MODAL ==================== --}}
-@include('admin.partials.mobile-sidebar')
+
+<?php echo $__env->make('admin.partials.mobile-sidebar', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
 
 <script>
-    const rejectRoute = '{{ route("admin.registrants.reject", ["registrant" => "REG_ID"]) }}';
-    const resendRoute = '{{ route("admin.registrants.resend-credentials", ["registrant" => "REG_ID"]) }}';
+    const rejectRoute = '<?php echo e(route("admin.registrants.reject", ["registrant" => "REG_ID"])); ?>';
+    const resendRoute = '<?php echo e(route("admin.registrants.resend-credentials", ["registrant" => "REG_ID"])); ?>';
     // ---- Reject Modal (Single) ----
     function openRejectModal(id, name) {
         document.getElementById('rejectName').textContent = name;
@@ -581,13 +587,13 @@
 
         const form = document.createElement('form');
         form.method = 'POST';
-        form.action = '{{ route("admin.registrants.bulk-approve") }}';
+        form.action = '<?php echo e(route("admin.registrants.bulk-approve")); ?>';
         form.style.display = 'none';
 
         const csrf = document.createElement('input');
         csrf.type = 'hidden';
         csrf.name = '_token';
-        csrf.value = '{{ csrf_token() }}';
+        csrf.value = '<?php echo e(csrf_token()); ?>';
         form.appendChild(csrf);
 
         checked.forEach(cb => {
@@ -614,7 +620,7 @@
         const csrf = document.createElement('input');
         csrf.type = 'hidden';
         csrf.name = '_token';
-        csrf.value = '{{ csrf_token() }}';
+        csrf.value = '<?php echo e(csrf_token()); ?>';
         form.appendChild(csrf);
 
         document.body.appendChild(form);
@@ -696,7 +702,7 @@
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                'X-CSRF-TOKEN': '<?php echo e(csrf_token()); ?>',
                 'Accept': 'application/json',
             },
             body: JSON.stringify({ client_remark: '', client_remark_action: action }),
@@ -705,7 +711,7 @@
         .then(function(data) {
             if (data.success) {
                 var isApprove = action === 'approve';
-                var userName = '{{ Auth::user()->name }}';
+                var userName = '<?php echo e(Auth::user()->name); ?>';
                 // Update button styling — keep emoji, set active/disabled state
                 if (approveBtn) {
                     if (isApprove) {
@@ -725,7 +731,7 @@
                 }
                 // Update the status badge cell in the same row
                 var row = (approveBtn || rejectBtn).closest('tr');
-                var statusCell = row && row.querySelectorAll('td')[{{ Auth::user()->canWrite() ? 4 : 3 }}];
+                var statusCell = row && row.querySelectorAll('td')[<?php echo e(Auth::user()->canWrite() ? 4 : 3); ?>];
                 if (statusCell) {
                     var oldRemark = statusCell.querySelector('.client-remark-label');
                     if (oldRemark) oldRemark.remove();
@@ -756,10 +762,10 @@
     }
 </style>
 
-{{-- Real-time polling untuk stats cards (setiap 10 detik) --}}
+
 <script>
 (function(){
-    var pollUrl = '{{ route("admin.dashboard.data") }}';
+    var pollUrl = '<?php echo e(route("admin.dashboard.data")); ?>';
     setInterval(function() {
         fetch(pollUrl)
             .then(function(r) { return r.json(); })
@@ -786,3 +792,4 @@
 
 </body>
 </html>
+<?php /**PATH /Users/mdrz/2026/MSD26/resources/views/admin/registrants/index.blade.php ENDPATH**/ ?>

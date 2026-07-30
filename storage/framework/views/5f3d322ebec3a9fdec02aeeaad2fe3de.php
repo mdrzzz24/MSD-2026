@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <link rel="icon" type="image/png" href="{{ asset('img/metrodata.png') }}">
+    <link rel="icon" type="image/png" href="<?php echo e(asset('img/metrodata.png')); ?>">
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Detail Registrant — {{ config('app.name') }}</title>
+    <title>Detail Registrant — <?php echo e(config('app.name')); ?></title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
@@ -13,11 +13,11 @@
 <body class="bg-gray-50 font-sans antialiased">
 
 <div class="flex min-h-screen">
-    @include('admin.partials.sidebar')
+    <?php echo $__env->make('admin.partials.sidebar', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
     <main class="flex-1 lg:ml-64">
         <header class="sticky top-0 z-30 bg-white/80 backdrop-blur border-b border-gray-200">
             <div class="flex items-center h-16 px-4 sm:px-6 lg:px-8 gap-4">
-                <a href="{{ route('admin.dashboard') }}" class="inline-flex items-center gap-1.5 text-sm text-indigo-600 hover:text-indigo-800 font-medium transition">
+                <a href="<?php echo e(route('admin.dashboard')); ?>" class="inline-flex items-center gap-1.5 text-sm text-indigo-600 hover:text-indigo-800 font-medium transition">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
                     Dashboard
                 </a>
@@ -28,147 +28,150 @@
 
         <div class="p-4 sm:p-6 lg:p-8">
             <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
-                {{-- Main detail card --}}
+                
                 <div class="xl:col-span-2 bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-                    {{-- Header card --}}
+                    
                     <div class="px-6 py-5 border-b border-gray-100 flex items-center gap-4">
                         <div class="w-12 h-12 rounded-full bg-gradient-to-br from-indigo-400 to-purple-500 flex items-center justify-center text-white text-lg font-bold flex-shrink-0">
-                            {{ strtoupper(substr($registrant->name, 0, 1)) }}
+                            <?php echo e(strtoupper(substr($registrant->name, 0, 1))); ?>
+
                         </div>
                         <div>
-                            <h2 class="text-lg font-bold text-gray-900">{{ $registrant->name }}</h2>
-                            <p class="text-xs text-gray-500">ID: #{{ $registrant->id }}</p>
+                            <h2 class="text-lg font-bold text-gray-900"><?php echo e($registrant->name); ?></h2>
+                            <p class="text-xs text-gray-500">ID: #<?php echo e($registrant->id); ?></p>
                         </div>
                         <div class="ml-auto">
-                            @if ($registrant->status === 'approved')
+                            <?php if($registrant->status === 'approved'): ?>
                                 <span class="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
                                     <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Approved
                                 </span>
-                            @elseif ($registrant->status === 'rejected')
+                            <?php elseif($registrant->status === 'rejected'): ?>
                                 <span class="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold bg-red-50 text-red-700 border border-red-200">
                                     <span class="w-1.5 h-1.5 rounded-full bg-red-500"></span> Rejected
                                 </span>
-                            @else
+                            <?php else: ?>
                                 <span class="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-200">
                                     <span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span> Pending
                                 </span>
-                            @endif
+                            <?php endif; ?>
                         </div>
                     </div>
 
-                    {{-- Detail fields --}}
+                    
                     <div class="p-6 space-y-4">
                         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                             <div class="bg-gray-50 rounded-xl p-4">
                                 <dt class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Email</dt>
-                                <dd class="text-sm font-medium text-gray-900">{{ $registrant->email }}</dd>
+                                <dd class="text-sm font-medium text-gray-900"><?php echo e($registrant->email); ?></dd>
                             </div>
-                            @if ($registrant->plain_password)
+                            <?php if($registrant->plain_password): ?>
                             <div class="bg-gray-50 rounded-xl p-4">
                                 <dt class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Password</dt>
                                 <dd class="text-sm font-medium text-gray-900 flex items-center gap-2">
-                                    <code class="bg-gray-200 px-2 py-0.5 rounded select-all text-xs" id="detailPwd">{{ $registrant->plain_password }}</code>
+                                    <code class="bg-gray-200 px-2 py-0.5 rounded select-all text-xs" id="detailPwd"><?php echo e($registrant->plain_password); ?></code>
                                     <button onclick="copyDetailPwd()" class="text-gray-400 hover:text-gray-600 transition" title="Copy password">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
                                     </button>
                                 </dd>
                             </div>
-                            @endif
+                            <?php endif; ?>
                             <div class="bg-gray-50 rounded-xl p-4">
                                 <dt class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Phone</dt>
-                                <dd class="text-sm font-medium text-gray-900">{{ $registrant->phone ?? '—' }}</dd>
+                                <dd class="text-sm font-medium text-gray-900"><?php echo e($registrant->phone ?? '—'); ?></dd>
                             </div>
                             <div class="bg-gray-50 rounded-xl p-4">
                                 <dt class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Job Title</dt>
-                                <dd class="text-sm font-medium text-gray-900">{{ $registrant->job_title ?? '—' }}</dd>
+                                <dd class="text-sm font-medium text-gray-900"><?php echo e($registrant->job_title ?? '—'); ?></dd>
                             </div>
                             <div class="bg-gray-50 rounded-xl p-4">
                                 <dt class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Job Role</dt>
-                                <dd class="text-sm font-medium text-gray-900">{{ $registrant->job_role ?? '—' }}</dd>
+                                <dd class="text-sm font-medium text-gray-900"><?php echo e($registrant->job_role ?? '—'); ?></dd>
                             </div>
                             <div class="bg-gray-50 rounded-xl p-4">
                                 <dt class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Company</dt>
-                                <dd class="text-sm font-medium text-gray-900">{{ $registrant->company ?? '—' }}</dd>
+                                <dd class="text-sm font-medium text-gray-900"><?php echo e($registrant->company ?? '—'); ?></dd>
                             </div>
                             <div class="bg-gray-50 rounded-xl p-4">
                                 <dt class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Industry</dt>
-                                <dd class="text-sm font-medium text-gray-900">{{ $registrant->industry ?? '—' }}</dd>
+                                <dd class="text-sm font-medium text-gray-900"><?php echo e($registrant->industry ?? '—'); ?></dd>
                             </div>
                             <div class="bg-gray-50 rounded-xl p-4">
                                 <dt class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Employees</dt>
-                                <dd class="text-sm font-medium text-gray-900">{{ $registrant->employees ?? '—' }}</dd>
+                                <dd class="text-sm font-medium text-gray-900"><?php echo e($registrant->employees ?? '—'); ?></dd>
                             </div>
                             <div class="bg-gray-50 rounded-xl p-4">
                                 <dt class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">GDPR Consent</dt>
                                 <dd class="text-sm font-medium">
-                                    @if ($registrant->gdpr)
+                                    <?php if($registrant->gdpr): ?>
                                         <span class="inline-flex items-center gap-1 text-emerald-600">
                                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
                                             Consented
                                         </span>
-                                    @else
+                                    <?php else: ?>
                                         <span class="text-gray-400">—</span>
-                                    @endif
+                                    <?php endif; ?>
                                 </dd>
                             </div>
                             <div class="bg-gray-50 rounded-xl p-4">
                                 <dt class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Registered to Event At</dt>
-                                <dd class="text-sm font-medium text-gray-900">{{ $registrant->created_at->copy()->addHours(7)->format('d M Y, H:i') }}</dd>
+                                <dd class="text-sm font-medium text-gray-900"><?php echo e($registrant->created_at->copy()->addHours(7)->format('d M Y, H:i')); ?></dd>
                             </div>
-                            @if ($registrant->first_name || $registrant->last_name)
+                            <?php if($registrant->first_name || $registrant->last_name): ?>
                             <div class="bg-gray-50 rounded-xl p-4">
                                 <dt class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">First Name</dt>
-                                <dd class="text-sm font-medium text-gray-900">{{ $registrant->first_name ?? '—' }}</dd>
+                                <dd class="text-sm font-medium text-gray-900"><?php echo e($registrant->first_name ?? '—'); ?></dd>
                             </div>
                             <div class="bg-gray-50 rounded-xl p-4">
                                 <dt class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Last Name</dt>
-                                <dd class="text-sm font-medium text-gray-900">{{ $registrant->last_name ?? '—' }}</dd>
+                                <dd class="text-sm font-medium text-gray-900"><?php echo e($registrant->last_name ?? '—'); ?></dd>
                             </div>
-                            @endif
-                            @if ($registrant->referral_code)
+                            <?php endif; ?>
+                            <?php if($registrant->referral_code): ?>
                             <div class="bg-gray-50 rounded-xl p-4">
                                 <dt class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Referral Code</dt>
-                                <dd class="text-sm font-medium text-gray-900 font-mono">{{ $registrant->referral_code }}</dd>
+                                <dd class="text-sm font-medium text-gray-900 font-mono"><?php echo e($registrant->referral_code); ?></dd>
                             </div>
-                            @endif
-                            @if ($registrant->utm_source)
+                            <?php endif; ?>
+                            <?php if($registrant->utm_source): ?>
                             <div class="bg-gray-50 rounded-xl p-4">
                                 <dt class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">UTM Source</dt>
-                                <dd class="text-sm font-medium text-gray-900">{{ $registrant->utm_source }}</dd>
+                                <dd class="text-sm font-medium text-gray-900"><?php echo e($registrant->utm_source); ?></dd>
                             </div>
-                            @endif
+                            <?php endif; ?>
 
                         </div>
 
-                        @if ($registrant->notes)
+                        <?php if($registrant->notes): ?>
                             <div class="bg-gray-50 rounded-xl p-4">
                                 <dt class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Registrant Notes</dt>
-                                <dd class="text-sm text-gray-700">{{ $registrant->notes }}</dd>
+                                <dd class="text-sm text-gray-700"><?php echo e($registrant->notes); ?></dd>
                             </div>
-                        @endif
+                        <?php endif; ?>
 
-                        {{-- Admin Remarks / Notes (inline editable) --}}
+                        
                         <div class="bg-yellow-50 rounded-xl p-4 border border-yellow-200" id="adminNotesCard">
                             <div class="flex items-center justify-between mb-2">
                                 <dt class="text-xs font-semibold text-yellow-600 uppercase tracking-wider">Admin Remarks</dt>
-                                @if (Auth::user()->canWrite())
+                                <?php if(Auth::user()->canWrite()): ?>
                                 <button onclick="toggleAdminNotesEdit()"
                                         class="text-xs font-medium text-yellow-700 hover:text-yellow-900 bg-yellow-100 hover:bg-yellow-200 px-3 py-1 rounded-lg transition"
                                         id="editNotesBtn">
-                                    ✏️ {{ $registrant->admin_notes ? 'Edit' : 'Add Note' }}
+                                    ✏️ <?php echo e($registrant->admin_notes ? 'Edit' : 'Add Note'); ?>
+
                                 </button>
-                                @endif
+                                <?php endif; ?>
                             </div>
-                            {{-- Display mode --}}
+                            
                             <dd class="text-sm text-gray-800 whitespace-pre-wrap" id="adminNotesDisplay">
-                                {{ $registrant->admin_notes ?: 'No remarks yet.' }}
+                                <?php echo e($registrant->admin_notes ?: 'No remarks yet.'); ?>
+
                             </dd>
-                            {{-- Edit mode (hidden by default) --}}
-                            @if (Auth::user()->canWrite())
+                            
+                            <?php if(Auth::user()->canWrite()): ?>
                             <div id="adminNotesEdit" class="hidden">
                                 <textarea id="adminNotesInput" rows="4"
                                           class="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm focus:ring-2 focus:ring-yellow-400 focus:border-yellow-400 resize-none"
-                                          placeholder="Add your remarks about this registrant...">{{ $registrant->admin_notes }}</textarea>
+                                          placeholder="Add your remarks about this registrant..."><?php echo e($registrant->admin_notes); ?></textarea>
                                 <div class="flex items-center gap-2 mt-2">
                                     <button onclick="saveAdminNotes()"
                                             class="px-4 py-2 text-sm font-semibold rounded-xl bg-yellow-500 text-white hover:bg-yellow-600 shadow-sm transition">
@@ -181,86 +184,92 @@
                                     <span id="notesStatus" class="text-xs text-gray-400 ml-2 hidden"></span>
                                 </div>
                             </div>
-                            @endif
+                            <?php endif; ?>
                         </div>
 
-                        {{-- Must be : Approve / Reject (hanya untuk pending) --}}
-                        @if (Auth::user()->isClient())
-                            @if ($registrant->isPending())
+                        
+                        <?php if(Auth::user()->isClient()): ?>
+                            <?php if($registrant->isPending()): ?>
                         <div class="bg-indigo-50 rounded-xl p-4 border border-indigo-200">
                             <div class="flex items-center justify-between mb-3">
                                 <dt class="text-xs font-semibold text-indigo-600 uppercase tracking-wider">Must be :</dt>
                             </div>
                             <div class="flex items-center gap-3">
-                                <button {{ $registrant->hasClientRemark() ? '' : "onclick=detailMustBe($registrant->id,'approve')" }}
-                                        id="detail-approve-{{ $registrant->id }}"
+                                <button <?php echo e($registrant->hasClientRemark() ? '' : "onclick=detailMustBe($registrant->id,'approve')"); ?>
+
+                                        id="detail-approve-<?php echo e($registrant->id); ?>"
                                         class="flex-1 px-4 py-3 rounded-xl text-sm font-bold transition border-2
-                                        {{ $registrant->hasClientRemark() && $registrant->client_remark_action === 'approve' ? 'bg-emerald-50 text-emerald-700 border-emerald-500 cursor-default' : ($registrant->hasClientRemark() ? 'bg-gray-50 text-gray-400 border-gray-200 cursor-default' : 'bg-white text-emerald-700 border-emerald-300 hover:bg-emerald-50') }}"
-                                        {{ $registrant->hasClientRemark() ? 'disabled' : '' }}>
+                                        <?php echo e($registrant->hasClientRemark() && $registrant->client_remark_action === 'approve' ? 'bg-emerald-50 text-emerald-700 border-emerald-500 cursor-default' : ($registrant->hasClientRemark() ? 'bg-gray-50 text-gray-400 border-gray-200 cursor-default' : 'bg-white text-emerald-700 border-emerald-300 hover:bg-emerald-50')); ?>"
+                                        <?php echo e($registrant->hasClientRemark() ? 'disabled' : ''); ?>>
                                     ✅ Approve
                                 </button>
-                                <button {{ $registrant->hasClientRemark() ? '' : "onclick=detailMustBe($registrant->id,'reject')" }}
-                                        id="detail-reject-{{ $registrant->id }}"
+                                <button <?php echo e($registrant->hasClientRemark() ? '' : "onclick=detailMustBe($registrant->id,'reject')"); ?>
+
+                                        id="detail-reject-<?php echo e($registrant->id); ?>"
                                         class="flex-1 px-4 py-3 rounded-xl text-sm font-bold transition border-2
-                                        {{ $registrant->hasClientRemark() && $registrant->client_remark_action === 'reject' ? 'bg-red-50 text-red-700 border-red-500 cursor-default' : ($registrant->hasClientRemark() ? 'bg-gray-50 text-gray-400 border-gray-200 cursor-default' : 'bg-white text-red-700 border-red-300 hover:bg-red-50') }}"
-                                        {{ $registrant->hasClientRemark() ? 'disabled' : '' }}>
+                                        <?php echo e($registrant->hasClientRemark() && $registrant->client_remark_action === 'reject' ? 'bg-red-50 text-red-700 border-red-500 cursor-default' : ($registrant->hasClientRemark() ? 'bg-gray-50 text-gray-400 border-gray-200 cursor-default' : 'bg-white text-red-700 border-red-300 hover:bg-red-50')); ?>"
+                                        <?php echo e($registrant->hasClientRemark() ? 'disabled' : ''); ?>>
                                     ❌ Reject
                                 </button>
                             </div>
-                            @if ($registrant->hasClientRemark())
+                            <?php if($registrant->hasClientRemark()): ?>
                             <div class="mt-3 text-xs text-gray-500 text-center">
-                                @if ($registrant->clientRemarkedBy)
-                                    by {{ $registrant->clientRemarkedBy->name }}
-                                @endif
-                                &middot; {{ $registrant->client_remarked_at?->diffForHumans() }}
+                                <?php if($registrant->clientRemarkedBy): ?>
+                                    by <?php echo e($registrant->clientRemarkedBy->name); ?>
+
+                                <?php endif; ?>
+                                &middot; <?php echo e($registrant->client_remarked_at?->diffForHumans()); ?>
+
                             </div>
-                            @endif
+                            <?php endif; ?>
                         </div>
-                            @elseif ($registrant->hasClientRemark())
+                            <?php elseif($registrant->hasClientRemark()): ?>
                         <div class="bg-indigo-50 rounded-xl p-4 border border-indigo-200">
                             <dt class="text-xs font-semibold text-indigo-600 uppercase tracking-wider mb-2">Must be :</dt>
                             <div class="flex flex-col items-start gap-1">
                                 <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold
-                                    {{ $registrant->client_remark_action === 'approve' ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700' }}">
-                                    {{ $registrant->client_remark_action === 'approve' ? '✅ Must be Approve' : '❌ Must be Reject' }}
+                                    <?php echo e($registrant->client_remark_action === 'approve' ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'); ?>">
+                                    <?php echo e($registrant->client_remark_action === 'approve' ? '✅ Must be Approve' : '❌ Must be Reject'); ?>
+
                                 </span>
-                                @if ($registrant->clientRemarkedBy)
-                                    <span class="text-xs text-gray-500">{{ $registrant->clientRemarkedBy->name }}</span>
-                                @endif
-                                <span class="text-[10px] text-gray-400">{{ $registrant->client_remarked_at?->diffForHumans() }}</span>
+                                <?php if($registrant->clientRemarkedBy): ?>
+                                    <span class="text-xs text-gray-500"><?php echo e($registrant->clientRemarkedBy->name); ?></span>
+                                <?php endif; ?>
+                                <span class="text-[10px] text-gray-400"><?php echo e($registrant->client_remarked_at?->diffForHumans()); ?></span>
                             </div>
                         </div>
-                            @endif
-                        @endif
-                        @if (!Auth::user()->isClient() && $registrant->hasClientRemark())
+                            <?php endif; ?>
+                        <?php endif; ?>
+                        <?php if(!Auth::user()->isClient() && $registrant->hasClientRemark()): ?>
                         <div class="bg-indigo-50 rounded-xl p-4 border border-indigo-200">
                             <dt class="text-xs font-semibold text-indigo-600 uppercase tracking-wider mb-2">Must be :</dt>
                             <div class="flex flex-col items-start gap-1">
                                 <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold
-                                    {{ $registrant->client_remark_action === 'approve' ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700' }}">
-                                    {{ $registrant->client_remark_action === 'approve' ? '✅ Must be Approve' : '❌ Must be Reject' }}
+                                    <?php echo e($registrant->client_remark_action === 'approve' ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'); ?>">
+                                    <?php echo e($registrant->client_remark_action === 'approve' ? '✅ Must be Approve' : '❌ Must be Reject'); ?>
+
                                 </span>
-                                @if ($registrant->clientRemarkedBy)
-                                    <span class="text-xs text-gray-500">{{ $registrant->clientRemarkedBy->name }}</span>
-                                @endif
-                                <span class="text-[10px] text-gray-400">{{ $registrant->client_remarked_at?->diffForHumans() }}</span>
+                                <?php if($registrant->clientRemarkedBy): ?>
+                                    <span class="text-xs text-gray-500"><?php echo e($registrant->clientRemarkedBy->name); ?></span>
+                                <?php endif; ?>
+                                <span class="text-[10px] text-gray-400"><?php echo e($registrant->client_remarked_at?->diffForHumans()); ?></span>
                             </div>
                         </div>
-                        @endif
+                        <?php endif; ?>
                     </div>
 
-                    {{-- Actions --}}
-                    @if (Auth::user()->canWrite())
+                    
+                    <?php if(Auth::user()->canWrite()): ?>
                     <div class="px-6 py-4 bg-gray-50/50 border-t border-gray-100 flex items-center justify-between">
                         <div class="flex items-center gap-2">
-                            <a href="{{ route('admin.registrants.edit', $registrant) }}"
+                            <a href="<?php echo e(route('admin.registrants.edit', $registrant)); ?>"
                                class="px-4 py-2 text-sm font-medium rounded-xl bg-amber-50 text-amber-700 hover:bg-amber-100 border border-amber-200 transition">
                                 ✏️ Edit
                             </a>
-                            <form action="{{ route('admin.registrants.destroy', $registrant) }}" method="POST" class="inline"
-                                  onsubmit="return confirm('Delete {{ addslashes($registrant->name) }} permanently?')">
-                                @csrf
-                                @method('DELETE')
+                            <form action="<?php echo e(route('admin.registrants.destroy', $registrant)); ?>" method="POST" class="inline"
+                                  onsubmit="return confirm('Delete <?php echo e(addslashes($registrant->name)); ?> permanently?')">
+                                <?php echo csrf_field(); ?>
+                                <?php echo method_field('DELETE'); ?>
                                 <button type="submit"
                                         class="px-4 py-2 text-sm font-medium rounded-xl bg-red-50 text-red-700 hover:bg-red-100 border border-red-200 transition">
                                     🗑 Delete
@@ -268,45 +277,46 @@
                             </form>
                         </div>
                         <div class="flex items-center gap-2.5">
-                            @if ($registrant->isPending())
-                                @if ($registrant->hasClientRemark())
+                            <?php if($registrant->isPending()): ?>
+                                <?php if($registrant->hasClientRemark()): ?>
                                 <div class="flex flex-col items-center text-xs bg-indigo-50 px-3 py-1.5 rounded-lg border border-indigo-100 mr-1">
                                     <span class="font-semibold text-indigo-700">
-                                        {{ $registrant->client_remark_action === 'approve' ? '✅ Approve' : '❌ Reject' }}
+                                        <?php echo e($registrant->client_remark_action === 'approve' ? '✅ Approve' : '❌ Reject'); ?>
+
                                     </span>
-                                    @if ($registrant->clientRemarkedBy)
-                                        <span class="text-[10px] text-indigo-500">{{ $registrant->clientRemarkedBy->name }}</span>
-                                    @endif
+                                    <?php if($registrant->clientRemarkedBy): ?>
+                                        <span class="text-[10px] text-indigo-500"><?php echo e($registrant->clientRemarkedBy->name); ?></span>
+                                    <?php endif; ?>
                                 </div>
-                                @endif
-                                <form action="{{ route('admin.registrants.approve', $registrant) }}" method="POST">
-                                    @csrf
+                                <?php endif; ?>
+                                <form action="<?php echo e(route('admin.registrants.approve', $registrant)); ?>" method="POST">
+                                    <?php echo csrf_field(); ?>
                                     <button type="submit"
-                                            onclick="return confirm('Approve {{ addslashes($registrant->name) }}?')"
+                                            onclick="return confirm('Approve <?php echo e(addslashes($registrant->name)); ?>?')"
                                             class="px-5 py-2.5 text-sm font-semibold rounded-xl bg-emerald-500 text-white hover:bg-emerald-600 shadow-sm shadow-emerald-200 transition">
                                         ✓ Approve
                                     </button>
                                 </form>
-                            @endif
-                            @if ($registrant->status === 'approved' && $registrant->plain_password)
-                                <form action="{{ route('admin.registrants.resend-credentials', $registrant) }}" method="POST" class="inline">
-                                    @csrf
+                            <?php endif; ?>
+                            <?php if($registrant->status === 'approved' && $registrant->plain_password): ?>
+                                <form action="<?php echo e(route('admin.registrants.resend-credentials', $registrant)); ?>" method="POST" class="inline">
+                                    <?php echo csrf_field(); ?>
                                     <button type="submit"
-                                            onclick="return confirm('Resend credentials to {{ addslashes($registrant->name) }}?')"
+                                            onclick="return confirm('Resend credentials to <?php echo e(addslashes($registrant->name)); ?>?')"
                                             class="px-4 py-2.5 text-sm font-semibold rounded-xl bg-blue-500 text-white hover:bg-blue-600 shadow-sm shadow-blue-200 transition">
                                         📧 Resend Credentials
                                     </button>
                                 </form>
-                            @endif
+                            <?php endif; ?>
                         </div>
                     </div>
-                    @endif
+                    <?php endif; ?>
                 </div>
 
-                {{-- Sidebar column --}}
+                
                 <div class="xl:col-span-1 space-y-5">
-                    @unless(auth()->user()->isClient())
-                    {{-- Quick stats --}}
+                    <?php if (! (auth()->user()->isClient())): ?>
+                    
                     <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
                         <div class="px-5 py-4 border-b border-gray-100">
                             <h3 class="text-sm font-bold text-gray-800">Quick Stats</h3>
@@ -314,40 +324,41 @@
                         <div class="p-5 space-y-4">
                             <div>
                                 <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Unique Code</p>
-                                <p class="text-sm font-bold text-gray-900 font-mono">{{ $registrant->unique_code ?? '—' }}</p>
+                                <p class="text-sm font-bold text-gray-900 font-mono"><?php echo e($registrant->unique_code ?? '—'); ?></p>
                             </div>
                             <div>
                                 <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Registered</p>
-                                <p class="text-sm font-bold text-gray-900">{{ $registrant->created_at->copy()->addHours(7)->format('d M Y, H:i') }}</p>
+                                <p class="text-sm font-bold text-gray-900"><?php echo e($registrant->created_at->copy()->addHours(7)->format('d M Y, H:i')); ?></p>
                             </div>
                             <div>
                                 <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Processed</p>
-                                <p class="text-sm font-bold text-gray-900">{{ $registrant->processed_at?->copy()->addHours(7)->format('d M Y, H:i') ?? '—' }}</p>
-                                @if ($registrant->status === 'approved' && $registrant->approver)
-                                    <p class="text-xs text-gray-500 mt-0.5">by {{ $registrant->approver->name }}</p>
-                                @elseif ($registrant->status === 'rejected' && $registrant->rejecter)
-                                    <p class="text-xs text-gray-500 mt-0.5">by {{ $registrant->rejecter->name }}</p>
-                                @endif
+                                <p class="text-sm font-bold text-gray-900"><?php echo e($registrant->processed_at?->copy()->addHours(7)->format('d M Y, H:i') ?? '—'); ?></p>
+                                <?php if($registrant->status === 'approved' && $registrant->approver): ?>
+                                    <p class="text-xs text-gray-500 mt-0.5">by <?php echo e($registrant->approver->name); ?></p>
+                                <?php elseif($registrant->status === 'rejected' && $registrant->rejecter): ?>
+                                    <p class="text-xs text-gray-500 mt-0.5">by <?php echo e($registrant->rejecter->name); ?></p>
+                                <?php endif; ?>
                             </div>
-                            @if ($registrant->hasClientRemark())
+                            <?php if($registrant->hasClientRemark()): ?>
                             <div class="bg-indigo-50 rounded-xl p-3 border border-indigo-200">
                                 <p class="text-xs font-semibold text-indigo-600 uppercase tracking-wider mb-1">Client Recommendation</p>
                                 <div class="flex items-center gap-1.5 mb-1">
-                                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold {{ $registrant->client_remark_action === 'approve' ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700' }}">
-                                        {{ $registrant->client_remark_action === 'approve' ? '✅ Approve' : '❌ Reject' }}
+                                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold <?php echo e($registrant->client_remark_action === 'approve' ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'); ?>">
+                                        <?php echo e($registrant->client_remark_action === 'approve' ? '✅ Approve' : '❌ Reject'); ?>
+
                                     </span>
                                 </div>
-                                @if ($registrant->clientRemarkedBy)
-                                    <p class="text-[10px] text-gray-500">{{ $registrant->clientRemarkedBy->name }}</p>
-                                @endif
-                                <p class="text-xs text-gray-700 mt-1">{{ $registrant->client_remark }}</p>
-                                <p class="text-[10px] text-gray-400 mt-1">{{ $registrant->client_remarked_at?->diffForHumans() }}</p>
+                                <?php if($registrant->clientRemarkedBy): ?>
+                                    <p class="text-[10px] text-gray-500"><?php echo e($registrant->clientRemarkedBy->name); ?></p>
+                                <?php endif; ?>
+                                <p class="text-xs text-gray-700 mt-1"><?php echo e($registrant->client_remark); ?></p>
+                                <p class="text-[10px] text-gray-400 mt-1"><?php echo e($registrant->client_remarked_at?->diffForHumans()); ?></p>
                             </div>
-                            @endif
+                            <?php endif; ?>
                     </div>
-                    @endunless
+                    <?php endif; ?>
 
-                    {{-- Email History --}}
+                    
                     <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
                         <div class="px-5 py-4 border-b border-gray-100">
                             <h3 class="text-sm font-bold text-gray-800 flex items-center gap-2">
@@ -355,156 +366,160 @@
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
                                 </svg>
                                 Email History
-                                <span class="text-xs font-normal text-gray-400">({{ $emailLogs->count() }} sent)</span>
+                                <span class="text-xs font-normal text-gray-400">(<?php echo e($emailLogs->count()); ?> sent)</span>
                             </h3>
                         </div>
                         <div class="p-5 space-y-4">
-                            {{-- Expected email types (sent & missing) --}}
-                            @if (count($expectedTypes) > 0)
+                            
+                            <?php if(count($expectedTypes) > 0): ?>
                                 <div class="space-y-2">
                                     <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Email Status</p>
-                                    @foreach ($expectedTypes as $et)
-                                        <div class="flex items-center justify-between gap-3 p-2.5 rounded-lg {{ $et['sent'] ? 'bg-emerald-50/50' : 'bg-gray-50' }}">
+                                    <?php $__currentLoopData = $expectedTypes; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $et): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                        <div class="flex items-center justify-between gap-3 p-2.5 rounded-lg <?php echo e($et['sent'] ? 'bg-emerald-50/50' : 'bg-gray-50'); ?>">
                                             <div class="flex items-center gap-2.5 min-w-0">
-                                                @if ($et['sent'])
+                                                <?php if($et['sent']): ?>
                                                     <svg class="w-4 h-4 text-emerald-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                                                @else
+                                                <?php else: ?>
                                                     <svg class="w-4 h-4 text-gray-300 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                                                @endif
-                                                <span class="text-xs font-medium {{ $et['sent'] ? 'text-emerald-800' : 'text-gray-500' }}">{{ $et['label'] }}</span>
+                                                <?php endif; ?>
+                                                <span class="text-xs font-medium <?php echo e($et['sent'] ? 'text-emerald-800' : 'text-gray-500'); ?>"><?php echo e($et['label']); ?></span>
                                             </div>
                                             <div class="flex items-center gap-2 flex-shrink-0">
-                                                @if ($et['sent'])
+                                                <?php if($et['sent']): ?>
                                                     <span class="text-xs font-medium text-emerald-600 bg-emerald-100 px-2 py-0.5 rounded-full">Sent</span>
-                                                @else
-                                                    @unless(auth()->user()->isClient())
-                                                    <form action="{{ route('admin.registrants.send-email', [$registrant, $et['type']]) }}" method="POST" class="inline"
-                                                          onsubmit="return confirm('Send {{ addslashes($et['label']) }} email to {{ addslashes($registrant->display_name) }}?')">
-                                                        @csrf
+                                                <?php else: ?>
+                                                    <?php if (! (auth()->user()->isClient())): ?>
+                                                    <form action="<?php echo e(route('admin.registrants.send-email', [$registrant, $et['type']])); ?>" method="POST" class="inline"
+                                                          onsubmit="return confirm('Send <?php echo e(addslashes($et['label'])); ?> email to <?php echo e(addslashes($registrant->display_name)); ?>?')">
+                                                        <?php echo csrf_field(); ?>
                                                         <button type="submit"
                                                                 class="text-xs font-medium px-2.5 py-1 rounded-lg bg-indigo-100 text-indigo-700 hover:bg-indigo-200 transition">
                                                             Send Now
                                                         </button>
                                                     </form>
-                                                    @endunless
-                                                @endif
+                                                    <?php endif; ?>
+                                                <?php endif; ?>
                                             </div>
                                         </div>
-                                    @endforeach
+                                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                                 </div>
-                            @endif
+                            <?php endif; ?>
 
-                            {{-- Detailed email logs --}}
-                            @if ($emailLogs->count() > 0)
+                            
+                            <?php if($emailLogs->count() > 0): ?>
                                 <div class="space-y-2">
                                     <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Log Details</p>
                                     <div class="space-y-2">
-                                        @foreach ($emailLogs as $log)
-                                            <div class="flex items-start gap-3 p-3 rounded-xl {{ $log->status === 'sent' ? 'bg-emerald-50' : ($log->status === 'failed' ? 'bg-red-50' : ($log->status === 'bounced' ? 'bg-orange-50' : 'bg-gray-50')) }}">
+                                        <?php $__currentLoopData = $emailLogs; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $log): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                            <div class="flex items-start gap-3 p-3 rounded-xl <?php echo e($log->status === 'sent' ? 'bg-emerald-50' : ($log->status === 'failed' ? 'bg-red-50' : ($log->status === 'bounced' ? 'bg-orange-50' : 'bg-gray-50'))); ?>">
                                                 <div class="flex-shrink-0 mt-0.5">
-                                                    @if ($log->status === 'sent')
+                                                    <?php if($log->status === 'sent'): ?>
                                                         <svg class="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                                                    @elseif ($log->status === 'failed')
+                                                    <?php elseif($log->status === 'failed'): ?>
                                                         <svg class="w-4 h-4 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                                                    @elseif ($log->status === 'bounced')
+                                                    <?php elseif($log->status === 'bounced'): ?>
                                                         <svg class="w-4 h-4 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"/></svg>
-                                                    @else
+                                                    <?php else: ?>
                                                         <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                                                    @endif
+                                                    <?php endif; ?>
                                                 </div>
                                                 <div class="flex-1 min-w-0">
-                                                    <p class="text-xs font-semibold text-gray-800 truncate">{{ $log->subject }}</p>
+                                                    <p class="text-xs font-semibold text-gray-800 truncate"><?php echo e($log->subject); ?></p>
                                                     <p class="text-xs text-gray-500 mt-0.5">
-                                                        <span class="capitalize">{{ str_replace('_', ' ', $log->template_type) }}</span>
+                                                        <span class="capitalize"><?php echo e(str_replace('_', ' ', $log->template_type)); ?></span>
                                                         &middot;
-                                                        {{ $log->sent_at?->copy()->addHours(7)->format('d M Y, H:i:s') ?? '—' }}
+                                                        <?php echo e($log->sent_at?->copy()->addHours(7)->format('d M Y, H:i:s') ?? '—'); ?>
+
                                                     </p>
-                                                    @if ($log->status === 'failed' && $log->error_message)
-                                                        <p class="text-xs text-red-500 mt-0.5 truncate">{{ $log->error_message }}</p>
-                                                    @endif
+                                                    <?php if($log->status === 'failed' && $log->error_message): ?>
+                                                        <p class="text-xs text-red-500 mt-0.5 truncate"><?php echo e($log->error_message); ?></p>
+                                                    <?php endif; ?>
                                                 </div>
                                                 <div class="flex items-center gap-1.5 flex-shrink-0">
-                                                    <span class="text-xs font-medium px-2 py-0.5 rounded-full {{ $log->status === 'sent' ? 'bg-emerald-100 text-emerald-700' : ($log->status === 'failed' ? 'bg-red-100 text-red-600' : ($log->status === 'bounced' ? 'bg-orange-100 text-orange-700' : 'bg-gray-100 text-gray-600')) }}">
-                                                        {{ ucfirst($log->status) }}
+                                                    <span class="text-xs font-medium px-2 py-0.5 rounded-full <?php echo e($log->status === 'sent' ? 'bg-emerald-100 text-emerald-700' : ($log->status === 'failed' ? 'bg-red-100 text-red-600' : ($log->status === 'bounced' ? 'bg-orange-100 text-orange-700' : 'bg-gray-100 text-gray-600'))); ?>">
+                                                        <?php echo e(ucfirst($log->status)); ?>
+
                                                     </span>
-                                                    @unless(auth()->user()->isClient())
-                                                    <form action="{{ route('admin.email-logs.resend', $log) }}" method="POST" class="inline"
+                                                    <?php if (! (auth()->user()->isClient())): ?>
+                                                    <form action="<?php echo e(route('admin.email-logs.resend', $log)); ?>" method="POST" class="inline"
                                                           onsubmit="return confirm('Resend this email?')">
-                                                        @csrf
+                                                        <?php echo csrf_field(); ?>
                                                         <button type="submit" class="text-xs font-medium px-2 py-0.5 rounded-lg bg-indigo-100 text-indigo-700 hover:bg-indigo-200 transition"
                                                                 title="Resend">
                                                             ↻
                                                         </button>
                                                     </form>
-                                                    @endunless
+                                                    <?php endif; ?>
                                                 </div>
                                             </div>
-                                        @endforeach
+                                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                                     </div>
                                 </div>
-                            @endif
+                            <?php endif; ?>
                         </div>
                     </div>
 
-                    {{-- Workshops --}}
-                    @if ($workshops->count() > 0)
+                    
+                    <?php if($workshops->count() > 0): ?>
                     <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
                         <div class="px-5 py-4 border-b border-gray-100">
                             <h3 class="text-sm font-bold text-gray-800 flex items-center gap-2">
                                 <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
                                 </svg>
-                                Workshops ({{ $workshops->count() }})
+                                Workshops (<?php echo e($workshops->count()); ?>)
                             </h3>
                         </div>
                         <div class="p-5">
                             <div class="flex flex-wrap gap-2">
-                                @foreach ($workshops as $w)
-                                    @php $pw = $w->pivot; @endphp
-                                    <a href="{{ route('admin.workshops.registrants', $w) }}"
+                                <?php $__currentLoopData = $workshops; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $w): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                    <?php $pw = $w->pivot; ?>
+                                    <a href="<?php echo e(route('admin.workshops.registrants', $w)); ?>"
                                        class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-indigo-50 text-indigo-700 rounded-lg hover:bg-indigo-100 transition"
-                                       @if ($pw && $pw->created_at) title="Joined workshop: {{ $pw->created_at->copy()->addHours(7)->format('d M Y, H:i') }}" @endif>
+                                       <?php if($pw && $pw->created_at): ?> title="Joined workshop: <?php echo e($pw->created_at->copy()->addHours(7)->format('d M Y, H:i')); ?>" <?php endif; ?>>
                                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/>
                                         </svg>
-                                        {{ $w->name ?: $w->title }}
-                                        @if ($pw)
-                                            <span class="text-xs px-1.5 py-0.5 rounded-full {{ $pw->status === 'approved' ? 'bg-emerald-100 text-emerald-700' : ($pw->status === 'rejected' ? 'bg-red-100 text-red-600' : 'bg-amber-100 text-amber-700') }}">{{ $pw->status }}</span>
-                                        @endif
+                                        <?php echo e($w->name ?: $w->title); ?>
+
+                                        <?php if($pw): ?>
+                                            <span class="text-xs px-1.5 py-0.5 rounded-full <?php echo e($pw->status === 'approved' ? 'bg-emerald-100 text-emerald-700' : ($pw->status === 'rejected' ? 'bg-red-100 text-red-600' : 'bg-amber-100 text-amber-700')); ?>"><?php echo e($pw->status); ?></span>
+                                        <?php endif; ?>
                                     </a>
-                                @endforeach
+                                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                             </div>
                         </div>
                     </div>
-                    @endif
+                    <?php endif; ?>
 
-                    {{-- Agenda Sessions --}}
-                    @if ($agendaItems->count() > 0)
+                    
+                    <?php if($agendaItems->count() > 0): ?>
                     <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
                         <div class="px-5 py-4 border-b border-gray-100">
                             <h3 class="text-sm font-bold text-gray-800 flex items-center gap-2">
                                 <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
                                 </svg>
-                                Sessions ({{ $agendaItems->count() }})
+                                Sessions (<?php echo e($agendaItems->count()); ?>)
                             </h3>
                         </div>
                         <div class="p-5">
                             <div class="flex flex-wrap gap-2">
-                                @foreach ($agendaItems as $item)
+                                <?php $__currentLoopData = $agendaItems; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $item): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                                     <span class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-gray-50 text-gray-700 rounded-lg border border-gray-200">
-                                        {{ $item->title }}
-                                        @php $as = $item->pivot->status ?? 'pending'; @endphp
-                                        <span class="text-xs px-1.5 py-0.5 rounded-full {{ $as === 'approved' ? 'bg-emerald-100 text-emerald-700' : ($as === 'rejected' ? 'bg-red-100 text-red-600' : 'bg-amber-100 text-amber-700') }}">{{ $as }}</span>
+                                        <?php echo e($item->title); ?>
+
+                                        <?php $as = $item->pivot->status ?? 'pending'; ?>
+                                        <span class="text-xs px-1.5 py-0.5 rounded-full <?php echo e($as === 'approved' ? 'bg-emerald-100 text-emerald-700' : ($as === 'rejected' ? 'bg-red-100 text-red-600' : 'bg-amber-100 text-amber-700')); ?>"><?php echo e($as); ?></span>
                                     </span>
-                                @endforeach
+                                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                             </div>
                         </div>
                     </div>
-                    @endif
+                    <?php endif; ?>
 
-                    {{-- QR Code --}}
-                    @if ($registrant->qr_token)
+                    
+                    <?php if($registrant->qr_token): ?>
                     <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
                         <div class="px-5 py-4 border-b border-gray-100">
                             <h3 class="text-sm font-bold text-gray-800 flex items-center gap-2">
@@ -515,9 +530,9 @@
                             </h3>
                         </div>
                         <div class="p-5 text-center">
-                            <img src="{{ $registrant->qr_code_url }}" alt="QR Code" class="w-32 h-32 mx-auto rounded-lg border border-gray-200 mb-3">
+                            <img src="<?php echo e($registrant->qr_code_url); ?>" alt="QR Code" class="w-32 h-32 mx-auto rounded-lg border border-gray-200 mb-3">
                             <div class="flex items-center gap-2">
-                                <input type="text" value="{{ $registrant->qr_share_url }}" readonly
+                                <input type="text" value="<?php echo e($registrant->qr_share_url); ?>" readonly
                                        class="text-xs text-indigo-600 bg-indigo-50 px-2 py-1.5 rounded-lg w-full border-0 cursor-text"
                                        id="qrShareUrl">
                                 <button onclick="copyQrUrl()"
@@ -525,18 +540,19 @@
                                     Copy
                                 </button>
                             </div>
-                            <a href="{{ $registrant->qr_share_url }}" target="_blank"
+                            <a href="<?php echo e($registrant->qr_share_url); ?>" target="_blank"
                                class="inline-block text-xs text-indigo-600 hover:text-indigo-800 font-medium mt-2">
                                 Preview QR →
                             </a>
-                            @if ($registrant->checked_in_at)
+                            <?php if($registrant->checked_in_at): ?>
                                 <p class="text-xs text-emerald-600 font-semibold mt-2">
-                                    ✓ Checked in at {{ $registrant->checked_in_at->copy()->addHours(7)->format('H:i, d M Y') }}
+                                    ✓ Checked in at <?php echo e($registrant->checked_in_at->copy()->addHours(7)->format('H:i, d M Y')); ?>
+
                                 </p>
-                            @endif
+                            <?php endif; ?>
                         </div>
                     </div>
-                    @endif
+                    <?php endif; ?>
                 </div>
             </div>
     </main>
@@ -602,11 +618,11 @@
         notesStatus.classList.add('hidden');
 
         try {
-            const res = await fetch('{{ route('admin.registrants.notes', $registrant) }}', {
+            const res = await fetch('<?php echo e(route('admin.registrants.notes', $registrant)); ?>', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                    'X-CSRF-TOKEN': '<?php echo e(csrf_token()); ?>',
                     'Accept': 'application/json',
                 },
                 body: JSON.stringify({ admin_notes: notes }),
@@ -665,10 +681,10 @@
         clientRemarkForm.classList.add('hidden');
         if (editClientRemarkBtn) editClientRemarkBtn.classList.remove('hidden');
         // Restore original values
-        clientRemarkInput.value = '{{ $registrant->client_remark ? addslashes($registrant->client_remark) : '' }}';
+        clientRemarkInput.value = '<?php echo e($registrant->client_remark ? addslashes($registrant->client_remark) : ''); ?>';
         var radios = document.querySelectorAll('input[name="client_remark_action"]');
         radios.forEach(function(r) {
-            r.checked = r.value === '{{ $registrant->client_remark_action ?? 'approve' }}';
+            r.checked = r.value === '<?php echo e($registrant->client_remark_action ?? 'approve'); ?>';
         });
     }
 
@@ -684,11 +700,11 @@
         clientRemarkStatus.classList.add('hidden');
 
         try {
-            const res = await fetch('{{ route('admin.registrants.client-remark', $registrant) }}', {
+            const res = await fetch('<?php echo e(route('admin.registrants.client-remark', $registrant)); ?>', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                    'X-CSRF-TOKEN': '<?php echo e(csrf_token()); ?>',
                     'Accept': 'application/json',
                 },
                 body: JSON.stringify({ client_remark: remark, client_remark_action: action }),
@@ -725,7 +741,7 @@
     // ═══════════════════════════════
     //  Must be : Approve / Reject (direct submit)
     // ═══════════════════════════════
-    var detailMustBeUrl = window.location.origin + '/admin/registrants/{{ $registrant->id }}/client-remark';
+    var detailMustBeUrl = window.location.origin + '/admin/registrants/<?php echo e($registrant->id); ?>/client-remark';
 
     function detailMustBe(id, action) {
         var approveBtn = document.getElementById('detail-approve-' + id);
@@ -738,7 +754,7 @@
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                'X-CSRF-TOKEN': '<?php echo e(csrf_token()); ?>',
                 'Accept': 'application/json',
             },
             body: JSON.stringify({ client_remark: '', client_remark_action: action }),
@@ -768,3 +784,4 @@
 
 </body>
 </html>
+<?php /**PATH /Users/mdrz/2026/MSD26/resources/views/admin/registrant-detail.blade.php ENDPATH**/ ?>

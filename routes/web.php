@@ -106,6 +106,10 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     // Dashboard
     Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('dashboard');
     Route::get('/dashboard/data', [AdminController::class, 'dashboardData'])->name('dashboard.data');
+    Route::get('/dashboard/daily/{date}', [AdminController::class, 'dailyDetail'])->name('dashboard.daily');
+
+    // Regist Confirmation (client recommendations for admin)
+    Route::get('/regist-confirmation', [AdminController::class, 'registConfirmation'])->name('regist-confirmation');
 
     // Registrant management
     Route::get('/registrants', [AdminController::class, 'index'])->name('registrants.index');
@@ -120,6 +124,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::post('/registrants/bulk-reject', [AdminController::class, 'bulkReject'])->name('registrants.bulk-reject');
     Route::get('/registrants/export/csv', [AdminController::class, 'exportCsv'])->name('registrants.export-csv');
     Route::post('/registrants/{registrant}/notes', [AdminController::class, 'updateNotes'])->name('registrants.notes');
+    Route::post('/registrants/{registrant}/client-remark', [AdminController::class, 'clientRemark'])->name('registrants.client-remark');
     Route::post('/registrants/{registrant}/send-email/{type}', [AdminController::class, 'sendEmailByType'])->name('registrants.send-email');
 
     // ── Walk-in Registration ──

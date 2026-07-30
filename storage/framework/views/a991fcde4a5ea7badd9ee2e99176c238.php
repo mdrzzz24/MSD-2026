@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <link rel="icon" type="image/png" href="{{ asset('img/metrodata.png') }}">
+    <link rel="icon" type="image/png" href="<?php echo e(asset('img/metrodata.png')); ?>">
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Dashboard — {{ config('app.name') }}</title>
+    <title>Dashboard — <?php echo e(config('app.name')); ?></title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
@@ -22,18 +22,18 @@
 
 <div class="flex min-h-screen">
 
-    {{-- ==================== SIDEBAR ==================== --}}
-@include('admin.partials.sidebar')
+    
+<?php echo $__env->make('admin.partials.sidebar', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
 
-    {{-- ==================== MAIN CONTENT ==================== --}}
+    
     <main class="flex-1 lg:ml-64">
 
-        {{-- Top bar --}}
+        
         <header class="sticky top-0 z-30 bg-white/80 backdrop-blur border-b border-gray-200">
             <div class="flex items-center justify-between h-16 px-4 sm:px-6 lg:px-8">
-                {{-- Mobile hamburger + breadcrumb --}}
+                
                 <div class="flex items-center gap-4">
-                    {{-- Mobile menu toggle --}}
+                    
                     <button id="sidebarToggle" class="lg:hidden p-2 -ml-2 text-gray-500 hover:text-gray-700 rounded-lg hover:bg-gray-100">
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
@@ -45,16 +45,16 @@
                     </div>
                 </div>
 
-                {{-- Right side --}}
+                
                 <div class="flex items-center gap-2">
-                    <a href="{{ route('admin.registrants.export-csv') }}"
+                    <a href="<?php echo e(route('admin.registrants.export-csv')); ?>"
                        class="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-lg transition">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                         </svg>
                         Export
                     </a>
-                    <a href="{{ route('admin.registrants.index') }}"
+                    <a href="<?php echo e(route('admin.registrants.index')); ?>"
                        class="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-indigo-600 bg-indigo-50 hover:bg-indigo-100 rounded-lg transition">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
@@ -65,45 +65,46 @@
             </div>
         </header>
 
-        {{-- Page content --}}
+        
         <div class="p-4 sm:p-6 lg:p-8 space-y-6">
 
-            {{-- Flash messages --}}
-            @include('admin.partials.notification')
+            
+            <?php echo $__env->make('admin.partials.notification', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
 
-            {{-- Registration Form Toggle (Super Admin only) --}}
-            @if (Auth::user()->isSuperAdmin())
-            @php $forcedOpen = \Illuminate\Support\Facades\Cache::get('registration_forced_open', false); @endphp
+            
+            <?php if(Auth::user()->isSuperAdmin()): ?>
+            <?php $forcedOpen = \Illuminate\Support\Facades\Cache::get('registration_forced_open', false); ?>
             <div class="flex items-center gap-4 bg-white rounded-2xl border border-gray-200 px-5 py-4 shadow-sm">
                 <div>
                     <p class="text-sm font-bold text-gray-900">Registration Form</p>
                     <p class="text-xs text-gray-500">
                         Status:
-                        @if ($forcedOpen)
+                        <?php if($forcedOpen): ?>
                             <span class="text-emerald-600 font-semibold">Forced OPEN</span> — form open regardless of countdown
-                        @else
+                        <?php else: ?>
                             <span class="text-amber-600 font-semibold">Follows Countdown</span> — opens automatically on 13 July 2026
-                        @endif
+                        <?php endif; ?>
                     </p>
                 </div>
-                <form action="{{ route('admin.toggle-registration') }}" method="POST" class="ml-auto">
-                    @csrf
-                    <button type="submit" class="px-4 py-2 text-sm font-semibold rounded-xl transition {{ $forcedOpen ? 'bg-red-500 text-white hover:bg-red-600' : 'bg-emerald-500 text-white hover:bg-emerald-600' }}">
-                        {{ $forcedOpen ? 'Close Registration' : 'Force Open Registration' }}
+                <form action="<?php echo e(route('admin.toggle-registration')); ?>" method="POST" class="ml-auto">
+                    <?php echo csrf_field(); ?>
+                    <button type="submit" class="px-4 py-2 text-sm font-semibold rounded-xl transition <?php echo e($forcedOpen ? 'bg-red-500 text-white hover:bg-red-600' : 'bg-emerald-500 text-white hover:bg-emerald-600'); ?>">
+                        <?php echo e($forcedOpen ? 'Close Registration' : 'Force Open Registration'); ?>
+
                     </button>
                 </form>
             </div>
-            @endif
+            <?php endif; ?>
 
-            {{-- ===== ROW 1: Welcome + Today's Stats ===== --}}
+            
             <div class="grid grid-cols-1 lg:grid-cols-4 gap-4">
-                {{-- Welcome card --}}
+                
                 <div class="lg:col-span-2 bg-gradient-to-br from-indigo-600 to-purple-700 rounded-2xl p-6 text-white shadow-lg">
                     <div class="flex items-start justify-between">
                         <div>
                             <p class="text-indigo-200 text-sm font-medium">Welcome back,</p>
-                            <h2 class="text-2xl font-bold mt-1">{{ Auth::user()->name }}</h2>
-                            <p class="text-indigo-200 text-sm mt-1">{{ now()->format('l, d F Y') }}</p>
+                            <h2 class="text-2xl font-bold mt-1"><?php echo e(Auth::user()->name); ?></h2>
+                            <p class="text-indigo-200 text-sm mt-1"><?php echo e(now()->format('l, d F Y')); ?></p>
                         </div>
                         <div class="w-14 h-14 bg-white/20 rounded-2xl flex items-center justify-center backdrop-blur-sm">
                             <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -113,107 +114,107 @@
                     </div>
                     <div class="mt-6 flex items-center gap-6">
                         <div>
-                            <p class="text-3xl font-bold" data-stat="todayCount">{{ $todayCount }}</p>
+                            <p class="text-3xl font-bold" data-stat="todayCount"><?php echo e($todayCount); ?></p>
                             <p class="text-indigo-200 text-xs">registrations today</p>
                         </div>
                         <div class="h-10 w-px bg-white/20"></div>
                         <div>
-                            <p class="text-3xl font-bold {{ $trend >= 0 ? 'text-emerald-300' : 'text-red-300' }}" data-stat="trend" data-trend="{{ $trend }}">
-                                {{ $trend >= 0 ? '+' : '' }}{{ $trend }}%
+                            <p class="text-3xl font-bold <?php echo e($trend >= 0 ? 'text-emerald-300' : 'text-red-300'); ?>" data-stat="trend" data-trend="<?php echo e($trend); ?>">
+                                <?php echo e($trend >= 0 ? '+' : ''); ?><?php echo e($trend); ?>%
                             </p>
                             <p class="text-indigo-200 text-xs">vs yesterday</p>
                         </div>
                         <div class="h-10 w-px bg-white/20"></div>
                         <div>
-                            <p class="text-3xl font-bold text-amber-300" data-stat="pending">{{ $pending }}</p>
+                            <p class="text-3xl font-bold text-amber-300" data-stat="pending"><?php echo e($pending); ?></p>
                             <p class="text-indigo-200 text-xs">pending review</p>
                         </div>
                     </div>
                 </div>
 
-                {{-- Mini status distribution --}}
+                
                 <div class="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm">
                     <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-4">Status Distribution</h3>
-                    @php $grand = max($total, 1); @endphp
+                    <?php $grand = max($total, 1); ?>
                     <div class="space-y-3" id="status-distribution">
                         <div>
                             <div class="flex justify-between text-xs mb-1">
                                 <span class="font-medium text-gray-700">Approved</span>
-                                <span class="text-gray-500"><span data-stat="approved">{{ $approved }}</span> (<span data-stat="approvedPct">{{ round($approved/$grand*100) }}</span>%)</span>
+                                <span class="text-gray-500"><span data-stat="approved"><?php echo e($approved); ?></span> (<span data-stat="approvedPct"><?php echo e(round($approved/$grand*100)); ?></span>%)</span>
                             </div>
                             <div class="h-2 bg-gray-100 rounded-full overflow-hidden">
-                                <div class="h-full bg-emerald-500 rounded-full transition-all" data-statbar="approved" style="width: {{ $approved/$grand*100 }}%"></div>
+                                <div class="h-full bg-emerald-500 rounded-full transition-all" data-statbar="approved" style="width: <?php echo e($approved/$grand*100); ?>%"></div>
                             </div>
                         </div>
                         <div>
                             <div class="flex justify-between text-xs mb-1">
                                 <span class="font-medium text-gray-700">Pending</span>
-                                <span class="text-gray-500"><span data-stat="pending2">{{ $pending }}</span> (<span data-stat="pendingPct">{{ round($pending/$grand*100) }}</span>%)</span>
+                                <span class="text-gray-500"><span data-stat="pending2"><?php echo e($pending); ?></span> (<span data-stat="pendingPct"><?php echo e(round($pending/$grand*100)); ?></span>%)</span>
                             </div>
                             <div class="h-2 bg-gray-100 rounded-full overflow-hidden">
-                                <div class="h-full bg-amber-400 rounded-full transition-all" data-statbar="pending2" style="width: {{ $pending/$grand*100 }}%"></div>
+                                <div class="h-full bg-amber-400 rounded-full transition-all" data-statbar="pending2" style="width: <?php echo e($pending/$grand*100); ?>%"></div>
                             </div>
                         </div>
                         <div>
                             <div class="flex justify-between text-xs mb-1">
                                 <span class="font-medium text-gray-700">Rejected</span>
-                                <span class="text-gray-500"><span data-stat="rejected">{{ $rejected }}</span> (<span data-stat="rejectedPct">{{ round($rejected/$grand*100) }}</span>%)</span>
+                                <span class="text-gray-500"><span data-stat="rejected"><?php echo e($rejected); ?></span> (<span data-stat="rejectedPct"><?php echo e(round($rejected/$grand*100)); ?></span>%)</span>
                             </div>
                             <div class="h-2 bg-gray-100 rounded-full overflow-hidden">
-                                <div class="h-full bg-red-400 rounded-full transition-all" data-statbar="rejected" style="width: {{ $rejected/$grand*100 }}%"></div>
+                                <div class="h-full bg-red-400 rounded-full transition-all" data-statbar="rejected" style="width: <?php echo e($rejected/$grand*100); ?>%"></div>
                             </div>
                         </div>
                     </div>
                     <div class="mt-4 pt-3 border-t border-gray-100 flex justify-between text-xs">
                         <span class="text-gray-400">Total</span>
-                        <span class="font-bold text-gray-900"><span data-stat="total">{{ $total }}</span></span>
+                        <span class="font-bold text-gray-900"><span data-stat="total"><?php echo e($total); ?></span></span>
                     </div>
                 </div>
 
-                {{-- Quick actions --}}
+                
                 <div class="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm">
                     <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-4">Quick Actions</h3>
                     <div class="space-y-2.5">
-                        <a href="{{ route('admin.registrants.index', ['status' => 'pending']) }}"
+                        <a href="<?php echo e(route('admin.registrants.index', ['status' => 'pending'])); ?>"
                            class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-amber-700 bg-amber-50 hover:bg-amber-100 transition">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
                             </svg>
-                            Review Pending (<span data-stat="pending">{{ $pending }}</span>)
-                            @if ($stalePending > 0)
-                                <span class="ml-auto text-xs bg-red-100 text-red-600 px-2 py-0.5 rounded-full font-bold"><span data-stat="stalePending">{{ $stalePending }}</span> stale</span>
-                            @endif
+                            Review Pending (<span data-stat="pending"><?php echo e($pending); ?></span>)
+                            <?php if($stalePending > 0): ?>
+                                <span class="ml-auto text-xs bg-red-100 text-red-600 px-2 py-0.5 rounded-full font-bold"><span data-stat="stalePending"><?php echo e($stalePending); ?></span> stale</span>
+                            <?php endif; ?>
                         </a>
-                        <a href="{{ route('admin.registrants.index') }}"
+                        <a href="<?php echo e(route('admin.registrants.index')); ?>"
                            class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-indigo-700 bg-indigo-50 hover:bg-indigo-100 transition">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
                             </svg>
                             All Registrants
                         </a>
-                        <a href="{{ route('admin.registrants.export-csv') }}"
+                        <a href="<?php echo e(route('admin.registrants.export-csv')); ?>"
                            class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-gray-700 bg-gray-50 hover:bg-gray-100 transition">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                             </svg>
                             Export Data
                         </a>
-                        @if (Auth::user()->isSuperAdmin())
-                        <a href="{{ route('admin.management.backup.index') }}"
+                        <?php if(Auth::user()->isSuperAdmin()): ?>
+                        <a href="<?php echo e(route('admin.management.backup.index')); ?>"
                            class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-purple-700 bg-purple-50 hover:bg-purple-100 transition">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 1.657 3.582 3 8 3s8-1.343 8-3V7M4 7c0 1.657 3.582 3 8 3s8-1.343 8-3M4 7c0-1.657 3.582-3 8-3s8 1.343 8 3m0 5c0 1.657-3.582 3-8 3s-8-1.343-8-3"/>
                             </svg>
                             Database Backup
                         </a>
-                        @endif
+                        <?php endif; ?>
                     </div>
                 </div>
             </div>
 
-            {{-- ===== ROW 2: Chart + Stats Cards ===== --}}
+            
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
-                {{-- Bar Chart --}}
+                
                 <div class="lg:col-span-2 bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
                     <div class="flex items-center justify-between mb-5">
                         <div>
@@ -233,50 +234,51 @@
                         </div>
                     </div>
                     <div class="flex items-end gap-1.5 h-36 relative" id="realtime-chart">
-                        @foreach ($chartData as $bar)
+                        <?php $__currentLoopData = $chartData; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $bar): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                             <div class="flex-1 flex flex-col items-center gap-1 group relative chart-bar"
-                                 data-date="{{ $bar['date'] }}"
-                                 data-total="{{ $bar['total'] }}"
-                                 data-approved="{{ $bar['approved'] }}"
-                                 data-pending="{{ $bar['pending'] }}"
-                                 data-rejected="{{ $bar['rejected'] }}">
+                                 data-date="<?php echo e($bar['date']); ?>"
+                                 data-total="<?php echo e($bar['total']); ?>"
+                                 data-approved="<?php echo e($bar['approved']); ?>"
+                                 data-pending="<?php echo e($bar['pending']); ?>"
+                                 data-rejected="<?php echo e($bar['rejected']); ?>">
                                 <div class="w-full flex flex-col-reverse" style="height: 140px;">
-                                    @if ($bar['approved'] > 0)
+                                    <?php if($bar['approved'] > 0): ?>
                                         <div class="w-full bg-emerald-400 rounded-t transition-all duration-500 hover:bg-emerald-500 chart-bar-approved"
-                                             style="height: {{ max(2, $bar['approved'] / $maxDaily * 130) }}px"></div>
-                                    @endif
-                                    @if ($bar['rejected'] > 0)
+                                             style="height: <?php echo e(max(2, $bar['approved'] / $maxDaily * 130)); ?>px"></div>
+                                    <?php endif; ?>
+                                    <?php if($bar['rejected'] > 0): ?>
                                         <div class="w-full bg-red-400 rounded-t transition-all duration-500 hover:bg-red-500 chart-bar-rejected"
-                                             style="height: {{ max(2, $bar['rejected'] / $maxDaily * 130) }}px"></div>
-                                    @endif
-                                    @if ($bar['pending'] > 0)
+                                             style="height: <?php echo e(max(2, $bar['rejected'] / $maxDaily * 130)); ?>px"></div>
+                                    <?php endif; ?>
+                                    <?php if($bar['pending'] > 0): ?>
                                         <div class="w-full bg-indigo-400 rounded-t transition-all duration-500 hover:bg-indigo-500 chart-bar-pending"
-                                             style="height: {{ max(2, $bar['pending'] / $maxDaily * 130) }}px"></div>
-                                    @endif
-                                    @if ($bar['total'] === 0)
+                                             style="height: <?php echo e(max(2, $bar['pending'] / $maxDaily * 130)); ?>px"></div>
+                                    <?php endif; ?>
+                                    <?php if($bar['total'] === 0): ?>
                                         <div class="w-full bg-gray-100 rounded-t chart-bar-empty" style="height: 2px"></div>
-                                    @endif
+                                    <?php endif; ?>
                                 </div>
-                                {{-- Label angka di atas bar (hidden default, muncul saat hover/click) --}}
+                                
                                 <div class="chart-bar-label text-[9px] font-bold text-gray-700 opacity-0 group-hover:opacity-100 transition-opacity duration-200 leading-none mt-0.5">
-                                    {{ $bar['total'] }}
+                                    <?php echo e($bar['total']); ?>
+
                                 </div>
-                                <span class="text-[10px] text-gray-400 font-medium -mt-0.5">{{ $bar['day'] }}</span>
+                                <span class="text-[10px] text-gray-400 font-medium -mt-0.5"><?php echo e($bar['day']); ?></span>
                             </div>
-                        @endforeach
-                        {{-- Tooltip --}}
+                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                        
                         <div id="chartTooltip" class="absolute z-50 hidden pointer-events-none bg-gray-900 text-white text-xs rounded-lg shadow-lg px-3 py-2.5 leading-relaxed transition-opacity duration-150" style="min-width: 140px;"></div>
                     </div>
                 </div>
 
-                {{-- Summary mini-cards --}}
+                
                 <div class="space-y-4">
-                    <a href="{{ route('admin.registrants.index', ['status' => 'all']) }}"
+                    <a href="<?php echo e(route('admin.registrants.index', ['status' => 'all'])); ?>"
                        class="block bg-white rounded-2xl p-5 border border-gray-100 shadow-sm hover:shadow-md transition group">
                         <div class="flex items-center justify-between">
                             <div>
                                 <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Total Registrants</p>
-                                <p class="text-3xl font-bold text-gray-900 mt-1" data-stat="total">{{ $total }}</p>
+                                <p class="text-3xl font-bold text-gray-900 mt-1" data-stat="total"><?php echo e($total); ?></p>
                             </div>
                             <div class="w-11 h-11 bg-gray-100 rounded-xl flex items-center justify-center group-hover:bg-gray-200 transition">
                                 <svg class="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -285,12 +287,12 @@
                             </div>
                         </div>
                     </a>
-                    <a href="{{ route('admin.workshops.index') }}"
+                    <a href="<?php echo e(route('admin.workshops.index')); ?>"
                        class="block bg-white rounded-2xl p-5 border border-gray-100 shadow-sm hover:shadow-md transition group">
                         <div class="flex items-center justify-between">
                             <div>
                                 <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Workshops</p>
-                                <p class="text-3xl font-bold text-gray-900 mt-1" data-stat="workshopCount">{{ $workshopCount }}</p>
+                                <p class="text-3xl font-bold text-gray-900 mt-1" data-stat="workshopCount"><?php echo e($workshopCount); ?></p>
                             </div>
                             <div class="w-11 h-11 bg-indigo-50 rounded-xl flex items-center justify-center group-hover:bg-indigo-100 transition">
                                 <svg class="w-6 h-6 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -298,14 +300,14 @@
                                 </svg>
                             </div>
                         </div>
-                        <p class="text-xs text-gray-400 mt-2"><span data-stat="workshopRegistrations">{{ $workshopRegistrations }}</span> total registrations</p>
+                        <p class="text-xs text-gray-400 mt-2"><span data-stat="workshopRegistrations"><?php echo e($workshopRegistrations); ?></span> total registrations</p>
                     </a>
-                    <a href="{{ route('admin.registrants.index', ['status' => 'pending']) }}"
+                    <a href="<?php echo e(route('admin.registrants.index', ['status' => 'pending'])); ?>"
                        class="block bg-white rounded-2xl p-5 border border-yellow-100 shadow-sm hover:shadow-md transition group">
                         <div class="flex items-center justify-between">
                             <div>
                                 <p class="text-xs font-semibold text-yellow-600 uppercase tracking-wider">Pending</p>
-                                <p class="text-3xl font-bold text-yellow-700 mt-1" data-stat="pending">{{ $pending }}</p>
+                                <p class="text-3xl font-bold text-yellow-700 mt-1" data-stat="pending"><?php echo e($pending); ?></p>
                             </div>
                             <div class="w-11 h-11 bg-yellow-100 rounded-xl flex items-center justify-center group-hover:bg-yellow-200 transition">
                                 <svg class="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -313,14 +315,14 @@
                                 </svg>
                             </div>
                         </div>
-                        @if ($stalePending > 0)
-                            <p class="text-xs text-red-500 mt-2 font-medium">⚠ <span data-stat="stalePending">{{ $stalePending }}</span> pending for &gt;2 days</p>
-                        @endif
+                        <?php if($stalePending > 0): ?>
+                            <p class="text-xs text-red-500 mt-2 font-medium">⚠ <span data-stat="stalePending"><?php echo e($stalePending); ?></span> pending for &gt;2 days</p>
+                        <?php endif; ?>
                     </a>
                 </div>
             </div>
 
-            {{-- ===== ROW 3: Daily Registration Data Table ===== --}}
+            
             <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
                 <div class="flex items-center justify-between px-5 py-4 border-b border-gray-100">
                     <div>
@@ -354,231 +356,234 @@
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-gray-50" id="daily-table-body">
-                            @foreach ($chartData as $row)
-                            @php
+                            <?php $__currentLoopData = $chartData; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $row): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                            <?php
                                 $pendingPct = $row['total'] > 0 ? round($row['pending'] / $row['total'] * 100) : 0;
                                 $isHighPending = $pendingPct >= 50 && $row['pending'] > 0;
-                            @endphp
-                            <tr class="hover:bg-gray-50/50 transition daily-row cursor-pointer {{ $isHighPending ? 'bg-indigo-50/30' : '' }}"
-                                data-date="{{ $row['date'] }}"
-                                data-total="{{ $row['total'] }}"
-                                data-approved="{{ $row['approved'] }}"
-                                data-pending="{{ $row['pending'] }}"
-                                data-rejected="{{ $row['rejected'] }}"
-                                onclick="openDailyDetail('{{ $row['date'] }}', 'pending')">
+                            ?>
+                            <tr class="hover:bg-gray-50/50 transition daily-row cursor-pointer <?php echo e($isHighPending ? 'bg-indigo-50/30' : ''); ?>"
+                                data-date="<?php echo e($row['date']); ?>"
+                                data-total="<?php echo e($row['total']); ?>"
+                                data-approved="<?php echo e($row['approved']); ?>"
+                                data-pending="<?php echo e($row['pending']); ?>"
+                                data-rejected="<?php echo e($row['rejected']); ?>"
+                                onclick="openDailyDetail('<?php echo e($row['date']); ?>', 'pending')">
                                 <td class="px-5 py-3 text-gray-900 font-medium whitespace-nowrap">
-                                    {{ \Carbon\Carbon::parse($row['date'])->format('d M Y') }}
+                                    <?php echo e(\Carbon\Carbon::parse($row['date'])->format('d M Y')); ?>
+
                                 </td>
                                 <td class="px-5 py-3 text-gray-500 whitespace-nowrap">
-                                    @php
+                                    <?php
                                         $dayName = \Carbon\Carbon::parse($row['date'])->isoFormat('dddd');
-                                    @endphp
-                                    {{ $dayName }}
+                                    ?>
+                                    <?php echo e($dayName); ?>
+
                                 </td>
-                                <td class="px-5 py-3 text-center font-bold text-gray-900">{{ $row['total'] }}</td>
+                                <td class="px-5 py-3 text-center font-bold text-gray-900"><?php echo e($row['total']); ?></td>
                                 <td class="px-5 py-3 text-center">
-                                    @if ($row['approved'] > 0)
-                                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700">{{ $row['approved'] }}</span>
-                                    @else
+                                    <?php if($row['approved'] > 0): ?>
+                                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700"><?php echo e($row['approved']); ?></span>
+                                    <?php else: ?>
                                         <span class="text-gray-300">—</span>
-                                    @endif
+                                    <?php endif; ?>
                                 </td>
                                 <td class="px-5 py-3 text-center">
-                                    @if ($row['pending'] > 0)
-                                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold {{ $isHighPending ? 'bg-indigo-200 text-indigo-800' : 'bg-indigo-50 text-indigo-700' }}">{{ $row['pending'] }}</span>
-                                    @else
+                                    <?php if($row['pending'] > 0): ?>
+                                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold <?php echo e($isHighPending ? 'bg-indigo-200 text-indigo-800' : 'bg-indigo-50 text-indigo-700'); ?>"><?php echo e($row['pending']); ?></span>
+                                    <?php else: ?>
                                         <span class="text-gray-300">—</span>
-                                    @endif
+                                    <?php endif; ?>
                                 </td>
                                 <td class="px-5 py-3 text-center">
-                                    @if ($row['pending'] > 0)
+                                    <?php if($row['pending'] > 0): ?>
                                         <div class="flex items-center gap-1.5 justify-center">
-                                            <span class="text-xs font-bold {{ $isHighPending ? 'text-indigo-700' : 'text-indigo-500' }}">{{ $pendingPct }}%</span>
+                                            <span class="text-xs font-bold <?php echo e($isHighPending ? 'text-indigo-700' : 'text-indigo-500'); ?>"><?php echo e($pendingPct); ?>%</span>
                                             <div class="w-12 h-1.5 bg-gray-100 rounded-full overflow-hidden">
-                                                <div class="h-full rounded-full {{ $isHighPending ? 'bg-indigo-500' : 'bg-indigo-300' }}" style="width: {{ $pendingPct }}%"></div>
+                                                <div class="h-full rounded-full <?php echo e($isHighPending ? 'bg-indigo-500' : 'bg-indigo-300'); ?>" style="width: <?php echo e($pendingPct); ?>%"></div>
                                             </div>
                                         </div>
-                                    @else
+                                    <?php else: ?>
                                         <span class="text-gray-300">—</span>
-                                    @endif
+                                    <?php endif; ?>
                                 </td>
                                 <td class="px-5 py-3 text-center">
-                                    @if ($row['rejected'] > 0)
-                                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-red-50 text-red-700">{{ $row['rejected'] }}</span>
-                                    @else
+                                    <?php if($row['rejected'] > 0): ?>
+                                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-red-50 text-red-700"><?php echo e($row['rejected']); ?></span>
+                                    <?php else: ?>
                                         <span class="text-gray-300">—</span>
-                                    @endif
+                                    <?php endif; ?>
                                 </td>
                                 <td class="px-5 py-3">
                                     <div class="flex items-center gap-0.5 h-4 w-full max-w-[80px] ml-auto mr-auto">
-                                        @php
+                                        <?php
                                             $maxRow = max($maxDaily, 1);
                                             $approvedH = max(2, $row['approved'] / $maxRow * 16);
                                             $pendingH = max(2, $row['pending'] / $maxRow * 16);
                                             $rejectedH = max(2, $row['rejected'] / $maxRow * 16);
-                                        @endphp
-                                        @if ($row['approved'] > 0)
-                                            <div class="flex-1 bg-emerald-400 rounded-t" style="height: {{ $approvedH }}px"></div>
-                                        @endif
-                                        @if ($row['pending'] > 0)
-                                            <div class="flex-1 bg-indigo-400 rounded-t" style="height: {{ $pendingH }}px"></div>
-                                        @endif
-                                        @if ($row['rejected'] > 0)
-                                            <div class="flex-1 bg-red-400 rounded-t" style="height: {{ $rejectedH }}px"></div>
-                                        @endif
-                                        @if ($row['total'] === 0)
+                                        ?>
+                                        <?php if($row['approved'] > 0): ?>
+                                            <div class="flex-1 bg-emerald-400 rounded-t" style="height: <?php echo e($approvedH); ?>px"></div>
+                                        <?php endif; ?>
+                                        <?php if($row['pending'] > 0): ?>
+                                            <div class="flex-1 bg-indigo-400 rounded-t" style="height: <?php echo e($pendingH); ?>px"></div>
+                                        <?php endif; ?>
+                                        <?php if($row['rejected'] > 0): ?>
+                                            <div class="flex-1 bg-red-400 rounded-t" style="height: <?php echo e($rejectedH); ?>px"></div>
+                                        <?php endif; ?>
+                                        <?php if($row['total'] === 0): ?>
                                             <div class="flex-1 bg-gray-100 rounded-t" style="height: 2px"></div>
-                                        @endif
+                                        <?php endif; ?>
                                     </div>
                                 </td>
                             </tr>
-                            @endforeach
+                            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                         </tbody>
                     </table>
                 </div>
-                {{-- Footer summary --}}
+                
                 <div class="bg-gray-50/50 border-t border-gray-100 px-5 py-3 flex items-center justify-between text-xs text-gray-500">
                     <span>Showing <strong>14</strong> days of data</span>
                     <span class="font-medium text-gray-700">
                         Total:
-                        @php
+                        <?php
                             $grandTotal = collect($chartData)->sum('total');
                             $grandApproved = collect($chartData)->sum('approved');
                             $grandPending = collect($chartData)->sum('pending');
                             $grandRejected = collect($chartData)->sum('rejected');
-                        @endphp
-                        <span class="text-gray-900 font-bold">{{ $grandTotal }}</span> registrations
+                        ?>
+                        <span class="text-gray-900 font-bold"><?php echo e($grandTotal); ?></span> registrations
                         &middot;
-                        <span class="text-emerald-600">{{ $grandApproved }}</span> approved
+                        <span class="text-emerald-600"><?php echo e($grandApproved); ?></span> approved
                         &middot;
-                        <span class="text-indigo-600">{{ $grandPending }}</span> pending
+                        <span class="text-indigo-600"><?php echo e($grandPending); ?></span> pending
                         &middot;
-                        <span class="text-red-600">{{ $grandRejected }}</span> rejected
+                        <span class="text-red-600"><?php echo e($grandRejected); ?></span> rejected
                     </span>
                 </div>
             </div>
 
-            {{-- ===== ROW 4: Recent Registrants + Workshop Registrations ===== --}}
+            
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                {{-- Recent registrants (compact list, not a full table) --}}
+                
                 <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
                     <div class="flex items-center justify-between px-5 py-4 border-b border-gray-100">
                         <div>
                             <h3 class="text-sm font-bold text-gray-900">Recent Registrants</h3>
                             <p class="text-xs text-gray-500">Latest 7 registrations</p>
                         </div>
-                        <a href="{{ route('admin.registrants.index') }}"
+                        <a href="<?php echo e(route('admin.registrants.index')); ?>"
                            class="text-xs font-medium text-indigo-600 hover:text-indigo-800 transition">
                             View All &rarr;
                         </a>
                     </div>
                     <div class="divide-y divide-gray-50" id="realtime-recent">
-                        @forelse ($recentRegistrants as $r)
-                            <a href="{{ route('admin.registrants.show', $r['id']) }}"
+                        <?php $__empty_1 = true; $__currentLoopData = $recentRegistrants; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $r): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
+                            <a href="<?php echo e(route('admin.registrants.show', $r['id'])); ?>"
                                class="flex items-center gap-3 px-5 py-3 hover:bg-gray-50/50 transition">
                                 <div class="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-400 to-purple-500 flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
-                                    {{ $r['initial'] }}
+                                    <?php echo e($r['initial']); ?>
+
                                 </div>
                                 <div class="flex-1 min-w-0">
-                                    <p class="text-sm font-semibold text-gray-900 truncate">{{ $r['name'] }}</p>
-                                    <p class="text-xs text-gray-500 truncate">{{ $r['email'] }}</p>
+                                    <p class="text-sm font-semibold text-gray-900 truncate"><?php echo e($r['name']); ?></p>
+                                    <p class="text-xs text-gray-500 truncate"><?php echo e($r['email']); ?></p>
                                 </div>
                                 <div class="text-right flex-shrink-0">
-                                    @if ($r['status'] === 'approved')
+                                    <?php if($r['status'] === 'approved'): ?>
                                         <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-50 text-emerald-700">Approved</span>
-                                    @elseif ($r['status'] === 'rejected')
+                                    <?php elseif($r['status'] === 'rejected'): ?>
                                         <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-red-50 text-red-700">Rejected</span>
-                                    @else
+                                    <?php else: ?>
                                         <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-amber-50 text-amber-700">Pending</span>
-                                    @endif
-                                    <p class="text-[10px] text-gray-400 mt-0.5">{{ $r['timeAgo'] }}</p>
+                                    <?php endif; ?>
+                                    <p class="text-[10px] text-gray-400 mt-0.5"><?php echo e($r['timeAgo']); ?></p>
                                 </div>
                             </a>
-                        @empty
+                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
                             <div class="px-5 py-10 text-center">
                                 <p class="text-gray-400 text-sm">No registrants yet</p>
                             </div>
-                        @endforelse
+                        <?php endif; ?>
                     </div>
                 </div>
 
-                {{-- Approval stats, check-in, sources --}}
+                
                 <div class="space-y-4">
-                    {{-- Registration Overview --}}
+                    
                     <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
                         <h3 class="text-sm font-bold text-gray-900 mb-4">Registration Overview</h3>
                         <div class="grid grid-cols-2 gap-4">
                             <div class="bg-emerald-50 rounded-xl p-4 text-center">
-                                <p class="text-2xl font-bold text-emerald-700" data-stat="approved">{{ $approved }}</p>
+                                <p class="text-2xl font-bold text-emerald-700" data-stat="approved"><?php echo e($approved); ?></p>
                                 <p class="text-xs text-emerald-600 mt-1">Approved</p>
-                                @if ($total > 0)
+                                <?php if($total > 0): ?>
                                 <div class="mt-2 h-1.5 bg-emerald-200 rounded-full overflow-hidden">
-                                    <div class="h-full bg-emerald-500 rounded-full" style="width: {{ $approved/max($total,1)*100 }}%"></div>
+                                    <div class="h-full bg-emerald-500 rounded-full" style="width: <?php echo e($approved/max($total,1)*100); ?>%"></div>
                                 </div>
-                                @endif
+                                <?php endif; ?>
                             </div>
                             <div class="bg-amber-50 rounded-xl p-4 text-center">
-                                <p class="text-2xl font-bold text-amber-700" data-stat="pending">{{ $pending }}</p>
+                                <p class="text-2xl font-bold text-amber-700" data-stat="pending"><?php echo e($pending); ?></p>
                                 <p class="text-xs text-amber-600 mt-1">Pending</p>
-                                @if ($total > 0)
+                                <?php if($total > 0): ?>
                                 <div class="mt-2 h-1.5 bg-amber-200 rounded-full overflow-hidden">
-                                    <div class="h-full bg-amber-400 rounded-full" style="width: {{ $pending/max($total,1)*100 }}%"></div>
+                                    <div class="h-full bg-amber-400 rounded-full" style="width: <?php echo e($pending/max($total,1)*100); ?>%"></div>
                                 </div>
-                                @endif
+                                <?php endif; ?>
                             </div>
                             <div class="bg-red-50 rounded-xl p-4 text-center">
-                                <p class="text-2xl font-bold text-red-600" data-stat="rejected">{{ $rejected }}</p>
+                                <p class="text-2xl font-bold text-red-600" data-stat="rejected"><?php echo e($rejected); ?></p>
                                 <p class="text-xs text-red-500 mt-1">Rejected</p>
-                                @if ($total > 0)
+                                <?php if($total > 0): ?>
                                 <div class="mt-2 h-1.5 bg-red-200 rounded-full overflow-hidden">
-                                    <div class="h-full bg-red-400 rounded-full" style="width: {{ $rejected/max($total,1)*100 }}%"></div>
+                                    <div class="h-full bg-red-400 rounded-full" style="width: <?php echo e($rejected/max($total,1)*100); ?>%"></div>
                                 </div>
-                                @endif
+                                <?php endif; ?>
                             </div>
                             <div class="bg-indigo-50 rounded-xl p-4 text-center">
-                                <p class="text-2xl font-bold text-indigo-700" data-stat="workshopRegistrations">{{ $workshopRegistrations }}</p>
+                                <p class="text-2xl font-bold text-indigo-700" data-stat="workshopRegistrations"><?php echo e($workshopRegistrations); ?></p>
                                 <p class="text-xs text-indigo-600 mt-1">Workshop Regs</p>
-                                @if ($workshopCount > 0)
-                                <p class="text-[10px] text-indigo-400 mt-1">{{ round($workshopRegistrations/max($workshopCount,1)) }}/workshop avg</p>
-                                @endif
+                                <?php if($workshopCount > 0): ?>
+                                <p class="text-[10px] text-indigo-400 mt-1"><?php echo e(round($workshopRegistrations/max($workshopCount,1))); ?>/workshop avg</p>
+                                <?php endif; ?>
                             </div>
                         </div>
                     </div>
 
-                    {{-- Source Tracking --}}
-                    @if ($topSources->count() > 0)
+                    
+                    <?php if($topSources->count() > 0): ?>
                     <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
                         <h3 class="text-sm font-bold text-gray-900 mb-3">Top Registration Sources</h3>
                         <div class="space-y-2.5" id="realtime-sources">
-                            @foreach ($topSources as $src)
+                            <?php $__currentLoopData = $topSources; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $src): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                             <div class="flex items-center gap-3">
-                                <span class="text-xs font-medium text-gray-600 w-24 truncate">{{ $src->utm_source ?: 'Direct' }}</span>
+                                <span class="text-xs font-medium text-gray-600 w-24 truncate"><?php echo e($src->utm_source ?: 'Direct'); ?></span>
                                 <div class="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden">
-                                    <div class="h-full bg-indigo-400 rounded-full" style="width: {{ $src->total/max($approved,1)*100 }}%"></div>
+                                    <div class="h-full bg-indigo-400 rounded-full" style="width: <?php echo e($src->total/max($approved,1)*100); ?>%"></div>
                                 </div>
-                                <span class="text-xs font-semibold text-gray-700 w-10 text-right">{{ $src->total }}</span>
+                                <span class="text-xs font-semibold text-gray-700 w-10 text-right"><?php echo e($src->total); ?></span>
                             </div>
-                            @endforeach
+                            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                         </div>
                     </div>
-                    @endif
+                    <?php endif; ?>
 
-                    {{-- Referral & Waitlist --}}
+                    
                     <div class="grid grid-cols-2 gap-4">
-                        @if ($referralCount > 0)
+                        <?php if($referralCount > 0): ?>
                         <div class="bg-white rounded-xl border border-gray-100 shadow-sm p-4">
                             <p class="text-xs text-gray-400 uppercase tracking-wider">Referral Codes</p>
-                            <p class="text-xl font-bold text-gray-900 mt-1"><span data-stat="referralCount">{{ $referralCount }}</span></p>
+                            <p class="text-xl font-bold text-gray-900 mt-1"><span data-stat="referralCount"><?php echo e($referralCount); ?></span></p>
                             <p class="text-xs text-gray-500">registrants with referral</p>
                         </div>
-                        @endif
-                        @if ($workshopWaitlistTotal > 0)
+                        <?php endif; ?>
+                        <?php if($workshopWaitlistTotal > 0): ?>
                         <div class="bg-white rounded-xl border border-gray-100 shadow-sm p-4">
                             <p class="text-xs text-gray-400 uppercase tracking-wider">Waitlist</p>
-                            <p class="text-xl font-bold text-amber-600 mt-1"><span data-stat="workshopWaitlistTotal">{{ $workshopWaitlistTotal }}</span></p>
+                            <p class="text-xl font-bold text-amber-600 mt-1"><span data-stat="workshopWaitlistTotal"><?php echo e($workshopWaitlistTotal); ?></span></p>
                             <p class="text-xs text-gray-500">on workshop waitlist</p>
                         </div>
-                        @endif
+                        <?php endif; ?>
                     </div>
                 </div>
             </div>
@@ -587,12 +592,12 @@
     </main>
 </div>
 
-{{-- Daily Detail Modal --}}
+
 <div id="dailyModal" class="fixed inset-0 z-50 hidden" role="dialog" aria-modal="true">
     <div class="fixed inset-0 bg-black/50 backdrop-blur-sm transition-opacity" onclick="closeDailyModal()"></div>
     <div class="fixed inset-0 flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[85vh] flex flex-col animate-fade-in">
-            {{-- Modal header --}}
+            
             <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100 flex-shrink-0">
                 <div>
                     <h3 class="text-lg font-bold text-gray-900" id="modalTitle">Registrations</h3>
@@ -604,7 +609,7 @@
                     </svg>
                 </button>
             </div>
-            {{-- Modal stats bar --}}
+            
             <div class="flex items-center justify-between px-6 py-3 bg-gray-50/50 border-b border-gray-100 text-xs">
                 <div class="flex items-center gap-4" id="modalStats">
                     <span>Total: <strong id="modalTotal" class="text-gray-900">0</strong></span>
@@ -619,7 +624,7 @@
                     <button onclick="filterDaily('rejected')" class="px-2.5 py-1 rounded-lg text-xs font-medium transition daily-filter daily-filter-rejected bg-gray-100 text-gray-500 hover:bg-red-50 hover:text-red-700">Rejected</button>
                 </div>
             </div>
-            {{-- Modal body --}}
+            
             <div class="flex-1 overflow-y-auto px-6 py-4" id="modalBody">
                 <div class="text-center text-gray-400 py-10" id="modalLoading">
                     <svg class="w-8 h-8 mx-auto animate-spin mb-3" fill="none" viewBox="0 0 24 24">
@@ -630,7 +635,7 @@
                 </div>
                 <div id="modalContent" class="hidden"></div>
             </div>
-            {{-- Modal footer --}}
+            
             <div class="px-6 py-3 border-t border-gray-100 flex justify-end flex-shrink-0">
                 <button onclick="closeDailyModal()" class="px-4 py-2 text-sm font-medium text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-xl transition">Close</button>
             </div>
@@ -638,7 +643,7 @@
     </div>
 </div>
 
-{{-- Mobile sidebar overlay --}}
+
 <div id="sidebarOverlay" class="fixed inset-0 bg-black/40 backdrop-blur-sm z-30 hidden lg:hidden" onclick="toggleSidebar()"></div>
 <div id="mobileSidebar" class="fixed inset-y-0 left-0 w-64 bg-white border-r border-gray-200 z-40 transform -translate-x-full transition-transform lg:hidden">
     <div class="flex items-center justify-between h-16 px-6 border-b border-gray-100">
@@ -658,35 +663,35 @@
         </button>
     </div>
     <nav class="px-3 py-6 space-y-1">
-        <a href="{{ route('admin.dashboard') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium bg-indigo-50 text-indigo-700">
+        <a href="<?php echo e(route('admin.dashboard')); ?>" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium bg-indigo-50 text-indigo-700">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-4 0a1 1 0 01-1-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 01-1 1"/>
             </svg>
             Dashboard
         </a>
-        <a href="{{ route('admin.registrants.index') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-gray-600 hover:bg-gray-100">
+        <a href="<?php echo e(route('admin.registrants.index')); ?>" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-gray-600 hover:bg-gray-100">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
             Registrants
         </a>
-        <a href="{{ route('admin.agenda.index') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-gray-600 hover:bg-gray-100">
+        <a href="<?php echo e(route('admin.agenda.index')); ?>" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-gray-600 hover:bg-gray-100">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
             Agenda
         </a>
-        <a href="{{ route('admin.templates.index') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-gray-600 hover:bg-gray-100">
+        <a href="<?php echo e(route('admin.templates.index')); ?>" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-gray-600 hover:bg-gray-100">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
             </svg>
             Template Email
         </a>
-        <a href="{{ route('admin.workshops.index') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-gray-600 hover:bg-gray-100">
+        <a href="<?php echo e(route('admin.workshops.index')); ?>" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-gray-600 hover:bg-gray-100">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
             </svg>
             Workshop
         </a>
         <hr class="my-4">
-        <form action="{{ route('logout') }}" method="POST">
-            @csrf
+        <form action="<?php echo e(route('logout')); ?>" method="POST">
+            <?php echo csrf_field(); ?>
             <button type="submit" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-red-500 hover:bg-red-50 w-full">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a2 2 0 01-2 2H6a2 2 0 01-2-2V7a2 2 0 012-2h5a2 2 0 012 2v1"/>
@@ -755,10 +760,10 @@
     }
 </style>
 
-{{-- Real-time polling (every 8 detik) --}}
+
 <script>
 (function(){
-    var pollUrl = '{{ route("admin.dashboard.data") }}';
+    var pollUrl = '<?php echo e(route("admin.dashboard.data")); ?>';
     var pollInterval = 8000; // 8 detik
 
     function updateDashboard(data) {
@@ -1147,7 +1152,7 @@ function escapeHtml(text) {
 var dailyDetailUrlBase = window.location.origin + '/admin/dashboard/daily/';
 var dailyCurrentDate = null;
 var dailyCurrentFilter = 'pending';
-var dailyCurrentUserName = '{{ Auth::user()->name }}';
+var dailyCurrentUserName = '<?php echo e(Auth::user()->name); ?>';
 
 function openDailyDetail(date, status) {
     var modal = document.getElementById('dailyModal');
@@ -1191,9 +1196,9 @@ function openDailyDetail(date, status) {
 
             // Build registrants list
             var html = '';
-            var csrfToken = '{{ csrf_token() }}';
-            var isClient = {{ Auth::user()->isClient() ? 'true' : 'false' }};
-            var currentUserName = '{{ Auth::user()->name }}';
+            var csrfToken = '<?php echo e(csrf_token()); ?>';
+            var isClient = <?php echo e(Auth::user()->isClient() ? 'true' : 'false'); ?>;
+            var currentUserName = '<?php echo e(Auth::user()->name); ?>';
             if (data.registrants.length === 0) {
                 html = '<div class="text-center text-gray-400 py-10"><p>No registrants for this date.</p></div>';
             } else {
@@ -1285,7 +1290,7 @@ function dailyMustBe(id, action, btn) {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
-            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+            'X-CSRF-TOKEN': '<?php echo e(csrf_token()); ?>',
             'Accept': 'application/json',
         },
         body: JSON.stringify({ client_remark: '', client_remark_action: action }),
@@ -1344,3 +1349,4 @@ document.addEventListener('keydown', function(e) {
 
 </body>
 </html>
+<?php /**PATH /Users/mdrz/2026/MSD26/resources/views/admin/dashboard.blade.php ENDPATH**/ ?>

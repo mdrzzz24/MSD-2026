@@ -73,6 +73,7 @@ class AdminController extends Controller
             ];
             if ($count > $maxDaily) $maxDaily = $count;
         }
+        $chartData = array_reverse($chartData); // newest first
         $maxDaily = max($maxDaily, 1);
 
         $workshopCount = Workshop::count();
@@ -125,6 +126,55 @@ class AdminController extends Controller
     {
         $data = $this->getDashboardStats();
         return response()->json($data);
+    }
+
+    /**
+     * Return registrants for a specific date as JSON (for daily detail modal).
+     */
+    public function dailyDetail(string $date, Request $request)
+    {
+        $statusFilter = $request->get('status'); // 'pending', 'approved', 'rejected', or null for all
+
+        $query = Registrant::whereDate('created_at', $date)
+            ->with('clientRemarkedBy')
+            ->orderBy('created_at');
+
+        if ($statusFilter && in_array($statusFilter, ['pending', 'approved', 'rejected'])) {
+            $query->where('status', $statusFilter);
+        }
+
+        $registrants = $query->get()->map(fn($r) => [
+                'id'            => $r->id,
+                'name'          => $r->name,
+                'email'         => $r->email,
+                'phone'         => $r->phone,
+                'company'       => $r->company,
+                'job_title'     => $r->job_title,
+                'status'        => $r->status,
+                'utm_source'    => $r->utm_source,
+                'unique_code'   => $r->unique_code,
+                'created_at'    => $r->created_at->format('H:i'),
+                'time_ago'      => $r->created_at->diffForHumans(),
+                'initial'       => strtoupper(substr($r->name, 0, 1)),
+                'has_remark'    => $r->hasClientRemark(),
+                'remark_action' => $r->client_remark_action,
+                'remark_by'     => $r->clientRemarkedBy?->name,
+            ]);
+
+        $stats = [
+            'total'    => $registrants->count(),
+            'approved' => $registrants->where('status', 'approved')->count(),
+            'pending'  => $registrants->where('status', 'pending')->count(),
+            'rejected' => $registrants->where('status', 'rejected')->count(),
+        ];
+
+        return response()->json([
+            'date'         => $date,
+            'date_formatted' => \Carbon\Carbon::parse($date)->format('d M Y'),
+            'day_name'     => \Carbon\Carbon::parse($date)->isoFormat('dddd'),
+            'registrants'  => $registrants,
+            'stats'        => $stats,
+        ]);
     }
 
     /**
@@ -568,6 +618,68 @@ class AdminController extends Controller
             'notes'     => $registrant->admin_notes,
             'updatedAt' => $registrant->updated_at->format('d M Y, H:i'),
         ]);
+    }
+
+    /**
+     * Save or update a client remark (approve/reject recommendation).
+     * Accessible by clients and admins/super_admins.
+     */
+    public function clientRemark(Request $request, Registrant $registrant)
+    {
+        if (Auth::user()->isClient() && !Auth::user()->hasPermission('registrants')) {
+            return response()->json(['error' => 'You do not have permission.'], 403);
+        }
+
+        $validated = $request->validate([
+            'client_remark'        => ['nullable', 'string', 'max:2000'],
+            'client_remark_action' => ['required', 'string', 'in:approve,reject'],
+        ]);
+
+        $registrant->update([
+            'client_remark'        => $validated['client_remark'],
+            'client_remark_action' => $validated['client_remark_action'],
+            'client_remarked_by'   => Auth::id(),
+            'client_remarked_at'   => now(),
+        ]);
+
+        return response()->json([
+            'success'   => true,
+            'message'   => 'Your recommendation has been submitted.',
+            'remark'    => $registrant->client_remark,
+            'action'    => $registrant->client_remark_action,
+            'updatedAt' => $registrant->client_remarked_at->format('d M Y, H:i'),
+        ]);
+    }
+
+    /**
+     * Show registrants with client recommendations for admin/super admin to review.
+     */
+    public function registConfirmation(Request $request)
+    {
+        $statusFilter   = $request->get('status', 'all');      // all, pending, approved, rejected
+        $recommendFilter = $request->get('recommend', 'all');   // all, approve, reject
+
+        $query = Registrant::whereNotNull('client_remark_action')
+            ->with('clientRemarkedBy');
+
+        if ($statusFilter !== 'all') {
+            $query->where('status', $statusFilter);
+        }
+        if ($recommendFilter !== 'all') {
+            $query->where('client_remark_action', $recommendFilter);
+        }
+
+        $registrants = $query->latest('client_remarked_at')->paginate(20)->withQueryString();
+
+        $base = Registrant::whereNotNull('client_remark_action');
+        $stats = [
+            'total_approve'  => (clone $base)->where('client_remark_action', 'approve')->where('status', 'pending')->count(),
+            'total_reject'   => (clone $base)->where('client_remark_action', 'reject')->where('status', 'pending')->count(),
+            'total_approved' => (clone $base)->where('client_remark_action', 'approve')->where('status', 'approved')->count(),
+            'total_rejected' => (clone $base)->where('client_remark_action', 'reject')->where('status', 'rejected')->count(),
+        ];
+
+        return view('admin.regist-confirmation', compact('registrants', 'stats', 'statusFilter', 'recommendFilter'));
     }
 
     /**

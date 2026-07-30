@@ -43,6 +43,10 @@ class Registrant extends Authenticatable
         'approved_by',
         'rejected_by',
         'assigned_to',
+        'client_remark',
+        'client_remark_action',
+        'client_remarked_by',
+        'client_remarked_at',
     ];
 
     protected $hidden = [
@@ -51,9 +55,10 @@ class Registrant extends Authenticatable
     ];
 
     protected $casts = [
-        'processed_at'  => 'datetime',
-        'checked_in_at' => 'datetime',
-        'gdpr'          => 'boolean',
+        'processed_at'       => 'datetime',
+        'checked_in_at'      => 'datetime',
+        'client_remarked_at' => 'datetime',
+        'gdpr'               => 'boolean',
         'attended_before' => 'boolean',
         'password'      => 'hashed',
     ];
@@ -228,5 +233,21 @@ class Registrant extends Authenticatable
         return $this->belongsToMany(AgendaItem::class, 'agenda_item_registrant')
                     ->withTimestamps()
                     ->withPivot(['status', 'admin_notes', 'processed_by', 'processed_at', 'id']);
+    }
+
+    /**
+     * Client user who submitted a remark on this registrant.
+     */
+    public function clientRemarkedBy()
+    {
+        return $this->belongsTo(User::class, 'client_remarked_by');
+    }
+
+    /**
+     * Check if this registrant has a client remark.
+     */
+    public function hasClientRemark(): bool
+    {
+        return !is_null($this->client_remark_action);
     }
 }

@@ -104,7 +104,7 @@ class User extends Authenticatable
                 'tracks' => true, 'utm_sources' => true, 'qr_codes' => true,
             ] + array_combine($all, array_fill(0, count($all), false)),
             'client' => [
-                'workshop_registrants' => true, 'utm_sources' => true, 'qr_codes' => true,
+                'registrants' => true, 'workshop_registrants' => true, 'utm_sources' => true, 'qr_codes' => true,
             ] + array_combine($all, array_fill(0, count($all), false)),
             default => [],
         };
