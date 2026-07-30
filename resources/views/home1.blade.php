@@ -891,7 +891,7 @@ document.addEventListener('DOMContentLoaded',function(){var e=document.getElemen
 
 </div>
 
-<script src="{{ asset('js/main.js') }}?v=10"></>
+<script src="{{ asset('js/main.js') }}?v=10"></script>
 <style>
 .field-err { display:block; font-size:12px; color:#ef4444; margin-top:2px; min-height:0; }
 .field-err:empty { display:none; }
@@ -946,6 +946,24 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('notifMessage').innerHTML = '{!! str_replace(["'"], ["\\'"], session('error')) !!}';
     document.getElementById('successModal').style.display = 'flex';
     document.body.style.overflow = 'hidden';
+});
+@elseif (session('info'))
+document.addEventListener('DOMContentLoaded', function() {
+    var icon = document.getElementById('notifIcon');
+    var svg = document.getElementById('notifIconSvg');
+    var title = document.getElementById('notifTitle');
+    icon.style.background = 'rgba(59,130,246,0.15)';
+    icon.style.borderColor = 'rgba(59,130,246,0.2)';
+    svg.style.color = '#3b82f6';
+    svg.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>';
+    title.textContent = 'Workshop Invitation';
+    document.getElementById('notifMessage').innerHTML = '{!! str_replace(["'"], ["\\'"], session('info')) !!}';
+    document.getElementById('successModal').style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+    setTimeout(function() {
+        var el = document.getElementById('register');
+        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 800);
 });
 @endif
 </script>

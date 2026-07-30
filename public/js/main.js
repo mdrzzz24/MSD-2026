@@ -187,8 +187,8 @@ if (regForm) {
       }
 
       if (response.ok && data.success) {
-        // Show success modal
-        showSuccessModal();
+        // Show success modal with optional workshop message
+        showSuccessModal(data.message || null);
         regForm.reset();
         const gdpr = regForm.querySelector('[name="gdpr"]');
         if (gdpr) gdpr.checked = true;
@@ -224,7 +224,7 @@ if (regForm) {
 }
 
 // Success modal helpers
-function showSuccessModal() {
+function showSuccessModal(customMessage) {
   const modal = document.getElementById('successModal');
   if (modal) {
     var icon = document.getElementById('notifIcon');
@@ -234,7 +234,7 @@ function showSuccessModal() {
     if (icon) { icon.style.background = 'rgba(16,185,129,0.15)'; icon.style.borderColor = 'rgba(16,185,129,0.2)'; }
     if (svg) { svg.style.color = '#10b981'; svg.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/>'; }
     if (title) title.textContent = 'Registration Successful';
-    if (msg) msg.innerHTML = 'Your data has been received. Please wait for confirmation from the admin via email.';
+    if (msg) msg.innerHTML = customMessage || 'Your data has been received. Please wait for confirmation from the admin via email.';
     modal.style.display = 'flex';
   }
 }
@@ -245,7 +245,6 @@ function closeSuccessModal() {
     modal.style.display = 'none';
   }
   document.body.style.overflow = '';
-  window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 // Close modal on backdrop click

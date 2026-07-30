@@ -18,7 +18,7 @@
             </svg>
         </div>
         <h1 class="text-2xl font-bold text-gray-900 mb-2">Pendaftaran Berhasil!</h1>
-        <p class="text-gray-500 mb-6">Data Anda telah kami terima. Silakan tunggu konfirmasi dari admin melalui email.</p>
+        <p class="text-gray-500 mb-6">{!! session('success') ?: 'Data Anda telah kami terima. Silakan tunggu konfirmasi dari admin melalui email.' !!}</p>
         <div class="bg-amber-50 border border-amber-200 rounded-xl p-4 text-sm text-amber-700 mb-6">
             <strong>✉️ Cek email Anda</strong><br>
             Jika disetujui, Anda akan menerima email berisi password untuk login.

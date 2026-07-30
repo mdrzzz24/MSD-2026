@@ -85,7 +85,11 @@ class WorkshopInvitationController extends Controller
         $registrant = Registrant::where('email', $email)->first();
 
         if (!$registrant) {
-            return redirect($redirectUrl)->withInput()->with('error', 'No registration found with this email. Please register for MSD 2026 first.');
+            // Store invitation token in session so we can auto-register after event registration
+            session(['pending_workshop_invitation' => $token]);
+
+            return redirect()->route('home1')
+                ->with('info', 'Your email is not registered for the event. Please complete the event registration form below first. After that, you will be automatically registered for the workshop.');
         }
 
         // Check if registrant is approved (skip if workshop bypasses approval)

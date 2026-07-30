@@ -145,15 +145,63 @@ class RegistrantAuthController extends Controller
             }
         }
 
+        // ── Auto-register for workshop if coming from an invitation ──
+        $workshopRegistered = false;
+        $workshopName = null;
+        if ($pendingToken = session('pending_workshop_invitation')) {
+            $invitation = \App\Models\WorkshopInvitation::where('token', $pendingToken)
+                ->with(['workshop', 'track'])
+                ->first();
+
+            if ($invitation && $invitation->isValid()) {
+                $workshop = $invitation->workshop;
+                $track = $invitation->track;
+                $workshopName = $track?->name ?? $workshop->name ?? $workshop->title;
+
+                try {
+                    // Track-specific registration
+                    if ($track) {
+                        $track->load('agendaItems');
+                        $workshop->load('agendaItems');
+                        $agendaItem = $track->agendaItems->first() ?? $workshop->agendaItems->first();
+
+                        if ($agendaItem) {
+                            $registrant->agendaItems()->attach($agendaItem->id, ['status' => 'pending']);
+                        }
+
+                        $registrant->workshops()->attach($workshop->id, [
+                            'status'   => 'pending',
+                            'track_id' => $track->id,
+                        ]);
+                    } else {
+                        $registrant->workshops()->attach($workshop->id, ['status' => 'pending']);
+                    }
+
+                    $invitation->incrementUse();
+                    $workshopRegistered = true;
+                } catch (\Throwable $e) {
+                    // Workshop registration failed silently — event registration still succeeds
+                }
+            }
+
+            session()->forget('pending_workshop_invitation');
+        }
+
+        $successMsg = 'Registration successful! Please wait for admin confirmation.';
+        if ($workshopRegistered && $workshopName) {
+            $successMsg .= ' You have also been registered for <strong>' . e($workshopName) . '</strong> workshop.';
+        }
+
         if ($request->ajax() || $request->wantsJson()) {
             return response()->json([
                 'success'  => true,
                 'redirect' => route('register.success'),
+                'message'  => $successMsg,
             ]);
         }
 
         return redirect()->route('register.success')
-            ->with('success', 'Registration successful! Please wait for admin confirmation.');
+            ->with('success', $successMsg);
     }
 
     /**
