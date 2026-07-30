@@ -519,7 +519,7 @@
         var remarkText = document.getElementById('rejectClientRemarkText');
         remarkContainer.classList.add('hidden');
 
-        fetch(window.location.origin + '/admin/dashboard/daily/__DATE__'.replace('__DATE__', 'fetch') + '?registrant_id=' + id)
+        fetch('{{ url('admin/dashboard/daily') }}/fetch?registrant_id=' + id)
             .then(function(r) { return r.json(); })
             .then(function(data) { /* not needed */ })
             .catch(function() { /* silently ignore */ });
@@ -682,7 +682,7 @@
     // ═══════════════════════════════
     //  Must be : Approve / Reject (direct submit)
     // ═══════════════════════════════
-    var mustBeUrl = window.location.origin + '/admin/registrants/REG_ID/client-remark';
+    var mustBeUrl = '{{ url('admin/registrants') }}/REG_ID/client-remark';
 
     function submitMustBe(id, action) {
         var approveBtn = document.getElementById('mustbe-approve-' + id);

@@ -1144,7 +1144,7 @@ function escapeHtml(text) {
 //  Daily Detail Modal
 // ═══════════════════════════════════════════════
 // Build URL from current page origin to avoid cross-origin issues
-var dailyDetailUrlBase = window.location.origin + '/admin/dashboard/daily/';
+var dailyDetailUrlBase = '{{ url('admin/dashboard/daily') }}/';
 var dailyCurrentDate = null;
 var dailyCurrentFilter = 'pending';
 var dailyCurrentUserName = '{{ Auth::user()->name }}';
@@ -1275,7 +1275,7 @@ function updateFilterButtons(status) {
 // ═══════════════════════════════════════════════
 //  Must be : Approve / Reject (for client users)
 // ═══════════════════════════════════════════════
-var dailyMustBeUrl = window.location.origin + '/admin/registrants/';
+var dailyMustBeUrl = '{{ url('admin/registrants') }}/';
 
 function dailyMustBe(id, action, btn) {
     var allBtns = document.querySelectorAll('.daily-mustbe-' + id);

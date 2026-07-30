@@ -725,7 +725,7 @@
     // ═══════════════════════════════
     //  Must be : Approve / Reject (direct submit)
     // ═══════════════════════════════
-    var detailMustBeUrl = window.location.origin + '/admin/registrants/{{ $registrant->id }}/client-remark';
+    var detailMustBeUrl = '{{ url('admin/registrants/' . $registrant->id . '/client-remark') }}';
 
     function detailMustBe(id, action) {
         var approveBtn = document.getElementById('detail-approve-' + id);

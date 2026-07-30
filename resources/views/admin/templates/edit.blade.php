@@ -83,9 +83,9 @@
             .replace(/\{\{\s*venue_name\s*\}\}/g, 'Shangri-La Hotel Jakarta')
             .replace(/\{\{\s*track_name\s*\}\}/g, 'Sample Session')
             .replace(/\{\{\s*event_date\s*\}\}/g, '12 Agustus 2026')
-            .replace(/\{\{\s*login_url\s*\}\}/g, window.location.origin + '/login')
+            .replace(/\{\{\s*login_url\s*\}\}/g, '{{ url('/login') }}')
             .replace(/\{\{\s*qr_code\s*\}\}/g, '<img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=sample" alt="QR" style="width:200px;height:200px;display:block;margin:16px auto;">')
-            .replace(/\{\{\s*qr_checkin_url\s*\}\}/g, window.location.origin + '/login');
+            .replace(/\{\{\s*qr_checkin_url\s*\}\}/g, '{{ url('/login') }}');
 
         doc.open();
         doc.write(html);
