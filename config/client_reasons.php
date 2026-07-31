@@ -13,7 +13,6 @@ return [
     */
 
     'reject' => [
-        'WAITING FOR METRODATA APPROVAL',
         'DECLINED (INTERN)',
         'WAITING LIST',
         'DECLINE (COMPETITOR)',
