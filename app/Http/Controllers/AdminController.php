@@ -158,6 +158,7 @@ class AdminController extends Controller
                 'initial'       => strtoupper(substr($r->name, 0, 1)),
                 'has_remark'    => $r->hasClientRemark(),
                 'remark_action' => $r->client_remark_action,
+                'remark'        => $r->client_remark,
                 'remark_by'     => $r->clientRemarkedBy?->name,
             ]);
 
@@ -680,6 +681,97 @@ class AdminController extends Controller
         ];
 
         return view('admin.regist-confirmation', compact('registrants', 'stats', 'statusFilter', 'recommendFilter'));
+    }
+
+    /**
+     * Export regist-confirmation (client recommendations) to CSV.
+     * Respects the same status & recommend filters as the page.
+     */
+    public function exportRegistConfirmationCsv(Request $request)
+    {
+        if (!Auth::user()->hasPermission('registrants')) {
+            return redirect()->route('admin.dashboard')->with('error', 'You do not have permission to export registrants.');
+        }
+
+        $statusFilter    = $request->get('status', 'all');      // all, pending, approved, rejected
+        $recommendFilter = $request->get('recommend', 'all');   // all, approve, reject
+
+        $query = Registrant::whereNotNull('client_remark_action')
+            ->with(['clientRemarkedBy', 'approver', 'rejecter']);
+
+        if ($statusFilter !== 'all') {
+            $query->where('status', $statusFilter);
+        }
+        if ($recommendFilter !== 'all') {
+            $query->where('client_remark_action', $recommendFilter);
+        }
+
+        $registrants = $query->latest('client_remarked_at')->get();
+
+        $headers = [
+            'Content-Type'        => 'text/csv; charset=UTF-8',
+            'Content-Disposition' => 'attachment; filename="regist-confirmation-' . now()->format('Y-m-d') . '.csv"',
+        ];
+
+        $callback = function () use ($registrants) {
+            $handle = fopen('php://output', 'w');
+
+            // BOM for Excel UTF-8
+            fprintf($handle, chr(0xEF) . chr(0xBB) . chr(0xBF));
+
+            // Header row
+            fputcsv($handle, [
+                'ID', 'Name', 'First Name', 'Last Name', 'Email', 'Phone',
+                'Job Title', 'Job Role', 'Company', 'Organization', 'Industry', 'Employees',
+                'Status', 'Unique Code', 'Notes', 'Admin Notes',
+                'Registered At', 'Processed At',
+                'UTM Source', 'UTM Medium', 'UTM Campaign', 'UTM Content',
+                'Referral Code', 'Referral Source', 'Attended Before',
+                'Approved By', 'Rejected By', 'Checked In At',
+                'Client Recommendation', 'Client Remark', 'Remarked By', 'Remarked At',
+            ]);
+
+            foreach ($registrants as $r) {
+                fputcsv($handle, [
+                    $r->id,
+                    $r->name,
+                    $r->first_name,
+                    $r->last_name,
+                    $r->email,
+                    $r->phone,
+                    $r->job_title,
+                    $r->job_role,
+                    $r->company,
+                    $r->organization,
+                    $r->industry,
+                    $r->employees,
+                    $r->status,
+                    $r->unique_code,
+                    $r->notes,
+                    $r->admin_notes,
+                    $r->created_at?->copy()->addHours(7)->format('Y-m-d H:i:s'),
+                    $r->processed_at?->copy()->addHours(7)->format('Y-m-d H:i:s'),
+                    $r->utm_source ?? '',
+                    $r->utm_medium ?? '',
+                    $r->utm_campaign ?? '',
+                    $r->utm_content ?? '',
+                    $r->referral_code ?? '',
+                    $r->referral_source ?? '',
+                    $r->attended_before ? 'Yes' : 'No',
+                    $r->approver?->name ?? '',
+                    $r->rejecter?->name ?? '',
+                    $r->checked_in_at?->copy()->addHours(7)->format('Y-m-d H:i:s'),
+                    $r->client_remark_action ?? '',
+                    $r->client_remark ?? '',
+                    $r->clientRemarkedBy?->name ?? '',
+                    $r->client_remarked_at?->copy()->addHours(7)->format('Y-m-d H:i:s'),
+                ]);
+            }
+
+            fclose($handle);
+        };
+
+        return Response::stream($callback, 200, $headers);
     }
 
     /**

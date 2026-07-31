@@ -110,6 +110,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
 
     // Regist Confirmation (client recommendations for admin)
     Route::get('/regist-confirmation', [AdminController::class, 'registConfirmation'])->name('regist-confirmation');
+    Route::get('/regist-confirmation/export/csv', [AdminController::class, 'exportRegistConfirmationCsv'])->name('regist-confirmation.export-csv');
 
     // Registrant management
     Route::get('/registrants', [AdminController::class, 'index'])->name('registrants.index');

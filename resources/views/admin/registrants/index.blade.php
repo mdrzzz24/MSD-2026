@@ -299,6 +299,9 @@
                                                 @if ($r->clientRemarkedBy)
                                                     by {{ $r->clientRemarkedBy->name }}
                                                 @endif
+                                                @if ($r->client_remark)
+                                                    <span class="block text-gray-500">{{ $r->client_remark }}</span>
+                                                @endif
                                             </div>
                                         @endif
                                     </td>
@@ -336,8 +339,9 @@
                                                         {{ $r->hasClientRemark() ? 'disabled' : '' }}>
                                                     ✅
                                                 </button>
-                                                <button @if(!$r->hasClientRemark()) onclick="submitMustBe({{ $r->id }},'reject')" @endif
+                                                <button @if(!$r->hasClientRemark()) onclick="openRejectReason({{ $r->id }}, this)" @endif
                                                         id="mustbe-reject-{{ $r->id }}"
+                                                        data-name="{{ $r->name }}"
                                                         class="px-2 py-1 rounded-lg text-xs font-semibold transition whitespace-nowrap
                                                         {{ $r->hasClientRemark() && $r->client_remark_action === 'reject' ? 'bg-red-50 text-red-700 border border-red-200 cursor-default' : ($r->hasClientRemark() ? 'bg-gray-50 text-gray-300 border border-gray-100 cursor-default' : 'bg-gray-50 text-gray-500 border border-gray-200 hover:bg-red-50 hover:text-red-600 hover:border-red-200') }}"
                                                         {{ $r->hasClientRemark() ? 'disabled' : '' }}>
@@ -462,6 +466,43 @@
                 </div>
             </form>
         </div>
+    </div>
+</div>
+
+{{-- ==================== REJECT REASON MODAL (client recommendation) ==================== --}}
+<div id="rejectReasonModal" class="fixed inset-0 z-50 hidden" role="dialog" aria-modal="true">
+    <div class="fixed inset-0 bg-black/40 backdrop-blur-sm" onclick="closeRejectReasonModal()"></div>
+    <div class="fixed inset-0 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden animate-fade-in">
+        <div class="bg-red-50 px-6 py-4 border-b border-red-100">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-red-100 rounded-xl flex items-center justify-center">
+                    <svg class="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"/>
+                    </svg>
+                </div>
+                <div>
+                    <h3 class="text-lg font-bold text-gray-900">Reject Reason</h3>
+                    <p class="text-xs text-gray-500">Select a reason for <span id="rrName" class="font-semibold text-gray-700"></span></p>
+                </div>
+            </div>
+        </div>
+        <div class="p-6">
+            <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Reason</label>
+            <select id="rrSelect" class="w-full border border-gray-300 rounded-xl px-3 py-2.5 text-sm focus:ring-2 focus:ring-red-100 focus:border-red-300 outline-none bg-white">
+                <option value="">— Select a reason —</option>
+                @foreach (config('client_reasons.reject') as $reason)
+                    <option value="{{ $reason }}">{{ $reason }}</option>
+                @endforeach
+            </select>
+            <div class="flex justify-end gap-2.5 mt-5">
+                <button type="button" onclick="closeRejectReasonModal()"
+                        class="px-5 py-2.5 text-sm font-medium rounded-xl bg-gray-100 text-gray-700 hover:bg-gray-200 transition">Cancel</button>
+                <button type="button" onclick="confirmRejectReason()"
+                        class="px-5 py-2.5 text-sm font-semibold rounded-xl bg-red-500 text-white hover:bg-red-600 shadow-sm shadow-red-200 transition">Reject</button>
+            </div>
+        </div>
+    </div>
     </div>
 </div>
 
@@ -660,6 +701,7 @@
             closeRejectModal();
             closeBulkRejectModal();
             closeRecommendModal();
+            closeRejectReasonModal();
         }
     });
 
@@ -684,7 +726,33 @@
     // ═══════════════════════════════
     var mustBeUrl = '{{ url('admin/registrants') }}/REG_ID/client-remark';
 
-    function submitMustBe(id, action) {
+    // Reject reason modal state
+    var rrPending = { id: null, btn: null };
+
+    function openRejectReason(id, btn) {
+        rrPending = { id: id, btn: btn };
+        var name = (btn && btn.getAttribute('data-name')) || '';
+        document.getElementById('rrName').textContent = name;
+        var sel = document.getElementById('rrSelect');
+        sel.value = '';
+        document.getElementById('rejectReasonModal').classList.remove('hidden');
+    }
+
+    function closeRejectReasonModal() {
+        document.getElementById('rejectReasonModal').classList.add('hidden');
+    }
+
+    function confirmRejectReason() {
+        var reason = document.getElementById('rrSelect').value;
+        if (!reason) {
+            alert('Please select a reason.');
+            return;
+        }
+        closeRejectReasonModal();
+        submitMustBe(rrPending.id, 'reject', reason);
+    }
+
+    function submitMustBe(id, action, reason) {
         var approveBtn = document.getElementById('mustbe-approve-' + id);
         var rejectBtn = document.getElementById('mustbe-reject-' + id);
 
@@ -699,7 +767,7 @@
                 'X-CSRF-TOKEN': '{{ csrf_token() }}',
                 'Accept': 'application/json',
             },
-            body: JSON.stringify({ client_remark: '', client_remark_action: action }),
+            body: JSON.stringify({ client_remark: reason || '', client_remark_action: action }),
         })
         .then(function(r) { return r.json(); })
         .then(function(data) {
@@ -731,7 +799,7 @@
                     if (oldRemark) oldRemark.remove();
                     var remarkDiv = document.createElement('div');
                     remarkDiv.className = 'client-remark-label mt-1 text-[10px] ' + (isApprove ? 'text-emerald-600' : 'text-red-600');
-                    remarkDiv.textContent = (isApprove ? '✅ Approve' : '❌ Reject') + ' by ' + userName;
+                    remarkDiv.textContent = (isApprove ? '✅ Approve' : '❌ Reject') + ' by ' + userName + (reason ? ': ' + reason : '');
                     statusCell.appendChild(remarkDiv);
                 }
             } else {

@@ -22,6 +22,11 @@
                 </a>
                 <span class="text-gray-300">/</span>
                 <h1 class="text-lg font-bold text-gray-900">Regist Confirmation</h1>
+                <a href="{{ route('admin.regist-confirmation.export-csv', request()->only(['status', 'recommend'])) }}"
+                   class="ml-auto inline-flex items-center gap-2 px-3.5 py-2 text-sm font-semibold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl transition shadow-sm shadow-indigo-200">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                    Export CSV
+                </a>
             </div>
         </header>
         <div class="p-4 sm:p-6 lg:p-8 space-y-6">
@@ -150,6 +155,9 @@
                                                     by {{ $r->clientRemarkedBy->name }}
                                                 @endif
                                             </span>
+                                            @if ($r->client_remark)
+                                                <span class="text-[10px] text-gray-500">{{ $r->client_remark }}</span>
+                                            @endif
                                             <span class="text-[9px] text-gray-400">
                                                 {{ $r->client_remarked_at?->diffForHumans() }}
                                             </span>

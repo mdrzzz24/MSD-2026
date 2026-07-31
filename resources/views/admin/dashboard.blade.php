@@ -638,6 +638,39 @@
     </div>
 </div>
 
+{{-- Reject Reason Modal (client recommendation) --}}
+<div id="rejectReasonModal" class="fixed inset-0 z-50 hidden" role="dialog" aria-modal="true">
+    <div class="fixed inset-0 bg-black/50 backdrop-blur-sm transition-opacity" onclick="closeRejectReasonModal()"></div>
+    <div class="fixed inset-0 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md animate-fade-in">
+            <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+                <div>
+                    <h3 class="text-lg font-bold text-gray-900">Reject Reason</h3>
+                    <p class="text-sm text-gray-500">Select a reason for <span id="rrName" class="font-medium text-gray-700"></span></p>
+                </div>
+                <button onclick="closeRejectReasonModal()" class="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-xl transition">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+            <div class="px-6 py-5">
+                <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Reason</label>
+                <select id="rrSelect" class="w-full border border-gray-300 rounded-xl px-3 py-2.5 text-sm focus:ring-2 focus:ring-red-100 focus:border-red-300 outline-none bg-white">
+                    <option value="">— Select a reason —</option>
+                    @foreach (config('client_reasons.reject') as $reason)
+                        <option value="{{ $reason }}">{{ $reason }}</option>
+                    @endforeach
+                </select>
+            </div>
+            <div class="px-6 py-4 border-t border-gray-100 flex justify-end gap-2">
+                <button onclick="closeRejectReasonModal()" class="px-4 py-2 text-sm font-medium text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-xl transition">Cancel</button>
+                <button onclick="confirmRejectReason()" class="px-4 py-2 text-sm font-semibold text-white bg-red-500 hover:bg-red-600 rounded-xl transition">Reject</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 {{-- Mobile sidebar overlay --}}
 <div id="sidebarOverlay" class="fixed inset-0 bg-black/40 backdrop-blur-sm z-30 hidden lg:hidden" onclick="toggleSidebar()"></div>
 <div id="mobileSidebar" class="fixed inset-y-0 left-0 w-64 bg-white border-r border-gray-200 z-40 transform -translate-x-full transition-transform lg:hidden">
@@ -1220,12 +1253,12 @@ function openDailyDetail(date, status) {
                         + '</div>'
                         + '<div class="text-right flex-shrink-0 flex flex-col items-end gap-1">'
                         + '<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold ' + statusClass + '">' + statusText + '</span>'
-                        + (r.has_remark ? '<span class="text-[10px] ' + (r.remark_action === 'approve' ? 'text-emerald-600' : 'text-red-600') + '">' + (r.remark_action === 'approve' ? '✅ Approve' : '❌ Reject') + (r.remark_by ? ' by ' + escapeHtml(r.remark_by) : '') + '</span>' : '')
+                        + (r.has_remark ? '<div class="text-right flex flex-col items-end"><span class="text-[10px] ' + (r.remark_action === 'approve' ? 'text-emerald-600' : 'text-red-600') + '">' + (r.remark_action === 'approve' ? '✅ Approve' : '❌ Reject') + (r.remark_by ? ' by ' + escapeHtml(r.remark_by) : '') + '</span>' + (r.remark ? '<span class="text-[10px] text-gray-500 max-w-[160px] truncate" title="' + escapeHtml(r.remark) + '">' + escapeHtml(r.remark) + '</span>' : '') + '</div>' : '')
                         + (r.status === 'pending' ? '<div class="flex items-center gap-1 mt-1.5">'
                             + (isClient
                                 ? '<span class="text-[9px] font-semibold text-gray-400 uppercase tracking-wider mr-0.5">Must be:</span>'
                                     + '<button onclick="dailyMustBe(' + r.id + ', \'approve\', this)" class="daily-mustbe daily-mustbe-' + r.id + ' px-2 py-0.5 rounded text-[10px] font-semibold border ' + (r.has_remark && r.remark_action === 'approve' ? 'bg-emerald-50 text-emerald-700 border-emerald-200 cursor-default' : r.has_remark ? 'bg-gray-50 text-gray-300 border-gray-100 cursor-default' : 'bg-gray-50 text-gray-500 border-gray-200 hover:bg-emerald-50 hover:text-emerald-600 hover:border-emerald-200') + '"' + (r.has_remark ? ' disabled' : '') + '>✅</button>'
-                                    + '<button onclick="dailyMustBe(' + r.id + ', \'reject\', this)" class="daily-mustbe daily-mustbe-' + r.id + ' px-2 py-0.5 rounded text-[10px] font-semibold border ' + (r.has_remark && r.remark_action === 'reject' ? 'bg-red-50 text-red-700 border-red-200 cursor-default' : r.has_remark ? 'bg-gray-50 text-gray-300 border-gray-100 cursor-default' : 'bg-gray-50 text-gray-500 border-gray-200 hover:bg-red-50 hover:text-red-600 hover:border-red-200') + '"' + (r.has_remark ? ' disabled' : '') + '>❌</button>'
+                                    + '<button onclick="openRejectReason(' + r.id + ', this)" data-name="' + escapeHtml(r.name) + '" class="daily-mustbe daily-mustbe-' + r.id + ' px-2 py-0.5 rounded text-[10px] font-semibold border ' + (r.has_remark && r.remark_action === 'reject' ? 'bg-red-50 text-red-700 border-red-200 cursor-default' : r.has_remark ? 'bg-gray-50 text-gray-300 border-gray-100 cursor-default' : 'bg-gray-50 text-gray-500 border-gray-200 hover:bg-red-50 hover:text-red-600 hover:border-red-200') + '"' + (r.has_remark ? ' disabled' : '') + '>❌</button>'
                                 : '<form action="/admin/registrants/' + r.id + '/approve" method="POST" style="display:inline" onsubmit="return confirm(\'Approve ' + escapeHtml(r.name) + '?\')">'
                                     + '<input type="hidden" name="_token" value="' + csrfToken + '">'
                                     + '<button type="submit" class="p-1 text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition" title="Approve">'
@@ -1277,7 +1310,40 @@ function updateFilterButtons(status) {
 // ═══════════════════════════════════════════════
 var dailyMustBeUrl = '{{ url('admin/registrants') }}/';
 
-function dailyMustBe(id, action, btn) {
+// Reject reason modal state
+var rrPending = { id: null, btn: null, name: '' };
+
+function openRejectReason(id, btn, name) {
+    rrPending = { id: id, btn: btn, name: name || '' };
+    if (!rrPending.name && btn) {
+        rrPending.name = btn.getAttribute('data-name') || '';
+    }
+    if (!rrPending.name && btn) {
+        var row = btn.closest('.flex.items-center.gap-3');
+        var nameEl = row && row.querySelector('a[href*="/admin/registrants/"]');
+        if (nameEl) rrPending.name = nameEl.textContent;
+    }
+    document.getElementById('rrName').textContent = rrPending.name;
+    var sel = document.getElementById('rrSelect');
+    sel.value = '';
+    document.getElementById('rejectReasonModal').classList.remove('hidden');
+}
+
+function closeRejectReasonModal() {
+    document.getElementById('rejectReasonModal').classList.add('hidden');
+}
+
+function confirmRejectReason() {
+    var reason = document.getElementById('rrSelect').value;
+    if (!reason) {
+        alert('Please select a reason.');
+        return;
+    }
+    closeRejectReasonModal();
+    dailyMustBe(rrPending.id, 'reject', rrPending.btn, reason);
+}
+
+function dailyMustBe(id, action, btn, reason) {
     var allBtns = document.querySelectorAll('.daily-mustbe-' + id);
     allBtns.forEach(function(b) { b.disabled = true; });
 
@@ -1288,7 +1354,7 @@ function dailyMustBe(id, action, btn) {
             'X-CSRF-TOKEN': '{{ csrf_token() }}',
             'Accept': 'application/json',
         },
-        body: JSON.stringify({ client_remark: '', client_remark_action: action }),
+        body: JSON.stringify({ client_remark: reason || '', client_remark_action: action }),
     })
     .then(function(r) { return r.json(); })
     .then(function(data) {
@@ -1312,7 +1378,7 @@ function dailyMustBe(id, action, btn) {
                 if (oldRemark) oldRemark.remove();
                 var remarkEl = document.createElement('div');
                 remarkEl.className = 'daily-remark-label text-[10px] ' + (action === 'approve' ? 'text-emerald-600' : 'text-red-600');
-                remarkEl.textContent = (action === 'approve' ? '✅ Approve' : '❌ Reject') + ' by ' + dailyCurrentUserName;
+                remarkEl.textContent = (action === 'approve' ? '✅ Approve' : '❌ Reject') + ' by ' + dailyCurrentUserName + (reason ? ': ' + reason : '');
                 var btnContainer = btn.parentNode;
                 badgeContainer.insertBefore(remarkEl, btnContainer);
             }
@@ -1336,9 +1402,15 @@ function closeDailyModal() {
     document.body.style.overflow = '';
 }
 
-// Close modal on Escape key
+// Close modals on Escape key
 document.addEventListener('keydown', function(e) {
-    if (e.key === 'Escape') closeDailyModal();
+    if (e.key === 'Escape') {
+        if (!document.getElementById('rejectReasonModal').classList.contains('hidden')) {
+            closeRejectReasonModal();
+        } else {
+            closeDailyModal();
+        }
+    }
 });
 </script>
 
