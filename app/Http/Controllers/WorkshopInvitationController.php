@@ -103,7 +103,7 @@ class WorkshopInvitationController extends Controller
         }
 
         if (!$registrant) {
-            // Store invitation token + UTM in session so we can auto-register after event registration
+            // Store invitation token + UTM (+ chosen track) in session so we can auto-register after event registration
             session([
                 'pending_workshop_invitation' => $token,
                 'pending_workshop_utm' => array_filter($request->only(['utm_source', 'utm_medium', 'utm_campaign', 'utm_content']), fn($v) => !is_null($v) && $v !== ''),

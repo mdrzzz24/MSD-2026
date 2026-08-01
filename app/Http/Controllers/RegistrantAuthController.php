@@ -120,6 +120,7 @@ class RegistrantAuthController extends Controller
             if ($invitation && $invitation->isValid()) {
                 $workshop = $invitation->workshop;
                 $track = $invitation->track;
+
                 $workshopName = $track?->name ?? $workshop->name ?? $workshop->title;
 
                 try {
