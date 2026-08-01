@@ -85,67 +85,58 @@
             <div class="px-5 py-12 text-center text-gray-400 text-sm">No workshops available.</div>
         <?php else: ?>
             <div class="overflow-x-auto">
-                <table class="w-full">
+                <table class="w-full table-fixed">
+                    <colgroup>
+                        <col class="w-[22%]">
+                        <col class="w-[30%]">
+                        <col class="w-[7%]">
+                        <col class="w-[7%]">
+                        <col class="w-[7%]">
+                        <col class="w-[7%]">
+                        <col class="w-[7%]">
+                        <col class="w-[13%]">
+                    </colgroup>
                     <thead><tr class="bg-gray-50/80">
-                        <th class="px-5 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase">Workshop</th>
-                        <th class="px-5 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase hidden lg:table-cell">Linked Agenda</th>
-                        <th class="px-5 py-3.5 text-center text-xs font-semibold text-gray-500 uppercase">Approved</th>
-                        <th class="px-5 py-3.5 text-center text-xs font-semibold text-gray-500 uppercase">Pending</th>
-                        <th class="px-5 py-3.5 text-center text-xs font-semibold text-gray-500 uppercase">Rejected</th>
-                        <th class="px-5 py-3.5 text-center text-xs font-semibold text-gray-500 uppercase">Waitlist</th>
-                        <th class="px-5 py-3.5 text-center text-xs font-semibold text-gray-500 uppercase">Total</th>
-                        <th class="px-5 py-3.5 text-center text-xs font-semibold text-gray-500 uppercase">Action</th>
+                        <th class="px-3 py-2.5 text-left text-[11px] font-semibold text-gray-500 uppercase tracking-wider">Workshop</th>
+                        <th class="px-3 py-2.5 text-left text-[11px] font-semibold text-gray-500 uppercase tracking-wider hidden lg:table-cell">Schedule</th>
+                        <th class="px-2 py-2.5 text-center text-[11px] font-semibold text-gray-500 uppercase tracking-wider">Approved</th>
+                        <th class="px-2 py-2.5 text-center text-[11px] font-semibold text-gray-500 uppercase tracking-wider">Pending</th>
+                        <th class="px-2 py-2.5 text-center text-[11px] font-semibold text-gray-500 uppercase tracking-wider">Rejected</th>
+                        <th class="px-2 py-2.5 text-center text-[11px] font-semibold text-gray-500 uppercase tracking-wider">Waitlist</th>
+                        <th class="px-2 py-2.5 text-center text-[11px] font-semibold text-gray-500 uppercase tracking-wider">Total</th>
+                        <th class="px-2 py-2.5 text-center text-[11px] font-semibold text-gray-500 uppercase tracking-wider">Action</th>
                     </tr></thead>
                     <tbody class="divide-y divide-gray-50">
                         <?php $__currentLoopData = $workshops; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $w): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                             <tr class="hover:bg-gray-50/50 transition">
-                                <td class="px-5 py-4">
-                                    <p class="text-sm font-semibold text-gray-900"><?php echo e($w->name ?: $w->title); ?></p>
+                                <td class="px-3 py-2.5">
+                                    <p class="text-sm font-semibold text-gray-900 truncate" title="<?php echo e($w->name ?: $w->title); ?>"><?php echo e($w->name ?: $w->title); ?></p>
                                     <?php if(!$w->registration_open): ?>
-                                        <span class="inline-flex items-center gap-1 mt-1 px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-600">Registration Closed</span>
+                                        <span class="inline-flex items-center gap-1 mt-0.5 px-1.5 py-0.5 rounded-full text-[10px] font-medium bg-gray-100 text-gray-500">Closed</span>
                                     <?php endif; ?>
                                 </td>
-                                <td class="px-5 py-4 hidden lg:table-cell">
-                                    <?php $linked = $w->agendaItems; ?>
-                                    <?php if($linked->isNotEmpty()): ?>
-                                        <?php $__currentLoopData = $linked; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $ai): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-                                            <span class="inline-block px-2 py-0.5 rounded text-xs font-medium bg-indigo-50 text-indigo-700 mb-1"><?php echo e($ai->title); ?> (<?php echo e($ai->timeLabel()); ?>)</span>
-                                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
-                                    <?php else: ?>
-                                        <span class="text-xs text-gray-400">—</span>
-                                    <?php endif; ?>
+                                <td class="px-3 py-2.5 hidden lg:table-cell">
+                                    <?php $schedTime = $w->timeRange() !== '—' ? $w->timeRange() : ($w->agendaItems->first()?->timeLabel() ?? '—'); ?>
+                                    <p class="text-sm font-semibold text-gray-900 truncate"><?php echo e($w->date ? $w->date->format('d M Y') : '—'); ?></p>
+                                    <p class="text-xs text-gray-500 truncate" title="<?php echo e($schedTime); ?>"><?php echo e($schedTime); ?></p>
+                                    <p class="text-xs text-gray-400 truncate"><?php echo e($w->room ? $w->room . ' Room' : '—'); ?></p>
                                 </td>
-                                <td class="px-5 py-4 text-center">
-                                    <span class="inline-flex items-center justify-center w-8 h-8 rounded-full text-sm font-bold <?php echo e($w->approved_count > 0 ? 'bg-emerald-50 text-emerald-700' : 'bg-gray-100 text-gray-400'); ?>">
-                                        <?php echo e($w->approved_count); ?>
-
-                                    </span>
+                                <td class="px-2 py-2.5 text-center">
+                                    <span class="text-sm font-bold <?php echo e($w->approved_count > 0 ? 'text-emerald-600' : 'text-gray-300'); ?>"><?php echo e($w->approved_count); ?></span>
                                 </td>
-                                <td class="px-5 py-4 text-center">
-                                    <?php if($w->pending_count > 0): ?>
-                                        <span class="inline-flex items-center justify-center w-8 h-8 rounded-full text-sm font-bold bg-amber-50 text-amber-700"><?php echo e($w->pending_count); ?></span>
-                                    <?php else: ?>
-                                        <span class="text-sm text-gray-400">—</span>
-                                    <?php endif; ?>
+                                <td class="px-2 py-2.5 text-center">
+                                    <span class="text-sm font-bold <?php echo e($w->pending_count > 0 ? 'text-amber-600' : 'text-gray-300'); ?>"><?php echo e($w->pending_count); ?></span>
                                 </td>
-                                <td class="px-5 py-4 text-center">
-                                    <?php if($w->rejected_count > 0): ?>
-                                        <span class="inline-flex items-center justify-center w-8 h-8 rounded-full text-sm font-bold bg-red-50 text-red-700"><?php echo e($w->rejected_count); ?></span>
-                                    <?php else: ?>
-                                        <span class="text-sm text-gray-400">—</span>
-                                    <?php endif; ?>
+                                <td class="px-2 py-2.5 text-center">
+                                    <span class="text-sm font-bold <?php echo e($w->rejected_count > 0 ? 'text-red-600' : 'text-gray-300'); ?>"><?php echo e($w->rejected_count); ?></span>
                                 </td>
-                                <td class="px-5 py-4 text-center">
-                                    <?php if($w->waitlist_count > 0): ?>
-                                        <span class="inline-flex items-center justify-center w-8 h-8 rounded-full text-sm font-bold bg-amber-50 text-amber-700"><?php echo e($w->waitlist_count); ?></span>
-                                    <?php else: ?>
-                                        <span class="text-sm text-gray-400">—</span>
-                                    <?php endif; ?>
+                                <td class="px-2 py-2.5 text-center">
+                                    <span class="text-sm font-bold <?php echo e($w->waitlist_count > 0 ? 'text-amber-600' : 'text-gray-300'); ?>"><?php echo e($w->waitlist_count); ?></span>
                                 </td>
-                                <td class="px-5 py-4 text-center">
-                                    <span class="inline-flex items-center justify-center w-8 h-8 rounded-full text-sm font-bold bg-indigo-50 text-indigo-700"><?php echo e($w->total_count); ?></span>
+                                <td class="px-2 py-2.5 text-center">
+                                    <span class="text-sm font-bold text-indigo-600"><?php echo e($w->total_count); ?></span>
                                 </td>
-                                <td class="px-5 py-4 text-center">
+                                <td class="px-2 py-2.5 text-center">
                                     <a href="<?php echo e(route('admin.workshops.registrants', $w)); ?>"
                                        class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-indigo-50 text-indigo-700 hover:bg-indigo-100 transition">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>

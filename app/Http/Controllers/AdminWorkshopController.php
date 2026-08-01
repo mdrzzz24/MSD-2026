@@ -179,6 +179,7 @@ class AdminWorkshopController extends Controller
                 $applyFilters($q);
             }])
             ->withCount('waitlist')
+            ->with('agendaItems')
             ->orderBy('date')
             ->orderBy('start_time')
             ->get();
