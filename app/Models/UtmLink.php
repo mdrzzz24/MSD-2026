@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class UtmLink extends Model
 {
     protected $fillable = [
-        'name', 'base_url', 'target_type', 'workshop_id', 'workshop_invitation_id', 'utm_source', 'utm_medium',
+        'name', 'base_url', 'target_type', 'workshop_id', 'workshop_invitation_id', 'track_id', 'utm_source', 'utm_medium',
         'utm_campaign', 'utm_content', 'full_url', 'is_active', 'created_by',
     ];
 
@@ -33,6 +33,11 @@ class UtmLink extends Model
     public function workshopInvitation()
     {
         return $this->belongsTo(WorkshopInvitation::class);
+    }
+
+    public function track()
+    {
+        return $this->belongsTo(Track::class);
     }
 
     /**
@@ -69,10 +74,17 @@ class UtmLink extends Model
                     return rtrim(self::BASE_URL, '/') . '/invitation/workshop/' . ($chosen->slug ?: $chosen->token);
                 }
             }
-            // Fallback: prefer a slug-based (custom) invitation, otherwise the latest active one
+            // Fallback: prefer a workshop-level (no track) custom-slug invitation, so a single
+            // custom slug can serve multiple tracks (the track is resolved from the UTM link later)
             $invitation = WorkshopInvitation::where('workshop_id', $this->workshop_id)
                 ->whereNotNull('slug')
+                ->whereNull('track_id')
                 ->first();
+            if (!$invitation) {
+                $invitation = WorkshopInvitation::where('workshop_id', $this->workshop_id)
+                    ->whereNotNull('slug')
+                    ->first();
+            }
             if (!$invitation) {
                 $invitation = WorkshopInvitation::where('workshop_id', $this->workshop_id)
                     ->where('is_active', true)
@@ -101,6 +113,31 @@ class UtmLink extends Model
         $separator = $this->target_type === 'workshop' ? '?' : '/?';
 
         return $base . $separator . http_build_query($params);
+    }
+
+    /**
+     * Resolve a track for a workshop-level (master custom-slug) invitation from a matching
+     * workshop UTM link that carries a track_id. Returns null when no link/track matches.
+     */
+    public static function resolveTrackForWorkshop(?int $workshopId, array $utm): ?Track
+    {
+        if (!$workshopId || empty($utm['utm_source']) || empty($utm['utm_campaign'])) {
+            return null;
+        }
+
+        $q = static::forWorkshop()
+            ->where('workshop_id', $workshopId)
+            ->where('utm_source', $utm['utm_source'] ?? '')
+            ->where('utm_medium', $utm['utm_medium'] ?? '')
+            ->where('utm_campaign', $utm['utm_campaign'] ?? '')
+            ->whereNotNull('track_id');
+        if (!empty($utm['utm_content'])) {
+            $q->where('utm_content', $utm['utm_content']);
+        }
+
+        $link = $q->latest()->first();
+
+        return $link?->track;
     }
 
     public function registrationsCount(): int

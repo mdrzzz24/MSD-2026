@@ -230,7 +230,7 @@
                         </td>
                         <td class="px-5 py-4 text-center">
                             <div class="flex items-center justify-center gap-1.5">
-                                <button onclick="editWorkshopUtmLink({{ $link->id }}, '{{ addslashes($link->name) }}', '{{ $link->utm_source }}', '{{ $link->utm_medium }}', '{{ $link->utm_campaign }}', '{{ $link->utm_content ?? '' }}', '{{ $link->workshop_invitation_id ?? '' }}')" class="p-1.5 text-gray-400 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition" title="Edit">
+                                <button onclick="editWorkshopUtmLink({{ $link->id }}, '{{ addslashes($link->name) }}', '{{ $link->utm_source }}', '{{ $link->utm_medium }}', '{{ $link->utm_campaign }}', '{{ $link->utm_content ?? '' }}', '{{ $link->workshop_invitation_id ?? '' }}', '{{ $link->track_id ?? '' }}')" class="p-1.5 text-gray-400 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition" title="Edit">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
                                 </button>
                                 <form action="{{ route('admin.workshops.utm-links.destroy', $link) }}" method="POST" class="inline" onsubmit="return confirm('Delete {{ addslashes($link->name) }}?')">
@@ -278,6 +278,7 @@
                                 <option value="">— Auto (invitation default) —</option>
                             </select>
                             <p class="text-xs text-gray-400 mt-1">Pick a specific custom slug / invitation if the workshop has more than one.</p></div>
+                        <input type="hidden" name="track_id" id="wsUtmTrackId">
                         <div class="grid grid-cols-3 gap-3">
                             <div><label class="block text-sm font-semibold text-gray-700 mb-1">Source <span class="text-red-500">*</span></label>
                                 <input type="text" id="wsUtmSource" name="utm_source" required placeholder="newsletter" class="w-full px-4 py-2.5 text-sm border border-gray-200 rounded-xl bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"></div>
@@ -363,10 +364,8 @@ function wsPopulateInvitationOptions() {
         opts += '<option value="'+i.id+'">'+label+'</option>';
     });
     sel.innerHTML = opts;
-    // When a track is chosen, auto-select its invitation so the link points to that track's session
-    if (trackId && invs.length) {
-        sel.value = String(invs[0].id);
-    }
+    // Store the chosen track on the link — the invitation page resolves the session from the UTM link
+    if (document.getElementById('wsUtmTrackId')) document.getElementById('wsUtmTrackId').value = trackId || '';
     wsUpdateUtmUrlPreview();
 }
 
@@ -378,7 +377,9 @@ function wsUpdateUtmUrlPreview() {
         var data = wsInvitations.find(function(i){ return String(i.id) === String(inv.value); });
         base = data ? (wsBaseUrl + '/invitation/workshop/' + (data.slug || data.token)) : (wsBaseUrl + '/invitation/workshop/{slug}');
     } else {
-        base = wsBaseUrl + '/invitation/workshop/{slug}';
+        // Prefer the workshop's custom-slug (workshop-level) invitation so the shared link stays short/custom
+        var master = wsInvitations.find(function(i){ return !i.track_id && i.slug; }) || wsInvitations.find(function(i){ return i.slug; }) || wsInvitations[0];
+        base = master ? (wsBaseUrl + '/invitation/workshop/' + (master.slug || master.token)) : (wsBaseUrl + '/invitation/workshop/{slug}');
     }
     var source = document.getElementById('wsUtmSource').value || '...';
     document.getElementById('wsUtmUrlPreview').textContent = base + '?utm_source=' + source;
@@ -388,14 +389,14 @@ function openWorkshopUtmModal() {
     document.getElementById('wsUtmModalTitle').textContent = 'Create Workshop UTM Link';
     document.getElementById('wsUtmForm').action = '{{ route("admin.workshops.utm-links.store") }}';
     document.getElementById('wsUtmFormMethod').value = 'POST';
-    ['wsUtmLinkId','wsUtmName','wsUtmSource','wsUtmMedium','wsUtmCampaign','wsUtmContent'].forEach(id => document.getElementById(id).value = '');
+    ['wsUtmLinkId','wsUtmName','wsUtmSource','wsUtmMedium','wsUtmCampaign','wsUtmContent','wsUtmTrackId'].forEach(id => document.getElementById(id).value = '');
     wsPopulateTrackOptions();
     document.getElementById('wsUtmInvitation').value = '';
     wsUpdateUtmUrlPreview();
     document.getElementById('wsUtmModal').classList.remove('hidden');
 }
 
-function editWorkshopUtmLink(id, name, source, medium, campaign, content, invitationId) {
+function editWorkshopUtmLink(id, name, source, medium, campaign, content, invitationId, trackId) {
     document.getElementById('wsUtmModalTitle').textContent = 'Edit Workshop UTM Link';
     document.getElementById('wsUtmForm').action = wsUtmUpdateUrl.replace('LINK_ID', id);
     document.getElementById('wsUtmFormMethod').value = 'PUT';
@@ -407,9 +408,10 @@ function editWorkshopUtmLink(id, name, source, medium, campaign, content, invita
     document.getElementById('wsUtmContent').value = content;
     var invData = invitationId ? wsInvitations.find(function(i){ return String(i.id) === String(invitationId); }) : null;
     wsPopulateTrackOptions();
-    document.getElementById('wsUtmTrack').value = invData ? invData.track_id : '';
+    document.getElementById('wsUtmTrack').value = invData ? invData.track_id : (trackId || '');
     wsPopulateInvitationOptions();
     document.getElementById('wsUtmInvitation').value = invitationId || '';
+    document.getElementById('wsUtmTrackId').value = trackId || '';
     wsUpdateUtmUrlPreview();
     document.getElementById('wsUtmModal').classList.remove('hidden');
 }

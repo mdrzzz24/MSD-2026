@@ -121,6 +121,11 @@ class RegistrantAuthController extends Controller
                 $workshop = $invitation->workshop;
                 $track = $invitation->track;
 
+                // For a workshop-level (master custom-slug) invitation, resolve the track from the pending UTM
+                if (!$track) {
+                    $track = \App\Models\UtmLink::resolveTrackForWorkshop($workshop->id, session('pending_workshop_utm', []));
+                }
+
                 $workshopName = $track?->name ?? $workshop->name ?? $workshop->title;
 
                 try {

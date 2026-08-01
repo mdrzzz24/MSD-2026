@@ -26,6 +26,19 @@ class WorkshopInvitationController extends Controller
 
         $workshop = $invitation->workshop;
         $track = $invitation->track;
+
+        // For a workshop-level (master custom-slug) invitation, resolve the session/track from the matching UTM link
+        if (!$track) {
+            $track = \App\Models\UtmLink::resolveTrackForWorkshop($workshop->id, [
+                'utm_source'   => request('utm_source'),
+                'utm_medium'   => request('utm_medium'),
+                'utm_campaign' => request('utm_campaign'),
+                'utm_content'  => request('utm_content'),
+            ]);
+        }
+        if ($track) {
+            $track->load(['speakers', 'agendaItems.speakers']);
+        }
         $email = old('email', request('email', $invitation->email ?? ''));
 
         // Whether to show the inline event registration form (came from an unregistered email submission)
@@ -85,8 +98,24 @@ class WorkshopInvitationController extends Controller
 
         $workshop = $invitation->workshop;
         $track = $invitation->track;
+
+        // For a workshop-level (master custom-slug) invitation, resolve the session/track from the matching UTM link
+        if (!$track) {
+            $track = \App\Models\UtmLink::resolveTrackForWorkshop($workshop->id, [
+                'utm_source'   => $request->input('utm_source'),
+                'utm_medium'   => $request->input('utm_medium'),
+                'utm_campaign' => $request->input('utm_campaign'),
+                'utm_content'  => $request->input('utm_content'),
+            ]);
+        }
         $email = $request->input('email');
         $redirectUrl = route('workshop.invitation', $token) . '?email=' . urlencode($email);
+
+        // Keep UTM params in the redirect so a master custom-slug link keeps resolving the same track after registering
+        $utmParams = array_filter($request->only(['utm_source', 'utm_medium', 'utm_campaign', 'utm_content']), fn($v) => !is_null($v) && $v !== '');
+        if ($utmParams) {
+            $redirectUrl .= '&' . http_build_query($utmParams);
+        }
 
         // Find registrant by email
         $registrant = Registrant::where('email', $email)->first();

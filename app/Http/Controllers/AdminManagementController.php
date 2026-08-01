@@ -244,6 +244,7 @@ class AdminManagementController extends Controller
             'utm_campaign' => ['required', 'string', 'max:100'],
             'utm_content'  => ['nullable', 'string', 'max:100'],
             'workshop_invitation_id' => ['nullable', 'integer', 'exists:workshop_invitations,id'],
+            'track_id'     => ['nullable', 'integer', 'exists:tracks,id'],
         ]);
 
         // Resolve invitation defensively: must belong to the chosen workshop, else fall back to auto-detect
@@ -255,12 +256,22 @@ class AdminManagementController extends Controller
             }
         }
 
+        // Resolve track defensively: must belong to the chosen workshop
+        $trackId = null;
+        if ($request->input('track_id')) {
+            $tr = \App\Models\Track::find($request->input('track_id'));
+            if ($tr && $tr->workshop_id == $request->input('workshop_id')) {
+                $trackId = $tr->id;
+            }
+        }
+
         $link = UtmLink::create([
             'name'                    => $request->input('name'),
             'base_url'                => UtmLink::BASE_URL,
             'target_type'             => 'workshop',
             'workshop_id'             => $request->input('workshop_id'),
             'workshop_invitation_id'  => $workshopInvitationId,
+            'track_id'                => $trackId,
             'utm_source'              => $request->input('utm_source'),
             'utm_medium'              => $request->input('utm_medium'),
             'utm_campaign'            => $request->input('utm_campaign'),
@@ -290,6 +301,7 @@ class AdminManagementController extends Controller
             'utm_campaign' => ['required', 'string', 'max:100'],
             'utm_content'  => ['nullable', 'string', 'max:100'],
             'workshop_invitation_id' => ['nullable', 'integer', 'exists:workshop_invitations,id'],
+            'track_id'     => ['nullable', 'integer', 'exists:tracks,id'],
         ]);
 
         // Resolve invitation defensively: must belong to the chosen workshop, else fall back to auto-detect
@@ -301,12 +313,22 @@ class AdminManagementController extends Controller
             }
         }
 
+        // Resolve track defensively: must belong to the chosen workshop
+        $trackId = null;
+        if ($request->input('track_id')) {
+            $tr = \App\Models\Track::find($request->input('track_id'));
+            if ($tr && $tr->workshop_id == $request->input('workshop_id')) {
+                $trackId = $tr->id;
+            }
+        }
+
         $utmLink->update([
             'name'                    => $request->input('name'),
             'base_url'                => UtmLink::BASE_URL,
             'target_type'             => 'workshop',
             'workshop_id'             => $request->input('workshop_id'),
             'workshop_invitation_id'  => $workshopInvitationId,
+            'track_id'                => $trackId,
             'utm_source'              => $request->input('utm_source'),
             'utm_medium'              => $request->input('utm_medium'),
             'utm_campaign'            => $request->input('utm_campaign'),

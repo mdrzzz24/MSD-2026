@@ -55,7 +55,12 @@ Export CSV
 @foreach ($utmLinks as $link)
 @php $regs = $link->workshopRegistrationsCount(); @endphp
 <tr class="hover:bg-gray-50/50">
-<td class="px-5 py-4"><span class="text-sm font-semibold text-gray-900">{{ $link->name }}</span></td>
+<td class="px-5 py-4">
+<span class="text-sm font-semibold text-gray-900">{{ $link->name }}</span>
+@if ($link->track)
+<span class="block text-[10px] font-medium text-gray-500 mt-0.5">Track: {{ $link->track->name }}</span>
+@endif
+</td>
 <td class="px-5 py-4">
 @if ($link->workshop)
 <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-teal-50 text-teal-700 border border-teal-200">🎯 {{ $link->workshop->name ?: $link->workshop->title }}</span>
@@ -97,7 +102,7 @@ Export CSV
 </a>
 @endif
 @if (Auth::user()->role === 'super_admin' || $link->created_by === Auth::id())
-<button onclick="editWorkshopLink({{ $link->id }}, '{{ addslashes($link->name) }}', '{{ $link->workshop_id }}', '{{ $link->utm_source }}', '{{ $link->utm_medium }}', '{{ $link->utm_campaign }}', '{{ $link->utm_content ?? '' }}', '{{ $link->workshop_invitation_id ?? '' }}')" class="p-1.5 text-gray-400 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition" title="Edit">
+<button onclick="editWorkshopLink({{ $link->id }}, '{{ addslashes($link->name) }}', '{{ $link->workshop_id }}', '{{ $link->utm_source }}', '{{ $link->utm_medium }}', '{{ $link->utm_campaign }}', '{{ $link->utm_content ?? '' }}', '{{ $link->workshop_invitation_id ?? '' }}', '{{ $link->track_id ?? '' }}')" class="p-1.5 text-gray-400 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition" title="Edit">
 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
 </button>
 <form action="{{ route('admin.workshops.utm-links.destroy', $link) }}" method="POST" class="inline" onsubmit="return confirm('Delete {{ addslashes($link->name) }}?')">
@@ -148,7 +153,9 @@ Export CSV
 <option value="">— Select workshop —</option>
 @foreach ($workshops as $w)
 @php
-$inv = $w->invitations()->whereNotNull('slug')->first() ?? $w->invitations()->where('is_active', true)->first();
+$inv = $w->invitations()->whereNotNull('slug')->whereNull('track_id')->first()
+    ?? $w->invitations()->whereNotNull('slug')->first()
+    ?? $w->invitations()->where('is_active', true)->first();
 $invUrl = $inv ? rtrim(\App\Models\UtmLink::BASE_URL, '/') . '/invitation/workshop/' . ($inv->slug ?: $inv->token) : '';
 @endphp
 <option value="{{ $w->id }}" data-invite-url="{{ $invUrl }}">{{ $w->name ?: $w->title }}</option>
@@ -165,6 +172,7 @@ $invUrl = $inv ? rtrim(\App\Models\UtmLink::BASE_URL, '/') . '/invitation/worksh
 <option value="">— Auto (invitation default) —</option>
 </select>
 <p class="text-xs text-gray-400 mt-1">Pick a specific custom slug / invitation if the workshop has more than one.</p></div>
+<input type="hidden" name="track_id" id="wUtmTrackId">
 <div class="grid grid-cols-3 gap-3">
 <div><label class="block text-sm font-semibold text-gray-700 mb-1">Source <span class="text-red-500">*</span></label>
 <input type="text" id="wUtmSource" name="utm_source" required placeholder="newsletter" class="w-full px-4 py-2.5 text-sm border border-gray-200 rounded-xl bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500">
@@ -228,10 +236,8 @@ invs.forEach(function(i){
     opts += '<option value="'+i.id+'">'+label+'</option>';
 });
 sel.innerHTML = opts;
-// When a track is chosen, auto-select its invitation so the link points to that track's session
-if (trackId && invs.length) {
-    sel.value = String(invs[0].id);
-}
+// Store the chosen track on the link — the invitation page resolves the session from the UTM link
+if (document.getElementById('wUtmTrackId')) document.getElementById('wUtmTrackId').value = trackId || '';
 updateWorkshopUrlPreview();
 }
 
@@ -239,7 +245,7 @@ function openWorkshopLinkModal() {
 document.getElementById('wUtmModalTitle').textContent = 'Create Workshop UTM Link';
 document.getElementById('workshopUtmForm').action = '{{ route("admin.workshops.utm-links.store") }}';
 document.getElementById('wUtmFormMethod').value = 'POST';
-['wUtmLinkId','wUtmName','wUtmSource','wUtmMedium','wUtmCampaign','wUtmContent'].forEach(id => document.getElementById(id).value = '');
+['wUtmLinkId','wUtmName','wUtmSource','wUtmMedium','wUtmCampaign','wUtmContent','wUtmTrackId'].forEach(id => document.getElementById(id).value = '');
 document.getElementById('wUtmWorkshop').value = '';
 populateWorkshopOptions();
 document.getElementById('wUtmInvitation').value = '';
@@ -247,7 +253,7 @@ updateWorkshopUrlPreview();
 document.getElementById('workshopUtmModal').classList.remove('hidden');
 }
 const wUtmUpdateUrl = '{{ route("admin.workshops.utm-links.update", ["utmLink" => "LINK_ID"]) }}';
-function editWorkshopLink(id, name, workshopId, source, medium, campaign, content, invitationId) {
+function editWorkshopLink(id, name, workshopId, source, medium, campaign, content, invitationId, trackId) {
 document.getElementById('wUtmModalTitle').textContent = 'Edit Workshop UTM Link';
 document.getElementById('workshopUtmForm').action = wUtmUpdateUrl.replace('LINK_ID', id);
 document.getElementById('wUtmFormMethod').value = 'PUT';
@@ -260,9 +266,10 @@ document.getElementById('wUtmCampaign').value = campaign;
 document.getElementById('wUtmContent').value = content;
 var invData = invitationId ? wInvitations.find(function(i){ return String(i.id) === String(invitationId); }) : null;
 populateWorkshopOptions();
-document.getElementById('wUtmTrack').value = invData ? invData.track_id : '';
+document.getElementById('wUtmTrack').value = invData ? invData.track_id : (trackId || '');
 populateInvitationOptions();
 document.getElementById('wUtmInvitation').value = invitationId || '';
+document.getElementById('wUtmTrackId').value = trackId || '';
 updateWorkshopUrlPreview();
 document.getElementById('workshopUtmModal').classList.remove('hidden');
 }
