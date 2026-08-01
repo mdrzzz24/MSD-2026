@@ -29,7 +29,7 @@
     {{-- Generate Invitation --}}
     <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 mb-6">
         <h2 class="text-sm font-bold text-gray-800 mb-3">Generate Invitation Link</h2>
-        <form action="{{ route('admin.workshops.invitations.generate', $workshop) }}" method="POST" class="flex items-end gap-3">
+        <form action="{{ route('admin.workshops.invitations.generate', $workshop) }}" method="POST" class="flex flex-wrap items-end gap-3">
             @csrf
             @php $workshopTracks = $workshop->tracks()->where('is_active', true)->get(); @endphp
             @if ($workshopTracks->isNotEmpty())
@@ -43,7 +43,20 @@
                     </select>
                 </div>
             @endif
-            <div class="flex-1">
+            <div class="w-40">
+                <label class="block text-xs font-semibold text-gray-600 mb-1">Link Type</label>
+                <select name="link_type" id="linkType" class="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 focus:bg-white transition">
+                    <option value="random">Random Code</option>
+                    <option value="custom">Custom Slug</option>
+                </select>
+            </div>
+            <div class="flex-1 min-w-[220px]" id="slugField" style="display: none;">
+                <label class="block text-xs font-semibold text-gray-600 mb-1">Custom Slug <span class="text-gray-400">(link: /invitation/workshop/{slug})</span></label>
+                <input type="text" name="slug" id="slugInput" placeholder="nama-workshop"
+                       class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 focus:bg-white transition">
+                <p class="text-xs text-gray-400 mt-1">Preview: <code class="text-indigo-600">/invitation/workshop/<span id="slugPreview">nama-workshop</span></code></p>
+            </div>
+            <div class="flex-1 min-w-[200px]">
                 <label class="block text-xs font-semibold text-gray-600 mb-1">Target Email <span class="text-gray-400">(optional)</span></label>
                 <input type="email" name="email" placeholder="invitee@company.com" class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 focus:bg-white transition">
             </div>
@@ -54,6 +67,26 @@
             </div>
             <button type="submit" class="px-5 py-2.5 bg-indigo-600 text-white text-sm font-semibold rounded-xl hover:bg-indigo-700 shadow-sm transition">Generate</button>
         </form>
+        <script>
+            (function() {
+                var linkType = document.getElementById('linkType');
+                var slugField = document.getElementById('slugField');
+                var slugInput = document.getElementById('slugInput');
+                var slugPreview = document.getElementById('slugPreview');
+
+                function toggleSlugField() {
+                    var isCustom = linkType.value === 'custom';
+                    slugField.style.display = isCustom ? '' : 'none';
+                }
+                function updatePreview() {
+                    var raw = slugInput.value.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+                    slugPreview.textContent = raw || 'nama-workshop';
+                }
+                linkType.addEventListener('change', toggleSlugField);
+                slugInput.addEventListener('input', updatePreview);
+                toggleSlugField();
+            })();
+        </script>
     </div>
 
     {{-- Invitations List --}}
@@ -76,10 +109,10 @@
                         <tr class="hover:bg-gray-50/50">
                             <td class="px-5 py-4">
                                 <div class="flex items-center gap-2">
-                                    <a href="{{ route('workshop.invitation', $inv->token) }}" target="_blank" class="text-sm text-indigo-600 hover:text-indigo-800 font-medium truncate block max-w-[220px]">
-                                        {{ route('workshop.invitation', $inv->token) }}
+                                    <a href="{{ $inv->invitation_url }}" target="_blank" class="text-sm text-indigo-600 hover:text-indigo-800 font-medium truncate block max-w-[240px]">
+                                        {{ $inv->invitation_url }}
                                     </a>
-                                    <button onclick="copyLink(this, '{{ route('workshop.invitation', $inv->token) }}')"
+                                    <button onclick="copyLink(this, '{{ $inv->invitation_url }}')"
                                             class="flex-shrink-0 px-2 py-1 text-xs font-medium rounded-lg bg-gray-100 text-gray-600 hover:bg-indigo-100 hover:text-indigo-700 transition"
                                             title="Copy link">
                                         Copy
@@ -148,6 +181,127 @@
         </div>
     </div>
 
+    {{-- Workshop UTM Links (for this workshop) --}}
+    <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden mt-6">
+        <div class="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
+            <div>
+                <h2 class="text-sm font-bold text-gray-800">Workshop UTM Links</h2>
+                <p class="text-xs text-gray-500">UTM for this workshop's invitation link — separate from event registration UTM</p>
+            </div>
+            <button onclick="openWorkshopUtmModal()" class="px-3 py-1.5 text-xs font-medium rounded-lg bg-indigo-500 text-white hover:bg-indigo-600 transition">+ New UTM Link</button>
+        </div>
+        @if ($utmLinks->count())
+        <div class="overflow-x-auto">
+            <table class="w-full">
+                <thead>
+                    <tr class="bg-gray-50/80">
+                        <th class="px-5 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase">Name</th>
+                        <th class="px-5 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase">UTM Parameters</th>
+                        <th class="px-5 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase">Full URL</th>
+                        <th class="px-5 py-3.5 text-center text-xs font-semibold text-gray-500 uppercase">Regs</th>
+                        <th class="px-5 py-3.5 text-center text-xs font-semibold text-gray-500 uppercase">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-50">
+                    @foreach ($utmLinks as $link)
+                    @php $regs = $link->workshopRegistrationsCount(); @endphp
+                    <tr class="hover:bg-gray-50/50">
+                        <td class="px-5 py-4"><span class="text-sm font-semibold text-gray-900">{{ $link->name }}</span></td>
+                        <td class="px-5 py-4">
+                            <div class="flex flex-wrap gap-1">
+                                <span class="text-[10px] font-medium bg-indigo-50 text-indigo-700 px-1.5 py-0.5 rounded">source:{{ $link->utm_source }}</span>
+                                <span class="text-[10px] font-medium bg-emerald-50 text-emerald-700 px-1.5 py-0.5 rounded">medium:{{ $link->utm_medium }}</span>
+                                <span class="text-[10px] font-medium bg-amber-50 text-amber-700 px-1.5 py-0.5 rounded">campaign:{{ $link->utm_campaign }}</span>
+                                @if ($link->utm_content)<span class="text-[10px] font-medium bg-gray-50 text-gray-600 px-1.5 py-0.5 rounded">content:{{ $link->utm_content }}</span>@endif
+                            </div>
+                        </td>
+                        <td class="px-5 py-4 max-w-[200px]">
+                            <div class="flex items-center gap-1">
+                                <input type="text" id="ws-url-{{ $link->id }}" value="{{ $link->full_url }}" readonly onclick="this.select()" class="text-xs text-indigo-600 bg-indigo-50 px-2 py-1 rounded flex-1 min-w-0 border-0 cursor-text">
+                                <button onclick="copyUtmUrl(this, 'ws-url-{{ $link->id }}')" class="flex-shrink-0 px-2 py-1 text-xs font-medium rounded-lg bg-gray-100 text-gray-600 hover:bg-indigo-100 hover:text-indigo-700 transition" title="Copy URL">Copy</button>
+                            </div>
+                        </td>
+                        <td class="px-5 py-4 text-center">
+                            @if ($regs > 0)
+                            <a href="{{ route('admin.registrants.index', ['utm_source' => $link->utm_source, 'utm_medium' => $link->utm_medium, 'utm_campaign' => $link->utm_campaign]) }}" class="text-sm font-bold text-indigo-600 hover:text-indigo-800 hover:underline">{{ $regs }}</a>
+                            @else
+                            <span class="text-sm text-gray-400">0</span>
+                            @endif
+                        </td>
+                        <td class="px-5 py-4 text-center">
+                            <div class="flex items-center justify-center gap-1.5">
+                                <button onclick="editWorkshopUtmLink({{ $link->id }}, '{{ addslashes($link->name) }}', '{{ $link->utm_source }}', '{{ $link->utm_medium }}', '{{ $link->utm_campaign }}', '{{ $link->utm_content ?? '' }}', '{{ $link->workshop_invitation_id ?? '' }}')" class="p-1.5 text-gray-400 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition" title="Edit">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                                </button>
+                                <form action="{{ route('admin.workshops.utm-links.destroy', $link) }}" method="POST" class="inline" onsubmit="return confirm('Delete {{ addslashes($link->name) }}?')">
+                                    @csrf @method('DELETE')
+                                    <button type="submit" class="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition" title="Delete">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        </div>
+        @else
+        <div class="px-6 py-8 text-center">
+            <p class="text-gray-400 font-medium">No workshop UTM links yet</p>
+            <p class="text-xs text-gray-400 mt-1">Create a UTM for this workshop's invitation link (newsletter, sales, meta, ...)</p>
+        </div>
+        @endif
+    </div>
+
+    {{-- Workshop UTM Modal --}}
+    <div id="wsUtmModal" class="fixed inset-0 z-50 hidden" role="dialog" aria-modal="true">
+        <div class="fixed inset-0 bg-black/40 backdrop-blur-sm" onclick="closeWsUtmModal()"></div>
+        <div class="fixed inset-0 flex items-center justify-center p-4">
+            <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden animate-fade-in">
+                <div class="px-6 py-4 border-b border-gray-100"><h3 class="text-lg font-bold text-gray-900" id="wsUtmModalTitle">Create Workshop UTM Link</h3></div>
+                <form id="wsUtmForm" method="POST" action="{{ route('admin.workshops.utm-links.store') }}">
+                    @csrf
+                    <input type="hidden" name="_method" id="wsUtmFormMethod" value="POST">
+                    <input type="hidden" name="link_id" id="wsUtmLinkId">
+                    <input type="hidden" name="workshop_id" value="{{ $workshop->id }}">
+                    <div class="p-6 space-y-3">
+                        <div><label class="block text-sm font-semibold text-gray-700 mb-1">Link Name <span class="text-red-500">*</span></label>
+                            <input type="text" id="wsUtmName" name="name" required placeholder="e.g. Workshop AWS - Newsletter" class="w-full px-4 py-2.5 text-sm border border-gray-200 rounded-xl bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"></div>
+                        <div id="wsUtmTrackGroup" style="display:none"><label class="block text-sm font-semibold text-gray-700 mb-1">Track <span class="text-gray-400 font-normal">(optional)</span></label>
+                            <select id="wsUtmTrack" onchange="wsPopulateInvitationOptions()" class="w-full px-4 py-2.5 text-sm border border-gray-200 rounded-xl bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500">
+                                <option value="">— All tracks —</option>
+                            </select>
+                            <p class="text-xs text-gray-400 mt-1">Filter the invitation list by track.</p></div>
+                        <div><label class="block text-sm font-semibold text-gray-700 mb-1">Invitation / Custom Slug <span class="text-gray-400 font-normal">(optional)</span></label>
+                            <select id="wsUtmInvitation" name="workshop_invitation_id" onchange="wsUpdateUtmUrlPreview()" class="w-full px-4 py-2.5 text-sm border border-gray-200 rounded-xl bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500">
+                                <option value="">— Auto (invitation default) —</option>
+                            </select>
+                            <p class="text-xs text-gray-400 mt-1">Pick a specific custom slug / invitation if the workshop has more than one.</p></div>
+                        <div class="grid grid-cols-3 gap-3">
+                            <div><label class="block text-sm font-semibold text-gray-700 mb-1">Source <span class="text-red-500">*</span></label>
+                                <input type="text" id="wsUtmSource" name="utm_source" required placeholder="newsletter" class="w-full px-4 py-2.5 text-sm border border-gray-200 rounded-xl bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"></div>
+                            <div><label class="block text-sm font-semibold text-gray-700 mb-1">Medium <span class="text-red-500">*</span></label>
+                                <input type="text" id="wsUtmMedium" name="utm_medium" required placeholder="email" class="w-full px-4 py-2.5 text-sm border border-gray-200 rounded-xl bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"></div>
+                            <div><label class="block text-sm font-semibold text-gray-700 mb-1">Campaign <span class="text-red-500">*</span></label>
+                                <input type="text" id="wsUtmCampaign" name="utm_campaign" required placeholder="msd2026" class="w-full px-4 py-2.5 text-sm border border-gray-200 rounded-xl bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"></div>
+                        </div>
+                        <div><label class="block text-sm font-semibold text-gray-700 mb-1">Content (optional)</label>
+                            <input type="text" id="wsUtmContent" name="utm_content" placeholder="e.g. newsletter-banner-a" class="w-full px-4 py-2.5 text-sm border border-gray-200 rounded-xl bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"></div>
+                        <div class="bg-gray-50 border border-gray-200 rounded-xl px-4 py-3">
+                            <p class="text-xs text-gray-500 mb-1">URL Preview</p>
+                            <p class="text-[11px] text-indigo-600 break-all font-mono" id="wsUtmUrlPreview">{{ rtrim(\App\Models\UtmLink::BASE_URL, '/') }}/invitation/workshop/{slug}?utm_source=...</p>
+                        </div>
+                    </div>
+                    <div class="flex justify-end gap-2.5 px-6 py-4 border-t border-gray-100 bg-gray-50/50">
+                        <button type="button" onclick="closeWsUtmModal()" class="px-5 py-2.5 text-sm font-medium rounded-xl bg-gray-100 text-gray-700 hover:bg-gray-200 transition">Cancel</button>
+                        <button type="submit" class="px-5 py-2.5 text-sm font-semibold rounded-xl bg-indigo-500 text-white hover:bg-indigo-600 transition">Save Link</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
     <div class="mt-4">
         <a href="{{ route('admin.workshops.index') }}" class="text-sm text-indigo-600 hover:text-indigo-800 font-medium">&larr; Back to Workshops</a>
     </div>
@@ -176,6 +330,100 @@ function toggleEditLimit(id) {
     var form = document.getElementById('edit-limit-form-' + id);
     form.classList.toggle('hidden');
 }
+
+// ── Workshop UTM Links ──
+var wsUtmUpdateUrl = '{{ route("admin.workshops.utm-links.update", ["utmLink" => "LINK_ID"]) }}';
+var wsInvitations = @json($wsInvitationData);
+var wsTracks = @json($wsTrackData);
+var wsBaseUrl = '{{ rtrim(\App\Models\UtmLink::BASE_URL, '/') }}';
+
+function wsPopulateTrackOptions() {
+    var trackSel = document.getElementById('wsUtmTrack');
+    var opts = '<option value="">— All tracks —</option>';
+    wsTracks.forEach(function(t){ opts += '<option value="'+t.id+'">'+t.name+'</option>'; });
+    trackSel.innerHTML = opts;
+    document.getElementById('wsUtmTrackGroup').style.display = wsTracks.length ? '' : 'none';
+    wsPopulateInvitationOptions();
+}
+
+function wsPopulateInvitationOptions() {
+    var trackId = document.getElementById('wsUtmTrack').value;
+    var invs = wsInvitations.filter(function(i){ return !trackId || String(i.track_id) === String(trackId); });
+    var sel = document.getElementById('wsUtmInvitation');
+    var opts = '<option value="">— Auto (invitation default) —</option>';
+    invs.forEach(function(i){
+        var label = (i.slug ? i.slug : '(random) ' + i.token.slice(0,8));
+        if (i.track_name) label += ' · ' + i.track_name;
+        opts += '<option value="'+i.id+'">'+label+'</option>';
+    });
+    sel.innerHTML = opts;
+    wsUpdateUtmUrlPreview();
+}
+
+function wsUpdateUtmUrlPreview() {
+    var invSel = document.getElementById('wsUtmInvitation');
+    var inv = invSel.selectedOptions[0];
+    var base;
+    if (inv && inv.value) {
+        var data = wsInvitations.find(function(i){ return String(i.id) === String(inv.value); });
+        base = data ? (wsBaseUrl + '/invitation/workshop/' + (data.slug || data.token)) : (wsBaseUrl + '/invitation/workshop/{slug}');
+    } else {
+        base = wsBaseUrl + '/invitation/workshop/{slug}';
+    }
+    var source = document.getElementById('wsUtmSource').value || '...';
+    document.getElementById('wsUtmUrlPreview').textContent = base + '?utm_source=' + source;
+}
+
+function openWorkshopUtmModal() {
+    document.getElementById('wsUtmModalTitle').textContent = 'Create Workshop UTM Link';
+    document.getElementById('wsUtmForm').action = '{{ route("admin.workshops.utm-links.store") }}';
+    document.getElementById('wsUtmFormMethod').value = 'POST';
+    ['wsUtmLinkId','wsUtmName','wsUtmSource','wsUtmMedium','wsUtmCampaign','wsUtmContent'].forEach(id => document.getElementById(id).value = '');
+    wsPopulateTrackOptions();
+    document.getElementById('wsUtmInvitation').value = '';
+    wsUpdateUtmUrlPreview();
+    document.getElementById('wsUtmModal').classList.remove('hidden');
+}
+
+function editWorkshopUtmLink(id, name, source, medium, campaign, content, invitationId) {
+    document.getElementById('wsUtmModalTitle').textContent = 'Edit Workshop UTM Link';
+    document.getElementById('wsUtmForm').action = wsUtmUpdateUrl.replace('LINK_ID', id);
+    document.getElementById('wsUtmFormMethod').value = 'PUT';
+    document.getElementById('wsUtmLinkId').value = id;
+    document.getElementById('wsUtmName').value = name;
+    document.getElementById('wsUtmSource').value = source;
+    document.getElementById('wsUtmMedium').value = medium;
+    document.getElementById('wsUtmCampaign').value = campaign;
+    document.getElementById('wsUtmContent').value = content;
+    var invData = invitationId ? wsInvitations.find(function(i){ return String(i.id) === String(invitationId); }) : null;
+    wsPopulateTrackOptions();
+    document.getElementById('wsUtmTrack').value = invData ? invData.track_id : '';
+    wsPopulateInvitationOptions();
+    document.getElementById('wsUtmInvitation').value = invitationId || '';
+    wsUpdateUtmUrlPreview();
+    document.getElementById('wsUtmModal').classList.remove('hidden');
+}
+
+function closeWsUtmModal() {
+    document.getElementById('wsUtmModal').classList.add('hidden');
+}
+
+function copyUtmUrl(btn, inputId) {
+    const input = document.getElementById(inputId);
+    navigator.clipboard.writeText(input.value).then(() => {
+        const orig = btn.textContent;
+        btn.textContent = 'Copied!';
+        btn.classList.add('bg-emerald-100', 'text-emerald-700');
+        setTimeout(() => { btn.textContent = orig; btn.classList.remove('bg-emerald-100', 'text-emerald-700'); }, 1500);
+    });
+}
+
+document.getElementById('wsUtmSource')?.addEventListener('input', wsUpdateUtmUrlPreview);
+
+// Close workshop UTM modal on Escape
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') closeWsUtmModal();
+});
 </script>
 </body>
 </html>

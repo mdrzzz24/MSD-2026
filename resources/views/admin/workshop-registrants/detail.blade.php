@@ -26,7 +26,7 @@
             <h1 class="text-lg font-bold text-gray-900 truncate">{{ $workshop->name ?: $workshop->title }}</h1>
         </div>
         <div class="flex items-center gap-2">
-            <a href="{{ route('admin.workshops.registrants.export-csv', $workshop) }}"
+            <a href="{{ route('admin.workshops.registrants.export-csv', array_merge(['workshop' => $workshop], request()->only(['profile', 'source', 'date_from', 'date_to']))) }}"
                class="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-medium rounded-lg border border-gray-200 text-gray-600 bg-white hover:bg-gray-50 transition">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
                 Export CSV
@@ -37,6 +37,45 @@
 
 <div class="p-4 sm:p-6 lg:p-8">
     @include('admin.partials.notification')
+
+    {{-- Filter bar: Profile / Source / Date --}}
+    <form method="GET" action="{{ route('admin.workshops.registrants', $workshop) }}" class="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 mb-6">
+        <div class="flex flex-wrap items-end gap-3">
+            <div>
+                <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Profile</label>
+                <select name="profile" class="px-3 py-2 text-sm border border-gray-200 rounded-xl bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500">
+                    <option value="">All profiles</option>
+                    @foreach ($profiles as $p)
+                        <option value="{{ $p }}" @selected(request('profile') === $p)>{{ $p }}</option>
+                    @endforeach
+                </select>
+            </div>
+            <div>
+                <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Source</label>
+                <select name="source" class="px-3 py-2 text-sm border border-gray-200 rounded-xl bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500">
+                    <option value="">All sources</option>
+                    <option value="direct" @selected(request('source') === 'direct')>Direct</option>
+                    @foreach ($sources as $s)
+                        <option value="{{ $s }}" @selected(request('source') === $s)>{{ $s }}</option>
+                    @endforeach
+                </select>
+            </div>
+            <div>
+                <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">From</label>
+                <input type="date" name="date_from" value="{{ request('date_from') }}" class="px-3 py-2 text-sm border border-gray-200 rounded-xl bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500">
+            </div>
+            <div>
+                <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">To</label>
+                <input type="date" name="date_to" value="{{ request('date_to') }}" class="px-3 py-2 text-sm border border-gray-200 rounded-xl bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500">
+            </div>
+            <div class="flex items-center gap-2">
+                <button type="submit" class="px-4 py-2 text-xs font-semibold rounded-xl bg-indigo-500 text-white hover:bg-indigo-600 transition">Apply</button>
+                @if (request('profile') || request('source') || request('date_from') || request('date_to'))
+                    <a href="{{ route('admin.workshops.registrants', array_merge(['workshop' => $workshop], request()->except(['profile', 'source', 'date_from', 'date_to']))) }}" class="px-4 py-2 text-xs font-medium rounded-xl bg-gray-100 text-gray-600 hover:bg-gray-200 transition">Clear</a>
+                @endif
+            </div>
+        </div>
+    </form>
 
     {{-- Workshop Summary Card --}}
     @php $linkedAgenda = $workshop->agendaItems->first(); @endphp
@@ -102,6 +141,7 @@
                         <th class="px-4 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase hidden md:table-cell w-32">Phone</th>
                         <th class="px-4 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase hidden lg:table-cell w-36">Company</th>
                         <th class="px-4 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase hidden xl:table-cell w-36">Job Title</th>
+                        <th class="px-4 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase hidden md:table-cell w-28">Source</th>
                         <th class="px-4 py-3.5 text-center text-xs font-semibold text-gray-500 uppercase w-20">Track</th>
                         <th class="px-4 py-3.5 text-center text-xs font-semibold text-gray-500 uppercase w-28">WS Status</th>
                         <th class="px-4 py-3.5 text-center text-xs font-semibold text-gray-500 uppercase w-24">Reg Status</th>
@@ -126,6 +166,13 @@
                                 <td class="px-4 py-3.5 hidden md:table-cell max-w-0"><span class="text-sm text-gray-600 truncate block" title="{{ $r->phone ?? '' }}">{{ $r->phone ?? '—' }}</span></td>
                                 <td class="px-4 py-3.5 hidden lg:table-cell max-w-0"><span class="text-sm text-gray-600 truncate block" title="{{ $r->company ?? '' }}">{{ $r->company ?? '—' }}</span></td>
                                 <td class="px-4 py-3.5 hidden xl:table-cell max-w-0"><span class="text-sm text-gray-600 truncate block" title="{{ $r->job_title ?? '' }}">{{ $r->job_title ?? '—' }}</span></td>
+                                <td class="px-4 py-3.5 hidden md:table-cell max-w-0">
+                                    @if (!empty($r->pivot->utm_source))
+                                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-indigo-50 text-indigo-700 border border-indigo-200 truncate" title="UTM: {{ $r->pivot->utm_source }} / {{ $r->pivot->utm_medium }} / {{ $r->pivot->utm_campaign }}{{ $r->pivot->utm_content ? ' / '.$r->pivot->utm_content : '' }}">🔗 <span class="truncate">{{ $r->pivot->utm_source }}</span></span>
+                                    @else
+                                        <span class="text-xs text-gray-400">—</span>
+                                    @endif
+                                </td>
                                 <td class="px-4 py-3.5 text-center">
                                     @if (isset($r->registered_track_name))
                                         <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-teal-100 text-teal-700 border border-teal-200">

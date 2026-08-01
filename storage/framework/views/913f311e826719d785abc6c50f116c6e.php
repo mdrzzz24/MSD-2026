@@ -44,6 +44,7 @@
                         <th class="px-5 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase">Name</th>
                         <th class="px-5 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase">Email</th>
                         <th class="px-5 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase hidden sm:table-cell">Company</th>
+                        <th class="px-5 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase">Source</th>
                         <th class="px-5 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase hidden md:table-cell">Status</th>
                     </tr></thead>
                     <tbody class="divide-y divide-gray-50">
@@ -52,6 +53,16 @@
                                 <td class="px-5 py-4"><p class="text-sm font-semibold text-gray-900"><?php echo e($r->display_name); ?></p></td>
                                 <td class="px-5 py-4"><span class="text-sm text-gray-600"><?php echo e($r->email); ?></span></td>
                                 <td class="px-5 py-4 hidden sm:table-cell"><span class="text-sm text-gray-600"><?php echo e($r->company ?? '—'); ?></span></td>
+                                <td class="px-5 py-4">
+                                    <?php if($r->pivot->utm_source ?? null): ?>
+                                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-indigo-50 text-indigo-700 border border-indigo-200" title="UTM: <?php echo e($r->pivot->utm_source); ?> / <?php echo e($r->pivot->utm_medium); ?> / <?php echo e($r->pivot->utm_campaign); ?>">
+                                            🔗 <?php echo e($r->pivot->utm_source); ?>
+
+                                        </span>
+                                    <?php else: ?>
+                                        <span class="text-xs text-gray-400">—</span>
+                                    <?php endif; ?>
+                                </td>
                                 <td class="px-5 py-4 hidden md:table-cell">
                                     <?php if($r->status === 'approved'): ?>
                                         <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200"><span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Approved</span>

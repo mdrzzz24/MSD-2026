@@ -138,35 +138,76 @@ class AdminWorkshopController extends Controller
     /**
      * List all workshops with registrant counts (accessible by all admin roles).
      */
-    public function workshopRegistrants()
+    public function workshopRegistrants(Request $request)
     {
-        $workshops = Workshop::withCount(['registrants as approved_count' => function ($q) {
+        $profile  = $request->get('profile');
+        $source   = $request->get('source');
+        $dateFrom = $request->get('date_from');
+        $dateTo   = $request->get('date_to');
+
+        // Reusable filter closure applied to each per-workshop registrant count
+        $applyFilters = function ($q) use ($profile, $source, $dateFrom, $dateTo) {
+            if ($profile) {
+                $q->where('registrants.job_title', $profile);
+            }
+            if ($source === 'direct') {
+                $q->whereNull('registrants.utm_source');
+            } elseif ($source) {
+                $q->where('registrants.utm_source', $source);
+            }
+            if ($dateFrom) {
+                $q->whereDate('registrants.created_at', '>=', $dateFrom);
+            }
+            if ($dateTo) {
+                $q->whereDate('registrants.created_at', '<=', $dateTo);
+            }
+        };
+
+        $workshops = Workshop::withCount(['registrants as approved_count' => function ($q) use ($applyFilters) {
                 $q->where('registrant_workshop.status', 'approved');
+                $applyFilters($q);
             }])
-            ->withCount(['registrants as pending_count' => function ($q) {
+            ->withCount(['registrants as pending_count' => function ($q) use ($applyFilters) {
                 $q->where('registrant_workshop.status', 'pending');
+                $applyFilters($q);
             }])
-            ->withCount(['registrants as rejected_count' => function ($q) {
+            ->withCount(['registrants as rejected_count' => function ($q) use ($applyFilters) {
                 $q->where('registrant_workshop.status', 'rejected');
+                $applyFilters($q);
             }])
-            ->withCount('registrants as total_count')
+            ->withCount(['registrants as total_count' => function ($q) use ($applyFilters) {
+                $applyFilters($q);
+            }])
             ->withCount('waitlist')
             ->orderBy('date')
             ->orderBy('start_time')
             ->get();
 
-        return view('admin.workshop-registrants.index', compact('workshops'));
+        $profiles = Registrant::whereNotNull('job_title')->distinct()->orderBy('job_title')->pluck('job_title');
+        $sources  = Registrant::whereNotNull('utm_source')->distinct()->orderBy('utm_source')->pluck('utm_source');
+
+        return view('admin.workshop-registrants.index', compact('workshops', 'profiles', 'sources'));
     }
 
     /**
      * View registrants of a workshop with full details.
      */
-    public function registrants(Workshop $workshop)
+    public function registrants(Workshop $workshop, Request $request)
     {
         $workshop->load(['tracks.agendaItems', 'agendaItems.track']);
 
+        $profile  = $request->get('profile');
+        $source   = $request->get('source');
+        $dateFrom = $request->get('date_from');
+        $dateTo   = $request->get('date_to');
+
         $registrants = $workshop->registrants()
             ->with(['workshops', 'workshopWaitlists'])
+            ->when($profile, fn($q) => $q->where('registrants.job_title', $profile))
+            ->when($source === 'direct', fn($q) => $q->whereNull('registrants.utm_source'))
+            ->when($source && $source !== 'direct', fn($q) => $q->where('registrants.utm_source', $source))
+            ->when($dateFrom, fn($q) => $q->whereDate('registrants.created_at', '>=', $dateFrom))
+            ->when($dateTo, fn($q) => $q->whereDate('registrants.created_at', '<=', $dateTo))
             ->orderBy('name')
             ->get();
 
@@ -222,7 +263,10 @@ class AdminWorkshopController extends Controller
             ->latest('sent_at')
             ->first();
 
-        return view('admin.workshop-registrants.detail', compact('workshop', 'registrants', 'lastReminderLog'));
+        $profiles = Registrant::whereNotNull('job_title')->distinct()->orderBy('job_title')->pluck('job_title');
+        $sources  = Registrant::whereNotNull('utm_source')->distinct()->orderBy('utm_source')->pluck('utm_source');
+
+        return view('admin.workshop-registrants.detail', compact('workshop', 'registrants', 'lastReminderLog', 'profiles', 'sources'));
     }
 
     /**
@@ -446,9 +490,29 @@ class AdminWorkshopController extends Controller
     /**
      * Export all workshops registrants.
      */
-    public function exportCsv()
+    public function exportCsv(Request $request)
     {
-        $workshops = Workshop::with(['registrants', 'tracks'])->orderBy('title')->get();
+        $profile  = $request->get('profile');
+        $source   = $request->get('source');
+        $dateFrom = $request->get('date_from');
+        $dateTo   = $request->get('date_to');
+
+        $workshops = Workshop::with(['registrants' => function ($q) use ($profile, $source, $dateFrom, $dateTo) {
+                if ($profile) {
+                    $q->where('registrants.job_title', $profile);
+                }
+                if ($source === 'direct') {
+                    $q->whereNull('registrants.utm_source');
+                } elseif ($source) {
+                    $q->where('registrants.utm_source', $source);
+                }
+                if ($dateFrom) {
+                    $q->whereDate('registrants.created_at', '>=', $dateFrom);
+                }
+                if ($dateTo) {
+                    $q->whereDate('registrants.created_at', '<=', $dateTo);
+                }
+            }, 'tracks'])->orderBy('title')->get();
 
         $headers = ['Workshop', 'Date', 'Time', 'Track', 'Registrant Name', 'Email', 'Phone', 'Company', 'Job Title', 'Status', 'Joined Workshop At', 'Registered to Event At', 'UTM Source', 'UTM Medium', 'UTM Campaign'];
         $rows = [];
@@ -551,15 +615,27 @@ class AdminWorkshopController extends Controller
     /**
      * Export single workshop registrants.
      */
-    public function exportWorkshopCsv(Workshop $workshop)
+    public function exportWorkshopCsv(Workshop $workshop, Request $request)
     {
         $workshop->load('tracks');
         $trackLookup = $workshop->tracks->keyBy('id');
 
-        $registrants = $workshop->registrants()->orderBy('name')->get();
+        $profile  = $request->get('profile');
+        $source   = $request->get('source');
+        $dateFrom = $request->get('date_from');
+        $dateTo   = $request->get('date_to');
+
+        $registrants = $workshop->registrants()
+            ->when($profile, fn($q) => $q->where('registrants.job_title', $profile))
+            ->when($source === 'direct', fn($q) => $q->whereNull('registrants.utm_source'))
+            ->when($source && $source !== 'direct', fn($q) => $q->where('registrants.utm_source', $source))
+            ->when($dateFrom, fn($q) => $q->whereDate('registrants.created_at', '>=', $dateFrom))
+            ->when($dateTo, fn($q) => $q->whereDate('registrants.created_at', '<=', $dateTo))
+            ->orderBy('name')
+            ->get();
 
         $workshopName = $workshop->name ?: $workshop->title;
-        $headers = ['Workshop', 'Registrant Name', 'Email', 'Phone', 'Company', 'Job Title', 'Track', 'Status', 'Joined Workshop At', 'Registered to Event At', 'UTM Source', 'UTM Medium', 'UTM Campaign'];
+        $headers = ['Workshop', 'Registrant Name', 'Email', 'Phone', 'Company', 'Job Title', 'Track', 'Status', 'Joined Workshop At', 'Registered to Event At', 'UTM Source', 'UTM Medium', 'UTM Campaign', 'UTM Content'];
         $rows = $registrants->map(fn($r) => [
             $workshopName,
             $r->display_name ?: $r->name,
@@ -571,9 +647,11 @@ class AdminWorkshopController extends Controller
             $r->pivot->status ?? '-',
             $r->pivot->created_at?->copy()->addHours(7)->format('Y-m-d H:i') ?? '-',
             $r->created_at->copy()->addHours(7)->format('Y-m-d H:i'),
-            $r->utm_source ?? '',
-            $r->utm_medium ?? '',
-            $r->utm_campaign ?? '',
+            // Prefer per-workshop link (pivot), fall back to registrant-level UTM
+            $r->pivot->utm_source ?? ($r->utm_source ?? ''),
+            $r->pivot->utm_medium ?? ($r->utm_medium ?? ''),
+            $r->pivot->utm_campaign ?? ($r->utm_campaign ?? ''),
+            $r->pivot->utm_content ?? '',
         ])->toArray();
 
         return $this->csvDownload($headers, $rows, 'workshop-' . $workshop->id . '-' . now()->format('YmdHis') . '.csv');

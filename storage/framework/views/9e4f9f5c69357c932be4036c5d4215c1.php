@@ -161,9 +161,13 @@
                         <svg style="width:16px;height:16px;" fill="none" stroke="#ef4444" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke-width="2"/><path stroke-width="2" d="M15 9l-6 6M9 9l6 6"/></svg> Registration Rejected
                     </div>
                     <?php if($invitation->isValid()): ?>
-                        <form class="invite-form" method="POST" action="<?php echo e(route('workshop.invitation', $invitation->token)); ?>">
+                        <form class="invite-form" method="POST" action="<?php echo e($invitation->invitation_url); ?>">
                             <?php echo csrf_field(); ?>
                             <input type="hidden" name="email" value="<?php echo e($email); ?>">
+                            <input type="hidden" name="utm_source" id="utm_source" value="">
+                            <input type="hidden" name="utm_medium" id="utm_medium" value="">
+                            <input type="hidden" name="utm_campaign" id="utm_campaign" value="">
+                            <input type="hidden" name="utm_content" id="utm_content" value="">
                             <button type="submit" class="btn-submit">Re-register</button>
                         </form>
                     <?php endif; ?>
@@ -174,10 +178,14 @@
                 <?php endif; ?>
             </div>
         <?php elseif($invitation->isValid()): ?>
-            <form class="invite-form" method="POST" action="<?php echo e(route('workshop.invitation', $invitation->token)); ?>">
+            <form class="invite-form" method="POST" action="<?php echo e($invitation->invitation_url); ?>">
                 <?php echo csrf_field(); ?>
                 <label for="email">Enter your email to register</label>
                 <input type="email" name="email" id="email" value="<?php echo e(old('email', $email)); ?>" placeholder="yourname@company.com" required autocomplete="email">
+                <input type="hidden" name="utm_source" id="utm_source" value="">
+                <input type="hidden" name="utm_medium" id="utm_medium" value="">
+                <input type="hidden" name="utm_campaign" id="utm_campaign" value="">
+                <input type="hidden" name="utm_content" id="utm_content" value="">
                 <?php $__errorArgs = ['email'];
 $__bag = $errors->getBag($__errorArgs[1] ?? 'default');
 if ($__bag->has($__errorArgs[0])) :
@@ -188,6 +196,86 @@ endif;
 unset($__errorArgs, $__bag); ?>
                 <button type="submit" class="btn-submit">Register for Workshop</button>
             </form>
+
+            <?php if($needRegistration): ?>
+                <p class="section-eyebrow" style="margin-top:34px;text-align:center;">Register</p>
+                <div class="reg-notice">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4m0 4h.01"/></svg>
+                    <span>Your email is not registered for the event yet. Complete the event registration form below — after that, you will be automatically registered for <strong><?php echo e($workshop->name ?: $workshop->title); ?></strong>.</span>
+                </div>
+                <div class="form-wrap" style="grid-template-columns:1fr;margin-top:22px;">
+                    <form id="inviteRegForm" class="form-grid" method="POST" action="<?php echo e(route('register.submit')); ?>">
+                        <?php echo csrf_field(); ?>
+                        <div class="field"><label>First Name</label><input required name="firstName" placeholder="First Name" /></div>
+                        <div class="field"><label>Last Name</label><input required name="lastName" placeholder="Last Name" /></div>
+                        <div class="field">
+                            <label>Job Function</label>
+                            <select name="job_title" required>
+                                <option value="">Select Job Function</option>
+                                <?php $__currentLoopData = ['Intern','Staff','Supervisor','Manager','Senior Manager','General Manager','Head of Department','Chief','Director','President','Vice President']; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $jf): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?><option><?php echo e($jf); ?></option><?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                            </select>
+                        </div>
+                        <div class="field">
+                            <label>Job Title</label>
+                            <select id="regJobRoleSelector" name="job_role_selector" required>
+                                <option value="">Select Job Title</option>
+                                <?php $__currentLoopData = ['Student','Sales','Pre-Sales / Solution Architect','Engineering','Marketing','Management','Finance / Accounting','Information Technology','Operations','Human Resources','Legal / Compliance','Procurement','Research & Development','Customer Service / Support','Consulting','Business Development','Administration']; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $jt): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?><option><?php echo e($jt); ?></option><?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                            </select>
+                        </div>
+                        <div class="field" id="regJobRoleSpecificField" style="display:none;">
+                            <label>Job Role</label>
+                            <select id="regJobRoleSpecific">
+                                <option value="">Select Job Role</option>
+                                <?php $__currentLoopData = ['IT Infrastructure','Infrastructure Engineer','System Administrator','Network Administrator','Network Engineer','IT Operations','IT Support','Helpdesk','Desktop Support','NOC Engineer','Data Center Engineer','IT Security','Cyber Security Analyst','Security Engineer','Security Operations Center','DevSecOps Engineer','IT Governance, Risk & Compliance (GRC)','Software Engineer','Software Developer','Full Stack Developer','Front-End Developer','Back-End Developer','Mobile Developer','Web Developer','Application Developer','Technical Lead','Engineering Manager','Enterprise Architect','Solution Architect','Technical Architect','Cloud Architect','Application Architect','Data Analyst','Business Intelligence (BI) Analyst','Data Engineer','Data Scientist','AI Engineer','Machine Learning Engineer','Analytics','ERP','ERP Basis','ERP Functional','ERP Consultant','Business Application','Cloud Engineer','Cloud Administrator','DevOps Engineer','Site Reliability Engineer (SRE)','Platform Engineer','Engineer','Database Administrator (DBA)','Database Engineer','Database Architect','IT Project','IT Governance','IT Compliance','IT Audit','IT Risk','Digital Transformation','Digital Innovation','Digital Technology','IT Transformation','IT Business Analyst','System Analyst','IT Business Solution','IT Product Owner','IT Product','QA Engineer','Software','IT Engineer','IT Automation Engineer','IT Quality Assurance']; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $jr): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?><option><?php echo e($jr); ?></option><?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                            </select>
+                        </div>
+                        <input type="hidden" name="job_role" id="regJobRoleFinal">
+                        <div class="field"><label>Company Name</label><input required name="company" placeholder="Company Name" /></div>
+                        <div class="field"><label>Business Email</label><input required type="email" name="email" placeholder="yourname@company.com" value="<?php echo e($email); ?>" /></div>
+                        <div class="field">
+                            <label>Mobile Phone</label>
+                            <div class="phone-wrapper" style="display:flex;align-items:stretch;gap:0;">
+                                <span class="phone-prefix" id="regPhonePrefix" style="display:flex;align-items:center;padding:12px 10px;background:rgba(255,255,255,.08);border:1px solid var(--line,#d1d5db);border-right:none;border-radius:10px 0 0 10px;font-size:14px;color:rgba(255,255,255,.45);white-space:nowrap;flex-shrink:0;transition:border-color .25s,box-shadow .25s,background .25s;">+62</span>
+                                <input required name="phone" placeholder="815-xxx-xxxx" class="phone-input" id="regPhoneInput" style="flex:1;border-radius:0 10px 10px 0;border-left:none;" oninput="updateRegPhonePrefix(this)">
+                            </div>
+                        </div>
+                        <div class="field">
+                            <label>Industry</label>
+                            <select name="industry" required>
+                                <option value="">Select Industry</option>
+                                <?php $__currentLoopData = ['AGRICULTURE, FORESTRY','CHEMICALS','CONSTRUCTION, PROPERTY & REAL ESTATE','DISTRIBUTION','EDUCATION','FINANCIAL SERVICES','FISHING & MARINE','FOREIGN SERVICES','GOVERNMENT SERVICES','HEALTHCARE','HIGH TECHNOLOGY','HOSPITALITY / TOURISM','MANUFACTURING','MEDIA','MINING & METALS','OIL & GAS','PROFESSIONAL & BUSINESS SERVICES','RETAIL, WHOLESALE','TELECOMMUNICATIONS','TRANSPORTATION','UTILITIES / PUBLIC SERVICES']; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $ind): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?><option><?php echo e($ind); ?></option><?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                            </select>
+                        </div>
+                        <div class="field">
+                            <label>How did you hear about this event?</label>
+                            <select name="referral_source" required>
+                                <option value="">Select one</option>
+                                <?php $__currentLoopData = ['LinkedIn','Instagram','Kompas Newspaper','Metrodata Website','Email','Metrodata Group Sales Representative / Colleague']; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $rs): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?><option><?php echo e($rs); ?></option><?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                            </select>
+                        </div>
+                        <div class="field">
+                            <label>Number of Employee</label>
+                            <select name="employees" required>
+                                <option value="">Select Number of Employee</option>
+                                <?php $__currentLoopData = ['1 – 50','51 – 200','201 – 500','501 – 1000','1000+']; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $emp): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?><option><?php echo e($emp); ?></option><?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                            </select>
+                        </div>
+                        <div class="field full gdpr-group">
+                            <label class="checkbox-label">
+                                <input type="checkbox" name="gdpr" required checked>
+                                <span>By submitting this form, I understand Metrodata will process my personal information in accordance with their <strong><a href="https://www.metrodata.co.id/privacy-policy" target="_blank">Privacy Notice</a></strong>. Additionally, I consent to my information being shared with <strong><a href="https://jovenindo.com/privacy-policy" target="_blank">Event Partners</a></strong> in accordance. I understand I may withdraw my consent or update my information at any time.</span>
+                            </label>
+                        </div>
+                        <input type="hidden" name="utm_source" id="reg_utm_source" value="">
+                        <input type="hidden" name="utm_medium" id="reg_utm_medium" value="">
+                        <input type="hidden" name="utm_campaign" id="reg_utm_campaign" value="">
+                        <input type="hidden" name="utm_content" id="reg_utm_content" value="">
+                        <div class="field full" style="margin-top:8px">
+                            <button type="submit" class="btn btn-submit">Submit Registration <span class="btn-arrow">→</span></button>
+                        </div>
+                    </form>
+                </div>
+            <?php endif; ?>
         <?php else: ?>
             <div style="text-align:center;padding:16px 0;margin-top:8px;border-top:1px solid rgba(255,255,255,0.06);">
                 <p style="margin:0;font-size:14px;color:#94a3b8;">This invitation link has been used.</p>
@@ -200,6 +288,117 @@ unset($__errorArgs, $__bag); ?>
 <footer>
     &copy; 2026 <strong>Metrodata Solution Day</strong> — Jakarta, 20 August 2026 &middot; Shangri-La Hotel
 </footer>
+
+
+<div id="inviteSuccessModal" style="display:none; position:fixed; inset:0; z-index:9999; align-items:center; justify-content:center; background:rgba(5,13,42,0.7); backdrop-filter:blur(8px); padding:16px;">
+  <div style="background:rgba(255,255,255,0.06); backdrop-filter:blur(12px); border:1px solid rgba(255,255,255,0.1); border-radius:20px; box-shadow:0 25px 60px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.08); width:100%; max-width:420px; overflow:hidden; animation:fadeInUp 0.35s ease-out;">
+    <div style="padding:36px 32px 28px; text-align:center;">
+      <div style="width:72px; height:72px; background:rgba(16,185,129,0.15); border-radius:20px; display:flex; align-items:center; justify-content:center; margin:0 auto 22px; border:1px solid rgba(16,185,129,0.2);">
+        <svg style="width:34px; height:34px; color:#10b981;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/>
+        </svg>
+      </div>
+      <h2 style="font-size:19px; font-weight:700; color:#e2e8f0; margin-bottom:6px; letter-spacing:-0.01em;">Registration Successful!</h2>
+      <p id="inviteNotifMessage" style="font-size:14px; color:#94a3b8; line-height:1.6; margin-bottom:16px;"></p>
+      <div style="background:rgba(255,183,74,0.1); border:1px solid rgba(255,183,74,0.25); border-radius:12px; padding:14px 16px; text-align:left; margin-bottom:22px;">
+        <p style="margin:0 0 4px; font-size:13px; font-weight:700; color:#fbbf24;"> Check your email</p>
+        <p style="margin:0; font-size:12.5px; color:#94a3b8; line-height:1.5;">If approved, you will receive an email containing your password to log in.</p>
+      </div>
+      <a href="<?php echo e(url('/')); ?>" style="display:block; text-align:center; padding:12px 0; background:linear-gradient(135deg,#ff3d6e,#e91e63); color:#fff; font-weight:700; font-size:14px; letter-spacing:0.03em; border:none; border-radius:999px; text-decoration:none; box-shadow:0 8px 24px rgba(233,30,99,0.35); transition:transform 0.25s,box-shadow 0.25s;">Back to Home</a>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── UTM Capture from URL ──
+(function() {
+    const params = new URLSearchParams(window.location.search);
+    ['utm_source', 'utm_medium', 'utm_campaign', 'utm_content'].forEach(function(name) {
+        const el = document.getElementById(name);
+        if (el && params.has(name)) el.value = params.get(name);
+    });
+    // Inline event registration form UTM fields
+    [['reg_utm_source','utm_source'],['reg_utm_medium','utm_medium'],['reg_utm_campaign','utm_campaign'],['reg_utm_content','utm_content']].forEach(function(pair) {
+        const el = document.getElementById(pair[0]);
+        if (el && params.has(pair[1])) el.value = params.get(pair[1]);
+    });
+})();
+
+// ── Mobile phone prefix logic (inline event registration form) ──
+function updateRegPhonePrefix(el) {
+    var v = el.value.replace(/[^0-9]/g, '').replace(/^0/, '');
+    el.value = v;
+    var p = el.parentNode.querySelector('.phone-prefix');
+    if (p) { if (v) { p.style.background = '#fff'; p.style.color = '#374151'; } else { p.style.background = 'rgba(255,255,255,.08)'; p.style.color = 'rgba(255,255,255,.45)'; } }
+}
+
+// ── Job Function / Job Title / Job Role logic (inline event registration form) ──
+(function() {
+    var sel = document.getElementById('regJobRoleSelector');
+    var field = document.getElementById('regJobRoleSpecificField');
+    var spec = document.getElementById('regJobRoleSpecific');
+    var final = document.getElementById('regJobRoleFinal');
+    if (!sel || !final) return;
+    function update() {
+        var title = sel.value || '';
+        var isIT = title === 'Information Technology';
+        if (field) field.style.display = isIT ? '' : 'none';
+        if (spec) { spec.required = isIT; if (!isIT) spec.value = ''; }
+        var specific = spec ? spec.value : '';
+        final.value = specific ? (title + ' - ' + specific) : title;
+    }
+    sel.addEventListener('change', update);
+    if (spec) spec.addEventListener('change', update);
+    update();
+})();
+
+// ── Inline event registration: AJAX submit + success modal ──
+document.getElementById('inviteRegForm')?.addEventListener('submit', async function (e) {
+    e.preventDefault();
+    var btn = this.querySelector('button[type="submit"]');
+    var origText = btn.innerHTML;
+    btn.disabled = true;
+    btn.textContent = 'Submitting...';
+    try {
+        var resp = await fetch(this.action, {
+            method: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': document.querySelector('input[name="_token"]').value,
+                'Accept': 'application/json',
+            },
+            body: new FormData(this),
+        });
+        var data = await resp.json();
+        if (resp.ok && data.success) {
+            document.getElementById('inviteNotifMessage').innerHTML = data.message || 'We have received your data. Please wait for confirmation from the admin via email.';
+            document.getElementById('inviteSuccessModal').style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+            this.reset();
+        } else {
+            var errs = data.errors || {};
+            var keys = Object.keys(errs);
+            alert(keys.length ? (errs[keys[0]][0] || 'Please complete the required information.') : 'Please complete the required information.');
+        }
+    } catch (err) {
+        // Non-JSON response (server redirect/hang) — fall back to native submit
+        this.submit();
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = origText;
+    }
+});
+
+function closeInviteSuccessModal() {
+    document.getElementById('inviteSuccessModal').style.display = 'none';
+    document.body.style.overflow = '';
+}
+document.addEventListener('click', function (e) {
+    if (e.target && e.target.id === 'inviteSuccessModal') closeInviteSuccessModal();
+});
+document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') closeInviteSuccessModal();
+});
+</script>
 </body>
 </html>
 <?php /**PATH /Users/mdrz/2026/MSD26/resources/views/workshop-invitation.blade.php ENDPATH**/ ?>

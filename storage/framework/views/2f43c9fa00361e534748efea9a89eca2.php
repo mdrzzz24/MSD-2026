@@ -162,8 +162,12 @@
                                                 <span class="text-[10px] text-gray-500"><?php echo e($r->client_remark); ?></span>
                                             <?php endif; ?>
                                             <span class="text-[9px] text-gray-400">
-                                                <?php echo e($r->client_remarked_at?->diffForHumans()); ?>
+                                                <?php if($r->client_remarked_at): ?>
+                                                    <?php echo e($r->client_remarked_at->copy()->addHours(7)->format('d M Y, H:i')); ?> · <?php echo e($r->client_remarked_at->diffForHumans()); ?>
 
+                                                <?php else: ?>
+                                                    —
+                                                <?php endif; ?>
                                             </span>
                                         </div>
                                     </td>

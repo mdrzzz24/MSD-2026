@@ -745,9 +745,9 @@ document.addEventListener('DOMContentLoaded', function() {
         <div class="field"><label>First Name</label><input required name="firstName" placeholder="First Name" /><span class="field-err" data-field="firstName"></span></div>
         <div class="field"><label>Last Name</label><input required name="lastName" placeholder="Last Name" /><span class="field-err" data-field="lastName"></span></div>
         <div class="field">
-          <label>Job Title</label>
+          <label>Job Function</label>
           <select name="job_title" required>
-            <option value="">Select Job Title</option>
+            <option value="">Select Job Function</option>
             <option>Intern</option>
             <option>Staff</option>
             <option>Supervisor</option>
@@ -763,9 +763,9 @@ document.addEventListener('DOMContentLoaded', function() {
           <span class="field-err" data-field="job_title"></span>
         </div>
         <div class="field">
-          <label>Job Role</label>
-          <select name="job_role" required>
-            <option value="">Select Job Role</option>
+          <label>Job Title</label>
+          <select id="jobRoleSelector" name="job_role_selector" required>
+            <option value="">Select Job Title</option>
             <option>Student</option>
             <option>Sales</option>
             <option>Pre-Sales / Solution Architect</option>
@@ -786,6 +786,86 @@ document.addEventListener('DOMContentLoaded', function() {
           </select>
           <span class="field-err" data-field="job_role"></span>
         </div>
+        <div class="field" id="jobRoleSpecificField" style="display:none;">
+          <label>Job Role</label>
+          <select id="jobRoleSpecific">
+            <option value="">Select Job Role</option>
+            <option>IT Infrastructure</option>
+            <option>Infrastructure Engineer</option>
+            <option>System Administrator</option>
+            <option>Network Administrator</option>
+            <option>Network Engineer</option>
+            <option>IT Operations</option>
+            <option>IT Support</option>
+            <option>Helpdesk</option>
+            <option>Desktop Support</option>
+            <option>NOC Engineer</option>
+            <option>Data Center Engineer</option>
+            <option>IT Security</option>
+            <option>Cyber Security Analyst</option>
+            <option>Security Engineer</option>
+            <option>Security Operations Center</option>
+            <option>DevSecOps Engineer</option>
+            <option>IT Governance, Risk &amp; Compliance (GRC)</option>
+            <option>Software Engineer</option>
+            <option>Software Developer</option>
+            <option>Full Stack Developer</option>
+            <option>Front-End Developer</option>
+            <option>Back-End Developer</option>
+            <option>Mobile Developer</option>
+            <option>Web Developer</option>
+            <option>Application Developer</option>
+            <option>Technical Lead</option>
+            <option>Engineering Manager</option>
+            <option>Enterprise Architect</option>
+            <option>Solution Architect</option>
+            <option>Technical Architect</option>
+            <option>Cloud Architect</option>
+            <option>Application Architect</option>
+            <option>Data Analyst</option>
+            <option>Business Intelligence (BI) Analyst</option>
+            <option>Data Engineer</option>
+            <option>Data Scientist</option>
+            <option>AI Engineer</option>
+            <option>Machine Learning Engineer</option>
+            <option>Analytics</option>
+            <option>ERP</option>
+            <option>ERP Basis</option>
+            <option>ERP Functional</option>
+            <option>ERP Consultant</option>
+            <option>Business Application</option>
+            <option>Cloud Engineer</option>
+            <option>Cloud Administrator</option>
+            <option>DevOps Engineer</option>
+            <option>Site Reliability Engineer (SRE)</option>
+            <option>Platform Engineer</option>
+            <option>Engineer</option>
+            <option>Database Administrator (DBA)</option>
+            <option>Database Engineer</option>
+            <option>Database Architect</option>
+            <option>IT Project</option>
+            <option>IT Governance</option>
+            <option>IT Compliance</option>
+            <option>IT Audit</option>
+            <option>IT Risk</option>
+            <option>Digital Transformation</option>
+            <option>Digital Innovation</option>
+            <option>Digital Technology</option>
+            <option>IT Transformation</option>
+            <option>IT Business Analyst</option>
+            <option>System Analyst</option>
+            <option>IT Business Solution</option>
+            <option>IT Product Owner</option>
+            <option>IT Product</option>
+            <option>QA Engineer</option>
+            <option>Software</option>
+            <option>IT Engineer</option>
+            <option>IT Automation Engineer</option>
+            <option>IT Quality Assurance</option>
+          </select>
+          <span class="field-err" data-field="job_role_specific"></span>
+        </div>
+        <input type="hidden" name="job_role" id="jobRoleFinal">
         <div class="field"><label>Company Name</label><input required name="company" placeholder="Company Name" /><span class="field-err" data-field="company"></span></div>
         <div class="field"><label>Business Email</label><input required type="email" name="email" placeholder="yourname@company.com" /><span class="field-err" data-field="email"></span><small style="color:#94a3b8;font-size:11px;"></small></div>
         <div class="field"><label>Mobile Phone</label><div class="phone-wrapper" style="display:flex;align-items:stretch;gap:0;"><span class="phone-prefix" id="phonePrefix1" style="display:flex;align-items:center;padding:12px 10px;background:rgba(255,255,255,.08);border:1px solid var(--line,#d1d5db);border-right:none;border-radius:10px 0 0 10px;font-size:14px;color:rgba(255,255,255,.45);white-space:nowrap;flex-shrink:0;transition:border-color .25s,box-shadow .25s,background .25s;">+62</span><input required name="phone" placeholder="815-xxx-xxxx" class="phone-input" id="phoneInput1" style="flex:1;border-radius:0 10px 10px 0;border-left:none;" oninput="updatePhonePrefix(this)" onfocus="this.parentNode.querySelector('.phone-prefix').style.borderColor='var(--pink,#e91e63)';this.parentNode.querySelector('.phone-prefix').style.boxShadow='0 0 0 3px rgba(233,30,99,.15)';this.parentNode.querySelector('.phone-prefix').style.background='rgba(255,255,255,.12)'" onblur="this.parentNode.querySelector('.phone-prefix').style.borderColor='';this.parentNode.querySelector('.phone-prefix').style.boxShadow='';updatePhonePrefix(this)" /></div><span class="field-err" data-field="phone"></span></div>
@@ -892,6 +972,41 @@ document.addEventListener('DOMContentLoaded',function(){var e=document.getElemen
 </div>
 
 <script src="{{ asset('js/main.js') }}?v=10"></script>
+<script>
+// Job Function / Job Title / Job Role logic:
+// - "Job Role" dropdown only appears when Job Title = "Information Technology"
+// - DB job_role = "{Job Title} - {Job Role}"
+(function() {
+  var jobTitleSelect = document.getElementById('jobRoleSelector');
+  var jobRoleField = document.getElementById('jobRoleSpecificField');
+  var jobRoleSelect = document.getElementById('jobRoleSpecific');
+  var jobRoleFinal = document.getElementById('jobRoleFinal');
+  var regForm = document.getElementById('regForm');
+
+  function updateJobRole() {
+    if (!jobTitleSelect || !jobRoleFinal) return;
+    var title = jobTitleSelect.value || '';
+    var isIT = title === 'Information Technology';
+
+    if (jobRoleField) jobRoleField.style.display = isIT ? '' : 'none';
+    if (jobRoleSelect) {
+      jobRoleSelect.required = isIT;
+      if (!isIT) jobRoleSelect.value = '';
+    }
+
+    // Read the specific role AFTER possible clearing (non-IT)
+    var specific = jobRoleSelect ? jobRoleSelect.value : '';
+    jobRoleFinal.value = specific ? (title + ' - ' + specific) : title;
+  }
+
+  if (jobTitleSelect) jobTitleSelect.addEventListener('change', updateJobRole);
+  if (jobRoleSelect) jobRoleSelect.addEventListener('change', updateJobRole);
+  if (regForm) regForm.addEventListener('reset', updateJobRole);
+
+  // Init (e.g., after a failed submit with old values restored)
+  updateJobRole();
+})();
+</script>
 <style>
 .field-err { display:block; font-size:12px; color:#ef4444; margin-top:2px; min-height:0; }
 .field-err:empty { display:none; }

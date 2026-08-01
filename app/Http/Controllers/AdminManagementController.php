@@ -4,8 +4,11 @@ namespace App\Http\Controllers;
 
 use App\Http\Controllers\Concerns\Exportable;
 use App\Models\Registrant;
+use App\Models\Track;
 use App\Models\User;
 use App\Models\UtmLink;
+use App\Models\Workshop;
+use App\Models\WorkshopInvitation;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -72,8 +75,8 @@ class AdminManagementController extends Controller
             'checked' => $unlinkedSources->sum('checked_in'),
         ];
 
-        // UTM Links — scope by user unless super_admin
-        $utmLinks = UtmLink::when($user->role !== 'super_admin', function ($q) use ($user) {
+        // UTM Links — event registration only (workshop UTM is separate); scope by user unless super_admin
+        $utmLinks = UtmLink::forEvent()->when($user->role !== 'super_admin', function ($q) use ($user) {
                 // If user belongs to a group, show all UTM links from the group
                 if ($user->group_id) {
                     $groupUserIds = User::where('group_id', $user->group_id)->pluck('id')->toArray();
@@ -149,6 +152,184 @@ class AdminManagementController extends Controller
         $utmLink->delete();
         return redirect()->route('admin.management.utm')
             ->with('success', "UTM Link <strong>{$name}</strong> deleted.");
+    }
+
+    // ── Workshop UTM Links (separate from event UTM, under Workshop menu) ──
+
+    public function workshopUtmLinks()
+    {
+        $user = Auth::user();
+        if (!$user->hasPermission('workshops') && !$user->hasPermission('workshop_registrants')) {
+            return redirect()->route('admin.dashboard')->with('error', 'You do not have permission to view workshop UTM links.');
+        }
+
+        $utmLinks = UtmLink::forWorkshop()->with('workshop')
+            ->when($user->role !== 'super_admin', function ($q) use ($user) {
+                // Own links + links created by any client (clients can see each other's links)
+                $clientIds = User::where('role', 'client')->pluck('id');
+                return $q->where(function ($sub) use ($user, $clientIds) {
+                    $sub->where('created_by', $user->id)
+                        ->orWhereIn('created_by', $clientIds);
+                });
+            })
+            ->latest()->get();
+        $workshops = Workshop::orderBy('name')->orderBy('title')->get();
+
+        // For the create/edit modal: choose custom slug (invitation) + track
+        $invitations = WorkshopInvitation::with(['workshop', 'track'])->get()->map(fn($i) => [
+            'id'          => $i->id,
+            'workshop_id' => $i->workshop_id,
+            'track_id'    => $i->track_id,
+            'slug'        => $i->slug,
+            'token'       => $i->token,
+            'is_active'   => $i->is_active,
+            'track_name'  => $i->track?->name,
+        ])->values();
+        $tracks = Track::with('workshop')->get()->map(fn($t) => [
+            'id'          => $t->id,
+            'workshop_id' => $t->workshop_id,
+            'name'        => $t->name,
+        ])->values();
+
+        return view('admin.workshops.utm-links', compact('utmLinks', 'workshops', 'invitations', 'tracks'));
+    }
+
+    public function exportWorkshopUtmLinks()
+    {
+        $user = Auth::user();
+        if (!$user->hasPermission('workshops') && !$user->hasPermission('workshop_registrants')) {
+            return redirect()->route('admin.dashboard')->with('error', 'You do not have permission to export workshop UTM links.');
+        }
+
+        $utmLinks = UtmLink::forWorkshop()->with('workshop')
+            ->when($user->role !== 'super_admin', function ($q) use ($user) {
+                // Same visibility as the page: own links + links created by any client
+                $clientIds = User::where('role', 'client')->pluck('id');
+                return $q->where(function ($sub) use ($user, $clientIds) {
+                    $sub->where('created_by', $user->id)
+                        ->orWhereIn('created_by', $clientIds);
+                });
+            })
+            ->latest()->get();
+
+        $headers = ['Name', 'Workshop', 'UTM Source', 'UTM Medium', 'UTM Campaign', 'UTM Content', 'Full URL', 'Created By', 'Registrations', 'Created At'];
+        $rows = $utmLinks->map(fn($l) => [
+            $l->name,
+            $l->workshop ? ($l->workshop->name ?: $l->workshop->title) : '',
+            $l->utm_source,
+            $l->utm_medium,
+            $l->utm_campaign,
+            $l->utm_content ?? '',
+            $l->full_url ?? $l->buildUrl(),
+            $l->creator?->name ?? '',
+            $l->workshopRegistrationsCount(),
+            $l->created_at?->copy()->addHours(7)->format('Y-m-d H:i') ?? '',
+        ])->toArray();
+
+        return $this->csvDownload($headers, $rows, 'workshop-utm-links-' . now()->format('YmdHis') . '.csv');
+    }
+
+    public function storeWorkshopUtmLink(Request $request)
+    {
+        $user = Auth::user();
+        if (!$user->hasPermission('workshops') && !$user->hasPermission('workshop_registrants')) {
+            return redirect()->route('admin.dashboard')->with('error', 'You do not have permission to manage workshop UTM links.');
+        }
+
+        $request->validate([
+            'name'         => ['required', 'string', 'max:255'],
+            'workshop_id'  => ['required', 'exists:workshops,id'],
+            'utm_source'   => ['required', 'string', 'max:100'],
+            'utm_medium'   => ['required', 'string', 'max:100'],
+            'utm_campaign' => ['required', 'string', 'max:100'],
+            'utm_content'  => ['nullable', 'string', 'max:100'],
+            'workshop_invitation_id' => ['nullable', 'integer', 'exists:workshop_invitations,id'],
+        ]);
+
+        // Resolve invitation defensively: must belong to the chosen workshop, else fall back to auto-detect
+        $workshopInvitationId = null;
+        if ($request->input('workshop_invitation_id')) {
+            $inv = WorkshopInvitation::find($request->input('workshop_invitation_id'));
+            if ($inv && $inv->workshop_id == $request->input('workshop_id')) {
+                $workshopInvitationId = $inv->id;
+            }
+        }
+
+        $link = UtmLink::create([
+            'name'                    => $request->input('name'),
+            'base_url'                => UtmLink::BASE_URL,
+            'target_type'             => 'workshop',
+            'workshop_id'             => $request->input('workshop_id'),
+            'workshop_invitation_id'  => $workshopInvitationId,
+            'utm_source'              => $request->input('utm_source'),
+            'utm_medium'              => $request->input('utm_medium'),
+            'utm_campaign'            => $request->input('utm_campaign'),
+            'utm_content'             => $request->input('utm_content'),
+            'created_by'              => Auth::id(),
+        ]);
+        $link->update(['full_url' => $link->buildUrl()]);
+
+        return back()->with('success', "Workshop UTM Link <strong>{$link->name}</strong> created successfully.");
+    }
+
+    public function updateWorkshopUtmLink(Request $request, UtmLink $utmLink)
+    {
+        $user = Auth::user();
+        if (!$user->hasPermission('workshops') && !$user->hasPermission('workshop_registrants')) {
+            return redirect()->route('admin.dashboard')->with('error', 'You do not have permission to manage workshop UTM links.');
+        }
+        if ($user->role !== 'super_admin' && $utmLink->created_by !== $user->id) {
+            return redirect()->route('admin.workshops.utm-links')->with('error', 'You can only edit your own workshop UTM links.');
+        }
+
+        $request->validate([
+            'name'         => ['required', 'string', 'max:255'],
+            'workshop_id'  => ['required', 'exists:workshops,id'],
+            'utm_source'   => ['required', 'string', 'max:100'],
+            'utm_medium'   => ['required', 'string', 'max:100'],
+            'utm_campaign' => ['required', 'string', 'max:100'],
+            'utm_content'  => ['nullable', 'string', 'max:100'],
+            'workshop_invitation_id' => ['nullable', 'integer', 'exists:workshop_invitations,id'],
+        ]);
+
+        // Resolve invitation defensively: must belong to the chosen workshop, else fall back to auto-detect
+        $workshopInvitationId = null;
+        if ($request->input('workshop_invitation_id')) {
+            $inv = WorkshopInvitation::find($request->input('workshop_invitation_id'));
+            if ($inv && $inv->workshop_id == $request->input('workshop_id')) {
+                $workshopInvitationId = $inv->id;
+            }
+        }
+
+        $utmLink->update([
+            'name'                    => $request->input('name'),
+            'base_url'                => UtmLink::BASE_URL,
+            'target_type'             => 'workshop',
+            'workshop_id'             => $request->input('workshop_id'),
+            'workshop_invitation_id'  => $workshopInvitationId,
+            'utm_source'              => $request->input('utm_source'),
+            'utm_medium'              => $request->input('utm_medium'),
+            'utm_campaign'            => $request->input('utm_campaign'),
+            'utm_content'             => $request->input('utm_content'),
+        ]);
+        $utmLink->update(['full_url' => $utmLink->buildUrl()]);
+
+        return back()->with('success', "Workshop UTM Link <strong>{$utmLink->name}</strong> updated.");
+    }
+
+    public function destroyWorkshopUtmLink(UtmLink $utmLink)
+    {
+        $user = Auth::user();
+        if (!$user->hasPermission('workshops') && !$user->hasPermission('workshop_registrants')) {
+            return redirect()->route('admin.dashboard')->with('error', 'You do not have permission to manage workshop UTM links.');
+        }
+        if ($user->role !== 'super_admin' && $utmLink->created_by !== $user->id) {
+            return redirect()->route('admin.workshops.utm-links')->with('error', 'You can only delete your own workshop UTM links.');
+        }
+
+        $name = $utmLink->name;
+        $utmLink->delete();
+        return back()->with('success', "Workshop UTM Link <strong>{$name}</strong> deleted.");
     }
 
     // ── QR Codes (list all approved with QR) ──

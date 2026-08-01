@@ -156,8 +156,23 @@ class Registrant extends Authenticatable
     public function workshops()
     {
         return $this->belongsToMany(Workshop::class, 'registrant_workshop')
-                    ->withPivot(['status', 'admin_notes', 'processed_by', 'processed_at', 'track_id'])
+                    ->withPivot(['status', 'admin_notes', 'processed_by', 'processed_at', 'track_id',
+                                 'utm_source', 'utm_medium', 'utm_campaign', 'utm_content'])
                     ->withTimestamps();
+    }
+
+    /**
+     * UTM values to store on the workshop pivot when a registration is created.
+     * $override wins when provided (e.g. from a workshop invitation link).
+     */
+    public function utmForPivot(array $override = []): array
+    {
+        return array_merge([
+            'utm_source'   => $this->utm_source,
+            'utm_medium'   => $this->utm_medium,
+            'utm_campaign' => $this->utm_campaign,
+            'utm_content'  => $this->utm_content,
+        ], $override);
     }
 
     /**

@@ -20,7 +20,7 @@
         <h1 class="text-2xl font-bold text-gray-900 mb-2">Pendaftaran Berhasil!</h1>
         <p class="text-gray-500 mb-6"><?php echo session('success') ?: 'Data Anda telah kami terima. Silakan tunggu konfirmasi dari admin melalui email.'; ?></p>
         <div class="bg-amber-50 border border-amber-200 rounded-xl p-4 text-sm text-amber-700 mb-6">
-            <strong>✉️ Cek email Anda</strong><br>
+            <strong> Cek email Anda</strong><br>
             Jika disetujui, Anda akan menerima email berisi password untuk login.
         </div>
         <a href="<?php echo e(url('/')); ?>" class="inline-flex items-center gap-2 text-indigo-600 hover:text-indigo-800 font-medium text-sm">

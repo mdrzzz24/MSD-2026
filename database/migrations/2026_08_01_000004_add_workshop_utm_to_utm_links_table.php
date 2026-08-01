@@ -1,0 +1,34 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    public function up(): void
+    {
+        // Two separate UTM scopes: 'event' (registration event) and 'workshop' (workshop invitation)
+        Schema::table('utm_links', function (Blueprint $table) {
+            if (!Schema::hasColumn('utm_links', 'target_type')) {
+                $table->string('target_type', 20)->default('event')->after('base_url');
+            }
+            if (!Schema::hasColumn('utm_links', 'workshop_id')) {
+                $table->foreignId('workshop_id')->nullable()->after('target_type')->constrained()->cascadeOnDelete();
+            }
+        });
+    }
+
+    public function down(): void
+    {
+        Schema::table('utm_links', function (Blueprint $table) {
+            if (Schema::hasColumn('utm_links', 'workshop_id')) {
+                $table->dropForeign(['workshop_id']);
+                $table->dropColumn('workshop_id');
+            }
+            if (Schema::hasColumn('utm_links', 'target_type')) {
+                $table->dropColumn('target_type');
+            }
+        });
+    }
+};

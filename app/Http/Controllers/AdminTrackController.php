@@ -120,7 +120,7 @@ class AdminTrackController extends Controller
                         'status' => 'approved', 'processed_by' => Auth::id(), 'processed_at' => now(),
                     ]);
                 } else {
-                    $registrant->workshops()->attach($workshopId, [
+                    $registrant->workshops()->attach($workshopId, $registrant->utmForPivot() + [
                         'status' => 'approved', 'processed_by' => Auth::id(), 'processed_at' => now(),
                     ]);
                 }
@@ -244,7 +244,7 @@ class AdminTrackController extends Controller
                         'status' => 'rejected', 'admin_notes' => $adminNotes, 'processed_by' => Auth::id(), 'processed_at' => now(),
                     ]);
                 } else {
-                    $registrant->workshops()->attach($workshopId, [
+                    $registrant->workshops()->attach($workshopId, $registrant->utmForPivot() + [
                         'status' => 'rejected', 'admin_notes' => $adminNotes, 'processed_by' => Auth::id(), 'processed_at' => now(),
                     ]);
                 }

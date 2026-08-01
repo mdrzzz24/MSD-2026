@@ -234,7 +234,7 @@
                         </div>
                     </div>
                     <div class="flex items-end gap-1.5 h-36 relative" id="realtime-chart">
-                        <?php $__currentLoopData = $chartData; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $bar): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                        <?php $__currentLoopData = array_reverse($chartData); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $bar): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                             <div class="flex-1 flex flex-col items-center gap-1 group relative chart-bar"
                                  data-date="<?php echo e($bar['date']); ?>"
                                  data-total="<?php echo e($bar['total']); ?>"
@@ -327,7 +327,7 @@
                 <div class="flex items-center justify-between px-5 py-4 border-b border-gray-100">
                     <div>
                         <h3 class="text-sm font-bold text-gray-900">Registrations Per Day</h3>
-                        <p class="text-xs text-gray-500">Last 14 days — detailed breakdown</p>
+                        <p class="text-xs text-gray-500">Last <?php echo e($dailyTotalDays); ?> days — detailed breakdown</p>
                     </div>
                     <div class="flex items-center gap-3 text-xs text-gray-500">
                         <span class="flex items-center gap-1.5">
@@ -356,7 +356,7 @@
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-gray-50" id="daily-table-body">
-                            <?php $__currentLoopData = $chartData; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $row): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                            <?php $__currentLoopData = $dailyPage; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $row): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                             <?php
                                 $pendingPct = $row['total'] > 0 ? round($row['pending'] / $row['total'] * 100) : 0;
                                 $isHighPending = $pendingPct >= 50 && $row['pending'] > 0;
@@ -416,7 +416,7 @@
                                 <td class="px-5 py-3">
                                     <div class="flex items-center gap-0.5 h-4 w-full max-w-[80px] ml-auto mr-auto">
                                         <?php
-                                            $maxRow = max($maxDaily, 1);
+                                            $maxRow = max($dailyMax, 1);
                                             $approvedH = max(2, $row['approved'] / $maxRow * 16);
                                             $pendingH = max(2, $row['pending'] / $maxRow * 16);
                                             $rejectedH = max(2, $row['rejected'] / $maxRow * 16);
@@ -441,24 +441,30 @@
                     </table>
                 </div>
                 
-                <div class="bg-gray-50/50 border-t border-gray-100 px-5 py-3 flex items-center justify-between text-xs text-gray-500">
-                    <span>Showing <strong>14</strong> days of data</span>
-                    <span class="font-medium text-gray-700">
-                        Total:
-                        <?php
-                            $grandTotal = collect($chartData)->sum('total');
-                            $grandApproved = collect($chartData)->sum('approved');
-                            $grandPending = collect($chartData)->sum('pending');
-                            $grandRejected = collect($chartData)->sum('rejected');
-                        ?>
-                        <span class="text-gray-900 font-bold"><?php echo e($grandTotal); ?></span> registrations
-                        &middot;
-                        <span class="text-emerald-600"><?php echo e($grandApproved); ?></span> approved
-                        &middot;
-                        <span class="text-indigo-600"><?php echo e($grandPending); ?></span> pending
-                        &middot;
-                        <span class="text-red-600"><?php echo e($grandRejected); ?></span> rejected
+                <div class="bg-gray-50/50 border-t border-gray-100 px-5 py-3 flex flex-col lg:flex-row items-center justify-between gap-3 text-xs text-gray-500">
+                    <span class="flex flex-wrap items-center gap-x-4 gap-y-1">
+                        <span>Showing <strong id="dailyFooterRange"><?php echo e($dailyPagination->total() > 0 ? $dailyPagination->firstItem() . '–' . $dailyPagination->lastItem() : '0–0'); ?></strong> of <strong id="dailyFooterTotalDays"><?php echo e($dailyPagination->total()); ?></strong> days</span>
+                        <span class="font-medium text-gray-700">
+                            Total:
+                            <?php
+                                $grandTotal = collect($dailyData)->sum('total');
+                                $grandApproved = collect($dailyData)->sum('approved');
+                                $grandPending = collect($dailyData)->sum('pending');
+                                $grandRejected = collect($dailyData)->sum('rejected');
+                            ?>
+                            <span class="text-gray-900 font-bold" id="dailyFooterTotal"><?php echo e($grandTotal); ?></span> registrations
+                            &middot;
+                            <span class="text-emerald-600" id="dailyFooterApproved"><?php echo e($grandApproved); ?></span> approved
+                            &middot;
+                            <span class="text-indigo-600" id="dailyFooterPending"><?php echo e($grandPending); ?></span> pending
+                            &middot;
+                            <span class="text-red-600" id="dailyFooterRejected"><?php echo e($grandRejected); ?></span> rejected
+                        </span>
                     </span>
+                    <div class="flex items-center gap-1">
+                        <?php echo e($dailyPagination->links()); ?>
+
+                    </div>
                 </div>
             </div>
 
@@ -850,7 +856,8 @@
         // ── Update chart bars ──
         if (data.maxDaily > 0 && data.chartData) {
             var bars = document.querySelectorAll('#realtime-chart .chart-bar');
-            data.chartData.forEach(function(item, i) {
+            // Chart renders oldest → newest (newest on the right), so reverse for index mapping
+            data.chartData.slice().reverse().forEach(function(item, i) {
                 if (bars[i]) {
                     // Update data attributes for tooltip
                     bars[i].setAttribute('data-date', item.date);
@@ -956,11 +963,11 @@
         }
 
         // ── Update daily table ──
-        if (data.chartData && data.maxDaily) {
+        if (data.dailyData && data.dailyMax) {
             var tableBody = document.getElementById('daily-table-body');
             if (tableBody) {
-                var maxRow = Math.max(data.maxDaily, 1);
-                data.chartData.forEach(function(item) {
+                var maxRow = Math.max(data.dailyMax, 1);
+                data.dailyData.forEach(function(item) {
                     var row = tableBody.querySelector('.daily-row[data-date="' + item.date + '"]');
                     if (!row) return;
 
@@ -1039,17 +1046,17 @@
                     row.classList.add('realtime-updated');
                 });
 
-                // Update footer summary
-                var dailyFooter = tableBody.closest('.rounded-2xl')?.querySelector('.border-t');
-                if (dailyFooter) {
-                    var grandTotal = data.chartData.reduce(function(sum, d) { return sum + d.total; }, 0);
-                    var grandApproved = data.chartData.reduce(function(sum, d) { return sum + d.approved; }, 0);
-                    var grandPending = data.chartData.reduce(function(sum, d) { return sum + d.pending; }, 0);
-                    var grandRejected = data.chartData.reduce(function(sum, d) { return sum + d.rejected; }, 0);
-                    dailyFooter.innerHTML = '<div class="bg-gray-50/50 border-t border-gray-100 px-5 py-3 flex items-center justify-between text-xs text-gray-500">'
-                        + '<span>Showing <strong>14</strong> days of data</span>'
-                        + '<span class="font-medium text-gray-700">Total: <span class="text-gray-900 font-bold">' + grandTotal + '</span> registrations &middot; <span class="text-emerald-600">' + grandApproved + '</span> approved &middot; <span class="text-indigo-600">' + grandPending + '</span> pending &middot; <span class="text-red-600">' + grandRejected + '</span> rejected</span>'
-                        + '</div>';
+                // Update footer summary (totals only — preserve pagination links)
+                var el = function(id) { return document.getElementById(id); };
+                if (el('dailyFooterTotal')) {
+                    var grandTotal = data.dailyData.reduce(function(sum, d) { return sum + d.total; }, 0);
+                    var grandApproved = data.dailyData.reduce(function(sum, d) { return sum + d.approved; }, 0);
+                    var grandPending = data.dailyData.reduce(function(sum, d) { return sum + d.pending; }, 0);
+                    var grandRejected = data.dailyData.reduce(function(sum, d) { return sum + d.rejected; }, 0);
+                    el('dailyFooterTotal').textContent = grandTotal;
+                    el('dailyFooterApproved').textContent = grandApproved;
+                    el('dailyFooterPending').textContent = grandPending;
+                    el('dailyFooterRejected').textContent = grandRejected;
                 }
             }
         }
@@ -1258,7 +1265,7 @@ function openDailyDetail(date, status) {
                         + '</div>'
                         + '<div class="text-right flex-shrink-0 flex flex-col items-end gap-1">'
                         + '<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold ' + statusClass + '">' + statusText + '</span>'
-                        + (r.has_remark ? '<div class="text-right flex flex-col items-end"><span class="text-[10px] ' + (r.remark_action === 'approve' ? 'text-emerald-600' : 'text-red-600') + '">' + (r.remark_action === 'approve' ? '✅ Approve' : '❌ Reject') + (r.remark_by ? ' by ' + escapeHtml(r.remark_by) : '') + '</span>' + (r.remark ? '<span class="text-[10px] text-gray-500 max-w-[160px] truncate" title="' + escapeHtml(r.remark) + '">' + escapeHtml(r.remark) + '</span>' : '') + '</div>' : '')
+                        + (r.has_remark ? '<div class="text-right flex flex-col items-end"><span class="text-[10px] ' + (r.remark_action === 'approve' ? 'text-emerald-600' : 'text-red-600') + '">' + (r.remark_action === 'approve' ? '✅ Approve' : '❌ Reject') + (r.remark_by ? ' by ' + escapeHtml(r.remark_by) : '') + '</span>' + (r.remark ? '<span class="text-[10px] text-gray-500 max-w-[160px] truncate" title="' + escapeHtml(r.remark) + '">' + escapeHtml(r.remark) + '</span>' : '') + (r.remark_at ? '<span class="text-[9px] text-gray-400">' + escapeHtml(r.remark_at) + '</span>' : '') + '</div>' : '')
                         + (r.status === 'pending' ? '<div class="flex items-center gap-1 mt-1.5">'
                             + (isClient
                                 ? '<span class="text-[9px] font-semibold text-gray-400 uppercase tracking-wider mr-0.5">Must be:</span>'
@@ -1417,6 +1424,47 @@ document.addEventListener('keydown', function(e) {
         }
     }
 });
+
+// ── AJAX pagination for "Registrations Per Day" table (keep scroll position) ──
+(function() {
+    var tableBody = document.getElementById('daily-table-body');
+    if (!tableBody) return;
+
+    var card = tableBody.closest('.rounded-2xl');
+    if (!card) return;
+
+    card.addEventListener('click', function(e) {
+        var link = e.target.closest('a[href*="page="]');
+        if (!link) return;
+
+        e.preventDefault();
+        var url = link.getAttribute('href');
+
+        fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+            .then(function(r) { return r.text(); })
+            .then(function(html) {
+                var doc = new DOMParser().parseFromString(html, 'text/html');
+                var newBody = doc.getElementById('daily-table-body');
+                var newCard = newBody ? newBody.closest('.rounded-2xl') : null;
+                var newFooter = newCard ? newCard.querySelector('.border-t') : null;
+                var currentFooter = card.querySelector('.border-t');
+
+                if (newBody) {
+                    tableBody.innerHTML = newBody.innerHTML;
+                    if (newFooter && currentFooter) currentFooter.innerHTML = newFooter.innerHTML;
+                    window.history.pushState({}, '', url);
+                }
+            })
+            .catch(function() {
+                window.location.href = url;
+            });
+    });
+
+    // Make back/forward buttons work after AJAX navigation
+    window.addEventListener('popstate', function() {
+        window.location.reload();
+    });
+})();
 </script>
 
 </body>

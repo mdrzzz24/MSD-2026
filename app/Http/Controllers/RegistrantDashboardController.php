@@ -119,7 +119,7 @@ class RegistrantDashboardController extends Controller
             }
         }
 
-        $registrant->workshops()->attach($workshop->id, ['status' => 'pending']);
+        $registrant->workshops()->attach($workshop->id, $registrant->utmForPivot() + ['status' => 'pending']);
 
         return back()->with('success', "Successfully registered for workshop <strong>" . ($workshop->name ?: $workshop->title) . "</strong>. Waiting for admin approval.");
     }
@@ -225,7 +225,7 @@ class RegistrantDashboardController extends Controller
         if ($workshopId) {
             $existW = $registrant->workshops()->where('workshop_id', $workshopId)->first();
             if (!$existW) {
-                $registrant->workshops()->attach($workshopId, ['status' => 'pending']);
+                $registrant->workshops()->attach($workshopId, $registrant->utmForPivot() + ['status' => 'pending']);
             }
         }
 

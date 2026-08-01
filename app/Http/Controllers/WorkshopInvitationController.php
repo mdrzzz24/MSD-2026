@@ -18,13 +18,18 @@ class WorkshopInvitationController extends Controller
      */
     public function show($token)
     {
-        $invitation = WorkshopInvitation::where('token', $token)
+        $invitation = WorkshopInvitation::where(function ($q) use ($token) {
+                $q->where('token', $token)->orWhere('slug', $token);
+            })
             ->with(['workshop.agendaItems.speakers', 'track.speakers'])
             ->firstOrFail();
 
         $workshop = $invitation->workshop;
         $track = $invitation->track;
         $email = old('email', request('email', $invitation->email ?? ''));
+
+        // Whether to show the inline event registration form (came from an unregistered email submission)
+        $needRegistration = request()->has('need_registration');
 
         // Determine which speakers to show
         $speakers = $track?->speakers ?? $workshop->agendaItems->first()?->speakers ?? collect();
@@ -55,7 +60,7 @@ class WorkshopInvitationController extends Controller
             }
         }
 
-        return view('workshop-invitation', compact('workshop', 'track', 'invitation', 'email', 'registrationStatus', 'speakers'));
+        return view('workshop-invitation', compact('workshop', 'track', 'invitation', 'email', 'registrationStatus', 'speakers', 'needRegistration'));
     }
 
     /**
@@ -63,7 +68,9 @@ class WorkshopInvitationController extends Controller
      */
     public function register(Request $request, $token)
     {
-        $invitation = WorkshopInvitation::where('token', $token)
+        $invitation = WorkshopInvitation::where(function ($q) use ($token) {
+                $q->where('token', $token)->orWhere('slug', $token);
+            })
             ->with(['workshop', 'track'])
             ->firstOrFail();
 
@@ -84,12 +91,34 @@ class WorkshopInvitationController extends Controller
         // Find registrant by email
         $registrant = Registrant::where('email', $email)->first();
 
-        if (!$registrant) {
-            // Store invitation token in session so we can auto-register after event registration
-            session(['pending_workshop_invitation' => $token]);
+        // Capture UTM attribution from the invitation link (only fills empty fields)
+        if ($registrant) {
+            $utmFill = [];
+            if (!$registrant->utm_source)   $utmFill['utm_source']   = $request->input('utm_source');
+            if (!$registrant->utm_medium)   $utmFill['utm_medium']   = $request->input('utm_medium');
+            if (!$registrant->utm_campaign) $utmFill['utm_campaign'] = $request->input('utm_campaign');
+            if ($utmFill) {
+                $registrant->update($utmFill);
+            }
+        }
 
-            return redirect()->route('home1')
-                ->with('info', 'Your email is not registered for the event. Please complete the event registration form below first. After that, you will be automatically registered for the workshop.');
+        if (!$registrant) {
+            // Store invitation token + UTM in session so we can auto-register after event registration
+            session([
+                'pending_workshop_invitation' => $token,
+                'pending_workshop_utm' => array_filter($request->only(['utm_source', 'utm_medium', 'utm_campaign', 'utm_content']), fn($v) => !is_null($v) && $v !== ''),
+            ]);
+
+            // Stay on the invitation page — show the event registration form inline (no redirect to home)
+            $params = ['email' => $email, 'need_registration' => 1];
+            foreach (['utm_source', 'utm_medium', 'utm_campaign', 'utm_content'] as $k) {
+                if ($request->filled($k)) {
+                    $params[$k] = $request->input($k);
+                }
+            }
+
+            return redirect(route('workshop.invitation', $token) . '?' . http_build_query($params))
+                ->with('info', 'Your email is not registered for the event yet. Complete the event registration form below — after that, you will be automatically registered for this workshop.');
         }
 
         // Check if registrant is approved (skip if workshop bypasses approval)
@@ -127,7 +156,7 @@ class WorkshopInvitationController extends Controller
             }
 
             // Also sync to workshop-level pivot with track_id
-            $this->syncWorkshopRegistration($registrant, $workshop, 'pending', $track->id);
+            $this->syncWorkshopRegistration($registrant, $workshop, 'pending', $track->id, $this->utmOverride($request));
 
             $invitation->incrementUse();
             return redirect($redirectUrl)->with('success', 'Successfully registered. Waiting for admin approval.');
@@ -197,28 +226,36 @@ class WorkshopInvitationController extends Controller
         }
 
         // Register the registrant for the workshop
-        $registrant->workshops()->attach($workshop->id, ['status' => 'pending']);
+        $registrant->workshops()->attach($workshop->id, $registrant->utmForPivot($this->utmOverride($request)) + ['status' => 'pending']);
         $invitation->incrementUse();
 
         return redirect($redirectUrl)->with('success', 'Successfully registered for the workshop. Waiting for admin approval.');
     }
 
     /**
+     * Extract non-empty UTM params from the request (workshop invitation link).
+     */
+    private function utmOverride(Request $request): array
+    {
+        return array_filter($request->only(['utm_source', 'utm_medium', 'utm_campaign', 'utm_content']), fn($v) => !is_null($v) && $v !== '');
+    }
+
+    /**
      * Sync workshop-level registration pivot.
      */
-    private function syncWorkshopRegistration(Registrant $registrant, Workshop $workshop, string $status, ?int $trackId = null): void
+    private function syncWorkshopRegistration(Registrant $registrant, Workshop $workshop, string $status, ?int $trackId = null, array $utm = []): void
     {
         $existing = $registrant->workshops()->where('workshop_id', $workshop->id)->first();
         if ($existing) {
-            $registrant->workshops()->updateExistingPivot($workshop->id, [
+            $registrant->workshops()->updateExistingPivot($workshop->id, array_merge([
                 'status' => $status,
                 'track_id' => $trackId ?? $existing->pivot->track_id,
-            ]);
+            ], $utm));
         } else {
-            $registrant->workshops()->attach($workshop->id, [
+            $registrant->workshops()->attach($workshop->id, array_merge([
                 'status' => $status,
                 'track_id' => $trackId,
-            ]);
+            ], $utm));
         }
     }
 
@@ -232,9 +269,11 @@ class WorkshopInvitationController extends Controller
         }
 
         $request->validate([
-            'email'    => ['nullable', 'email', 'max:255'],
-            'max_uses' => ['nullable', 'integer', 'min:0'],
-            'track_id' => ['nullable', 'exists:tracks,id'],
+            'link_type' => ['required', 'in:random,custom'],
+            'slug'      => ['nullable', 'string', 'max:120'],
+            'email'     => ['nullable', 'email', 'max:255'],
+            'max_uses'  => ['nullable', 'integer', 'min:0'],
+            'track_id'  => ['nullable', 'exists:tracks,id'],
         ]);
 
         // Verify track belongs to this workshop
@@ -245,19 +284,33 @@ class WorkshopInvitationController extends Controller
             }
         }
 
+        // Custom slug link (optional) — default is the random token
+        $slug = null;
+        if ($request->input('link_type') === 'custom') {
+            $slug = Str::slug($request->input('slug', ''));
+            if ($slug === '') {
+                return back()->with('error', 'Custom slug is required for a custom link.');
+            }
+            if (WorkshopInvitation::where('slug', $slug)->exists()) {
+                return back()->with('error', "Custom link '/invitation/workshop/{$slug}' already exists. Please use a different slug.");
+            }
+        }
+
         $invitation = WorkshopInvitation::create([
             'workshop_id' => $workshop->id,
             'track_id'    => $request->input('track_id'),
             'email'       => $request->input('email'),
             'max_uses'    => $request->input('max_uses', 0),
             'is_active'   => true,
+            'slug'        => $slug,
         ]);
 
-        $link = route('workshop.invitation', $invitation->token);
+        $link = $invitation->invitation_url;
         $trackName = $invitation->track?->name;
         $label = $trackName ? " ({$trackName})" : '';
+        $typeLabel = $slug ? 'Custom' : 'Random';
 
-        return back()->with('success', "Invitation link{$label} generated: <a href=\"{$link}\" target=\"_blank\" style=\"color:#4f46e5;font-weight:600;text-decoration:underline;\">{$link}</a>");
+        return back()->with('success', "{$typeLabel} invitation link{$label} generated: <a href=\"{$link}\" target=\"_blank\" style=\"color:#4f46e5;font-weight:600;text-decoration:underline;\">{$link}</a>");
     }
 
     /**
@@ -270,7 +323,25 @@ class WorkshopInvitationController extends Controller
         }
 
         $invitations = $workshop->invitations()->with('track')->latest()->get();
-        return view('admin.workshops.invitations', compact('workshop', 'invitations'));
+        $tracks = $workshop->tracks()->get();
+        $utmLinks = \App\Models\UtmLink::forWorkshop()->where('workshop_id', $workshop->id)->latest()->get();
+
+        // Lightweight JSON data for the UTM modal (invitation/slug + track pickers)
+        $wsInvitationData = $invitations->map(fn($i) => [
+            'id'          => $i->id,
+            'workshop_id' => $i->workshop_id,
+            'track_id'    => $i->track_id,
+            'slug'        => $i->slug,
+            'token'       => $i->token,
+            'track_name'  => $i->track?->name,
+        ])->values();
+        $wsTrackData = $tracks->map(fn($t) => [
+            'id'          => $t->id,
+            'workshop_id' => $t->workshop_id,
+            'name'        => $t->name,
+        ])->values();
+
+        return view('admin.workshops.invitations', compact('workshop', 'invitations', 'tracks', 'utmLinks', 'wsInvitationData', 'wsTrackData'));
     }
 
     /**

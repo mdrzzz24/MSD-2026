@@ -251,6 +251,13 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::post('/tracks/{track}/toggle', [AdminTrackController::class, 'toggle'])->name('tracks.toggle');
     });
 
+    // ── Workshop UTM Links (separate from event UTM) — accessible by admin & client ──
+    Route::get('/workshops/utm-links', [App\Http\Controllers\AdminManagementController::class, 'workshopUtmLinks'])->name('workshops.utm-links');
+    Route::get('/workshops/utm-links/export', [App\Http\Controllers\AdminManagementController::class, 'exportWorkshopUtmLinks'])->name('workshops.utm-links.export');
+    Route::post('/workshops/utm-links', [App\Http\Controllers\AdminManagementController::class, 'storeWorkshopUtmLink'])->name('workshops.utm-links.store');
+    Route::put('/workshops/utm-links/{utmLink}', [App\Http\Controllers\AdminManagementController::class, 'updateWorkshopUtmLink'])->name('workshops.utm-links.update');
+    Route::delete('/workshops/utm-links/{utmLink}', [App\Http\Controllers\AdminManagementController::class, 'destroyWorkshopUtmLink'])->name('workshops.utm-links.destroy');
+
     // ── Agenda QR Scan — accessible by users with agenda permission ──
     Route::get('/agenda/scan', [AdminAgendaController::class, 'scanIndex'])->name('agenda.scan-index');
     Route::get('/agenda/{agendum}/scan', [AdminAgendaController::class, 'scan'])->name('agenda.scan');

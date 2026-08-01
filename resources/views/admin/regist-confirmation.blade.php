@@ -159,7 +159,11 @@
                                                 <span class="text-[10px] text-gray-500">{{ $r->client_remark }}</span>
                                             @endif
                                             <span class="text-[9px] text-gray-400">
-                                                {{ $r->client_remarked_at?->diffForHumans() }}
+                                                @if ($r->client_remarked_at)
+                                                    {{ $r->client_remarked_at->copy()->addHours(7)->format('d M Y, H:i') }} · {{ $r->client_remarked_at->diffForHumans() }}
+                                                @else
+                                                    —
+                                                @endif
                                             </span>
                                         </div>
                                     </td>

@@ -11,6 +11,7 @@ use App\Models\User;
 use App\Models\Workshop;
 use App\Services\EmailService;
 use Illuminate\Http\Request;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
@@ -40,6 +41,13 @@ class AdminController extends Controller
             'timeAgo' => $r->created_at->diffForHumans(),
         ]);
 
+        // Daily history window: from the oldest registrant up to today (capped at 365 days)
+        $oldestTimestamp = Registrant::orderBy('created_at')->value('created_at');
+        $oldestDay = $oldestTimestamp
+            ? \Carbon\Carbon::parse($oldestTimestamp)->startOfDay()
+            : now()->startOfDay();
+        $dailyTotalDays = max(1, min(365, (int) abs(now()->startOfDay()->diffInDays($oldestDay)) + 1));
+
         $dailyStats = Registrant::select(
             DB::raw('DATE(created_at) as date'),
             DB::raw('COUNT(*) as total'),
@@ -47,7 +55,7 @@ class AdminController extends Controller
             DB::raw("SUM(CASE WHEN status = 'pending' THEN 1 ELSE 0 END) as pending_count"),
             DB::raw("SUM(CASE WHEN status = 'rejected' THEN 1 ELSE 0 END) as rejected_count")
         )
-        ->where('created_at', '>=', now()->subDays(14))
+        ->where('created_at', '>=', now()->subDays($dailyTotalDays - 1))
         ->groupBy('date')
         ->orderBy('date')
         ->get()
@@ -76,6 +84,30 @@ class AdminController extends Controller
         $chartData = array_reverse($chartData); // newest first
         $maxDaily = max($maxDaily, 1);
 
+        // Daily breakdown for the paginated "Registrations Per Day" table
+        $dailyData = [];
+        $dailyMax = 0;
+        for ($i = $dailyTotalDays - 1; $i >= 0; $i--) {
+            $date = now()->subDays($i)->format('Y-m-d');
+            $day = now()->subDays($i)->format('D');
+            $stats = $dailyStats->get($date);
+            $count = $stats ? (int) $stats->total : 0;
+            $approvedCount = $stats ? (int) $stats->approved_count : 0;
+            $pendingCount = $stats ? (int) $stats->pending_count : 0;
+            $rejectedCount = $stats ? (int) $stats->rejected_count : 0;
+            $dailyData[] = [
+                'day'      => $day,
+                'date'     => $date,
+                'total'    => $count,
+                'approved' => $approvedCount,
+                'pending'  => $pendingCount,
+                'rejected' => $rejectedCount,
+            ];
+            if ($count > $dailyMax) $dailyMax = $count;
+        }
+        $dailyData = array_reverse($dailyData); // newest first
+        $dailyMax = max($dailyMax, 1);
+
         $workshopCount = Workshop::count();
         $workshopRegistrations = DB::table('registrant_workshop')->count();
 
@@ -103,6 +135,7 @@ class AdminController extends Controller
         return compact(
             'total', 'pending', 'approved', 'rejected',
             'recentRegistrants', 'chartData', 'maxDaily',
+            'dailyData', 'dailyMax', 'dailyTotalDays',
             'workshopCount', 'workshopRegistrations',
             'todayCount', 'trend', 'stalePending',
             'checkedInToday', 'checkedInTotal', 'topSources',
@@ -113,9 +146,25 @@ class AdminController extends Controller
     /**
      * Show the admin dashboard with registrant statistics & overview.
      */
-    public function dashboard()
+    public function dashboard(Request $request)
     {
         $data = $this->getDashboardStats();
+
+        // Paginate the daily breakdown: show 7 most recent days per page
+        $perPage = 7;
+        $page = max(1, (int) $request->get('page', 1));
+        $dailyItems = collect($data['dailyData']);
+        $dailyPage = $dailyItems->forPage($page, $perPage)->values();
+
+        $data['dailyPage'] = $dailyPage;
+        $data['dailyPagination'] = new LengthAwarePaginator(
+            $dailyPage,
+            $dailyItems->count(),
+            $perPage,
+            $page,
+            ['path' => $request->url(), 'query' => $request->query()]
+        );
+
         return view('admin.dashboard', $data);
     }
 
@@ -160,6 +209,7 @@ class AdminController extends Controller
                 'remark_action' => $r->client_remark_action,
                 'remark'        => $r->client_remark,
                 'remark_by'     => $r->clientRemarkedBy?->name,
+                'remark_at'     => $r->client_remarked_at?->copy()->addHours(7)->format('d M Y, H:i'),
             ]);
 
         $stats = [
@@ -406,6 +456,10 @@ class AdminController extends Controller
         $utmCampaign = $request->get('utm_campaign');
         $direct      = $request->get('direct');
         $search      = $request->get('search');
+        $profile     = $request->get('profile');
+        $source      = $request->get('source');
+        $dateFrom    = $request->get('date_from');
+        $dateTo      = $request->get('date_to');
         $query = Registrant::withCount('emailLogs')->latest();
 
         if ($status === 'pending') {
@@ -428,6 +482,26 @@ class AdminController extends Controller
                   ->orWhere('job_role', 'like', $searchTerm)
                   ->orWhere('unique_code', 'like', $searchTerm);
             });
+        }
+
+        // Filter by profile (job title)
+        if ($profile) {
+            $query->where('job_title', $profile);
+        }
+
+        // Filter by source dropdown ('direct' = no UTM source)
+        if ($source === 'direct') {
+            $query->whereNull('utm_source');
+        } elseif ($source) {
+            $query->where('utm_source', $source);
+        }
+
+        // Filter by registration date range
+        if ($dateFrom) {
+            $query->whereDate('created_at', '>=', $dateFrom);
+        }
+        if ($dateTo) {
+            $query->whereDate('created_at', '<=', $dateTo);
         }
 
         // Filter by UTM parameters
@@ -462,6 +536,20 @@ class AdminController extends Controller
                   ->orWhere('unique_code', 'like', $searchTerm);
             });
         }
+        if ($profile) {
+            $statsQuery->where('job_title', $profile);
+        }
+        if ($source === 'direct') {
+            $statsQuery->whereNull('utm_source');
+        } elseif ($source) {
+            $statsQuery->where('utm_source', $source);
+        }
+        if ($dateFrom) {
+            $statsQuery->whereDate('created_at', '>=', $dateFrom);
+        }
+        if ($dateTo) {
+            $statsQuery->whereDate('created_at', '<=', $dateTo);
+        }
         if ($utmSource) {
             $statsQuery->where('utm_source', $utmSource);
         }
@@ -481,9 +569,14 @@ class AdminController extends Controller
         $rejected = (clone $statsQuery)->rejected()->count();
 
         $utmFilter = $utmSource ?: null;
+
+        // Dropdown options for the filter bar
+        $profiles = Registrant::whereNotNull('job_title')->distinct()->orderBy('job_title')->pluck('job_title');
+        $sources  = Registrant::whereNotNull('utm_source')->distinct()->orderBy('utm_source')->pluck('utm_source');
+
         return view('admin.registrants.index', compact(
             'registrants', 'total', 'pending', 'approved', 'rejected',
-            'status', 'utmFilter', 'search'
+            'status', 'utmFilter', 'search', 'profiles', 'sources'
         ));
     }
 
@@ -929,6 +1022,10 @@ class AdminController extends Controller
         $utmMedium   = $request->get('utm_medium');
         $utmCampaign = $request->get('utm_campaign');
         $direct      = $request->get('direct');
+        $profile     = $request->get('profile');
+        $source      = $request->get('source');
+        $dateFrom    = $request->get('date_from');
+        $dateTo      = $request->get('date_to');
 
         $query = Registrant::query();
 
@@ -938,6 +1035,21 @@ class AdminController extends Controller
             $query->approved();
         } elseif ($status === 'rejected') {
             $query->rejected();
+        }
+
+        if ($profile) {
+            $query->where('job_title', $profile);
+        }
+        if ($source === 'direct') {
+            $query->whereNull('utm_source');
+        } elseif ($source) {
+            $query->where('utm_source', $source);
+        }
+        if ($dateFrom) {
+            $query->whereDate('created_at', '>=', $dateFrom);
+        }
+        if ($dateTo) {
+            $query->whereDate('created_at', '<=', $dateTo);
         }
 
         if ($utmSource) {
@@ -953,7 +1065,7 @@ class AdminController extends Controller
             $query->whereNull('utm_source');
         }
 
-        $registrants = $query->latest()->get();
+        $registrants = $query->with('clientRemarkedBy')->latest()->get();
 
         $headers = [
             'Content-Type'        => 'text/csv; charset=UTF-8',
@@ -973,6 +1085,7 @@ class AdminController extends Controller
                 'Employees', 'Status', 'Unique Code', 'Notes', 'Admin Notes',
                 'Registered At', 'Processed At',
                 'UTM Source', 'UTM Medium', 'UTM Campaign',
+                'Client Recommendation', 'Client Remark', 'Remarked By', 'Remarked At',
             ]);
 
             foreach ($registrants as $r) {
@@ -997,6 +1110,10 @@ class AdminController extends Controller
                     $r->utm_source ?? '',
                     $r->utm_medium ?? '',
                     $r->utm_campaign ?? '',
+                    $r->client_remark_action ?? '',
+                    $r->client_remark ?? '',
+                    $r->clientRemarkedBy?->name ?? '',
+                    $r->client_remarked_at?->copy()->addHours(7)->format('Y-m-d H:i:s'),
                 ]);
             }
 

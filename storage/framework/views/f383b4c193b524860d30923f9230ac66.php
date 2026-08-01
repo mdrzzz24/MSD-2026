@@ -43,7 +43,7 @@
                     </div>
                 </div>
                 <div class="flex items-center gap-2">
-                    <a href="<?php echo e(route('admin.registrants.export-csv', request()->only(['status', 'utm_source', 'utm_medium', 'utm_campaign', 'direct']))); ?>"
+                    <a href="<?php echo e(route('admin.registrants.export-csv', request()->only(['status', 'utm_source', 'utm_medium', 'utm_campaign', 'direct', 'search', 'profile', 'source', 'date_from', 'date_to']))); ?>"
                        class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-lg transition">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
@@ -82,6 +82,51 @@
                 <a href="<?php echo e(route('admin.registrants.index')); ?>" class="ml-auto text-xs font-medium text-indigo-600 hover:text-indigo-800 hover:underline">Clear filter</a>
             </div>
             <?php endif; ?>
+
+            
+            <form method="GET" action="<?php echo e(route('admin.registrants.index')); ?>" class="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
+                <?php if(request('status') && request('status') !== 'all'): ?>
+                    <input type="hidden" name="status" value="<?php echo e(request('status')); ?>">
+                <?php endif; ?>
+                <?php if(request('search')): ?>
+                    <input type="hidden" name="search" value="<?php echo e(request('search')); ?>">
+                <?php endif; ?>
+                <div class="flex flex-wrap items-end gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Profile</label>
+                        <select name="profile" class="px-3 py-2 text-sm border border-gray-200 rounded-xl bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500">
+                            <option value="">All profiles</option>
+                            <?php $__currentLoopData = $profiles; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $p): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                <option value="<?php echo e($p); ?>" <?php if(request('profile') === $p): echo 'selected'; endif; ?>><?php echo e($p); ?></option>
+                            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Source</label>
+                        <select name="source" class="px-3 py-2 text-sm border border-gray-200 rounded-xl bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500">
+                            <option value="">All sources</option>
+                            <option value="direct" <?php if(request('source') === 'direct'): echo 'selected'; endif; ?>>Direct</option>
+                            <?php $__currentLoopData = $sources; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $s): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                <option value="<?php echo e($s); ?>" <?php if(request('source') === $s): echo 'selected'; endif; ?>><?php echo e($s); ?></option>
+                            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">From</label>
+                        <input type="date" name="date_from" value="<?php echo e(request('date_from')); ?>" class="px-3 py-2 text-sm border border-gray-200 rounded-xl bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">To</label>
+                        <input type="date" name="date_to" value="<?php echo e(request('date_to')); ?>" class="px-3 py-2 text-sm border border-gray-200 rounded-xl bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500">
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <button type="submit" class="px-4 py-2 text-xs font-semibold rounded-xl bg-indigo-500 text-white hover:bg-indigo-600 transition">Apply</button>
+                        <?php if(request('profile') || request('source') || request('date_from') || request('date_to')): ?>
+                            <a href="<?php echo e(route('admin.registrants.index', request()->except(['profile', 'source', 'date_from', 'date_to']))); ?>" class="px-4 py-2 text-xs font-medium rounded-xl bg-gray-100 text-gray-600 hover:bg-gray-200 transition">Clear</a>
+                        <?php endif; ?>
+                    </div>
+                </div>
+            </form>
 
             
             <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
@@ -305,6 +350,9 @@
                                                 <?php endif; ?>
                                                 <?php if($r->client_remark): ?>
                                                     <span class="block text-gray-500"><?php echo e($r->client_remark); ?></span>
+                                                <?php endif; ?>
+                                                <?php if($r->client_remarked_at): ?>
+                                                    <span class="block text-gray-400"><?php echo e($r->client_remarked_at->copy()->addHours(7)->format('d M Y, H:i')); ?></span>
                                                 <?php endif; ?>
                                             </div>
                                         <?php endif; ?>

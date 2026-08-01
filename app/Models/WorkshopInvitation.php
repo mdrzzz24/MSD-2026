@@ -11,6 +11,7 @@ class WorkshopInvitation extends Model
         'workshop_id',
         'track_id',
         'token',
+        'slug',
         'email',
         'max_uses',
         'use_count',
@@ -30,6 +31,14 @@ class WorkshopInvitation extends Model
                 $invite->token = Str::random(32);
             }
         });
+    }
+
+    /**
+     * Full invitation URL — uses the custom slug when set, otherwise the random token.
+     */
+    public function getInvitationUrlAttribute(): string
+    {
+        return route('workshop.invitation', $this->slug ?: $this->token);
     }
 
     public function workshop()

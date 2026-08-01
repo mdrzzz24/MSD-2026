@@ -34,7 +34,8 @@ class Workshop extends Model
     {
         return $this->belongsToMany(Registrant::class, 'registrant_workshop')
                     ->withTimestamps()
-                    ->withPivot(['status', 'admin_notes', 'processed_by', 'processed_at', 'id', 'track_id']);
+                    ->withPivot(['status', 'admin_notes', 'processed_by', 'processed_at', 'id', 'track_id',
+                                 'utm_source', 'utm_medium', 'utm_campaign', 'utm_content']);
     }
 
     public function waitlist()
