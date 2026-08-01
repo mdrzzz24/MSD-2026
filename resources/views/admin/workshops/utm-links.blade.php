@@ -40,11 +40,33 @@ Export CSV
 <span class="text-xs text-gray-400">Separate from event registration UTM</span>
 </div>
 @if ($utmLinks->count())
+@php
+    $grouped = $utmLinks->groupBy(fn($l) => $l->workshop_id ?: 'none')->sortKeys();
+@endphp
+<div class="divide-y divide-gray-100">
+@foreach ($grouped as $wsId => $groupLinks)
+@php
+    $gWorkshop = $groupLinks->first()->workshop;
+    $gName = $gWorkshop ? ($gWorkshop->name ?: $gWorkshop->title) : 'Unassigned';
+    $gRegs = $groupLinks->sum(fn($l) => $l->workshopRegistrationsCount());
+@endphp
+<div>
+<div class="px-5 py-3 bg-gray-50/60 border-b border-gray-100 flex items-center justify-between gap-2 cursor-pointer select-none ws-group-toggle" data-target="ws-body-{{ $loop->index }}">
+<div class="flex items-center gap-2">
+@if ($gWorkshop)
+<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-teal-50 text-teal-700 border border-teal-200">🎯 {{ $gName }}</span>
+@else
+<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-gray-100 text-gray-600">Unassigned</span>
+@endif
+<span class="text-xs text-gray-500">{{ $groupLinks->count() }} link{{ $groupLinks->count() > 1 ? 's' : '' }} · <strong class="text-gray-700">{{ $gRegs }}</strong> registration{{ $gRegs === 1 ? '' : 's' }}</span>
+</div>
+<svg class="ws-chevron w-4 h-4 text-gray-400 flex-shrink-0 transition-transform duration-200" style="transform:rotate(0deg)" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 18l6-6-6-6"/></svg>
+</div>
+<div id="ws-body-{{ $loop->index }}" class="ws-group-body hidden">
 <div class="overflow-x-auto">
 <table class="w-full">
 <thead><tr class="bg-gray-50/80">
 <th class="px-5 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Name</th>
-<th class="px-5 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Workshop</th>
 <th class="px-5 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">UTM Parameters</th>
 <th class="px-5 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Full URL</th>
 <th class="px-5 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Created By</th>
@@ -52,20 +74,13 @@ Export CSV
 <th class="px-5 py-3.5 text-center text-xs font-semibold text-gray-500 uppercase tracking-wider">Actions</th>
 </tr></thead>
 <tbody class="divide-y divide-gray-50">
-@foreach ($utmLinks as $link)
+@foreach ($groupLinks as $link)
 @php $regs = $link->workshopRegistrationsCount(); @endphp
 <tr class="hover:bg-gray-50/50">
 <td class="px-5 py-4">
 <span class="text-sm font-semibold text-gray-900">{{ $link->name }}</span>
 @if ($link->track)
 <span class="block text-[10px] font-medium text-gray-500 mt-0.5">Track: {{ $link->track->name }}</span>
-@endif
-</td>
-<td class="px-5 py-4">
-@if ($link->workshop)
-<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-teal-50 text-teal-700 border border-teal-200">🎯 {{ $link->workshop->name ?: $link->workshop->title }}</span>
-@else
-<span class="text-xs text-gray-400">—</span>
 @endif
 </td>
 <td class="px-5 py-4">
@@ -117,6 +132,10 @@ Export CSV
 @endforeach
 </tbody>
 </table>
+</div>
+</div>
+</div>
+@endforeach
 </div>
 <div class="px-5 py-3 border-t border-gray-100 bg-gray-50/50 flex items-center gap-6 text-xs text-gray-500">
 <span>Total workshop UTM links: <strong class="text-gray-700">{{ $utmLinks->count() }}</strong></span>
@@ -306,6 +325,17 @@ document.getElementById('sidebarToggle')?.addEventListener('click', () => {
 document.getElementById('mobileSidebar')?.classList.toggle('-translate-x-full');
 document.getElementById('sidebarOverlay')?.classList.toggle('hidden');
 });
+// Workshop group accordion (expandable folders)
+document.querySelectorAll('.ws-group-toggle').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+        var target = document.getElementById(btn.getAttribute('data-target'));
+        if (!target) return;
+        var chevron = btn.querySelector('.ws-chevron');
+        var isHidden = target.classList.toggle('hidden');
+        if (chevron) chevron.style.transform = isHidden ? 'rotate(0deg)' : 'rotate(90deg)';
+    });
+});
+
 // Close on Escape
 document.addEventListener('keydown', function(e) {
 if (e.key === 'Escape') closeWorkshopLinkModal();
