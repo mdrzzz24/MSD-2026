@@ -352,7 +352,13 @@ function wsPopulateTrackOptions() {
 
 function wsPopulateInvitationOptions() {
     var trackId = document.getElementById('wsUtmTrack').value;
-    var invs = wsInvitations.filter(function(i){ return !trackId || String(i.track_id) === String(trackId); });
+    var invs = wsInvitations.filter(function(i){ return !trackId || String(i.track_id) === String(trackId); })
+        .sort(function(a,b){
+            // Prefer custom-slug invitations (nicer URL) when auto-selecting a track
+            var aSlug = a.slug ? 0 : 1, bSlug = b.slug ? 0 : 1;
+            if (aSlug !== bSlug) return aSlug - bSlug;
+            return a.id - b.id;
+        });
     var sel = document.getElementById('wsUtmInvitation');
     var opts = '<option value="">— Auto (invitation default) —</option>';
     invs.forEach(function(i){
@@ -361,6 +367,10 @@ function wsPopulateInvitationOptions() {
         opts += '<option value="'+i.id+'">'+label+'</option>';
     });
     sel.innerHTML = opts;
+    // When a track is chosen, auto-select its invitation so the link points to that track's session
+    if (trackId && invs.length) {
+        sel.value = String(invs[0].id);
+    }
     wsUpdateUtmUrlPreview();
 }
 

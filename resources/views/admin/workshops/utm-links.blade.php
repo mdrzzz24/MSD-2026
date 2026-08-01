@@ -214,6 +214,11 @@ var invs = wInvitations.filter(function(i){
     if (String(i.workshop_id) !== String(wsId)) return false;
     if (trackId && String(i.track_id) !== String(trackId)) return false;
     return true;
+}).sort(function(a,b){
+    // Prefer custom-slug invitations (nicer URL) when auto-selecting a track
+    var aSlug = a.slug ? 0 : 1, bSlug = b.slug ? 0 : 1;
+    if (aSlug !== bSlug) return aSlug - bSlug;
+    return a.id - b.id;
 });
 var sel = document.getElementById('wUtmInvitation');
 var opts = '<option value="">— Auto (invitation default) —</option>';
@@ -223,6 +228,10 @@ invs.forEach(function(i){
     opts += '<option value="'+i.id+'">'+label+'</option>';
 });
 sel.innerHTML = opts;
+// When a track is chosen, auto-select its invitation so the link points to that track's session
+if (trackId && invs.length) {
+    sel.value = String(invs[0].id);
+}
 updateWorkshopUrlPreview();
 }
 
