@@ -186,7 +186,7 @@ $invUrl = $inv ? rtrim(\App\Models\UtmLink::BASE_URL, '/') . '/invitation/worksh
 <option value="">— All tracks —</option>
 </select>
 <p class="text-xs text-gray-400 mt-1">Filter the invitation list by track.</p></div>
-<div><label class="block text-sm font-semibold text-gray-700 mb-1">Invitation / Custom Slug <span class="text-gray-400 font-normal">(optional)</span></label>
+<div id="wUtmInvitationGroup"><label class="block text-sm font-semibold text-gray-700 mb-1">Invitation / Custom Slug <span class="text-gray-400 font-normal">(optional)</span></label>
 <select id="wUtmInvitation" name="workshop_invitation_id" onchange="updateWorkshopUrlPreview()" class="w-full px-4 py-2.5 text-sm border border-gray-200 rounded-xl bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500">
 <option value="">— Auto (invitation default) —</option>
 </select>
@@ -255,6 +255,17 @@ invs.forEach(function(i){
     opts += '<option value="'+i.id+'">'+label+'</option>';
 });
 sel.innerHTML = opts;
+// Only show the Invitation / Custom Slug picker when there is more than one custom slug to choose from.
+var slugGroup = document.getElementById('wUtmInvitationGroup');
+var customSlugs = invs.filter(function(i){ return i.slug; });
+if (slugGroup) {
+    if (customSlugs.length > 1) {
+        slugGroup.style.display = '';
+    } else {
+        slugGroup.style.display = 'none';
+        sel.value = customSlugs.length === 1 ? String(customSlugs[0].id) : '';
+    }
+}
 // Store the chosen track on the link — the invitation page resolves the session from the UTM link
 if (document.getElementById('wUtmTrackId')) document.getElementById('wUtmTrackId').value = trackId || '';
 updateWorkshopUrlPreview();
@@ -308,8 +319,13 @@ if (inv && inv.value) {
     base = opt ? (opt.getAttribute('data-invite-url') || wBaseUrl + '/invitation/workshop/{slug}') : (wBaseUrl + '/invitation/workshop/{slug}');
 }
 var source = document.getElementById('wUtmSource').value || '...';
+var medium = document.getElementById('wUtmMedium').value || '...';
+var campaign = document.getElementById('wUtmCampaign').value || '...';
+var content = document.getElementById('wUtmContent').value || '';
+var qs = 'utm_source=' + encodeURIComponent(source) + '&utm_medium=' + encodeURIComponent(medium) + '&utm_campaign=' + encodeURIComponent(campaign);
+if (content) qs += '&utm_content=' + encodeURIComponent(content);
 var preview = document.getElementById('wUtmUrlPreview');
-preview.textContent = base + '?utm_source=' + source;
+preview.textContent = base + '?' + qs;
 }
 function copyUrl(btn, inputId) {
 const input = document.getElementById(inputId);
@@ -320,7 +336,7 @@ btn.classList.add('pointer-events-none');
 setTimeout(() => { btn.innerHTML = orig; btn.classList.remove('pointer-events-none'); }, 1500);
 });
 }
-document.getElementById('wUtmSource')?.addEventListener('input', updateWorkshopUrlPreview);
+['wUtmSource','wUtmMedium','wUtmCampaign','wUtmContent'].forEach(id => document.getElementById(id)?.addEventListener('input', updateWorkshopUrlPreview));
 document.getElementById('sidebarToggle')?.addEventListener('click', () => {
 document.getElementById('mobileSidebar')?.classList.toggle('-translate-x-full');
 document.getElementById('sidebarOverlay')?.classList.toggle('hidden');
