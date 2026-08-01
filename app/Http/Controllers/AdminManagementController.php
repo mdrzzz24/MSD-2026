@@ -354,6 +354,125 @@ class AdminManagementController extends Controller
         return back()->with('success', "Workshop UTM Link <strong>{$name}</strong> deleted.");
     }
 
+    /**
+     * View registrants who registered for the workshop via a specific UTM link.
+     */
+    public function utmLinkRegistrants(UtmLink $utmLink)
+    {
+        $user = Auth::user();
+        if (!$user->hasPermission('workshops') && !$user->hasPermission('workshop_registrants')) {
+            return redirect()->route('admin.dashboard')->with('error', 'You do not have permission to view workshop UTM link registrants.');
+        }
+
+        // Same visibility as the list: super_admin sees all; others only own/client-created links
+        if ($user->role !== 'super_admin') {
+            $clientIds = User::where('role', 'client')->pluck('id');
+            $allowed = $utmLink->created_by === $user->id || $clientIds->contains($utmLink->created_by);
+            if (!$allowed) {
+                return redirect()->route('admin.workshops.utm-links')->with('error', 'You can only view registrants for your own workshop UTM links.');
+            }
+        }
+
+        $utmLink->load(['workshop', 'track', 'workshopInvitation']);
+        $workshop = $utmLink->workshop;
+
+        // Pivot rows attributed to this link's UTM
+        $pivotRows = \Illuminate\Support\Facades\DB::table('registrant_workshop')
+            ->where('utm_source', $utmLink->utm_source)
+            ->where('utm_medium', $utmLink->utm_medium)
+            ->where('utm_campaign', $utmLink->utm_campaign)
+            ->when($utmLink->utm_content, fn($q) => $q->where('utm_content', $utmLink->utm_content))
+            ->orderByDesc('created_at')
+            ->get();
+
+        $registrantIds = $pivotRows->pluck('registrant_id')->unique()->values();
+        $registrants = Registrant::whereIn('id', $registrantIds)->get();
+
+        $trackLookup = $workshop ? $workshop->tracks()->get()->keyBy('id') : collect();
+        $pivotByReg = $pivotRows->keyBy('registrant_id');
+
+        foreach ($registrants as $r) {
+            $p = $pivotByReg->get($r->id);
+            $r->pivot_track_id    = $p?->track_id;
+            $r->pivot_status      = $p?->status ?? 'pending';
+            $r->pivot_admin_notes = $p?->admin_notes;
+            $r->pivot_utm_source  = $p?->utm_source;
+            $r->pivot_utm_medium  = $p?->utm_medium;
+            $r->pivot_utm_campaign = $p?->utm_campaign;
+            $r->pivot_utm_content = $p?->utm_content;
+            $r->pivot_created_at  = $p?->created_at ? \Carbon\Carbon::parse($p->created_at) : null;
+            $r->registered_track_name = ($p?->track_id && $trackLookup->has($p->track_id))
+                ? $trackLookup[$p->track_id]->name
+                : null;
+        }
+
+        // Keep newest-first by pivot created_at
+        $registrants = $registrants->sortByDesc(fn($r) => $r->pivot_created_at?->timestamp ?? 0)->values();
+
+        return view('admin.workshops.utm-link-registrants', compact('utmLink', 'registrants', 'workshop'));
+    }
+
+    /**
+     * CSV export of registrants attributed to a specific workshop UTM link.
+     */
+    public function utmLinkRegistrantsCsv(UtmLink $utmLink)
+    {
+        $user = Auth::user();
+        if (!$user->hasPermission('workshops') && !$user->hasPermission('workshop_registrants')) {
+            return redirect()->route('admin.dashboard')->with('error', 'You do not have permission to export workshop UTM link registrants.');
+        }
+        if ($user->role !== 'super_admin') {
+            $clientIds = User::where('role', 'client')->pluck('id');
+            $allowed = $utmLink->created_by === $user->id || $clientIds->contains($utmLink->created_by);
+            if (!$allowed) {
+                return redirect()->route('admin.workshops.utm-links')->with('error', 'You can only export registrants for your own workshop UTM links.');
+            }
+        }
+
+        $utmLink->load(['workshop', 'track']);
+        $workshop = $utmLink->workshop;
+
+        $pivotRows = \Illuminate\Support\Facades\DB::table('registrant_workshop')
+            ->where('utm_source', $utmLink->utm_source)
+            ->where('utm_medium', $utmLink->utm_medium)
+            ->where('utm_campaign', $utmLink->utm_campaign)
+            ->when($utmLink->utm_content, fn($q) => $q->where('utm_content', $utmLink->utm_content))
+            ->orderByDesc('created_at')
+            ->get();
+        $registrantIds = $pivotRows->pluck('registrant_id')->unique()->values();
+        $registrants = Registrant::whereIn('id', $registrantIds)->get()->keyBy('id');
+        $trackLookup = $workshop ? $workshop->tracks()->get()->keyBy('id') : collect();
+
+        $headers = ['Name', 'Email', 'Phone', 'Company', 'Job Title', 'Job Role', 'Workshop', 'Track', 'WS Status', 'Reg Status', 'UTM Source', 'UTM Medium', 'UTM Campaign', 'UTM Content', 'Joined Workshop', 'Check-in'];
+        $rows = $pivotRows->map(function ($p) use ($registrants, $trackLookup, $workshop) {
+            $r = $registrants->get($p->registrant_id);
+            $trackName = ($p->track_id && $trackLookup->has($p->track_id)) ? $trackLookup[$p->track_id]->name : '';
+            return [
+                $r?->display_name ?? '',
+                $r?->email ?? '',
+                $r?->phone ?? '',
+                $r?->company ?? '',
+                $r?->job_title ?? '',
+                $r?->job_role ?? '',
+                $workshop ? ($workshop->name ?: $workshop->title) : '',
+                $trackName,
+                $p->status ?? '',
+                $r?->status ?? '',
+                $p->utm_source ?? '',
+                $p->utm_medium ?? '',
+                $p->utm_campaign ?? '',
+                $p->utm_content ?? '',
+                $p->created_at ? \Carbon\Carbon::parse($p->created_at)->copy()->addHours(7)->format('Y-m-d H:i') : '',
+                $r?->checked_in_at ? \Carbon\Carbon::parse($r->checked_in_at)->copy()->addHours(7)->format('Y-m-d H:i') : '',
+            ];
+        })->toArray();
+
+        $filename = 'utm-' . Str::slug($workshop ? ($workshop->name ?: $workshop->title) : 'workshop')
+            . ($utmLink->track ? '-' . Str::slug($utmLink->track->name) : '')
+            . '-registrants-' . now()->format('YmdHis') . '.csv';
+        return $this->csvDownload($headers, $rows, $filename);
+    }
+
     // ── QR Codes (list all approved with QR) ──
 
     public function qrCodes()
