@@ -460,6 +460,104 @@ class AdminController extends Controller
         $source      = $request->get('source');
         $dateFrom    = $request->get('date_from');
         $dateTo      = $request->get('date_to');
+        $query = $this->buildRegistrantQuery($request);
+
+        $registrants = $query->paginate(20)->withQueryString();
+
+        // Stats — scoped to current filters
+        $statsQuery = Registrant::query();
+        if ($search) {
+            $searchTerm = '%' . $search . '%';
+            $statsQuery->where(function ($q) use ($searchTerm) {
+                $q->where('name', 'like', $searchTerm)
+                  ->orWhere('email', 'like', $searchTerm)
+                  ->orWhere('phone', 'like', $searchTerm)
+                  ->orWhere('company', 'like', $searchTerm)
+                  ->orWhere('job_title', 'like', $searchTerm)
+                  ->orWhere('job_role', 'like', $searchTerm)
+                  ->orWhere('unique_code', 'like', $searchTerm);
+            });
+        }
+        if ($profile) {
+            $statsQuery->where('job_title', $profile);
+        }
+        if ($source === 'direct') {
+            $statsQuery->whereNull('utm_source');
+        } elseif ($source) {
+            $statsQuery->where('utm_source', $source);
+        }
+        if ($dateFrom) {
+            $statsQuery->whereDate('created_at', '>=', $dateFrom);
+        }
+        if ($dateTo) {
+            $statsQuery->whereDate('created_at', '<=', $dateTo);
+        }
+        if ($utmSource) {
+            $statsQuery->where('utm_source', $utmSource);
+        }
+        if ($utmMedium) {
+            $statsQuery->where('utm_medium', $utmMedium);
+        }
+        if ($utmCampaign) {
+            $statsQuery->where('utm_campaign', $utmCampaign);
+        }
+        if ($direct) {
+            $statsQuery->whereNull('utm_source');
+        }
+
+        $total    = (clone $statsQuery)->count();
+        $pending  = (clone $statsQuery)->pending()->count();
+        $approved = (clone $statsQuery)->approved()->count();
+        $rejected = (clone $statsQuery)->rejected()->count();
+
+        $utmFilter = $utmSource ?: null;
+
+        // Dropdown options for the filter bar
+        $profiles = Registrant::whereNotNull('job_title')->distinct()->orderBy('job_title')->pluck('job_title');
+        $sources  = Registrant::whereNotNull('utm_source')->distinct()->orderBy('utm_source')->pluck('utm_source');
+
+        return view('admin.registrants.index', compact(
+            'registrants', 'total', 'pending', 'approved', 'rejected',
+            'status', 'utmFilter', 'search', 'profiles', 'sources'
+        ));
+    }
+
+    /**
+     * AJAX live-search endpoint for the registrants table.
+     */
+    public function search(Request $request)
+    {
+        if (!Auth::user()->hasPermission('registrants')) {
+            return response()->json(['success' => false, 'message' => 'Unauthorized.'], 403);
+        }
+
+        $query = $this->buildRegistrantQuery($request);
+        $registrants = $query->paginate(20)->withQueryString();
+
+        return response()->json([
+            'success'    => true,
+            'rows'       => view('admin.registrants._rows', ['registrants' => $registrants])->render(),
+            'pagination' => $registrants->links()->render(),
+            'total'      => $registrants->total(),
+        ]);
+    }
+
+    /**
+     * Build the registrant query from request filters (shared by index & search).
+     */
+    private function buildRegistrantQuery(Request $request)
+    {
+        $status = $request->get('status', 'all');
+        $utmSource   = $request->get('utm_source');
+        $utmMedium   = $request->get('utm_medium');
+        $utmCampaign = $request->get('utm_campaign');
+        $direct      = $request->get('direct');
+        $search      = $request->get('search');
+        $profile     = $request->get('profile');
+        $source      = $request->get('source');
+        $dateFrom    = $request->get('date_from');
+        $dateTo      = $request->get('date_to');
+
         $query = Registrant::withCount('emailLogs')->latest();
 
         if ($status === 'pending') {
@@ -520,64 +618,7 @@ class AdminController extends Controller
             $query->whereNull('utm_source');
         }
 
-        $registrants = $query->paginate(20)->withQueryString();
-
-        // Stats — scoped to current filters
-        $statsQuery = Registrant::query();
-        if ($search) {
-            $searchTerm = '%' . $search . '%';
-            $statsQuery->where(function ($q) use ($searchTerm) {
-                $q->where('name', 'like', $searchTerm)
-                  ->orWhere('email', 'like', $searchTerm)
-                  ->orWhere('phone', 'like', $searchTerm)
-                  ->orWhere('company', 'like', $searchTerm)
-                  ->orWhere('job_title', 'like', $searchTerm)
-                  ->orWhere('job_role', 'like', $searchTerm)
-                  ->orWhere('unique_code', 'like', $searchTerm);
-            });
-        }
-        if ($profile) {
-            $statsQuery->where('job_title', $profile);
-        }
-        if ($source === 'direct') {
-            $statsQuery->whereNull('utm_source');
-        } elseif ($source) {
-            $statsQuery->where('utm_source', $source);
-        }
-        if ($dateFrom) {
-            $statsQuery->whereDate('created_at', '>=', $dateFrom);
-        }
-        if ($dateTo) {
-            $statsQuery->whereDate('created_at', '<=', $dateTo);
-        }
-        if ($utmSource) {
-            $statsQuery->where('utm_source', $utmSource);
-        }
-        if ($utmMedium) {
-            $statsQuery->where('utm_medium', $utmMedium);
-        }
-        if ($utmCampaign) {
-            $statsQuery->where('utm_campaign', $utmCampaign);
-        }
-        if ($direct) {
-            $statsQuery->whereNull('utm_source');
-        }
-
-        $total    = (clone $statsQuery)->count();
-        $pending  = (clone $statsQuery)->pending()->count();
-        $approved = (clone $statsQuery)->approved()->count();
-        $rejected = (clone $statsQuery)->rejected()->count();
-
-        $utmFilter = $utmSource ?: null;
-
-        // Dropdown options for the filter bar
-        $profiles = Registrant::whereNotNull('job_title')->distinct()->orderBy('job_title')->pluck('job_title');
-        $sources  = Registrant::whereNotNull('utm_source')->distinct()->orderBy('utm_source')->pluck('utm_source');
-
-        return view('admin.registrants.index', compact(
-            'registrants', 'total', 'pending', 'approved', 'rejected',
-            'status', 'utmFilter', 'search', 'profiles', 'sources'
-        ));
+        return $query;
     }
 
     /**

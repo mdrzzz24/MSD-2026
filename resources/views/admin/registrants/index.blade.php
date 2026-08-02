@@ -203,7 +203,7 @@
                                 All Registrants
                             @endif
                         </h2>
-                        <span class="text-xs text-gray-400">({{ $registrants->total() }})</span>
+                        <span class="text-xs text-gray-400" id="registrantCount">({{ $registrants->total() }})</span>
                     </div>
                     <div class="flex items-center gap-2">
                         {{-- Bulk action buttons --}}
@@ -220,7 +220,7 @@
                             </button>
                         </div>
                         @endif
-                        <form method="GET" action="{{ route('admin.registrants.index') }}" class="relative">
+                        <form method="GET" action="{{ route('admin.registrants.index') }}" class="relative" onsubmit="return false;">
                             @if (request('status') && request('status') !== 'all')
                                 <input type="hidden" name="status" value="{{ request('status') }}">
                             @endif
@@ -242,14 +242,12 @@
                             <input type="text" name="search" id="tableSearch" placeholder="Search name, email, company..."
                                    value="{{ request('search') }}"
                                    class="pl-9 pr-4 py-2 text-sm border border-gray-200 rounded-xl bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 focus:bg-white w-full sm:w-64 transition">
-                            @if (request('search'))
-                                <a href="{{ route('admin.registrants.index', request()->except('search')) }}"
-                                   class="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-200 transition">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                                    </svg>
-                                </a>
-                            @endif
+                            <a href="javascript:void(0)" id="clearRegSearchBtn" onclick="clearRegSearch()" style="display:none;"
+                               class="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-200 transition" title="Clear search">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                                </svg>
+                            </a>
                         </form>
                     </div>
                 </div>
@@ -257,7 +255,7 @@
                 {{-- Table --}}
                 <div class="overflow-x-auto">
                     <table class="w-full table-fixed" id="registrantTable">
-                        <thead>
+                        <thead id="registrantThead">
                             <tr class="bg-gray-50/80">
                                 @if (Auth::user()->canWrite())
                                 <th class="px-5 py-3.5 text-left w-10">
@@ -273,7 +271,7 @@
                                 <th class="px-3 py-3 text-center text-xs font-semibold text-gray-500 uppercase tracking-wider w-20">Actions</th>
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-gray-50">
+                        <tbody class="divide-y divide-gray-50" id="registrantTableBody">
                             @forelse ($registrants as $r)
                                 <tr class="hover:bg-gray-50/50 transition search-row">
                                     @if (Auth::user()->canWrite())
@@ -468,11 +466,11 @@
                 </div>
 
                 {{-- Pagination --}}
-                @if ($registrants->hasPages())
-                    <div class="px-5 py-4 border-t border-gray-100 bg-gray-50/50">
+                <div id="registrantPagination" class="px-5 py-4 border-t border-gray-100 bg-gray-50/50">
+                    @if ($registrants->hasPages())
                         {{ $registrants->links() }}
-                    </div>
-                @endif
+                    @endif
+                </div>
             </div>
         </div>
     </main>
@@ -734,14 +732,50 @@
         }
     }
 
-    // ---- Table Search (server-side with debounce) ----
-    let searchTimeout;
+    // ---- Table Search (AJAX live search, no reload) ----
+    let regSearchTimer = null;
+    let regSearchSeq = 0;
+    function regLiveSearch(input) {
+        clearTimeout(regSearchTimer);
+        regSearchTimer = setTimeout(async () => {
+            const seq = ++regSearchSeq;
+            const params = new URLSearchParams(window.location.search);
+            params.set('search', input.value);
+            params.set('page', '1');
+            try {
+                const res = await fetch('{{ route("admin.registrants.search") }}?' + params.toString(), {
+                    headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' }
+                });
+                const data = await res.json();
+                if (seq !== regSearchSeq) return;
+                const tbody = document.getElementById('registrantTableBody');
+                if (tbody && data.rows) tbody.innerHTML = data.rows;
+                const pag = document.getElementById('registrantPagination');
+                if (pag) pag.innerHTML = data.pagination || '';
+                const count = document.getElementById('registrantCount');
+                if (count) count.textContent = '(' + (data.total || 0) + ')';
+                // Keep row hover states & any row-level inline handlers are global, so fine
+            } catch (e) { /* ignore */ }
+            input.focus();
+            input.setSelectionRange(input.value.length, input.value.length);
+        }, 300);
+    }
+    function clearRegSearch() {
+        const input = document.getElementById('tableSearch');
+        const btn = document.getElementById('clearRegSearchBtn');
+        if (input) { input.value = ''; if (btn) btn.style.display = 'none'; regLiveSearch(input); }
+    }
     document.getElementById('tableSearch')?.addEventListener('input', function() {
-        clearTimeout(searchTimeout);
-        searchTimeout = setTimeout(() => {
-            this.closest('form').submit();
-        }, 400);
+        const btn = document.getElementById('clearRegSearchBtn');
+        if (btn) btn.style.display = this.value ? 'block' : 'none';
+        regLiveSearch(this);
     });
+    // Show the clear button if the URL already carries a search value
+    (function() {
+        const input = document.getElementById('tableSearch');
+        const btn = document.getElementById('clearRegSearchBtn');
+        if (input && btn && input.value) btn.style.display = 'block';
+    })();
 
     // ---- Close modals on Esc ----
     document.addEventListener('keydown', function(e) {

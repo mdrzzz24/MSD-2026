@@ -101,7 +101,7 @@ Route::match(['get', 'post'], '/admin/management/impersonate/leave', [App\Http\C
     ->name('admin.management.impersonate.leave');
 
 // ── Admin routes (protected by admin middleware) ──
-Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
+Route::middleware(['auth', 'admin', 'no_cache'])->prefix('admin')->name('admin.')->group(function () {
 
     // Dashboard
     Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('dashboard');
@@ -114,6 +114,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
 
     // Registrant management
     Route::get('/registrants', [AdminController::class, 'index'])->name('registrants.index');
+    Route::get('/registrants/search', [AdminController::class, 'search'])->name('registrants.search');
     Route::get('/registrants/{registrant}', [AdminController::class, 'show'])->name('registrants.show');
     Route::get('/registrants/{registrant}/edit', [AdminController::class, 'edit'])->name('registrants.edit');
     Route::put('/registrants/{registrant}', [AdminController::class, 'update'])->name('registrants.update');
@@ -132,6 +133,12 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('/walkin', [AdminController::class, 'walkinForm'])->name('walkin.form');
     Route::post('/walkin', [AdminController::class, 'walkinStore'])->name('walkin.store');
     Route::get('/walkin/{registrant}', [AdminController::class, 'walkinShow'])->name('walkin.show');
+
+    // ── Onsite Event (participant list + name badge printing) — admin & super admin ──
+    Route::get('/onsite', [App\Http\Controllers\AdminOnsiteController::class, 'index'])->name('onsite');
+    Route::get('/onsite/search', [App\Http\Controllers\AdminOnsiteController::class, 'search'])->name('onsite.search');
+    Route::get('/onsite/badges/print', [App\Http\Controllers\AdminOnsiteController::class, 'printBadges'])->name('onsite.badges');
+    Route::post('/onsite/badges/trigger', [App\Http\Controllers\AdminOnsiteController::class, 'triggerPrint'])->name('onsite.badges.trigger');
 
     // ── Super Admin only sections ──
     Route::middleware('super_admin')->group(function () {
