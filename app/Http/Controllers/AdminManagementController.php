@@ -244,7 +244,7 @@ class AdminManagementController extends Controller
         $request->validate([
             'name'         => ['required', 'string', 'max:255'],
             'workshop_id'  => ['required', 'exists:workshops,id'],
-            'utm_source'   => ['nullable', 'string', 'max:100'],
+            'utm_source'   => ['required', 'string', 'max:100'],
             'utm_medium'   => ['nullable', 'string', 'max:100'],
             'utm_campaign' => ['nullable', 'string', 'max:100'],
             'utm_content'  => ['nullable', 'string', 'max:100'],
@@ -301,7 +301,7 @@ class AdminManagementController extends Controller
         $request->validate([
             'name'         => ['required', 'string', 'max:255'],
             'workshop_id'  => ['required', 'exists:workshops,id'],
-            'utm_source'   => ['nullable', 'string', 'max:100'],
+            'utm_source'   => ['required', 'string', 'max:100'],
             'utm_medium'   => ['nullable', 'string', 'max:100'],
             'utm_campaign' => ['nullable', 'string', 'max:100'],
             'utm_content'  => ['nullable', 'string', 'max:100'],

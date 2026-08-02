@@ -193,8 +193,8 @@ $invUrl = $inv ? rtrim(\App\Models\UtmLink::BASE_URL, '/') . '/invitation/worksh
 <p class="text-xs text-gray-400 mt-1">Pick a specific custom slug / invitation if the workshop has more than one.</p></div>
 <input type="hidden" name="track_id" id="wUtmTrackId">
 <div class="grid grid-cols-3 gap-3">
-<div><label class="block text-sm font-semibold text-gray-700 mb-1">Source <span class="text-gray-400 font-normal">(optional)</span></label>
-<input type="text" id="wUtmSource" name="utm_source" placeholder="newsletter" class="w-full px-4 py-2.5 text-sm border border-gray-200 rounded-xl bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500">
+<div><label class="block text-sm font-semibold text-gray-700 mb-1">Source <span class="text-red-500">*</span></label>
+<input type="text" id="wUtmSource" name="utm_source" required placeholder="newsletter" class="w-full px-4 py-2.5 text-sm border border-gray-200 rounded-xl bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500">
 <p class="text-xs text-gray-400 mt-1">newsletter, sales, meta, etc.</p></div>
 <div><label class="block text-sm font-semibold text-gray-700 mb-1">Medium <span class="text-gray-400 font-normal">(optional)</span></label>
 <input type="text" id="wUtmMedium" name="utm_medium" placeholder="email" class="w-full px-4 py-2.5 text-sm border border-gray-200 rounded-xl bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"></div>
