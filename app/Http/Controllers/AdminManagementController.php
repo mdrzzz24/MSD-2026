@@ -77,14 +77,19 @@ class AdminManagementController extends Controller
 
         // UTM Links — event registration only (workshop UTM is separate); scope by user unless super_admin
         $utmLinks = UtmLink::forEvent()->when($user->role !== 'super_admin', function ($q) use ($user) {
-                // If user belongs to a group, show all UTM links from the group
+                // Own links + links created by any client (clients can see each other's links) + links shared with the user
+                $visibleCreatorIds = User::where('role', 'client')->pluck('id');
+                // If user belongs to a group, also include all group members' links
                 if ($user->group_id) {
-                    $groupUserIds = User::where('group_id', $user->group_id)->pluck('id')->toArray();
-                    return $q->whereIn('created_by', $groupUserIds)
-                        ->orWhereHas('sharedWith', fn($sq) => $sq->whereIn('user_id', $groupUserIds));
+                    $visibleCreatorIds = $visibleCreatorIds
+                        ->merge(User::where('group_id', $user->group_id)->pluck('id'))
+                        ->unique();
                 }
-                return $q->where('created_by', $user->id)
-                    ->orWhereHas('sharedWith', fn($sq) => $sq->where('user_id', $user->id));
+                return $q->where(function ($sub) use ($user, $visibleCreatorIds) {
+                    $sub->where('created_by', $user->id)
+                        ->orWhereIn('created_by', $visibleCreatorIds)
+                        ->orWhereHas('sharedWith', fn($sq) => $sq->whereIn('user_id', $visibleCreatorIds));
+                });
             })
             ->with('sharedWith')
             ->orderBy('created_at', 'desc')
