@@ -173,6 +173,14 @@ class WorkshopInvitationController extends Controller
                     } elseif ($status === 'pending') {
                         return redirect($redirectUrl)->with('info', 'Your registration for this track is pending approval.');
                     }
+                }
+
+                // Block registering for a session that overlaps another registration
+                if ($registrant->hasTimeConflict($workshop->id, $agendaItem->id, $agendaItem->date, $agendaItem->start_time, $agendaItem->end_time)) {
+                    return redirect($redirectUrl)->withInput()->with('error', 'You are already registered for another session at the same time.');
+                }
+
+                if ($existingAi) {
                     $registrant->agendaItems()->updateExistingPivot($agendaItem->id, [
                         'status' => 'pending',
                         'admin_notes' => null,
@@ -220,38 +228,8 @@ class WorkshopInvitationController extends Controller
         $wsStart = $workshop->start_time ?? $agendaItem?->start_time;
         $wsEnd = $workshop->end_time ?? $agendaItem?->end_time;
 
-        if ($wsDate && $wsStart && $wsEnd) {
-            $conflict = $registrant->workshops()
-                ->where('workshops.id', '!=', $workshop->id)
-                ->wherePivot('status', '!=', 'rejected')
-                ->where(function ($q) use ($wsDate, $wsStart, $wsEnd) {
-                    $q->where('date', $wsDate)
-                      ->where(function ($q2) use ($wsStart, $wsEnd) {
-                          $q2->whereBetween('start_time', [$wsStart, $wsEnd])
-                             ->orWhereBetween('end_time', [$wsStart, $wsEnd])
-                             ->orWhere(function ($q3) use ($wsStart, $wsEnd) {
-                                 $q3->where('start_time', '<=', $wsStart)
-                                    ->where('end_time', '>=', $wsEnd);
-                             });
-                      });
-                })->exists();
-
-            if (!$conflict) {
-                $conflict = $registrant->agendaItems()
-                    ->wherePivot('status', '!=', 'rejected')
-                    ->where(function ($q) use ($wsDate) {
-                        $q->where('agenda_items.date', $wsDate)
-                          ->orWhereNull('agenda_items.date');
-                    })
-                    ->where(function ($q) use ($wsStart, $wsEnd) {
-                        $q->where('start_time', '<', $wsEnd)
-                           ->where('end_time', '>', $wsStart);
-                    })->exists();
-            }
-
-            if ($conflict) {
-                return back()->withInput()->with('error', 'You are already registered for another session at the same time.');
-            }
+        if ($registrant->hasTimeConflict($workshop->id, null, $wsDate, $wsStart, $wsEnd)) {
+            return back()->withInput()->with('error', 'You are already registered for another session at the same time.');
         }
 
         // Register the registrant for the workshop

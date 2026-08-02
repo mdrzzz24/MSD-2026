@@ -176,6 +176,66 @@ class Registrant extends Authenticatable
     }
 
     /**
+     * Determine whether this registrant already has a non-rejected workshop or
+     * agenda-item registration whose time window overlaps [\$start, \$end].
+     *
+     * Workshop times are resolved from the workshop's first linked agenda item
+     * when the workshop fields are empty, and a null date is treated as the
+     * same event day (the event is a single-day event). Rejected registrations
+     * and the workshop/agenda item being registered are excluded.
+     */
+    public function hasTimeConflict(int $excludeWorkshopId, ?int $excludeAgendaItemId, $date, $start, $end): bool
+    {
+        if (!$start || !$end) {
+            return false;
+        }
+
+        $newStart = strtotime($start);
+        $newEnd   = strtotime($end);
+
+        $overlaps = function ($s, $e) use ($newStart, $newEnd): bool {
+            if (!$s || !$e) {
+                return false;
+            }
+            return strtotime($s) < $newEnd && strtotime($e) > $newStart;
+        };
+
+        $sameDay = function ($a, $b): bool {
+            if (!$a || !$b) {
+                return true; // unknown date = same event day
+            }
+            return $a->format('Y-m-d') === $b->format('Y-m-d');
+        };
+
+        // 1) Existing workshop-level registrations (exclude rejected + the workshop being registered)
+        foreach ($this->workshops()->wherePivot('status', '!=', 'rejected')->with('agendaItems')->get() as $w) {
+            if ($w->id === $excludeWorkshopId) {
+                continue;
+            }
+            $ai = $w->agendaItems->first();
+            $wsDate  = $w->date ?? $ai?->date;
+            $wsStart = $w->start_time ?? $ai?->start_time;
+            $wsEnd   = $w->end_time ?? $ai?->end_time;
+
+            if ($sameDay($date, $wsDate) && $overlaps($wsStart, $wsEnd)) {
+                return true;
+            }
+        }
+
+        // 2) Existing agenda-item registrations (exclude rejected + the agenda item being registered)
+        foreach ($this->agendaItems()->wherePivot('status', '!=', 'rejected')->get() as $a) {
+            if ($excludeAgendaItemId && $a->id === $excludeAgendaItemId) {
+                continue;
+            }
+            if ($sameDay($date, $a->date) && $overlaps($a->start_time, $a->end_time)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
      * Workshops waiting list.
      */
     public function workshopWaitlists()

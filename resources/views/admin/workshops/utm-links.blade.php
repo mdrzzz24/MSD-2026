@@ -193,13 +193,13 @@ $invUrl = $inv ? rtrim(\App\Models\UtmLink::BASE_URL, '/') . '/invitation/worksh
 <p class="text-xs text-gray-400 mt-1">Pick a specific custom slug / invitation if the workshop has more than one.</p></div>
 <input type="hidden" name="track_id" id="wUtmTrackId">
 <div class="grid grid-cols-3 gap-3">
-<div><label class="block text-sm font-semibold text-gray-700 mb-1">Source <span class="text-red-500">*</span></label>
-<input type="text" id="wUtmSource" name="utm_source" required placeholder="newsletter" class="w-full px-4 py-2.5 text-sm border border-gray-200 rounded-xl bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500">
+<div><label class="block text-sm font-semibold text-gray-700 mb-1">Source <span class="text-gray-400 font-normal">(optional)</span></label>
+<input type="text" id="wUtmSource" name="utm_source" placeholder="newsletter" class="w-full px-4 py-2.5 text-sm border border-gray-200 rounded-xl bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500">
 <p class="text-xs text-gray-400 mt-1">newsletter, sales, meta, etc.</p></div>
-<div><label class="block text-sm font-semibold text-gray-700 mb-1">Medium <span class="text-red-500">*</span></label>
-<input type="text" id="wUtmMedium" name="utm_medium" required placeholder="email" class="w-full px-4 py-2.5 text-sm border border-gray-200 rounded-xl bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"></div>
-<div><label class="block text-sm font-semibold text-gray-700 mb-1">Campaign <span class="text-red-500">*</span></label>
-<input type="text" id="wUtmCampaign" name="utm_campaign" required placeholder="msd2026" class="w-full px-4 py-2.5 text-sm border border-gray-200 rounded-xl bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"></div>
+<div><label class="block text-sm font-semibold text-gray-700 mb-1">Medium <span class="text-gray-400 font-normal">(optional)</span></label>
+<input type="text" id="wUtmMedium" name="utm_medium" placeholder="email" class="w-full px-4 py-2.5 text-sm border border-gray-200 rounded-xl bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"></div>
+<div><label class="block text-sm font-semibold text-gray-700 mb-1">Campaign <span class="text-gray-400 font-normal">(optional)</span></label>
+<input type="text" id="wUtmCampaign" name="utm_campaign" placeholder="msd2026" class="w-full px-4 py-2.5 text-sm border border-gray-200 rounded-xl bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"></div>
 </div>
 <div><label class="block text-sm font-semibold text-gray-700 mb-1">Content (optional)</label>
 <input type="text" id="wUtmContent" name="utm_content" placeholder="e.g. newsletter-banner-a" class="w-full px-4 py-2.5 text-sm border border-gray-200 rounded-xl bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"></div>
@@ -318,14 +318,14 @@ if (inv && inv.value) {
     var opt = sel.selectedOptions[0];
     base = opt ? (opt.getAttribute('data-invite-url') || wBaseUrl + '/invitation/workshop/{slug}') : (wBaseUrl + '/invitation/workshop/{slug}');
 }
-var source = document.getElementById('wUtmSource').value || '...';
-var medium = document.getElementById('wUtmMedium').value || '...';
-var campaign = document.getElementById('wUtmCampaign').value || '...';
-var content = document.getElementById('wUtmContent').value || '';
-var qs = 'utm_source=' + encodeURIComponent(source) + '&utm_medium=' + encodeURIComponent(medium) + '&utm_campaign=' + encodeURIComponent(campaign);
-if (content) qs += '&utm_content=' + encodeURIComponent(content);
+var params = [];
+var pairs = [['utm_source','wUtmSource'],['utm_medium','wUtmMedium'],['utm_campaign','wUtmCampaign'],['utm_content','wUtmContent']];
+pairs.forEach(function(p){
+    var v = document.getElementById(p[1]).value.trim();
+    if (v) params.push(p[0] + '=' + encodeURIComponent(v));
+});
 var preview = document.getElementById('wUtmUrlPreview');
-preview.textContent = base + '?' + qs;
+preview.textContent = params.length ? (base + '?' + params.join('&')) : base;
 }
 function copyUrl(btn, inputId) {
 const input = document.getElementById(inputId);
