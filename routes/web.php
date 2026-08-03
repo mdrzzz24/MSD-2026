@@ -122,6 +122,9 @@ Route::middleware(['auth', 'admin', 'no_cache'])->prefix('admin')->name('admin.'
     // Registrant management
     Route::get('/registrants', [AdminController::class, 'index'])->name('registrants.index');
     Route::get('/registrants/search', [AdminController::class, 'search'])->name('registrants.search');
+    Route::get('/registrants/realtime', [AdminController::class, 'registrantsRealtime'])->name('registrants.realtime');
+    Route::get('/registrants/rows', [AdminController::class, 'registrantsRows'])->name('registrants.rows');
+    Route::post('/registrants/pending-sync', [AdminController::class, 'pendingSync'])->name('registrants.pending-sync');
     Route::get('/registrants/{registrant}', [AdminController::class, 'show'])->name('registrants.show');
     Route::get('/registrants/{registrant}/edit', [AdminController::class, 'edit'])->name('registrants.edit');
     Route::put('/registrants/{registrant}', [AdminController::class, 'update'])->name('registrants.update');
@@ -132,6 +135,7 @@ Route::middleware(['auth', 'admin', 'no_cache'])->prefix('admin')->name('admin.'
     Route::post('/registrants/{registrant}/resend-credentials', [AdminController::class, 'resendCredentials'])->name('registrants.resend-credentials');
     Route::post('/registrants/bulk-approve', [AdminController::class, 'bulkApprove'])->name('registrants.bulk-approve');
     Route::post('/registrants/bulk-reject', [AdminController::class, 'bulkReject'])->name('registrants.bulk-reject');
+    Route::post('/registrants/submit-decisions', [AdminController::class, 'submitClientDecisions'])->name('registrants.submit-decisions');
     Route::get('/registrants/export/csv', [AdminController::class, 'exportCsv'])->name('registrants.export-csv');
     Route::post('/registrants/{registrant}/notes', [AdminController::class, 'updateNotes'])->name('registrants.notes');
     Route::post('/registrants/{registrant}/client-remark', [AdminController::class, 'clientRemark'])->name('registrants.client-remark');

@@ -478,6 +478,198 @@ class AdminController extends Controller
     }
 
     /**
+     * Lightweight realtime-collaboration endpoint (polled by clients).
+     * Returns registrant ids that were recently marked by OTHER clients,
+     * plus the current counts, so pages can refresh live without a reload.
+     */
+    public function registrantsRealtime(Request $request)
+    {
+        if (! Auth::user()->hasPermission('registrants')) {
+            return response()->json(['error' => 'Unauthorized.'], 403);
+        }
+
+        $since = $request->get('since');
+        $sinceDate = $since ? \Illuminate\Support\Carbon::parse($since) : now()->subSeconds(30);
+
+        $changed = Registrant::whereNotNull('client_remark_action')
+            ->where('client_remarked_at', '>=', $sinceDate)
+            ->where('client_remarked_by', '!=', Auth::id())
+            ->with('clientRemarkedBy')
+            ->get(['id', 'name', 'client_remark_action', 'client_remarked_by'])
+            ->map(fn ($r) => [
+                'id'     => $r->id,
+                'name'   => $r->name,
+                'action' => $r->client_remark_action,
+                'by'     => $r->clientRemarkedBy?->name,
+            ])
+            ->values();
+
+        $myCounts = null;
+        if (Auth::user()->isClient()) {
+            $myCounts = [
+                'approve'  => Registrant::where('client_remark_action', 'approve')->count(),
+                'reject'   => Registrant::where('client_remark_action', 'reject')->count(),
+                'waitlist' => Registrant::where('client_remark_action', 'waitlist')->count(),
+                'unmarked' => Registrant::whereNull('client_remark_action')->count(),
+            ];
+        }
+
+        // Other clients' PENDING (not yet submitted) decision selections
+        $pending = [];
+        $otherClients = User::where('role', 'client')->where('id', '!=', Auth::id())->get(['id', 'name']);
+        $pendingIds = [];
+        foreach ($otherClients as $client) {
+            foreach (Cache::get('client_pending_marks:' . $client->id, []) as $m) {
+                $rid = (int) ($m['id'] ?? 0);
+                if ($rid > 0) {
+                    $pendingIds[] = $rid;
+                }
+            }
+        }
+        $pendingNames = $pendingIds !== [] ? Registrant::whereIn('id', $pendingIds)->pluck('name', 'id') : collect();
+        foreach ($otherClients as $client) {
+            foreach (Cache::get('client_pending_marks:' . $client->id, []) as $m) {
+                $rid = (int) ($m['id'] ?? 0);
+                $pending[] = [
+                    'registrant_id' => $rid,
+                    'action'        => $m['action'] ?? null,
+                    'reason'        => $m['reason'] ?? null,
+                    'client_name'   => $client->name,
+                    'name'          => $pendingNames[$rid] ?? ('Registrant #' . $rid),
+                ];
+            }
+        }
+
+        // The client's OWN pending selections, enriched with registrant names (used
+        // by the preview/cancel modal and to restore selections on page load).
+        $myPending = [];
+        if (Auth::user()->isClient()) {
+            $rawPending = Cache::get('client_pending_marks:' . Auth::id(), []);
+            $pendingIds = array_map(fn ($m) => (int) ($m['id'] ?? 0), $rawPending);
+            $pendingNames = $pendingIds !== [] ? Registrant::whereIn('id', $pendingIds)->pluck('name', 'id') : collect();
+            foreach ($rawPending as $m) {
+                $rid = (int) ($m['id'] ?? 0);
+                $myPending[] = [
+                    'id'     => $rid,
+                    'action' => $m['action'] ?? null,
+                    'reason' => $m['reason'] ?? null,
+                    'name'   => $pendingNames[$rid] ?? ('Registrant #' . $rid),
+                ];
+            }
+        }
+
+        return response()->json([
+            'changed'   => $changed->values(),
+            'pending'   => $pending,
+            'myPending' => $myPending,
+            'myCounts'  => $myCounts,
+            'stats'     => [
+                'total'    => Registrant::count(),
+                'pending'  => Registrant::pending()->count(),
+                'approved' => Registrant::approved()->count(),
+                'rejected' => Registrant::rejected()->count(),
+            ],
+            'now' => now()->toIso8601String(),
+        ]);
+    }
+
+    /**
+     * Store a client's CURRENT pending decision selections (before submit) so other
+     * clients can see in realtime who is marking what.
+     */
+    public function pendingSync(Request $request)
+    {
+        if (! Auth::user()->isClient()) {
+            return response()->json(['error' => 'Unauthorized.'], 403);
+        }
+
+        $selections = $request->input('selections', []);
+        $clean = [];
+        foreach ((array) $selections as $s) {
+            $id = (int) ($s['id'] ?? 0);
+            $action = $s['action'] ?? null;
+            if ($id > 0 && in_array($action, ['approve', 'reject', 'waitlist'], true)) {
+                // Prevent dual input: if another client already confirmed this
+                // registrant, this client can no longer select it.
+                if ($this->claimedByOtherClient($id, Auth::id())) {
+                    continue;
+                }
+                $reason = null;
+                if ($action === 'reject' && ! empty($s['reason'])) {
+                    $reason = trim((string) $s['reason']);
+                }
+                $clean[] = ['id' => $id, 'action' => $action, 'reason' => $reason];
+            }
+        }
+
+        Cache::put('client_pending_marks:' . Auth::id(), $clean, now()->addMinutes(10));
+
+        // Remember the FIRST client who selected each registrant, so that whoever
+        // submits later, the decision is credited to the original chooser.
+        foreach ($clean as $item) {
+            $rid = (int) ($item['id'] ?? 0);
+            if ($rid > 0 && ! Cache::has('client_pending_origin:' . $rid)) {
+                Cache::put('client_pending_origin:' . $rid, Auth::id(), now()->addMinutes(60));
+            }
+        }
+
+        return response()->json(['success' => true, 'count' => count($clean)]);
+    }
+
+    /**
+     * Whether the given registrant already has a pending selection from another
+     * client — used to prevent dual input (only ONE client may confirm each row).
+     */
+    private function claimedByOtherClient(int $registrantId, int $exceptClientId): bool
+    {
+        foreach (User::where('role', 'client')->where('id', '!=', $exceptClientId)->pluck('id') as $clientId) {
+            foreach (Cache::get('client_pending_marks:' . $clientId, []) as $m) {
+                if ((int) ($m['id'] ?? 0) === $registrantId) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Render fresh row HTML for given registrant ids — used by realtime collaboration
+     * so a row can be updated IN PLACE when another client marks a registrant.
+     */
+    public function registrantsRows(Request $request)
+    {
+        if (! Auth::user()->hasPermission('registrants')) {
+            return response()->json(['error' => 'Unauthorized.'], 403);
+        }
+
+        $raw = $request->get('ids');
+        $ids = [];
+        foreach ((array) $raw as $part) {
+            foreach (explode(',', (string) $part) as $x) {
+                $x = (int) trim($x);
+                if ($x > 0) {
+                    $ids[] = $x;
+                }
+            }
+        }
+        $ids = array_values(array_unique($ids));
+
+        if ($ids === []) {
+            return response()->json(['rows' => '']);
+        }
+
+        $registrants = Registrant::withCount('emailLogs')->with('clientRemarkedBy')
+            ->whereIn('id', $ids)
+            ->orderByRaw('FIELD(id,' . implode(',', $ids) . ')')
+            ->get();
+
+        return response()->json([
+            'rows' => view('admin.registrants._rows', ['registrants' => $registrants])->render(),
+        ]);
+    }
+
+    /**
      * Display a listing of registrants with filtering.
      */
     public function index(Request $request)
@@ -503,6 +695,8 @@ class AdminController extends Controller
         }
         $dateFrom    = $request->get('date_from');
         $dateTo      = $request->get('date_to');
+        $sort        = $request->get('sort');
+        $direction   = strtolower((string) $request->get('direction', 'asc')) === 'desc' ? 'desc' : 'asc';
         $query = $this->buildRegistrantQuery($request);
 
         $registrants = $query->paginate(20)->withQueryString();
@@ -555,11 +749,10 @@ class AdminController extends Controller
         // Client-only: how many registrants THIS client has already marked.
         $myCounts = null;
         if (Auth::user()->isClient()) {
-            $myBase = Registrant::where('client_remarked_by', Auth::id());
             $myCounts = [
-                'approve'  => (clone $myBase)->where('client_remark_action', 'approve')->count(),
-                'reject'   => (clone $myBase)->where('client_remark_action', 'reject')->count(),
-                'waitlist' => (clone $myBase)->where('client_remark_action', 'waitlist')->count(),
+                'approve'  => Registrant::where('client_remark_action', 'approve')->count(),
+                'reject'   => Registrant::where('client_remark_action', 'reject')->count(),
+                'waitlist' => Registrant::where('client_remark_action', 'waitlist')->count(),
                 'unmarked' => Registrant::whereNull('client_remark_action')->count(),
             ];
         }
@@ -572,7 +765,8 @@ class AdminController extends Controller
 
         return view('admin.registrants.index', compact(
             'registrants', 'total', 'pending', 'approved', 'rejected',
-            'status', 'utmFilter', 'search', 'profiles', 'sources', 'my', 'myCounts'
+            'status', 'utmFilter', 'search', 'profiles', 'sources', 'my', 'myCounts',
+            'sort', 'direction'
         ));
     }
 
@@ -618,7 +812,25 @@ class AdminController extends Controller
         $dateFrom    = $request->get('date_from');
         $dateTo      = $request->get('date_to');
 
-        $query = Registrant::withCount('emailLogs')->latest();
+        // Sorting via table headers
+        $sort = $request->get('sort');
+        $direction = strtolower((string) $request->get('direction', 'asc')) === 'desc' ? 'desc' : 'asc';
+        $sortable = [
+            'name'    => 'name',
+            'email'   => 'email',
+            'company' => 'company',
+            'source'  => 'utm_source',
+            'status'  => 'status',
+            'date'    => 'created_at',
+            'emails'  => 'email_logs_count',
+        ];
+
+        $query = Registrant::withCount('emailLogs');
+        if ($sort && array_key_exists($sort, $sortable)) {
+            $query->orderBy($sortable[$sort], $direction);
+        } else {
+            $query->latest(); // default: newest first
+        }
 
         if ($status === 'pending') {
             $query->pending();
@@ -655,10 +867,9 @@ class AdminController extends Controller
             $query->whereIn('client_remark_action', $marking);
         }
 
-        // Client-only: show only THIS client's own markings (used by the "My Markings" panel)
+        // Client-only: show markings by ANY client (global) — used by the "Markings" panel
         if (Auth::user()->isClient() && in_array($my, ['approve', 'reject', 'waitlist'], true)) {
-            $query->where('client_remark_action', $my)
-                  ->where('client_remarked_by', Auth::id());
+            $query->where('client_remark_action', $my);
         } elseif (Auth::user()->isClient() && $my === 'unmarked') {
             // Not yet recommended by any client
             $query->whereNull('client_remark_action');
@@ -1119,6 +1330,76 @@ class AdminController extends Controller
 
         return redirect()->back()
             ->with('success', "<strong>{$count}</strong> registrant(s) have been approved and notified.");
+    }
+
+    /**
+     * Submit a batch of client decisions (approve / reject+reason / waiting list)
+     * in ONE request. Records client_remark_action WITHOUT changing the status.
+     * Payload: {"decisions": "[{id, action, reason?}, ...]"} as JSON.
+     */
+    public function submitClientDecisions(Request $request)
+    {
+        if (! Auth::user()->isClient()) {
+            return redirect()->back()->with('error', 'Only clients can submit decisions.');
+        }
+
+        $decisions = json_decode((string) $request->input('decisions', '[]'), true);
+        if (! is_array($decisions) || count($decisions) === 0) {
+            return redirect()->back()->with('error', 'No decisions were submitted.');
+        }
+
+        $counts = ['approve' => 0, 'reject' => 0, 'waitlist' => 0];
+        $now = now();
+
+        // Once submitted, this client no longer has pending selections.
+        Cache::forget('client_pending_marks:' . Auth::id());
+
+        foreach ($decisions as $d) {
+            $id = (int) ($d['id'] ?? 0);
+            $action = $d['action'] ?? null;
+            if (! in_array($action, ['approve', 'reject', 'waitlist'], true)) {
+                continue;
+            }
+            $reason = ($action === 'reject') ? trim((string) ($d['reason'] ?? '')) : '';
+            if ($action === 'reject' && $reason === '') {
+                continue; // a rejected registrant must have a reason
+            }
+
+            $registrant = Registrant::where('id', $id)->whereNull('client_remark_action')->first();
+            if (! $registrant) {
+                continue; // skip missing or already-marked
+            }
+
+            // Another client already has a pending claim on this registrant → skip (no dual input).
+            if ($this->claimedByOtherClient($registrant->id, Auth::id())) {
+                continue;
+            }
+
+            // Credit the FIRST client who made this decision, not necessarily the
+            // submitter (e.g. when a colleague took over and submitted on their behalf).
+            $by = Auth::id();
+            $origin = (int) Cache::get('client_pending_origin:' . $registrant->id, 0);
+            if ($origin && User::where('id', $origin)->where('role', 'client')->exists()) {
+                $by = $origin;
+            }
+            Cache::forget('client_pending_origin:' . $registrant->id);
+
+            $registrant->update([
+                'client_remark'        => $reason !== '' ? mb_substr($reason, 0, 2000) : null,
+                'client_remark_action' => $action,
+                'client_remarked_by'   => $by,
+                'client_remarked_at'   => $now,
+                'waitlisted'           => $action === 'waitlist',
+            ]);
+            $counts[$action]++;
+        }
+
+        return redirect()->back()->with('success',
+            'Decisions submitted for admin review: '
+            . "<strong>{$counts['approve']}</strong> approved, "
+            . "<strong>{$counts['reject']}</strong> rejected, "
+            . "<strong>{$counts['waitlist']}</strong> waiting list."
+        );
     }
 
     /**
