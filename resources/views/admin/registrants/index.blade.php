@@ -43,7 +43,7 @@
                     </div>
                 </div>
                 <div class="flex items-center gap-2">
-                    <a href="{{ route('admin.registrants.export-csv', request()->only(['status', 'utm_source', 'utm_medium', 'utm_campaign', 'direct', 'search', 'profile', 'source', 'marking', 'date_from', 'date_to'])) }}"
+                    <a href="{{ route('admin.registrants.export-csv', request()->only(['status', 'utm_source', 'utm_medium', 'utm_campaign', 'direct', 'search', 'profile', 'source', 'marking', 'my', 'date_from', 'date_to'])) }}"
                        class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-lg transition">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
@@ -91,6 +91,9 @@
                 @if (request('search'))
                     <input type="hidden" name="search" value="{{ request('search') }}">
                 @endif
+                @if (request('my'))
+                    <input type="hidden" name="my" value="{{ request('my') }}">
+                @endif
                 <div class="flex flex-wrap items-end gap-3">
                     <div>
                         @include('admin.partials.profile-filter')
@@ -111,12 +114,62 @@
                     </div>
                     <div class="flex items-center gap-2">
                         <button type="submit" class="px-4 py-2 text-xs font-semibold rounded-xl bg-indigo-500 text-white hover:bg-indigo-600 transition">Apply</button>
-                        @if (request('profile') || request('source') || request('marking') || request('date_from') || request('date_to'))
-                            <a href="{{ route('admin.registrants.index', request()->except(['profile', 'source', 'marking', 'date_from', 'date_to'])) }}" class="px-4 py-2 text-xs font-medium rounded-xl bg-gray-100 text-gray-600 hover:bg-gray-200 transition">Clear</a>
+                        @if (request('profile') || request('source') || request('marking') || request('my') || request('date_from') || request('date_to'))
+                            <a href="{{ route('admin.registrants.index', request()->except(['profile', 'source', 'marking', 'my', 'date_from', 'date_to'])) }}" class="px-4 py-2 text-xs font-medium rounded-xl bg-gray-100 text-gray-600 hover:bg-gray-200 transition">Clear</a>
                         @endif
                     </div>
                 </div>
             </form>
+
+            {{-- Client-only: My Markings — quick summary & filter of THIS client's own markings --}}
+            @if (Auth::user()->isClient())
+            <div class="bg-white rounded-2xl border border-indigo-100 shadow-sm p-5">
+                <div class="flex flex-col lg:flex-row lg:items-center gap-4">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-xl bg-indigo-100 flex items-center justify-center flex-shrink-0">
+                            <svg class="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>
+                        </div>
+                        <div>
+                            <h3 class="text-sm font-bold text-gray-900">My Markings</h3>
+                            <p class="text-xs text-gray-500">Registrants I have already recommended — click to filter</p>
+                        </div>
+                    </div>
+                    <div class="flex flex-wrap items-center gap-2 lg:ml-auto">
+                        <a href="{{ route('admin.registrants.index', array_merge(request()->except(['my', 'page']), ['my' => 'all'])) }}"
+                           class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold border transition
+                           {{ $my === 'all' ? 'bg-gray-900 text-white border-gray-900' : 'bg-gray-50 text-gray-600 border-gray-200 hover:bg-gray-100' }}">
+                            All
+                        </a>
+                        <a href="{{ route('admin.registrants.index', array_merge(request()->except(['my', 'page']), ['my' => 'approve'])) }}"
+                           class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold border transition
+                           {{ $my === 'approve' ? 'bg-emerald-500 text-white border-emerald-500' : 'bg-white text-emerald-700 border-emerald-200 hover:bg-emerald-50' }}">
+                            ✅ Approved
+                            <span class="px-1.5 py-0.5 rounded-md text-[10px] {{ $my === 'approve' ? 'bg-white/25' : 'bg-emerald-100' }}">{{ $myCounts['approve'] ?? 0 }}</span>
+                        </a>
+                        <a href="{{ route('admin.registrants.index', array_merge(request()->except(['my', 'page']), ['my' => 'reject'])) }}"
+                           class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold border transition
+                           {{ $my === 'reject' ? 'bg-red-500 text-white border-red-500' : 'bg-white text-red-700 border-red-200 hover:bg-red-50' }}">
+                            ❌ Rejected
+                            <span class="px-1.5 py-0.5 rounded-md text-[10px] {{ $my === 'reject' ? 'bg-white/25' : 'bg-red-100' }}">{{ $myCounts['reject'] ?? 0 }}</span>
+                        </a>
+                        <a href="{{ route('admin.registrants.index', array_merge(request()->except(['my', 'page']), ['my' => 'waitlist'])) }}"
+                           class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold border transition
+                           {{ $my === 'waitlist' ? 'bg-orange-500 text-white border-orange-500' : 'bg-white text-orange-700 border-orange-200 hover:bg-orange-50' }}">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                            Waiting List
+                            <span class="px-1.5 py-0.5 rounded-md text-[10px] {{ $my === 'waitlist' ? 'bg-white/25' : 'bg-orange-100' }}">{{ $myCounts['waitlist'] ?? 0 }}</span>
+                        </a>
+                        <a href="{{ route('admin.registrants.index', array_merge(request()->except(['my', 'page']), ['my' => 'unmarked'])) }}"
+                           class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold border transition
+                           {{ $my === 'unmarked' ? 'bg-gray-800 text-white border-gray-800' : 'bg-white text-gray-600 border-gray-300 hover:bg-gray-100' }}">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 9h.01M9 13h6"/></svg>
+                            Unmarked
+                            <span class="px-1.5 py-0.5 rounded-md text-[10px] {{ $my === 'unmarked' ? 'bg-white/25' : 'bg-gray-200' }}">{{ $myCounts['unmarked'] ?? 0 }}</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+            @endif
 
             {{-- Stats cards --}}
             <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">

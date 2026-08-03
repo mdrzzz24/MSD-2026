@@ -110,6 +110,7 @@ Route::middleware(['auth', 'admin', 'no_cache'])->prefix('admin')->name('admin.'
 
     // Regist Confirmation (client recommendations for admin)
     Route::get('/regist-confirmation', [AdminController::class, 'registConfirmation'])->name('regist-confirmation');
+    Route::get('/regist-confirmation/unbalanced', [AdminController::class, 'registConfirmationUnbalanced'])->name('regist-confirmation.unbalanced');
     Route::get('/regist-confirmation/export/csv', [AdminController::class, 'exportRegistConfirmationCsv'])->name('regist-confirmation.export-csv');
 
     // Import client confirmations from Excel (super admin only)

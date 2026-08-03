@@ -496,6 +496,11 @@ class AdminController extends Controller
         $profile     = array_values(array_filter((array) $request->get('profile')));
         $source      = array_values(array_filter((array) $request->get('source')));
         $marking     = array_values(array_filter((array) $request->get('marking')));
+        // Client-only: default to "Unmarked" so clients immediately see what still needs their review.
+        $my          = $request->get('my');
+        if (Auth::user()->isClient() && $my === null) {
+            $my = 'unmarked';
+        }
         $dateFrom    = $request->get('date_from');
         $dateTo      = $request->get('date_to');
         $query = $this->buildRegistrantQuery($request);
@@ -547,6 +552,18 @@ class AdminController extends Controller
         $approved = (clone $statsQuery)->approved()->count();
         $rejected = (clone $statsQuery)->rejected()->count();
 
+        // Client-only: how many registrants THIS client has already marked.
+        $myCounts = null;
+        if (Auth::user()->isClient()) {
+            $myBase = Registrant::where('client_remarked_by', Auth::id());
+            $myCounts = [
+                'approve'  => (clone $myBase)->where('client_remark_action', 'approve')->count(),
+                'reject'   => (clone $myBase)->where('client_remark_action', 'reject')->count(),
+                'waitlist' => (clone $myBase)->where('client_remark_action', 'waitlist')->count(),
+                'unmarked' => Registrant::whereNull('client_remark_action')->count(),
+            ];
+        }
+
         $utmFilter = $utmSource ?: null;
 
         // Dropdown options for the filter bar
@@ -555,7 +572,7 @@ class AdminController extends Controller
 
         return view('admin.registrants.index', compact(
             'registrants', 'total', 'pending', 'approved', 'rejected',
-            'status', 'utmFilter', 'search', 'profiles', 'sources'
+            'status', 'utmFilter', 'search', 'profiles', 'sources', 'my', 'myCounts'
         ));
     }
 
@@ -593,6 +610,11 @@ class AdminController extends Controller
         $profile     = array_values(array_filter((array) $request->get('profile')));
         $source      = array_values(array_filter((array) $request->get('source')));
         $marking     = array_values(array_filter((array) $request->get('marking')));
+        // Client-only: default to "Unmarked" view.
+        $my          = $request->get('my');
+        if (Auth::user()->isClient() && $my === null) {
+            $my = 'unmarked';
+        }
         $dateFrom    = $request->get('date_from');
         $dateTo      = $request->get('date_to');
 
@@ -631,6 +653,15 @@ class AdminController extends Controller
         // Filter by client marking (approve / reject / waiting list)
         if ($marking) {
             $query->whereIn('client_remark_action', $marking);
+        }
+
+        // Client-only: show only THIS client's own markings (used by the "My Markings" panel)
+        if (Auth::user()->isClient() && in_array($my, ['approve', 'reject', 'waitlist'], true)) {
+            $query->where('client_remark_action', $my)
+                  ->where('client_remarked_by', Auth::id());
+        } elseif (Auth::user()->isClient() && $my === 'unmarked') {
+            // Not yet recommended by any client
+            $query->whereNull('client_remark_action');
         }
 
         // Filter by registration date range
@@ -862,6 +893,64 @@ class AdminController extends Controller
         ];
 
         return view('admin.regist-confirmation', compact('registrants', 'stats', 'statusFilter', 'recommendFilter', 'search'));
+    }
+
+    /**
+     * Show registrants whose data is "unbalanced" — the actual status contradicts the
+     * client recommendation, or the waiting-list flag disagrees with the recommendation.
+     */
+    public function registConfirmationUnbalanced(Request $request)
+    {
+        if (! Auth::user()->hasPermission('registrants')) {
+            return redirect()->route('admin.dashboard')->with('error', 'You do not have permission to view unbalanced data.');
+        }
+
+        $reasonFilter = $request->get('reason', 'all'); // all | status | waitlist_flag
+        $search       = trim((string) $request->get('search'));
+
+        $query = $this->unbalancedBaseQuery($reasonFilter);
+
+        if ($search !== '') {
+            $query->where(fn ($q) => $q->where('name', 'like', "%{$search}%")->orWhere('email', 'like', "%{$search}%"));
+        }
+
+        $registrants = $query->with('clientRemarkedBy')->latest('client_remarked_at')->paginate(25)->withQueryString();
+
+        $stats = [
+            'total'          => $this->unbalancedBaseQuery('all')->count(),
+            'status'         => $this->unbalancedBaseQuery('status')->count(),
+            'waitlist_flag'  => $this->unbalancedBaseQuery('waitlist_flag')->count(),
+        ];
+
+        return view('admin.regist-confirmation-unbalanced', compact('registrants', 'stats', 'reasonFilter', 'search'));
+    }
+
+    /**
+     * Base query for the unbalanced-data page.
+     * reason: all | status | waitlist_flag
+     */
+    private function unbalancedBaseQuery(string $reasonFilter = 'all')
+    {
+        $statusBranch = fn ($q) => $q
+            ->where(fn ($x) => $x->where('client_remark_action', 'approve')->where('status', 'rejected'))
+            ->orWhere(fn ($x) => $x->where('client_remark_action', 'reject')->where('status', 'approved'))
+            ->orWhere(fn ($x) => $x->where('client_remark_action', 'waitlist')->whereIn('status', ['approved', 'rejected']));
+
+        $flagBranch = fn ($q) => $q
+            ->where(fn ($x) => $x->where('waitlisted', true)->where(fn ($y) => $y->where('client_remark_action', '!=', 'waitlist')->orWhereNull('client_remark_action')))
+            ->orWhere(fn ($x) => $x->where('client_remark_action', 'waitlist')->where('waitlisted', false));
+
+        $query = Registrant::whereNotNull('client_remark_action');
+
+        if ($reasonFilter === 'status') {
+            $query->where($statusBranch);
+        } elseif ($reasonFilter === 'waitlist_flag') {
+            $query->where($flagBranch);
+        } else {
+            $query->where(fn ($q) => $q->where($statusBranch)->orWhere($flagBranch));
+        }
+
+        return $query;
     }
 
     /**
@@ -1120,6 +1209,11 @@ class AdminController extends Controller
         $profile     = array_values(array_filter((array) $request->get('profile')));
         $source      = array_values(array_filter((array) $request->get('source')));
         $marking     = array_values(array_filter((array) $request->get('marking')));
+        // Client-only: default to "Unmarked" view.
+        $my          = $request->get('my');
+        if (Auth::user()->isClient() && $my === null) {
+            $my = 'unmarked';
+        }
         $dateFrom    = $request->get('date_from');
         $dateTo      = $request->get('date_to');
 
@@ -1139,6 +1233,13 @@ class AdminController extends Controller
         $query->filterBySources($source);
         if ($marking) {
             $query->whereIn('client_remark_action', $marking);
+        }
+        // Client-only: export only THIS client's own markings (or unmarked)
+        if (Auth::user()->isClient() && in_array($my, ['approve', 'reject', 'waitlist'], true)) {
+            $query->where('client_remark_action', $my)
+                  ->where('client_remarked_by', Auth::id());
+        } elseif (Auth::user()->isClient() && $my === 'unmarked') {
+            $query->whereNull('client_remark_action');
         }
         if ($dateFrom) {
             $query->whereDate('created_at', '>=', $dateFrom);

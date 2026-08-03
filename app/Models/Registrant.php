@@ -412,4 +412,35 @@ class Registrant extends Authenticatable
             default    => 'bg-gray-100 text-gray-600',
         };
     }
+
+    /**
+     * Reasons why this registrant's data is "unbalanced" between the actual status
+     * (Registrants page) and the client recommendation (Regist Confirmation page).
+     *
+     * @return array<int,string> reason keys (see the unbalanced view for labels)
+     */
+    public function unbalancedReasons(): array
+    {
+        $reasons = [];
+        $action = $this->client_remark_action;
+        $status = $this->status;
+
+        if ($action === 'approve' && $status === 'rejected') {
+            $reasons[] = 'approve_vs_rejected';
+        }
+        if ($action === 'reject' && $status === 'approved') {
+            $reasons[] = 'reject_vs_approved';
+        }
+        if ($action === 'waitlist' && in_array($status, ['approved', 'rejected'], true)) {
+            $reasons[] = 'waitlist_vs_status';
+        }
+        if ($this->waitlisted && $action !== 'waitlist') {
+            $reasons[] = 'flag_not_waitlist';
+        }
+        if ($action === 'waitlist' && ! $this->waitlisted) {
+            $reasons[] = 'waitlist_flag_false';
+        }
+
+        return $reasons;
+    }
 }
