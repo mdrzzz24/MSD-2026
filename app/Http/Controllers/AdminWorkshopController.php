@@ -140,21 +140,17 @@ class AdminWorkshopController extends Controller
      */
     public function workshopRegistrants(Request $request)
     {
-        $profile  = $request->get('profile');
-        $source   = $request->get('source');
+        $profile  = array_values(array_filter((array) $request->get('profile')));
+        $source   = array_values(array_filter((array) $request->get('source')));
         $dateFrom = $request->get('date_from');
         $dateTo   = $request->get('date_to');
 
         // Reusable filter closure applied to each per-workshop registrant count
         $applyFilters = function ($q) use ($profile, $source, $dateFrom, $dateTo) {
             if ($profile) {
-                $q->where('registrants.job_title', $profile);
+                $q->whereIn('registrants.job_title', $profile);
             }
-            if ($source === 'direct') {
-                $q->whereNull('registrants.utm_source');
-            } elseif ($source) {
-                $q->where('registrants.utm_source', $source);
-            }
+            $q->filterBySources($source, 'registrants.utm_source');
             if ($dateFrom) {
                 $q->whereDate('registrants.created_at', '>=', $dateFrom);
             }
@@ -197,16 +193,15 @@ class AdminWorkshopController extends Controller
     {
         $workshop->load(['tracks.agendaItems', 'agendaItems.track']);
 
-        $profile  = $request->get('profile');
-        $source   = $request->get('source');
+        $profile  = array_values(array_filter((array) $request->get('profile')));
+        $source   = array_values(array_filter((array) $request->get('source')));
         $dateFrom = $request->get('date_from');
         $dateTo   = $request->get('date_to');
 
         $registrants = $workshop->registrants()
             ->with(['workshops', 'workshopWaitlists'])
-            ->when($profile, fn($q) => $q->where('registrants.job_title', $profile))
-            ->when($source === 'direct', fn($q) => $q->whereNull('registrants.utm_source'))
-            ->when($source && $source !== 'direct', fn($q) => $q->where('registrants.utm_source', $source))
+            ->when($profile, fn($q) => $q->whereIn('registrants.job_title', $profile))
+            ->when($source, fn($q) => $q->filterBySources($source, 'registrants.utm_source'))
             ->when($dateFrom, fn($q) => $q->whereDate('registrants.created_at', '>=', $dateFrom))
             ->when($dateTo, fn($q) => $q->whereDate('registrants.created_at', '<=', $dateTo))
             ->orderBy('name')
@@ -494,19 +489,15 @@ class AdminWorkshopController extends Controller
     public function exportCsv(Request $request)
     {
         $profile  = $request->get('profile');
-        $source   = $request->get('source');
+        $source   = array_values(array_filter((array) $request->get('source')));
         $dateFrom = $request->get('date_from');
         $dateTo   = $request->get('date_to');
 
         $workshops = Workshop::with(['registrants' => function ($q) use ($profile, $source, $dateFrom, $dateTo) {
                 if ($profile) {
-                    $q->where('registrants.job_title', $profile);
+                    $q->whereIn('registrants.job_title', $profile);
                 }
-                if ($source === 'direct') {
-                    $q->whereNull('registrants.utm_source');
-                } elseif ($source) {
-                    $q->where('registrants.utm_source', $source);
-                }
+                $q->filterBySources($source, 'registrants.utm_source');
                 if ($dateFrom) {
                     $q->whereDate('registrants.created_at', '>=', $dateFrom);
                 }
@@ -621,15 +612,14 @@ class AdminWorkshopController extends Controller
         $workshop->load('tracks');
         $trackLookup = $workshop->tracks->keyBy('id');
 
-        $profile  = $request->get('profile');
-        $source   = $request->get('source');
+        $profile  = array_values(array_filter((array) $request->get('profile')));
+        $source   = array_values(array_filter((array) $request->get('source')));
         $dateFrom = $request->get('date_from');
         $dateTo   = $request->get('date_to');
 
         $registrants = $workshop->registrants()
-            ->when($profile, fn($q) => $q->where('registrants.job_title', $profile))
-            ->when($source === 'direct', fn($q) => $q->whereNull('registrants.utm_source'))
-            ->when($source && $source !== 'direct', fn($q) => $q->where('registrants.utm_source', $source))
+            ->when($profile, fn($q) => $q->whereIn('registrants.job_title', $profile))
+            ->when($source, fn($q) => $q->filterBySources($source, 'registrants.utm_source'))
             ->when($dateFrom, fn($q) => $q->whereDate('registrants.created_at', '>=', $dateFrom))
             ->when($dateTo, fn($q) => $q->whereDate('registrants.created_at', '<=', $dateTo))
             ->orderBy('name')

@@ -63,8 +63,17 @@
                 </span>
             @endif
             @if ($r->hasClientRemark())
-                <div class="mt-1 text-[10px] {{ $r->client_remark_action === 'approve' ? 'text-emerald-600' : 'text-red-600' }}">
-                    {{ $r->client_remark_action === 'approve' ? '✅ Approve' : '❌ Reject' }}
+                <div class="mt-1 text-[10px] {{ $r->client_remark_action === 'approve' ? 'text-emerald-600' : ($r->client_remark_action === 'reject' ? 'text-red-600' : 'text-orange-600') }}">
+                    @if ($r->client_remark_action === 'approve')
+                        ✅ Approve
+                    @elseif ($r->client_remark_action === 'reject')
+                        ❌ Reject
+                    @else
+                        <span class="inline-flex items-center gap-1">
+                            <svg class="w-3 h-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                            Waiting List
+                        </span>
+                    @endif
                     @if ($r->clientRemarkedBy)
                         by {{ $r->clientRemarkedBy->name }}
                     @endif
@@ -120,6 +129,17 @@
                             {{ $r->hasClientRemark() ? 'disabled' : '' }}>
                         ❌
                     </button>
+                    {{-- Waiting List toggle - client only --}}
+                    <form action="{{ route('admin.registrants.toggle-waitlist', $r) }}" method="POST" class="inline">
+                        @csrf
+                        <button type="submit"
+                                onclick="return confirm('{{ $r->isWaitlisted() ? 'Remove from waiting list?' : 'Add to waiting list?' }}')"
+                                title="{{ $r->isWaitlisted() ? 'Remove from waiting list' : 'Mark as waiting list' }}"
+                                class="px-2 py-1 rounded-lg text-xs font-semibold transition whitespace-nowrap border
+                                {{ $r->isWaitlisted() ? 'bg-orange-500 text-white border-orange-500' : 'bg-gray-50 text-gray-500 border border-gray-200 hover:bg-orange-50 hover:text-orange-600 hover:border-orange-200' }}">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                        </button>
+                    </form>
                 </div>
                 @endif
                 @if (Auth::user()->canWrite())

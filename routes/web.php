@@ -112,6 +112,12 @@ Route::middleware(['auth', 'admin', 'no_cache'])->prefix('admin')->name('admin.'
     Route::get('/regist-confirmation', [AdminController::class, 'registConfirmation'])->name('regist-confirmation');
     Route::get('/regist-confirmation/export/csv', [AdminController::class, 'exportRegistConfirmationCsv'])->name('regist-confirmation.export-csv');
 
+    // Import client confirmations from Excel (super admin only)
+    Route::get('/import-client-confirmations', [App\Http\Controllers\AdminImportController::class, 'index'])->name('import-client-confirmations');
+    Route::post('/import-client-confirmations/preview', [App\Http\Controllers\AdminImportController::class, 'preview'])->name('import-client-confirmations.preview');
+    Route::post('/import-client-confirmations/apply', [App\Http\Controllers\AdminImportController::class, 'apply'])->name('import-client-confirmations.apply');
+    Route::post('/import-client-confirmations/cancel', [App\Http\Controllers\AdminImportController::class, 'cancel'])->name('import-client-confirmations.cancel');
+
     // Registrant management
     Route::get('/registrants', [AdminController::class, 'index'])->name('registrants.index');
     Route::get('/registrants/search', [AdminController::class, 'search'])->name('registrants.search');
@@ -121,6 +127,7 @@ Route::middleware(['auth', 'admin', 'no_cache'])->prefix('admin')->name('admin.'
     Route::delete('/registrants/{registrant}', [AdminController::class, 'destroy'])->name('registrants.destroy');
     Route::post('/registrants/{registrant}/approve', [AdminController::class, 'approve'])->name('registrants.approve');
     Route::post('/registrants/{registrant}/reject', [AdminController::class, 'reject'])->name('registrants.reject');
+    Route::post('/registrants/{registrant}/toggle-waitlist', [AdminController::class, 'toggleWaitlist'])->name('registrants.toggle-waitlist');
     Route::post('/registrants/{registrant}/resend-credentials', [AdminController::class, 'resendCredentials'])->name('registrants.resend-credentials');
     Route::post('/registrants/bulk-approve', [AdminController::class, 'bulkApprove'])->name('registrants.bulk-approve');
     Route::post('/registrants/bulk-reject', [AdminController::class, 'bulkReject'])->name('registrants.bulk-reject');

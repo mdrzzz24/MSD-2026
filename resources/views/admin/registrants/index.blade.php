@@ -43,7 +43,7 @@
                     </div>
                 </div>
                 <div class="flex items-center gap-2">
-                    <a href="{{ route('admin.registrants.export-csv', request()->only(['status', 'utm_source', 'utm_medium', 'utm_campaign', 'direct', 'search', 'profile', 'source', 'date_from', 'date_to'])) }}"
+                    <a href="{{ route('admin.registrants.export-csv', request()->only(['status', 'utm_source', 'utm_medium', 'utm_campaign', 'direct', 'search', 'profile', 'source', 'marking', 'date_from', 'date_to'])) }}"
                        class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-lg transition">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
@@ -93,23 +93,13 @@
                 @endif
                 <div class="flex flex-wrap items-end gap-3">
                     <div>
-                        <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Profile</label>
-                        <select name="profile" class="px-3 py-2 text-sm border border-gray-200 rounded-xl bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500">
-                            <option value="">All profiles</option>
-                            @foreach ($profiles as $p)
-                                <option value="{{ $p }}" @selected(request('profile') === $p)>{{ $p }}</option>
-                            @endforeach
-                        </select>
+                        @include('admin.partials.profile-filter')
                     </div>
                     <div>
-                        <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Source</label>
-                        <select name="source" class="px-3 py-2 text-sm border border-gray-200 rounded-xl bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500">
-                            <option value="">All sources</option>
-                            <option value="direct" @selected(request('source') === 'direct')>Direct</option>
-                            @foreach ($sources as $s)
-                                <option value="{{ $s }}" @selected(request('source') === $s)>{{ $s }}</option>
-                            @endforeach
-                        </select>
+                        @include('admin.partials.source-filter')
+                    </div>
+                    <div>
+                        @include('admin.partials.marking-filter')
                     </div>
                     <div>
                         <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">From</label>
@@ -121,8 +111,8 @@
                     </div>
                     <div class="flex items-center gap-2">
                         <button type="submit" class="px-4 py-2 text-xs font-semibold rounded-xl bg-indigo-500 text-white hover:bg-indigo-600 transition">Apply</button>
-                        @if (request('profile') || request('source') || request('date_from') || request('date_to'))
-                            <a href="{{ route('admin.registrants.index', request()->except(['profile', 'source', 'date_from', 'date_to'])) }}" class="px-4 py-2 text-xs font-medium rounded-xl bg-gray-100 text-gray-600 hover:bg-gray-200 transition">Clear</a>
+                        @if (request('profile') || request('source') || request('marking') || request('date_from') || request('date_to'))
+                            <a href="{{ route('admin.registrants.index', request()->except(['profile', 'source', 'marking', 'date_from', 'date_to'])) }}" class="px-4 py-2 text-xs font-medium rounded-xl bg-gray-100 text-gray-600 hover:bg-gray-200 transition">Clear</a>
                         @endif
                     </div>
                 </div>
@@ -337,8 +327,17 @@
                                             </span>
                                         @endif
                                         @if ($r->hasClientRemark())
-                                            <div class="mt-1 text-[10px] {{ $r->client_remark_action === 'approve' ? 'text-emerald-600' : 'text-red-600' }}">
-                                                {{ $r->client_remark_action === 'approve' ? '✅ Approve' : '❌ Reject' }}
+                                            <div class="mt-1 text-[10px] {{ $r->client_remark_action === 'approve' ? 'text-emerald-600' : ($r->client_remark_action === 'reject' ? 'text-red-600' : 'text-orange-600') }}">
+                                                @if ($r->client_remark_action === 'approve')
+                                                    ✅ Approve
+                                                @elseif ($r->client_remark_action === 'reject')
+                                                    ❌ Reject
+                                                @else
+                                                    <span class="inline-flex items-center gap-1">
+                                                        <svg class="w-3 h-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                                        Waiting List
+                                                    </span>
+                                                @endif
                                                 @if ($r->clientRemarkedBy)
                                                     by {{ $r->clientRemarkedBy->name }}
                                                 @endif
@@ -393,6 +392,17 @@
                                                         {{ $r->hasClientRemark() ? 'disabled' : '' }}>
                                                     ❌
                                                 </button>
+                                                {{-- Waiting List toggle - client only --}}
+                                                <form action="{{ route('admin.registrants.toggle-waitlist', $r) }}" method="POST" class="inline">
+                                                    @csrf
+                                                    <button type="submit"
+                                                            onclick="return confirm('{{ $r->isWaitlisted() ? 'Remove from waiting list?' : 'Add to waiting list?' }}')"
+                                                            title="{{ $r->isWaitlisted() ? 'Remove from waiting list' : 'Mark as waiting list' }}"
+                                                            class="px-2 py-1 rounded-lg text-xs font-semibold transition whitespace-nowrap border
+                                                            {{ $r->isWaitlisted() ? 'bg-orange-500 text-white border-orange-500' : 'bg-gray-50 text-gray-500 border border-gray-200 hover:bg-orange-50 hover:text-orange-600 hover:border-orange-200' }}">
+                                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                                    </button>
+                                                </form>
                                             </div>
                                             @endif
                                             @if (Auth::user()->canWrite())

@@ -210,6 +210,7 @@ class AdminController extends Controller
                 'remark'        => $r->client_remark,
                 'remark_by'     => $r->clientRemarkedBy?->name,
                 'remark_at'     => $r->client_remarked_at?->copy()->addHours(7)->format('d M Y, H:i'),
+                'is_waitlisted' => $r->isWaitlisted(),
             ]);
 
         $stats = [
@@ -241,6 +242,7 @@ class AdminController extends Controller
 
         $registrant->update([
             'status'         => 'approved',
+            'waitlisted'     => false,
             'approved_by'    => Auth::id(),
             'password'       => $plainPassword,
             'plain_password' => $plainPassword,
@@ -305,6 +307,7 @@ class AdminController extends Controller
 
         $registrant->update([
             'status'       => 'rejected',
+            'waitlisted'   => false,
             'rejected_by'  => Auth::id(),
             'admin_notes'  => $request->input('admin_notes'),
             'processed_at' => now(),
@@ -350,6 +353,40 @@ class AdminController extends Controller
 
         return back()
             ->with('success', "Registrant <strong>{$registrant->name}</strong> has been rejected and a notification email has been sent.");
+    }
+
+    /**
+     * Toggle a registrant on/off the waiting list (client marking).
+     * Records a client recommendation (client_remark_action = waitlist) so it shows
+     * in the status cell and on the Regist Confirmation page, without changing status.
+     */
+    public function toggleWaitlist(Request $request, Registrant $registrant)
+    {
+        if (!Auth::user()->hasPermission('registrants')) {
+            return redirect()->back()->with('error', 'You do not have permission to manage the waiting list.');
+        }
+
+        if ($registrant->isWaitlisted()) {
+            $registrant->update([
+                'waitlisted'           => false,
+                'client_remark'        => null,
+                'client_remark_action' => null,
+                'client_remarked_by'   => null,
+                'client_remarked_at'   => null,
+            ]);
+
+            return back()->with('success', "Registrant <strong>{$registrant->name}</strong> has been removed from the waiting list.");
+        }
+
+        $registrant->update([
+            'waitlisted'           => true,
+            'client_remark'        => $request->input('client_remark') ?: null,
+            'client_remark_action' => 'waitlist',
+            'client_remarked_by'   => Auth::id(),
+            'client_remarked_at'   => now(),
+        ]);
+
+        return back()->with('success', "Registrant <strong>{$registrant->name}</strong> has been marked as waiting list.");
     }
 
     /**
@@ -456,8 +493,9 @@ class AdminController extends Controller
         $utmCampaign = $request->get('utm_campaign');
         $direct      = $request->get('direct');
         $search      = $request->get('search');
-        $profile     = $request->get('profile');
-        $source      = $request->get('source');
+        $profile     = array_values(array_filter((array) $request->get('profile')));
+        $source      = array_values(array_filter((array) $request->get('source')));
+        $marking     = array_values(array_filter((array) $request->get('marking')));
         $dateFrom    = $request->get('date_from');
         $dateTo      = $request->get('date_to');
         $query = $this->buildRegistrantQuery($request);
@@ -479,12 +517,11 @@ class AdminController extends Controller
             });
         }
         if ($profile) {
-            $statsQuery->where('job_title', $profile);
+            $statsQuery->whereIn('job_title', $profile);
         }
-        if ($source === 'direct') {
-            $statsQuery->whereNull('utm_source');
-        } elseif ($source) {
-            $statsQuery->where('utm_source', $source);
+        $statsQuery->filterBySources($source);
+        if ($marking) {
+            $statsQuery->whereIn('client_remark_action', $marking);
         }
         if ($dateFrom) {
             $statsQuery->whereDate('created_at', '>=', $dateFrom);
@@ -553,8 +590,9 @@ class AdminController extends Controller
         $utmCampaign = $request->get('utm_campaign');
         $direct      = $request->get('direct');
         $search      = $request->get('search');
-        $profile     = $request->get('profile');
-        $source      = $request->get('source');
+        $profile     = array_values(array_filter((array) $request->get('profile')));
+        $source      = array_values(array_filter((array) $request->get('source')));
+        $marking     = array_values(array_filter((array) $request->get('marking')));
         $dateFrom    = $request->get('date_from');
         $dateTo      = $request->get('date_to');
 
@@ -582,16 +620,17 @@ class AdminController extends Controller
             });
         }
 
-        // Filter by profile (job title)
+        // Filter by profile (job title) — multi-select
         if ($profile) {
-            $query->where('job_title', $profile);
+            $query->whereIn('job_title', $profile);
         }
 
-        // Filter by source dropdown ('direct' = no UTM source)
-        if ($source === 'direct') {
-            $query->whereNull('utm_source');
-        } elseif ($source) {
-            $query->where('utm_source', $source);
+        // Filter by source dropdown ('direct' = no UTM source, multi-select)
+        $query->filterBySources($source);
+
+        // Filter by client marking (approve / reject / waiting list)
+        if ($marking) {
+            $query->whereIn('client_remark_action', $marking);
         }
 
         // Filter by registration date range
@@ -791,12 +830,19 @@ class AdminController extends Controller
      */
     public function registConfirmation(Request $request)
     {
-        $statusFilter   = $request->get('status', 'all');      // all, pending, approved, rejected
+        $statusFilter    = $request->get('status', 'all');      // all, pending, approved, rejected
         $recommendFilter = $request->get('recommend', 'all');   // all, approve, reject
+        $search          = trim((string) $request->get('search')); // name / email
 
         $query = Registrant::whereNotNull('client_remark_action')
             ->with('clientRemarkedBy');
 
+        if ($search !== '') {
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                    ->orWhere('email', 'like', "%{$search}%");
+            });
+        }
         if ($statusFilter !== 'all') {
             $query->where('status', $statusFilter);
         }
@@ -810,11 +856,12 @@ class AdminController extends Controller
         $stats = [
             'total_approve'  => (clone $base)->where('client_remark_action', 'approve')->where('status', 'pending')->count(),
             'total_reject'   => (clone $base)->where('client_remark_action', 'reject')->where('status', 'pending')->count(),
+            'total_waitlist' => (clone $base)->where('client_remark_action', 'waitlist')->where('status', 'pending')->count(),
             'total_approved' => (clone $base)->where('client_remark_action', 'approve')->where('status', 'approved')->count(),
             'total_rejected' => (clone $base)->where('client_remark_action', 'reject')->where('status', 'rejected')->count(),
         ];
 
-        return view('admin.regist-confirmation', compact('registrants', 'stats', 'statusFilter', 'recommendFilter'));
+        return view('admin.regist-confirmation', compact('registrants', 'stats', 'statusFilter', 'recommendFilter', 'search'));
     }
 
     /**
@@ -829,10 +876,17 @@ class AdminController extends Controller
 
         $statusFilter    = $request->get('status', 'all');      // all, pending, approved, rejected
         $recommendFilter = $request->get('recommend', 'all');   // all, approve, reject
+        $search          = trim((string) $request->get('search')); // name / email
 
         $query = Registrant::whereNotNull('client_remark_action')
             ->with(['clientRemarkedBy', 'approver', 'rejecter']);
 
+        if ($search !== '') {
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                    ->orWhere('email', 'like', "%{$search}%");
+            });
+        }
         if ($statusFilter !== 'all') {
             $query->where('status', $statusFilter);
         }
@@ -1063,8 +1117,9 @@ class AdminController extends Controller
         $utmMedium   = $request->get('utm_medium');
         $utmCampaign = $request->get('utm_campaign');
         $direct      = $request->get('direct');
-        $profile     = $request->get('profile');
-        $source      = $request->get('source');
+        $profile     = array_values(array_filter((array) $request->get('profile')));
+        $source      = array_values(array_filter((array) $request->get('source')));
+        $marking     = array_values(array_filter((array) $request->get('marking')));
         $dateFrom    = $request->get('date_from');
         $dateTo      = $request->get('date_to');
 
@@ -1079,12 +1134,11 @@ class AdminController extends Controller
         }
 
         if ($profile) {
-            $query->where('job_title', $profile);
+            $query->whereIn('job_title', $profile);
         }
-        if ($source === 'direct') {
-            $query->whereNull('utm_source');
-        } elseif ($source) {
-            $query->where('utm_source', $source);
+        $query->filterBySources($source);
+        if ($marking) {
+            $query->whereIn('client_remark_action', $marking);
         }
         if ($dateFrom) {
             $query->whereDate('created_at', '>=', $dateFrom);

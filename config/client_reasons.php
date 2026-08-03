@@ -24,4 +24,11 @@ return [
         'NOT REPRESENTING ANY COMPANY',
     ],
 
+    'pending' => [
+        'WAITING LIST',
+        'WAITING FOR METRODATA APPROVAL',
+        'STILL IN PROCESS',
+        'NEED MORE INFORMATION',
+    ],
+
 ];

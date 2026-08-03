@@ -20,9 +20,9 @@ class AdminOnsiteController extends Controller
 
         $status   = $request->get('status', 'approved'); // default: approved
         $search   = $request->get('search');
-        $profile  = $request->get('profile');
+        $profile  = array_values(array_filter((array) $request->get('profile')));
         $company  = $request->get('company');
-        $source   = $request->get('source');
+        $source   = array_values(array_filter((array) $request->get('source')));
         $checkedIn = $request->get('checked_in');
         $sort     = $request->get('sort');
         $direction = $request->get('direction', 'asc');
@@ -45,16 +45,12 @@ class AdminOnsiteController extends Controller
             });
         }
         if ($profile) {
-            $base->where('job_title', $profile);
+            $base->whereIn('job_title', $profile);
         }
         if ($company) {
             $base->where('company', 'like', '%' . $company . '%');
         }
-        if ($source === 'direct') {
-            $base->whereNull('utm_source');
-        } elseif ($source) {
-            $base->where('utm_source', $source);
-        }
+        $base->filterBySources($source);
         if ($checkedIn === 'yes') {
             $base->whereNotNull('checked_in_at');
         } elseif ($checkedIn === 'no') {
@@ -99,9 +95,9 @@ class AdminOnsiteController extends Controller
     {
         $status    = $request->get('status', 'approved');
         $search    = $request->get('search');
-        $profile   = $request->get('profile');
+        $profile   = array_values(array_filter((array) $request->get('profile')));
         $company   = $request->get('company');
-        $source    = $request->get('source');
+        $source    = array_values(array_filter((array) $request->get('source')));
         $checkedIn = $request->get('checked_in');
         $sort      = $request->get('sort');
         $direction = $request->get('direction', 'asc');
@@ -147,16 +143,12 @@ class AdminOnsiteController extends Controller
         }
 
         if ($profile) {
-            $query->where('job_title', $profile);
+            $query->whereIn('job_title', $profile);
         }
         if ($company) {
             $query->where('company', 'like', '%' . $company . '%');
         }
-        if ($source === 'direct') {
-            $query->whereNull('utm_source');
-        } elseif ($source) {
-            $query->where('utm_source', $source);
-        }
+        $query->filterBySources($source);
 
         if ($checkedIn === 'yes') {
             $query->whereNotNull('checked_in_at');

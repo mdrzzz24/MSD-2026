@@ -26,6 +26,7 @@ class Registrant extends Authenticatable
         'unique_code',
         'notes',
         'status',
+        'waitlisted',
         'admin_notes',
         'processed_at',
         'password',
@@ -59,8 +60,9 @@ class Registrant extends Authenticatable
         'checked_in_at'      => 'datetime',
         'client_remarked_at' => 'datetime',
         'gdpr'               => 'boolean',
-        'attended_before' => 'boolean',
-        'password'      => 'hashed',
+        'attended_before'    => 'boolean',
+        'waitlisted'         => 'boolean',
+        'password'           => 'hashed',
     ];
 
     /**
@@ -100,6 +102,38 @@ class Registrant extends Authenticatable
         return $query->where('status', 'rejected');
     }
 
+    public function scopeWaitlisted($query)
+    {
+        return $query->where('waitlisted', true);
+    }
+
+    /**
+     * Filter by one or more UTM sources (multi-select filter).
+     * The special value 'direct' means "no UTM source" (utm_source IS NULL).
+     * 'direct' is OR-ed with the other selected sources.
+     *
+     * @param  string  $column  Column name — pass a qualified name (e.g. 'registrants.utm_source') on joined queries.
+     */
+    public function scopeFilterBySources($query, array $sources, string $column = 'utm_source')
+    {
+        $sources = array_values(array_filter($sources));
+        if (empty($sources)) {
+            return $query;
+        }
+
+        $hasDirect = in_array('direct', $sources, true);
+        $others = array_values(array_filter($sources, fn ($s) => $s !== 'direct'));
+
+        return $query->where(function ($q) use ($hasDirect, $others, $column) {
+            if ($hasDirect) {
+                $q->whereNull($column);
+            }
+            if ($others) {
+                $q->{$hasDirect ? 'orWhereIn' : 'whereIn'}($column, $others);
+            }
+        });
+    }
+
     // ── Helpers ──
 
     public function isPending(): bool
@@ -110,6 +144,11 @@ class Registrant extends Authenticatable
     public function isApproved(): bool
     {
         return $this->status === 'approved';
+    }
+
+    public function isWaitlisted(): bool
+    {
+        return $this->client_remark_action === 'waitlist' || (bool) $this->waitlisted;
     }
 
     /**
@@ -324,5 +363,53 @@ class Registrant extends Authenticatable
     public function hasClientRemark(): bool
     {
         return !is_null($this->client_remark_action);
+    }
+
+    /**
+     * Human label for the client remark (e.g. "✅ Approve").
+     * When $short is true, the emoji prefix is omitted.
+     */
+    public function clientRemarkLabel(bool $short = false): string
+    {
+        $emojis = ['approve' => '✅', 'reject' => '❌', 'pending' => '⏳', 'waitlist' => '⏳'];
+        $words  = ['approve' => 'Approve', 'reject' => 'Reject', 'pending' => 'Pending', 'waitlist' => 'Waiting List'];
+
+        $action = $this->client_remark_action;
+
+        if (!isset($words[$action])) {
+            return '';
+        }
+
+        return $short
+            ? $words[$action]
+            : ($emojis[$action] . ' ' . $words[$action]);
+    }
+
+    /**
+     * Tailwind text-color class for the client remark label.
+     */
+    public function clientRemarkTextClass(): string
+    {
+        return match ($this->client_remark_action) {
+            'approve'  => 'text-emerald-600',
+            'reject'   => 'text-red-600',
+            'pending'  => 'text-amber-600',
+            'waitlist' => 'text-orange-600',
+            default    => 'text-gray-500',
+        };
+    }
+
+    /**
+     * Tailwind badge classes for the client remark pill.
+     */
+    public function clientRemarkBadgeClass(): string
+    {
+        return match ($this->client_remark_action) {
+            'approve'  => 'bg-emerald-100 text-emerald-700',
+            'reject'   => 'bg-red-100 text-red-700',
+            'pending'  => 'bg-amber-100 text-amber-700',
+            'waitlist' => 'bg-orange-100 text-orange-700',
+            default    => 'bg-gray-100 text-gray-600',
+        };
     }
 }

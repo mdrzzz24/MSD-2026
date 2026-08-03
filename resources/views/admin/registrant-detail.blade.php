@@ -191,7 +191,7 @@
                             <div class="flex items-center justify-between mb-3">
                                 <dt class="text-xs font-semibold text-indigo-600 uppercase tracking-wider">Must be :</dt>
                             </div>
-                            <div class="flex items-center gap-3">
+                            <div class="flex items-center gap-2">
                                 <button {{ $registrant->hasClientRemark() ? '' : "onclick=detailMustBe($registrant->id,'approve')" }}
                                         id="detail-approve-{{ $registrant->id }}"
                                         class="flex-1 px-4 py-3 rounded-xl text-sm font-bold transition border-2
@@ -210,8 +210,8 @@
                             </div>
                             @if ($registrant->hasClientRemark())
                             <div class="mt-3 text-xs text-gray-500 text-center">
-                                <span class="font-semibold {{ $registrant->client_remark_action === 'reject' ? 'text-red-600' : 'text-emerald-600' }}">
-                                    {{ $registrant->client_remark_action === 'approve' ? '✅ Approve' : '❌ Reject' }}
+                                <span class="font-semibold {{ $registrant->clientRemarkTextClass() }}">
+                                    {{ $registrant->clientRemarkLabel() }}
                                 </span>
                                 @if ($registrant->client_remark)
                                     &middot; {{ $registrant->client_remark }}
@@ -229,9 +229,8 @@
                         <div class="bg-indigo-50 rounded-xl p-4 border border-indigo-200">
                             <dt class="text-xs font-semibold text-indigo-600 uppercase tracking-wider mb-2">Must be :</dt>
                             <div class="flex flex-col items-start gap-1">
-                                <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold
-                                    {{ $registrant->client_remark_action === 'approve' ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700' }}">
-                                    {{ $registrant->client_remark_action === 'approve' ? '✅ Must be Approve' : '❌ Must be Reject' }}
+                                <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold {{ $registrant->clientRemarkBadgeClass() }}">
+                                    {{ $registrant->clientRemarkLabel(true) }}
                                 </span>
                                 @if ($registrant->clientRemarkedBy)
                                     <span class="text-xs text-gray-500">{{ $registrant->clientRemarkedBy->name }}</span>
@@ -243,14 +242,25 @@
                             </div>
                         </div>
                             @endif
+                        {{-- Waiting List toggle - always available to client --}}
+                        <form action="{{ route('admin.registrants.toggle-waitlist', $registrant) }}" method="POST" class="mt-3">
+                            @csrf
+                            <button type="submit"
+                                    onclick="return confirm('{{ $registrant->isWaitlisted() ? 'Remove from waiting list?' : 'Add to waiting list?' }}')"
+                                    title="{{ $registrant->isWaitlisted() ? 'Remove from waiting list' : 'Mark as waiting list' }}"
+                                    class="w-full inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-sm font-bold transition border-2
+                                    {{ $registrant->isWaitlisted() ? 'bg-orange-500 text-white border-orange-500 hover:bg-orange-600' : 'bg-white text-orange-700 border-orange-300 hover:bg-orange-50' }}">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                {{ $registrant->isWaitlisted() ? 'Remove Waiting List' : 'Waiting List' }}
+                            </button>
+                        </form>
                         @endif
                         @if (!Auth::user()->isClient() && $registrant->hasClientRemark())
                         <div class="bg-indigo-50 rounded-xl p-4 border border-indigo-200">
                             <dt class="text-xs font-semibold text-indigo-600 uppercase tracking-wider mb-2">Must be :</dt>
                             <div class="flex flex-col items-start gap-1">
-                                <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold
-                                    {{ $registrant->client_remark_action === 'approve' ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700' }}">
-                                    {{ $registrant->client_remark_action === 'approve' ? '✅ Must be Approve' : '❌ Must be Reject' }}
+                                <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold {{ $registrant->clientRemarkBadgeClass() }}">
+                                    {{ $registrant->clientRemarkLabel(true) }}
                                 </span>
                                 @if ($registrant->clientRemarkedBy)
                                     <span class="text-xs text-gray-500">{{ $registrant->clientRemarkedBy->name }}</span>
@@ -287,7 +297,7 @@
                                 @if ($registrant->hasClientRemark())
                                 <div class="flex flex-col items-center text-xs bg-indigo-50 px-3 py-1.5 rounded-lg border border-indigo-100 mr-1">
                                     <span class="font-semibold text-indigo-700">
-                                        {{ $registrant->client_remark_action === 'approve' ? '✅ Approve' : '❌ Reject' }}
+                                        {{ $registrant->clientRemarkLabel() }}
                                     </span>
                                     @if ($registrant->clientRemarkedBy)
                                         <span class="text-[10px] text-indigo-500">{{ $registrant->clientRemarkedBy->name }}</span>
@@ -348,8 +358,8 @@
                             <div class="bg-indigo-50 rounded-xl p-3 border border-indigo-200">
                                 <p class="text-xs font-semibold text-indigo-600 uppercase tracking-wider mb-1">Client Recommendation</p>
                                 <div class="flex items-center gap-1.5 mb-1">
-                                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold {{ $registrant->client_remark_action === 'approve' ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700' }}">
-                                        {{ $registrant->client_remark_action === 'approve' ? '✅ Approve' : '❌ Reject' }}
+                                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold {{ $registrant->clientRemarkBadgeClass() }}">
+                                        {{ $registrant->clientRemarkLabel() }}
                                     </span>
                                 </div>
                                 @if ($registrant->clientRemarkedBy)
@@ -777,12 +787,39 @@
         detailMustBe(rrPending.id, 'reject', reason);
     }
 
+    // Pending reason modal state
+    var ppPending = { id: null, btn: null };
+
+    function openPendingReason(id, btn) {
+        ppPending = { id: id, btn: btn };
+        var name = (btn && btn.getAttribute('data-name')) || '';
+        document.getElementById('ppName').textContent = name;
+        var sel = document.getElementById('ppSelect');
+        sel.value = '';
+        document.getElementById('pendingReasonModal').classList.remove('hidden');
+    }
+
+    function closePendingReasonModal() {
+        document.getElementById('pendingReasonModal').classList.add('hidden');
+    }
+
+    function confirmPendingReason() {
+        var reason = document.getElementById('ppSelect').value;
+        if (!reason) {
+            alert('Please select a reason.');
+            return;
+        }
+        closePendingReasonModal();
+        detailMustBe(ppPending.id, 'pending', reason);
+    }
+
     function detailMustBe(id, action, reason) {
         var approveBtn = document.getElementById('detail-approve-' + id);
+        var pendingBtn = document.getElementById('detail-pending-' + id);
         var rejectBtn = document.getElementById('detail-reject-' + id);
+        var all = [approveBtn, pendingBtn, rejectBtn];
 
-        if (approveBtn) approveBtn.disabled = true;
-        if (rejectBtn) rejectBtn.disabled = true;
+        all.forEach(function(b) { if (b) b.disabled = true; });
 
         fetch(detailMustBeUrl, {
             method: 'POST',
@@ -796,28 +833,30 @@
         .then(function(r) { return r.json(); })
         .then(function(data) {
             if (data.success) {
-                var isApprove = action === 'approve';
-                if (approveBtn) {
-                    approveBtn.className = 'flex-1 px-4 py-3 rounded-xl text-sm font-bold transition border-2 ' + (isApprove ? 'bg-emerald-50 text-emerald-700 border-emerald-500 cursor-default' : 'bg-gray-50 text-gray-300 border-gray-100 cursor-default');
-                    approveBtn.disabled = false;
-                    approveBtn.onclick = null;
-                }
-                if (rejectBtn) {
-                    rejectBtn.className = 'flex-1 px-4 py-3 rounded-xl text-sm font-bold transition border-2 ' + (isApprove ? 'bg-gray-50 text-gray-300 border-gray-100 cursor-default' : 'bg-red-50 text-red-700 border-red-500 cursor-default');
-                    rejectBtn.disabled = false;
-                    rejectBtn.onclick = null;
-                }
+                var active = {
+                    approve: 'bg-emerald-50 text-emerald-700 border-emerald-500 cursor-default',
+                    pending: 'bg-amber-50 text-amber-700 border-amber-500 cursor-default',
+                    reject: 'bg-red-50 text-red-700 border-red-500 cursor-default'
+                };
+                var inactive = 'bg-gray-50 text-gray-300 border-gray-100 cursor-default';
+                var buttons = { approve: approveBtn, pending: pendingBtn, reject: rejectBtn };
+                Object.keys(buttons).forEach(function(key) {
+                    var b = buttons[key];
+                    if (!b) return;
+                    b.className = 'flex-1 px-4 py-3 rounded-xl text-sm font-bold transition border-2 ' + (key === action ? active[action] : inactive);
+                    b.disabled = false;
+                    b.onclick = null;
+                });
             }
         })
         .catch(function() {
-            if (approveBtn) approveBtn.disabled = false;
-            if (rejectBtn) rejectBtn.disabled = false;
+            all.forEach(function(b) { if (b) b.disabled = false; });
         });
     }
 
-    // Close reject reason modal on Escape
+    // Close reason modals on Escape
     document.addEventListener('keydown', function(e) {
-        if (e.key === 'Escape') closeRejectReasonModal();
+        if (e.key === 'Escape') { closeRejectReasonModal(); closePendingReasonModal(); }
     });
 </script>
 
@@ -852,6 +891,43 @@
                         class="px-5 py-2.5 text-sm font-medium rounded-xl bg-gray-100 text-gray-700 hover:bg-gray-200 transition">Cancel</button>
                 <button type="button" onclick="confirmRejectReason()"
                         class="px-5 py-2.5 text-sm font-semibold rounded-xl bg-red-500 text-white hover:bg-red-600 shadow-sm shadow-red-200 transition">Reject</button>
+            </div>
+        </div>
+    </div>
+    </div>
+</div>
+
+{{-- Pending Reason Modal (client recommendation) --}}
+<div id="pendingReasonModal" class="fixed inset-0 z-50 hidden" role="dialog" aria-modal="true">
+    <div class="fixed inset-0 bg-black/40 backdrop-blur-sm" onclick="closePendingReasonModal()"></div>
+    <div class="fixed inset-0 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden animate-fade-in">
+        <div class="bg-amber-50 px-6 py-4 border-b border-amber-100">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-amber-100 rounded-xl flex items-center justify-center">
+                    <svg class="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                </div>
+                <div>
+                    <h3 class="text-lg font-bold text-gray-900">Pending Reason</h3>
+                    <p class="text-xs text-gray-500">Select a reason for <span id="ppName" class="font-semibold text-gray-700"></span></p>
+                </div>
+            </div>
+        </div>
+        <div class="p-6">
+            <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Reason</label>
+            <select id="ppSelect" class="w-full border border-gray-300 rounded-xl px-3 py-2.5 text-sm focus:ring-2 focus:ring-amber-100 focus:border-amber-300 outline-none bg-white">
+                <option value="">— Select a reason —</option>
+                @foreach (config('client_reasons.pending') as $reason)
+                    <option value="{{ $reason }}">{{ $reason }}</option>
+                @endforeach
+            </select>
+            <div class="flex justify-end gap-2.5 mt-5">
+                <button type="button" onclick="closePendingReasonModal()"
+                        class="px-5 py-2.5 text-sm font-medium rounded-xl bg-gray-100 text-gray-700 hover:bg-gray-200 transition">Cancel</button>
+                <button type="button" onclick="confirmPendingReason()"
+                        class="px-5 py-2.5 text-sm font-semibold rounded-xl bg-amber-500 text-white hover:bg-amber-600 shadow-sm shadow-amber-200 transition">Pending</button>
             </div>
         </div>
     </div>

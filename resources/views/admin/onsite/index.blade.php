@@ -117,13 +117,7 @@ Print Badges
         </div>
     </div>
     <div>
-        <label class="block text-xs font-semibold text-gray-500 mb-1">Profile</label>
-        <select name="profile" class="px-3 py-2 text-sm border border-gray-200 rounded-xl bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500">
-            <option value="">All profiles</option>
-            @foreach ($profiles as $p)
-                <option value="{{ $p }}" @selected(request('profile') === $p)>{{ $p }}</option>
-            @endforeach
-        </select>
+        @include('admin.partials.profile-filter')
     </div>
     <div>
         <label class="block text-xs font-semibold text-gray-500 mb-1">Company</label>
@@ -135,14 +129,7 @@ Print Badges
         </select>
     </div>
     <div>
-        <label class="block text-xs font-semibold text-gray-500 mb-1">Source</label>
-        <select name="source" class="px-3 py-2 text-sm border border-gray-200 rounded-xl bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500">
-            <option value="">All sources</option>
-            <option value="direct" @selected(request('source') === 'direct')>Direct</option>
-            @foreach ($sources as $s)
-                <option value="{{ $s }}" @selected(request('source') === $s)>{{ $s }}</option>
-            @endforeach
-        </select>
+        @include('admin.partials.source-filter')
     </div>
     <div>
         <label class="block text-xs font-semibold text-gray-500 mb-1">Checked-in</label>

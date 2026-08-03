@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <link rel="icon" type="image/png" href="{{ asset('img/metrodata.png') }}">
+    <link rel="icon" type="image/png" href="<?php echo e(asset('img/metrodata.png')); ?>">
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Regist Confirmation — {{ config('app.name') }}</title>
+    <title>Regist Confirmation — <?php echo e(config('app.name')); ?></title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
@@ -12,17 +12,17 @@
 </head>
 <body class="bg-gray-50 font-sans antialiased">
 <div class="flex min-h-screen">
-    @include('admin.partials.sidebar')
+    <?php echo $__env->make('admin.partials.sidebar', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
     <main class="flex-1 lg:ml-64">
         <header class="sticky top-0 z-30 bg-white/80 backdrop-blur border-b border-gray-200">
             <div class="flex items-center h-16 px-4 sm:px-6 lg:px-8 gap-4">
-                <a href="{{ route('admin.dashboard') }}" class="inline-flex items-center gap-1.5 text-sm text-indigo-600 hover:text-indigo-800 font-medium transition">
+                <a href="<?php echo e(route('admin.dashboard')); ?>" class="inline-flex items-center gap-1.5 text-sm text-indigo-600 hover:text-indigo-800 font-medium transition">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
                     Dashboard
                 </a>
                 <span class="text-gray-300">/</span>
                 <h1 class="text-lg font-bold text-gray-900">Regist Confirmation</h1>
-                <a href="{{ route('admin.regist-confirmation.export-csv', request()->only(['status', 'recommend'])) }}"
+                <a href="<?php echo e(route('admin.regist-confirmation.export-csv', request()->only(['status', 'recommend']))); ?>"
                    class="ml-auto inline-flex items-center gap-2 px-3.5 py-2 text-sm font-semibold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl transition shadow-sm shadow-indigo-200">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
                     Export CSV
@@ -30,11 +30,11 @@
             </div>
         </header>
         <div class="p-4 sm:p-6 lg:p-8 space-y-6">
-            @include('admin.partials.notification')
+            <?php echo $__env->make('admin.partials.notification', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
 
-            {{-- Stats Cards --}}
+            
             <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-4">
-                <a href="{{ route('admin.regist-confirmation', array_merge(request()->except(['status', 'page']), ['status' => 'pending', 'recommend' => 'approve'])) }}"
+                <a href="<?php echo e(route('admin.regist-confirmation', array_merge(request()->except(['status', 'page']), ['status' => 'pending', 'recommend' => 'approve']))); ?>"
                    class="group bg-white rounded-2xl p-5 border border-amber-100 shadow-sm hover:shadow-md transition-shadow">
                     <div class="flex items-center justify-between mb-3">
                         <span class="text-xs font-semibold text-amber-600 uppercase tracking-wider">Pending Approve</span>
@@ -44,10 +44,10 @@
                             </svg>
                         </div>
                     </div>
-                    <p class="text-3xl font-bold text-amber-700">{{ $stats['total_approve'] }}</p>
+                    <p class="text-3xl font-bold text-amber-700"><?php echo e($stats['total_approve']); ?></p>
                     <p class="text-xs text-amber-500 mt-1">Waiting for approval</p>
                 </a>
-                <a href="{{ route('admin.regist-confirmation', array_merge(request()->except(['status', 'page']), ['status' => 'pending', 'recommend' => 'reject'])) }}"
+                <a href="<?php echo e(route('admin.regist-confirmation', array_merge(request()->except(['status', 'page']), ['status' => 'pending', 'recommend' => 'reject']))); ?>"
                    class="group bg-white rounded-2xl p-5 border border-red-100 shadow-sm hover:shadow-md transition-shadow">
                     <div class="flex items-center justify-between mb-3">
                         <span class="text-xs font-semibold text-red-500 uppercase tracking-wider">Pending Reject</span>
@@ -57,10 +57,10 @@
                             </svg>
                         </div>
                     </div>
-                    <p class="text-3xl font-bold text-red-600">{{ $stats['total_reject'] }}</p>
+                    <p class="text-3xl font-bold text-red-600"><?php echo e($stats['total_reject']); ?></p>
                     <p class="text-xs text-red-400 mt-1">Waiting for rejection</p>
                 </a>
-                <a href="{{ route('admin.regist-confirmation', array_merge(request()->except(['status', 'page']), ['status' => 'pending', 'recommend' => 'waitlist'])) }}"
+                <a href="<?php echo e(route('admin.regist-confirmation', array_merge(request()->except(['status', 'page']), ['status' => 'pending', 'recommend' => 'waitlist']))); ?>"
                    class="group bg-white rounded-2xl p-5 border border-orange-100 shadow-sm hover:shadow-md transition-shadow">
                     <div class="flex items-center justify-between mb-3">
                         <span class="text-xs font-semibold text-orange-600 uppercase tracking-wider">Pending Waiting List</span>
@@ -70,10 +70,10 @@
                             </svg>
                         </div>
                     </div>
-                    <p class="text-3xl font-bold text-orange-700">{{ $stats['total_waitlist'] }}</p>
+                    <p class="text-3xl font-bold text-orange-700"><?php echo e($stats['total_waitlist']); ?></p>
                     <p class="text-xs text-orange-500 mt-1">Waiting list</p>
                 </a>
-                <a href="{{ route('admin.regist-confirmation', array_merge(request()->except(['status', 'page']), ['status' => 'approved'])) }}"
+                <a href="<?php echo e(route('admin.regist-confirmation', array_merge(request()->except(['status', 'page']), ['status' => 'approved']))); ?>"
                    class="group bg-white rounded-2xl p-5 border border-emerald-100 shadow-sm hover:shadow-md transition-shadow">
                     <div class="flex items-center justify-between mb-3">
                         <span class="text-xs font-semibold text-emerald-600 uppercase tracking-wider">Approved</span>
@@ -83,10 +83,10 @@
                             </svg>
                         </div>
                     </div>
-                    <p class="text-3xl font-bold text-emerald-700">{{ $stats['total_approved'] }}</p>
+                    <p class="text-3xl font-bold text-emerald-700"><?php echo e($stats['total_approved']); ?></p>
                     <p class="text-xs text-emerald-500 mt-1">Already approved</p>
                 </a>
-                <a href="{{ route('admin.regist-confirmation', array_merge(request()->except(['status', 'page']), ['status' => 'rejected'])) }}"
+                <a href="<?php echo e(route('admin.regist-confirmation', array_merge(request()->except(['status', 'page']), ['status' => 'rejected']))); ?>"
                    class="group bg-white rounded-2xl p-5 border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
                     <div class="flex items-center justify-between mb-3">
                         <span class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Rejected</span>
@@ -96,12 +96,12 @@
                             </svg>
                         </div>
                     </div>
-                    <p class="text-3xl font-bold text-gray-700">{{ $stats['total_rejected'] }}</p>
+                    <p class="text-3xl font-bold text-gray-700"><?php echo e($stats['total_rejected']); ?></p>
                     <p class="text-xs text-gray-400 mt-1">Already rejected</p>
                 </a>
             </div>
 
-            {{-- Filters --}}
+            
             <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
                 <div class="px-5 py-4 border-b border-gray-100">
                     <div class="flex flex-col sm:flex-row sm:items-center gap-3">
@@ -110,18 +110,18 @@
                             <p class="text-xs text-gray-500">Registrants that have been reviewed by clients</p>
                         </div>
                         <div class="flex flex-wrap items-center gap-2 sm:ml-auto">
-                            <form method="GET" action="{{ route('admin.regist-confirmation') }}" class="flex items-center gap-2 mr-1">
-                                <input type="hidden" name="status" value="{{ $statusFilter }}">
-                                <input type="hidden" name="recommend" value="{{ $recommendFilter }}">
+                            <form method="GET" action="<?php echo e(route('admin.regist-confirmation')); ?>" class="flex items-center gap-2 mr-1">
+                                <input type="hidden" name="status" value="<?php echo e($statusFilter); ?>">
+                                <input type="hidden" name="recommend" value="<?php echo e($recommendFilter); ?>">
                                 <div class="relative">
-                                    <input type="text" name="search" value="{{ $search ?? '' }}" placeholder="Cari nama / email…"
+                                    <input type="text" name="search" value="<?php echo e($search ?? ''); ?>" placeholder="Cari nama / email…"
                                            class="w-52 rounded-lg border border-gray-200 bg-gray-50 text-sm text-gray-800 placeholder-gray-400 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 py-1.5 pl-3 pr-8 transition">
-                                    @if (!empty($search))
-                                        <a href="{{ route('admin.regist-confirmation', array_merge(request()->except(['search', 'page']), ['status' => $statusFilter, 'recommend' => $recommendFilter])) }}"
+                                    <?php if(!empty($search)): ?>
+                                        <a href="<?php echo e(route('admin.regist-confirmation', array_merge(request()->except(['search', 'page']), ['status' => $statusFilter, 'recommend' => $recommendFilter]))); ?>"
                                            class="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600" title="Hapus pencarian">
                                             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                                         </a>
-                                    @endif
+                                    <?php endif; ?>
                                 </div>
                                 <button type="submit" class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg transition">
                                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
@@ -135,16 +135,16 @@
                             </div>
                             <div class="flex items-center gap-2 text-xs flex-wrap">
                                 <span class="text-gray-400 font-medium">Status:</span>
-                                <a href="{{ route('admin.regist-confirmation', array_merge(request()->except(['status', 'page']), ['status' => 'all'])) }}" class="px-2.5 py-1 rounded-lg font-semibold transition {{ $statusFilter === 'all' ? 'bg-gray-200 text-gray-700' : 'bg-gray-100 text-gray-500 hover:bg-gray-200' }}">All</a>
-                                <a href="{{ route('admin.regist-confirmation', array_merge(request()->except(['status', 'page']), ['status' => 'pending'])) }}" class="px-2.5 py-1 rounded-lg font-semibold transition {{ $statusFilter === 'pending' ? 'bg-amber-200 text-amber-800' : 'bg-gray-100 text-gray-500 hover:bg-amber-50' }}">Pending</a>
-                                <a href="{{ route('admin.regist-confirmation', array_merge(request()->except(['status', 'page']), ['status' => 'approved'])) }}" class="px-2.5 py-1 rounded-lg font-semibold transition {{ $statusFilter === 'approved' ? 'bg-emerald-200 text-emerald-800' : 'bg-gray-100 text-gray-500 hover:bg-emerald-50' }}">Approved</a>
-                                <a href="{{ route('admin.regist-confirmation', array_merge(request()->except(['status', 'page']), ['status' => 'rejected'])) }}" class="px-2.5 py-1 rounded-lg font-semibold transition {{ $statusFilter === 'rejected' ? 'bg-red-200 text-red-800' : 'bg-gray-100 text-gray-500 hover:bg-red-50' }}">Rejected</a>
+                                <a href="<?php echo e(route('admin.regist-confirmation', array_merge(request()->except(['status', 'page']), ['status' => 'all']))); ?>" class="px-2.5 py-1 rounded-lg font-semibold transition <?php echo e($statusFilter === 'all' ? 'bg-gray-200 text-gray-700' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'); ?>">All</a>
+                                <a href="<?php echo e(route('admin.regist-confirmation', array_merge(request()->except(['status', 'page']), ['status' => 'pending']))); ?>" class="px-2.5 py-1 rounded-lg font-semibold transition <?php echo e($statusFilter === 'pending' ? 'bg-amber-200 text-amber-800' : 'bg-gray-100 text-gray-500 hover:bg-amber-50'); ?>">Pending</a>
+                                <a href="<?php echo e(route('admin.regist-confirmation', array_merge(request()->except(['status', 'page']), ['status' => 'approved']))); ?>" class="px-2.5 py-1 rounded-lg font-semibold transition <?php echo e($statusFilter === 'approved' ? 'bg-emerald-200 text-emerald-800' : 'bg-gray-100 text-gray-500 hover:bg-emerald-50'); ?>">Approved</a>
+                                <a href="<?php echo e(route('admin.regist-confirmation', array_merge(request()->except(['status', 'page']), ['status' => 'rejected']))); ?>" class="px-2.5 py-1 rounded-lg font-semibold transition <?php echo e($statusFilter === 'rejected' ? 'bg-red-200 text-red-800' : 'bg-gray-100 text-gray-500 hover:bg-red-50'); ?>">Rejected</a>
                                 <span class="text-gray-300 mx-1">|</span>
                                 <span class="text-gray-400 font-medium">Recommend:</span>
-                                <a href="{{ route('admin.regist-confirmation', array_merge(request()->except(['recommend', 'page']), ['recommend' => 'all'])) }}" class="px-2.5 py-1 rounded-lg font-semibold transition {{ $recommendFilter === 'all' ? 'bg-gray-200 text-gray-700' : 'bg-gray-100 text-gray-500 hover:bg-gray-200' }}">All</a>
-                                <a href="{{ route('admin.regist-confirmation', array_merge(request()->except(['recommend', 'page']), ['recommend' => 'approve'])) }}" class="px-2.5 py-1 rounded-lg font-semibold transition {{ $recommendFilter === 'approve' ? 'bg-emerald-200 text-emerald-800' : 'bg-gray-100 text-gray-500 hover:bg-emerald-50' }}">✅ Approve</a>
-                                <a href="{{ route('admin.regist-confirmation', array_merge(request()->except(['recommend', 'page']), ['recommend' => 'reject'])) }}" class="px-2.5 py-1 rounded-lg font-semibold transition {{ $recommendFilter === 'reject' ? 'bg-red-200 text-red-800' : 'bg-gray-100 text-gray-500 hover:bg-red-50' }}">❌ Reject</a>
-                                <a href="{{ route('admin.regist-confirmation', array_merge(request()->except(['recommend', 'page']), ['recommend' => 'waitlist'])) }}" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg font-semibold transition {{ $recommendFilter === 'waitlist' ? 'bg-orange-200 text-orange-800' : 'bg-gray-100 text-gray-500 hover:bg-orange-50' }}"><svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg> Waiting List</a>
+                                <a href="<?php echo e(route('admin.regist-confirmation', array_merge(request()->except(['recommend', 'page']), ['recommend' => 'all']))); ?>" class="px-2.5 py-1 rounded-lg font-semibold transition <?php echo e($recommendFilter === 'all' ? 'bg-gray-200 text-gray-700' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'); ?>">All</a>
+                                <a href="<?php echo e(route('admin.regist-confirmation', array_merge(request()->except(['recommend', 'page']), ['recommend' => 'approve']))); ?>" class="px-2.5 py-1 rounded-lg font-semibold transition <?php echo e($recommendFilter === 'approve' ? 'bg-emerald-200 text-emerald-800' : 'bg-gray-100 text-gray-500 hover:bg-emerald-50'); ?>">✅ Approve</a>
+                                <a href="<?php echo e(route('admin.regist-confirmation', array_merge(request()->except(['recommend', 'page']), ['recommend' => 'reject']))); ?>" class="px-2.5 py-1 rounded-lg font-semibold transition <?php echo e($recommendFilter === 'reject' ? 'bg-red-200 text-red-800' : 'bg-gray-100 text-gray-500 hover:bg-red-50'); ?>">❌ Reject</a>
+                                <a href="<?php echo e(route('admin.regist-confirmation', array_merge(request()->except(['recommend', 'page']), ['recommend' => 'waitlist']))); ?>" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg font-semibold transition <?php echo e($recommendFilter === 'waitlist' ? 'bg-orange-200 text-orange-800' : 'bg-gray-100 text-gray-500 hover:bg-orange-50'); ?>"><svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg> Waiting List</a>
                             </div>
                         </div>
                     </div>
@@ -163,108 +163,112 @@
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-gray-50">
-                            @forelse ($registrants as $r)
+                            <?php $__empty_1 = true; $__currentLoopData = $registrants; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $r): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
                                 <tr class="hover:bg-gray-50/50 transition">
                                     <td class="px-3 py-3">
-                                        <input type="checkbox" class="registrant-checkbox rounded border-gray-300 text-indigo-600 focus:ring-indigo-500" value="{{ $r->id }}">
+                                        <input type="checkbox" class="registrant-checkbox rounded border-gray-300 text-indigo-600 focus:ring-indigo-500" value="<?php echo e($r->id); ?>">
                                     </td>
                                     <td class="px-5 py-4 max-w-0">
                                         <div class="flex items-center gap-2">
                                             <div class="w-7 h-7 rounded-full bg-gradient-to-br from-indigo-400 to-purple-500 flex items-center justify-center text-white text-[10px] font-bold flex-shrink-0">
-                                                {{ strtoupper(substr($r->name, 0, 1)) }}
+                                                <?php echo e(strtoupper(substr($r->name, 0, 1))); ?>
+
                                             </div>
                                             <div class="min-w-0 truncate">
-                                                <a href="{{ route('admin.registrants.show', $r) }}" class="text-sm font-semibold text-gray-900 hover:text-indigo-600 transition truncate block">{{ $r->name }}</a>
-                                                <p class="text-[11px] text-gray-500 truncate">{{ $r->email }}</p>
+                                                <a href="<?php echo e(route('admin.registrants.show', $r)); ?>" class="text-sm font-semibold text-gray-900 hover:text-indigo-600 transition truncate block"><?php echo e($r->name); ?></a>
+                                                <p class="text-[11px] text-gray-500 truncate"><?php echo e($r->email); ?></p>
                                             </div>
                                         </div>
                                     </td>
                                     <td class="px-5 py-3 text-center">
                                         <div class="flex flex-col items-center gap-0.5">
-                                            <span class="inline-flex items-center gap-1 text-[10px] {{ $r->client_remark_action === 'approve' ? 'text-emerald-600' : ($r->client_remark_action === 'reject' ? 'text-red-600' : 'text-orange-600') }}">
-                                                @if ($r->client_remark_action === 'approve')
+                                            <span class="inline-flex items-center gap-1 text-[10px] <?php echo e($r->client_remark_action === 'approve' ? 'text-emerald-600' : ($r->client_remark_action === 'reject' ? 'text-red-600' : 'text-orange-600')); ?>">
+                                                <?php if($r->client_remark_action === 'approve'): ?>
                                                     ✅ Approve
-                                                @elseif ($r->client_remark_action === 'reject')
+                                                <?php elseif($r->client_remark_action === 'reject'): ?>
                                                     ❌ Reject
-                                                @else
+                                                <?php else: ?>
                                                     <svg class="w-3 h-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                                                     Waiting List
-                                                @endif
-                                                @if ($r->clientRemarkedBy)
-                                                    by {{ $r->clientRemarkedBy->name }}
-                                                @endif
+                                                <?php endif; ?>
+                                                <?php if($r->clientRemarkedBy): ?>
+                                                    by <?php echo e($r->clientRemarkedBy->name); ?>
+
+                                                <?php endif; ?>
                                             </span>
-                                            @if ($r->client_remark)
-                                                <span class="text-[10px] text-gray-500">{{ $r->client_remark }}</span>
-                                            @endif
+                                            <?php if($r->client_remark): ?>
+                                                <span class="text-[10px] text-gray-500"><?php echo e($r->client_remark); ?></span>
+                                            <?php endif; ?>
                                             <span class="text-[9px] text-gray-400">
-                                                @if ($r->client_remarked_at)
-                                                    {{ $r->client_remarked_at->copy()->addHours(7)->format('d M Y, H:i') }} · {{ $r->client_remarked_at->diffForHumans() }}
-                                                @else
+                                                <?php if($r->client_remarked_at): ?>
+                                                    <?php echo e($r->client_remarked_at->copy()->addHours(7)->format('d M Y, H:i')); ?> · <?php echo e($r->client_remarked_at->diffForHumans()); ?>
+
+                                                <?php else: ?>
                                                     —
-                                                @endif
+                                                <?php endif; ?>
                                             </span>
                                         </div>
                                     </td>
                                     <td class="px-5 py-3 text-center hidden sm:table-cell">
-                                        @if ($r->status === 'approved')
+                                        <?php if($r->status === 'approved'): ?>
                                             <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700">Approved</span>
-                                        @elseif ($r->status === 'rejected')
+                                        <?php elseif($r->status === 'rejected'): ?>
                                             <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-red-50 text-red-700">Rejected</span>
-                                        @else
+                                        <?php else: ?>
                                             <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-amber-50 text-amber-700">Pending</span>
-                                        @endif
+                                        <?php endif; ?>
                                     </td>
                                     <td class="px-5 py-3 text-center">
                                         <div class="flex items-center justify-center gap-1">
-                                            @if ($r->isPending())
-                                            <form action="{{ route('admin.registrants.approve', $r) }}" method="POST" class="inline" onsubmit="return confirm('Approve {{ addslashes($r->name) }}?')">
-                                                @csrf
+                                            <?php if($r->isPending()): ?>
+                                            <form action="<?php echo e(route('admin.registrants.approve', $r)); ?>" method="POST" class="inline" onsubmit="return confirm('Approve <?php echo e(addslashes($r->name)); ?>?')">
+                                                <?php echo csrf_field(); ?>
                                                 <button type="submit" title="Approve" class="p-1 text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition">
                                                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
                                                 </button>
                                             </form>
-                                            <button onclick="openRejectModal('{{ $r->id }}', '{{ addslashes($r->name) }}')" title="Reject" class="p-1 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition">
+                                            <button onclick="openRejectModal('<?php echo e($r->id); ?>', '<?php echo e(addslashes($r->name)); ?>')" title="Reject" class="p-1 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition">
                                                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                                             </button>
-                                            @else
+                                            <?php else: ?>
                                                 <span class="text-xs text-gray-400">—</span>
-                                            @endif
+                                            <?php endif; ?>
                                         </div>
                                     </td>
                                 </tr>
-                            @empty
+                            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
                                 <tr>
                                     <td colspan="5" class="px-5 py-16 text-center">
                                         <div class="flex flex-col items-center gap-2">
                                             <svg class="w-12 h-12 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
                                             </svg>
-                                            @if (!empty($search))
-                                                <p class="text-gray-400 font-medium">Tidak ada hasil untuk "{{ $search }}"</p>
+                                            <?php if(!empty($search)): ?>
+                                                <p class="text-gray-400 font-medium">Tidak ada hasil untuk "<?php echo e($search); ?>"</p>
                                                 <p class="text-xs text-gray-400">Coba kata kunci lain atau hapus pencarian</p>
-                                            @else
+                                            <?php else: ?>
                                                 <p class="text-gray-400 font-medium">No recommendations yet</p>
                                                 <p class="text-xs text-gray-400">Clients have not submitted any Must be recommendations</p>
-                                            @endif
+                                            <?php endif; ?>
                                         </div>
                                     </td>
                                 </tr>
-                            @endforelse
+                            <?php endif; ?>
                         </tbody>
                     </table>
                 </div>
-                @if ($registrants->hasPages())
+                <?php if($registrants->hasPages()): ?>
                     <div class="px-5 py-4 border-t border-gray-100 bg-gray-50/50">
-                        {{ $registrants->links() }}
+                        <?php echo e($registrants->links()); ?>
+
                     </div>
-                @endif
+                <?php endif; ?>
             </div>
         </div>
     </main>
 </div>
 
-{{-- Reject Modal (Single) --}}
+
 <div id="rejectModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/40 backdrop-blur-sm p-4">
     <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden animate-fade-in">
         <div class="bg-red-50 px-6 py-4 border-b border-red-100">
@@ -285,7 +289,7 @@
                 You are about to reject <strong id="rejectName" class="text-red-600"></strong>'s registration.
             </p>
             <form id="rejectForm" method="POST">
-                @csrf
+                <?php echo csrf_field(); ?>
                 <div class="flex justify-end gap-2.5">
                     <button type="button" onclick="closeRejectModal()" class="px-5 py-2.5 text-sm font-medium rounded-xl bg-gray-100 text-gray-700 hover:bg-gray-200 transition">Cancel</button>
                     <button type="submit" class="px-5 py-2.5 text-sm font-semibold rounded-xl bg-red-500 text-white hover:bg-red-600 shadow-sm shadow-red-200 transition">Yes, Reject</button>
@@ -295,7 +299,7 @@
     </div>
 </div>
 
-{{-- Bulk Reject Modal --}}
+
 <div id="bulkRejectModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/40 backdrop-blur-sm p-4">
     <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden animate-fade-in">
         <div class="bg-red-50 px-6 py-4 border-b border-red-100">
@@ -316,8 +320,8 @@
                 Reject <strong id="bulkRejectCount" class="font-bold text-red-600">0</strong> selected registrants?
                 A rejection email will be sent automatically to each.
             </p>
-            <form id="bulkRejectForm" method="POST" action="{{ route('admin.registrants.bulk-reject') }}">
-                @csrf
+            <form id="bulkRejectForm" method="POST" action="<?php echo e(route('admin.registrants.bulk-reject')); ?>">
+                <?php echo csrf_field(); ?>
                 <div id="bulkRejectIds"></div>
                 <div class="flex justify-end gap-2.5">
                     <button type="button" onclick="closeBulkRejectModal()" class="px-5 py-2.5 text-sm font-medium rounded-xl bg-gray-100 text-gray-700 hover:bg-gray-200 transition">Cancel</button>
@@ -328,11 +332,11 @@
     </div>
 </div>
 
-@include('admin.partials.mobile-sidebar')
+<?php echo $__env->make('admin.partials.mobile-sidebar', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
 
 <script>
-    var rejectRoute = '{{ route("admin.registrants.reject", ["registrant" => "REG_ID"]) }}';
-    var bulkRejectRoute = '{{ route("admin.registrants.bulk-reject") }}';
+    var rejectRoute = '<?php echo e(route("admin.registrants.reject", ["registrant" => "REG_ID"])); ?>';
+    var bulkRejectRoute = '<?php echo e(route("admin.registrants.bulk-reject")); ?>';
 
     // ---- Reject Modal (Single) ----
     function openRejectModal(id, name) {
@@ -380,11 +384,11 @@
 
         var form = document.createElement('form');
         form.method = 'POST';
-        form.action = '{{ route("admin.registrants.bulk-approve") }}';
+        form.action = '<?php echo e(route("admin.registrants.bulk-approve")); ?>';
         form.style.display = 'none';
 
         var csrf = document.createElement('input');
-        csrf.type = 'hidden'; csrf.name = '_token'; csrf.value = '{{ csrf_token() }}';
+        csrf.type = 'hidden'; csrf.name = '_token'; csrf.value = '<?php echo e(csrf_token()); ?>';
         form.appendChild(csrf);
 
         checked.forEach(function(cb) {
@@ -451,3 +455,4 @@
 </style>
 </body>
 </html>
+<?php /**PATH /Users/mdrz/2026/MSD26/resources/views/admin/regist-confirmation.blade.php ENDPATH**/ ?>
