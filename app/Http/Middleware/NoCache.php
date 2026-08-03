@@ -16,9 +16,11 @@ class NoCache
     {
         $response = $next($request);
 
-        $response->header('Cache-Control', 'no-cache, no-store, must-revalidate');
-        $response->header('Pragma', 'no-cache');
-        $response->header('Expires', '0');
+        // Use the HeaderBag so this works for both Laravel responses and raw
+        // Symfony StreamedResponse instances (e.g. file downloads).
+        $response->headers->set('Cache-Control', 'no-cache, no-store, must-revalidate');
+        $response->headers->set('Pragma', 'no-cache');
+        $response->headers->set('Expires', '0');
 
         return $response;
     }
