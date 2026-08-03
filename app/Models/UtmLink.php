@@ -118,24 +118,38 @@ class UtmLink extends Model
     /**
      * Resolve a track for a workshop-level (master custom-slug) invitation from a matching
      * workshop UTM link that carries a track_id. Returns null when no link/track matches.
+     *
+     * Only utm_source is required — utm_medium / utm_campaign / utm_content are optional on
+     * the link, and a link that leaves one of them empty is treated as "matches anything"
+     * for that param. When several links match, the most specific one (fewest empty params)
+     * wins, falling back to the newest.
      */
     public static function resolveTrackForWorkshop(?int $workshopId, array $utm): ?Track
     {
-        if (!$workshopId || empty($utm['utm_source']) || empty($utm['utm_campaign'])) {
+        if (!$workshopId || empty($utm['utm_source'])) {
             return null;
         }
 
         $q = static::forWorkshop()
             ->where('workshop_id', $workshopId)
-            ->where('utm_source', $utm['utm_source'] ?? '')
-            ->where('utm_medium', $utm['utm_medium'] ?? '')
-            ->where('utm_campaign', $utm['utm_campaign'] ?? '')
+            ->where('utm_source', $utm['utm_source'])
             ->whereNotNull('track_id');
-        if (!empty($utm['utm_content'])) {
-            $q->where('utm_content', $utm['utm_content']);
+
+        // Each optional UTM param defined on the link must match the request value.
+        // A NULL/empty value on the link means "matches anything" for that param,
+        // so links created with only utm_source still resolve their track.
+        foreach (['utm_medium', 'utm_campaign', 'utm_content'] as $k) {
+            $q->where(function ($sub) use ($k, $utm) {
+                $sub->whereNull($k)->orWhere($k, $utm[$k] ?? '');
+            });
         }
 
-        $link = $q->latest()->first();
+        // Prefer the most specific matching link (pins down more UTM params), then newest.
+        $link = $q->orderByDesc(\Illuminate\Support\Facades\DB::raw(
+            "(utm_medium IS NOT NULL AND utm_medium <> '') +
+             (utm_campaign IS NOT NULL AND utm_campaign <> '') +
+             (utm_content IS NOT NULL AND utm_content <> '')"
+        ))->orderByDesc('id')->first();
 
         return $link?->track;
     }
