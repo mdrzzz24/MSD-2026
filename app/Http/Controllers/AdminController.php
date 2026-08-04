@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Mail\RegistrantApproved;
 use App\Mail\RegistrantCredentials;
 use App\Mail\RegistrantRejected;
+use App\Models\ClientPendingMark;
 use App\Models\EmailTemplate;
 use App\Models\Registrant;
 use App\Models\User;
@@ -514,9 +515,10 @@ class AdminController extends Controller
             ];
         }
 
-        // Other clients' PENDING (not yet submitted) decision selections
-        $pending = [];
+        // Other clients' PENDING (not yet submitted) decision selections — stored in
+        // the client_pending_marks table so they survive until submitted.
         $otherClients = User::where('role', 'client')->where('id', '!=', Auth::id())->get(['id', 'name']);
+        $otherClientIds = $otherClients->pluck('id');
 
         // Cross-device presence: heartbeat THIS client as active right now, so other
         // clients (on any device) can see that this account is collaborating live.
@@ -524,45 +526,32 @@ class AdminController extends Controller
             Cache::put('client_last_seen:' . Auth::id(), now()->toIso8601String(), now()->addSeconds(90));
         }
 
-        $pendingIds = [];
-        foreach ($otherClients as $client) {
-            foreach (Cache::get('client_pending_marks:' . $client->id, []) as $m) {
-                $rid = (int) ($m['id'] ?? 0);
-                if ($rid > 0) {
-                    $pendingIds[] = $rid;
-                }
-            }
-        }
-        $pendingNames = $pendingIds !== [] ? Registrant::whereIn('id', $pendingIds)->pluck('name', 'id') : collect();
-        foreach ($otherClients as $client) {
-            foreach (Cache::get('client_pending_marks:' . $client->id, []) as $m) {
-                $rid = (int) ($m['id'] ?? 0);
-                $pending[] = [
-                    'registrant_id' => $rid,
-                    'action'        => $m['action'] ?? null,
-                    'reason'        => $m['reason'] ?? null,
-                    'client_name'   => $client->name,
-                    'name'          => $pendingNames[$rid] ?? ('Registrant #' . $rid),
-                ];
-            }
-        }
+        $pendingRows = $otherClientIds->isNotEmpty()
+            ? ClientPendingMark::with('user')->whereIn('user_id', $otherClientIds)->get()
+            : collect();
+        $pendingIds = $pendingRows->pluck('registrant_id')->filter()->map(fn ($v) => (int) $v)->unique()->values();
+        $pendingNames = $pendingIds->isNotEmpty() ? Registrant::whereIn('id', $pendingIds)->pluck('name', 'id') : collect();
+        $pending = $pendingRows->map(fn ($m) => [
+            'registrant_id' => (int) $m->registrant_id,
+            'action'        => $m->action,
+            'reason'        => $m->reason,
+            'client_name'   => $m->user?->name,
+            'name'          => $pendingNames[(int) $m->registrant_id] ?? ('Registrant #' . $m->registrant_id),
+        ])->values()->all();
 
         // The client's OWN pending selections, enriched with registrant names (used
         // by the preview/cancel modal and to restore selections on page load).
         $myPending = [];
         if (Auth::user()->isClient()) {
-            $rawPending = Cache::get('client_pending_marks:' . Auth::id(), []);
-            $pendingIds = array_map(fn ($m) => (int) ($m['id'] ?? 0), $rawPending);
-            $pendingNames = $pendingIds !== [] ? Registrant::whereIn('id', $pendingIds)->pluck('name', 'id') : collect();
-            foreach ($rawPending as $m) {
-                $rid = (int) ($m['id'] ?? 0);
-                $myPending[] = [
-                    'id'     => $rid,
-                    'action' => $m['action'] ?? null,
-                    'reason' => $m['reason'] ?? null,
-                    'name'   => $pendingNames[$rid] ?? ('Registrant #' . $rid),
-                ];
-            }
+            $myRows = ClientPendingMark::where('user_id', Auth::id())->get();
+            $myIds = $myRows->pluck('registrant_id')->filter()->map(fn ($v) => (int) $v)->unique()->values();
+            $myNames = $myIds->isNotEmpty() ? Registrant::whereIn('id', $myIds)->pluck('name', 'id') : collect();
+            $myPending = $myRows->map(fn ($m) => [
+                'id'     => (int) $m->registrant_id,
+                'action' => $m->action,
+                'reason' => $m->reason,
+                'name'   => $myNames[(int) $m->registrant_id] ?? ('Registrant #' . $m->registrant_id),
+            ])->values()->all();
         }
 
         // Which OTHER clients are currently collaborating (seen within the last 45s),
@@ -570,13 +559,18 @@ class AdminController extends Controller
         $presence = [];
         if (Auth::user()->isClient()) {
             $onlineCutoff = now()->subSeconds(45);
+            $pendingCounts = ClientPendingMark::query()
+                ->whereIn('user_id', $otherClientIds)
+                ->selectRaw('user_id, COUNT(*) as total')
+                ->groupBy('user_id')
+                ->pluck('total', 'user_id');
             foreach ($otherClients as $client) {
                 $lastSeen = Cache::get('client_last_seen:' . $client->id);
                 if ($lastSeen && \Illuminate\Support\Carbon::parse($lastSeen)->gt($onlineCutoff)) {
                     $presence[] = [
                         'id'      => $client->id,
                         'name'    => $client->name,
-                        'pending' => count(Cache::get('client_pending_marks:' . $client->id, [])),
+                        'pending' => (int) ($pendingCounts[$client->id] ?? 0),
                     ];
                 }
             }
@@ -648,15 +642,16 @@ class AdminController extends Controller
             }
         }
 
-        Cache::put('client_pending_marks:' . Auth::id(), $clean, now()->addMinutes(10));
-
-        // Remember the FIRST client who selected each registrant, so that whoever
-        // submits later, the decision is credited to the original chooser.
+        // Persist this client's current pending selections (replace-all). Stored in
+        // the DB so they never expire until the client submits or removes them.
+        ClientPendingMark::where('user_id', Auth::id())->delete();
         foreach ($clean as $item) {
-            $rid = (int) ($item['id'] ?? 0);
-            if ($rid > 0 && ! Cache::has('client_pending_origin:' . $rid)) {
-                Cache::put('client_pending_origin:' . $rid, Auth::id(), now()->addMinutes(60));
-            }
+            ClientPendingMark::create([
+                'user_id'       => Auth::id(),
+                'registrant_id' => (int) $item['id'],
+                'action'        => $item['action'],
+                'reason'        => $item['reason'] ?? null,
+            ]);
         }
 
         return response()->json(['success' => true, 'count' => count($clean)]);
@@ -668,42 +663,31 @@ class AdminController extends Controller
      */
     private function claimedByOtherClient(int $registrantId, int $exceptClientId): bool
     {
-        foreach (User::where('role', 'client')->where('id', '!=', $exceptClientId)->pluck('id') as $clientId) {
-            foreach (Cache::get('client_pending_marks:' . $clientId, []) as $m) {
-                if ((int) ($m['id'] ?? 0) === $registrantId) {
-                    return true;
-                }
-            }
-        }
-
-        return false;
+        return ClientPendingMark::where('registrant_id', $registrantId)
+            ->where('user_id', '!=', $exceptClientId)
+            ->exists();
     }
 
     /**
      * Registrant ids that SOME client currently has selected but has NOT yet
-     * submitted (kept in the client_pending_marks cache). Admin/super admin must
+     * submitted (kept in the client_pending_marks table). Admin/super admin must
      * not see these rows until the client submits the decision.
      */
     private function clientPendingClaimedIds(): array
     {
-        $ids = [];
-        foreach (User::where('role', 'client')->pluck('id') as $clientId) {
-            foreach (Cache::get('client_pending_marks:' . $clientId, []) as $m) {
-                $rid = (int) ($m['id'] ?? 0);
-                if ($rid > 0) {
-                    $ids[] = $rid;
-                }
-            }
-        }
+        $ids = ClientPendingMark::pluck('registrant_id')
+            ->map(fn ($v) => (int) $v)
+            ->unique()
+            ->values()
+            ->all();
 
-        $ids = array_values(array_unique($ids));
         if ($ids === []) {
             return [];
         }
 
-        // Only rows that are NOT yet submitted. A stale cache entry can still point
-        // at an already-submitted registrant (e.g. another client took it over and
-        // submitted it) — those must stay visible to admin, never hidden.
+        // Only rows that are NOT yet submitted. A stale entry can still point at an
+        // already-submitted registrant (e.g. another client took it over and submitted
+        // it) — those must stay visible to admin, never hidden.
         return Registrant::whereIn('id', $ids)
             ->whereNull('client_remark_action')
             ->pluck('id')
@@ -1447,7 +1431,7 @@ class AdminController extends Controller
         $now = now();
 
         // Once submitted, this client no longer has pending selections.
-        Cache::forget('client_pending_marks:' . Auth::id());
+        ClientPendingMark::where('user_id', Auth::id())->delete();
 
         foreach ($decisions as $d) {
             $id = (int) ($d['id'] ?? 0);
@@ -1470,14 +1454,14 @@ class AdminController extends Controller
                 continue;
             }
 
-            // Credit the FIRST client who made this decision, not necessarily the
-            // submitter (e.g. when a colleague took over and submitted on their behalf).
+            // Credit the client who holds the pending claim on this registrant (the
+            // original chooser), not necessarily the submitter (take-over flow).
             $by = Auth::id();
-            $origin = (int) Cache::get('client_pending_origin:' . $registrant->id, 0);
-            if ($origin && User::where('id', $origin)->where('role', 'client')->exists()) {
-                $by = $origin;
+            $originRow = ClientPendingMark::where('registrant_id', $registrant->id)->first();
+            if ($originRow && User::where('id', $originRow->user_id)->where('role', 'client')->exists()) {
+                $by = (int) $originRow->user_id;
             }
-            Cache::forget('client_pending_origin:' . $registrant->id);
+            ClientPendingMark::where('registrant_id', $registrant->id)->delete();
 
             $registrant->update([
                 'client_remark'        => $reason !== '' ? mb_substr($reason, 0, 2000) : null,
