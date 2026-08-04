@@ -633,6 +633,21 @@ class AdminController extends Controller
             }
         }
 
+        // Drop rows that were already submitted (e.g. taken over & submitted by
+        // another client) so stale pending entries can't hide real markings.
+        if ($clean !== []) {
+            $submittedIds = Registrant::whereIn('id', array_column($clean, 'id'))
+                ->whereNotNull('client_remark_action')
+                ->pluck('id')
+                ->all();
+            if ($submittedIds !== []) {
+                $clean = array_values(array_filter(
+                    $clean,
+                    fn ($item) => ! in_array($item['id'], $submittedIds, true)
+                ));
+            }
+        }
+
         Cache::put('client_pending_marks:' . Auth::id(), $clean, now()->addMinutes(10));
 
         // Remember the FIRST client who selected each registrant, so that whoever
@@ -681,7 +696,18 @@ class AdminController extends Controller
             }
         }
 
-        return array_values(array_unique($ids));
+        $ids = array_values(array_unique($ids));
+        if ($ids === []) {
+            return [];
+        }
+
+        // Only rows that are NOT yet submitted. A stale cache entry can still point
+        // at an already-submitted registrant (e.g. another client took it over and
+        // submitted it) — those must stay visible to admin, never hidden.
+        return Registrant::whereIn('id', $ids)
+            ->whereNull('client_remark_action')
+            ->pluck('id')
+            ->all();
     }
 
     /**
