@@ -582,13 +582,19 @@ class AdminController extends Controller
             }
         }
 
+        // Admin/super admin: registrant ids that clients currently have selected but
+        // NOT yet submitted — hidden from their list until submitted (drives the live
+        // hide/show in the browser without a manual refresh).
+        $pendingClaimIds = Auth::user()->isClient() ? [] : $this->clientPendingClaimedIds();
+
         return response()->json([
-            'changed'   => $changed->values(),
-            'pending'   => $pending,
-            'myPending' => $myPending,
-            'presence'  => $presence,
-            'myCounts'  => $myCounts,
-            'stats'     => [
+            'changed'         => $changed->values(),
+            'pending'         => $pending,
+            'myPending'       => $myPending,
+            'presence'        => $presence,
+            'myCounts'        => $myCounts,
+            'pendingClaimIds' => $pendingClaimIds,
+            'stats'           => [
                 'total'    => Registrant::count(),
                 'pending'  => Registrant::pending()->count(),
                 'approved' => Registrant::approved()->count(),
@@ -656,6 +662,26 @@ class AdminController extends Controller
         }
 
         return false;
+    }
+
+    /**
+     * Registrant ids that SOME client currently has selected but has NOT yet
+     * submitted (kept in the client_pending_marks cache). Admin/super admin must
+     * not see these rows until the client submits the decision.
+     */
+    private function clientPendingClaimedIds(): array
+    {
+        $ids = [];
+        foreach (User::where('role', 'client')->pluck('id') as $clientId) {
+            foreach (Cache::get('client_pending_marks:' . $clientId, []) as $m) {
+                $rid = (int) ($m['id'] ?? 0);
+                if ($rid > 0) {
+                    $ids[] = $rid;
+                }
+            }
+        }
+
+        return array_values(array_unique($ids));
     }
 
     /**
@@ -764,6 +790,15 @@ class AdminController extends Controller
         }
         if ($direct) {
             $statsQuery->whereNull('utm_source');
+        }
+
+        // Admin/super admin: keep stats consistent with the list — exclude rows that
+        // a client is currently marking (selected but NOT yet submitted).
+        if (! Auth::user()->isClient()) {
+            $claimed = $this->clientPendingClaimedIds();
+            if ($claimed !== []) {
+                $statsQuery->whereNotIn('id', $claimed);
+            }
         }
 
         $total    = (clone $statsQuery)->count();
@@ -922,6 +957,15 @@ class AdminController extends Controller
         // Filter for Direct (no UTM)
         if ($direct) {
             $query->whereNull('utm_source');
+        }
+
+        // Admin/super admin: hide rows currently being marked (selected but NOT yet
+        // submitted) by any client — they only become visible after the client submits.
+        if (! Auth::user()->isClient()) {
+            $claimed = $this->clientPendingClaimedIds();
+            if ($claimed !== []) {
+                $query->whereNotIn('id', $claimed);
+            }
         }
 
         return $query;
@@ -1565,6 +1609,15 @@ class AdminController extends Controller
         }
         if ($direct) {
             $query->whereNull('utm_source');
+        }
+
+        // Admin/super admin: exclude rows currently being marked (not yet submitted)
+        // by a client, so the CSV matches what the admin actually sees.
+        if (! Auth::user()->isClient()) {
+            $claimed = $this->clientPendingClaimedIds();
+            if ($claimed !== []) {
+                $query->whereNotIn('id', $claimed);
+            }
         }
 
         $registrants = $query->with('clientRemarkedBy')->latest()->get();

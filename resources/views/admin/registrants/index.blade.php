@@ -1450,6 +1450,10 @@ function restoreMyPending(myPending) {
     const rtUrl = '{{ route("admin.registrants.realtime") }}';
     const rowsUrl = '{{ route("admin.registrants.rows") }}';
     const currentMy = @json($my);
+    // Admin/super admin: rows that a client is currently marking (NOT yet submitted)
+    // are hidden from the list — track the set so we re-render live when it changes.
+    const isClient = @json(Auth::user()->isClient());
+    let prevPendingClaimKey = null;
     let since = new Date().toISOString();
     let toastTimer = null;
 
@@ -1489,6 +1493,29 @@ function restoreMyPending(myPending) {
         }
     }
     function actionLabel(a) { return a === 'approve' ? 'Approved' : a === 'reject' ? 'Rejected' : 'Waiting List'; }
+    function claimKeyFor(ids) {
+        if (!ids || !ids.length) return '';
+        return ids.slice().sort(function(a, b) { return a - b; }).join(',');
+    }
+    // Re-render the whole table (rows + pagination + count) from the server — used
+    // by admin/super admin so rows hidden while a client is marking reappear once
+    // the client submits (or new claims disappear) without a manual refresh.
+    function refreshTableFromServer() {
+        const params = new URLSearchParams(window.location.search);
+        fetch('{{ route("admin.registrants.search") }}?' + params.toString(), {
+            headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' }
+        })
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                const tbody = document.getElementById('registrantTableBody');
+                if (tbody && data.rows) tbody.innerHTML = data.rows;
+                const pag = document.getElementById('registrantPagination');
+                if (pag) pag.innerHTML = data.pagination || '';
+                const count = document.getElementById('registrantCount');
+                if (count) count.textContent = '(' + (data.total || 0) + ')';
+            })
+            .catch(function() {});
+    }
     function reRenderRows(ids, cb) {
         if (!ids.length) { cb(0); return; }
         fetch(rowsUrl + '?ids=' + ids.join(','))
@@ -1522,6 +1549,12 @@ function restoreMyPending(myPending) {
             restoreMyPending(data.myPending);
             updateDecisionBar();
             updatePresence(data.presence);
+            if (!isClient) {
+                const claimKey = claimKeyFor(data.pendingClaimIds);
+                const claimsChanged = claimKey !== prevPendingClaimKey;
+                prevPendingClaimKey = claimKey;
+                if (claimsChanged) refreshTableFromServer();
+            }
         })
         .catch(function() {});
     setInterval(function() {
@@ -1536,6 +1569,18 @@ function restoreMyPending(myPending) {
                 restoreMyPending(data.myPending);
                 updateDecisionBar();
                 updatePresence(data.presence);
+                // Admin/super admin: if the set of rows being marked (not yet submitted)
+                // changed, re-render from the server — hide newly-claimed rows, and reveal
+                // rows that were released or just submitted (results now visible).
+                if (!isClient) {
+                    const claimKey = claimKeyFor(data.pendingClaimIds);
+                    const claimsChanged = claimKey !== prevPendingClaimKey;
+                    prevPendingClaimKey = claimKey;
+                    if (claimsChanged) {
+                        refreshTableFromServer();
+                        return;
+                    }
+                }
                 if (data.changed && data.changed.length) {
                     const ids = data.changed.map(function(c) { return c.id; });
                     reRenderRows(ids, function(replaced) {
