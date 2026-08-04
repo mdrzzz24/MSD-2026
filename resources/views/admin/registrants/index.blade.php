@@ -688,6 +688,18 @@
         </div>
     </div>
 </div>
+
+{{-- Live presence: which OTHER clients are collaborating right now (across devices) --}}
+<div id="collabPresence" class="hidden fixed bottom-4 left-4 z-40 items-center gap-2.5 bg-white/95 backdrop-blur border border-emerald-200 rounded-2xl shadow-lg px-4 py-2.5 text-xs">
+    <span class="inline-flex items-center gap-1.5 font-bold text-emerald-700">
+        <span class="relative flex h-2 w-2">
+            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+            <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+        </span>
+        Collaborating
+    </span>
+    <span id="collabPresenceList" class="text-gray-700 font-medium"></span>
+</div>
 @endif
 
 <script>
@@ -870,6 +882,44 @@
         });
         return { decisions: decisions, invalid: invalid };
     }
+    // Collect ALL of this client's decisions: current-page DOM selections PLUS any
+    // selections made on OTHER pagination pages (kept in myPendingCache via realtime).
+    // Rows present on this page but NOT active were canceled, so they are excluded.
+    function collectAllMyDecisions() {
+        const decisions = [];
+        const seen = new Set();
+        let invalid = false;
+        // 1) Current-page DOM selections are authoritative for rows on this page.
+        document.querySelectorAll('.decision-toggle.decision-active').forEach(btn => {
+            const id = btn.dataset.id;
+            if (seen.has(id)) return;
+            seen.add(id);
+            const action = btn.dataset.action;
+            let reason = null;
+            if (action === 'reject') {
+                const sel = document.querySelector('.decision-reason[data-id="' + id + '"]');
+                reason = sel ? sel.value : '';
+                if (!reason) { invalid = true; }
+            }
+            decisions.push({ id: id, action: action, reason: reason });
+        });
+        // 2) Own selections made on other pages (restored from cache via realtime).
+        const inDomIds = new Set();
+        document.querySelectorAll('.decision-toggle').forEach(b => inDomIds.add(String(b.dataset.id)));
+        (myPendingCache || []).forEach(p => {
+            if (!p.id || !p.action || seen.has(String(p.id))) return;
+            if (inDomIds.has(String(p.id))) return; // this page's row decides (inactive = canceled)
+            seen.add(String(p.id));
+            const action = p.action;
+            let reason = null;
+            if (action === 'reject') {
+                reason = p.reason || '';
+                if (!reason) { invalid = true; }
+            }
+            decisions.push({ id: String(p.id), action: action, reason: reason });
+        });
+        return { decisions: decisions, invalid: invalid };
+    }
     function updateDecisionBar() {
         const bar = document.getElementById('decisionBar');
         if (!bar) return;
@@ -901,7 +951,7 @@
         else { bar.classList.add('hidden'); bar.classList.remove('flex'); }
     }
     function submitDecisions() {
-        const ds = collectDecisions();
+        const ds = collectAllMyDecisions();
         if (ds.decisions.length === 0) { alert('Please select at least one decision.'); return; }
         if (ds.invalid) { alert('Please select a reason for every rejected registrant.'); return; }
         if (!confirm('Submit ' + ds.decisions.length + ' decision(s) for admin review?')) return;
@@ -1411,6 +1461,19 @@ function restoreMyPending(myPending) {
         clearTimeout(toastTimer);
         toastTimer = setTimeout(function() { t.classList.add('hidden'); }, 4000);
     }
+    // Cross-device presence: show which OTHER clients are collaborating right now.
+    function updatePresence(presence) {
+        const chip = document.getElementById('collabPresence');
+        const list = document.getElementById('collabPresenceList');
+        if (!chip || !list) return;
+        const arr = (presence || []).filter(function(p) { return p && p.name; });
+        if (!arr.length) { chip.classList.add('hidden'); chip.classList.remove('flex'); return; }
+        list.textContent = arr.map(function(p) {
+            return p.name + (p.pending > 0 ? ' (' + p.pending + ')' : '');
+        }).join(', ');
+        chip.classList.remove('hidden');
+        chip.classList.add('flex');
+    }
     function updateCounts(data) {
         if (data.myCounts) {
             ['approve','reject','waitlist','unmarked'].forEach(function(k) {
@@ -1458,6 +1521,7 @@ function restoreMyPending(myPending) {
             updatePendingBadges(data.pending);
             restoreMyPending(data.myPending);
             updateDecisionBar();
+            updatePresence(data.presence);
         })
         .catch(function() {});
     setInterval(function() {
@@ -1471,6 +1535,7 @@ function restoreMyPending(myPending) {
                 myPendingCache = data.myPending || [];
                 restoreMyPending(data.myPending);
                 updateDecisionBar();
+                updatePresence(data.presence);
                 if (data.changed && data.changed.length) {
                     const ids = data.changed.map(function(c) { return c.id; });
                     reRenderRows(ids, function(replaced) {

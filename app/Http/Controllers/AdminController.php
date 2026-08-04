@@ -517,6 +517,13 @@ class AdminController extends Controller
         // Other clients' PENDING (not yet submitted) decision selections
         $pending = [];
         $otherClients = User::where('role', 'client')->where('id', '!=', Auth::id())->get(['id', 'name']);
+
+        // Cross-device presence: heartbeat THIS client as active right now, so other
+        // clients (on any device) can see that this account is collaborating live.
+        if (Auth::user()->isClient()) {
+            Cache::put('client_last_seen:' . Auth::id(), now()->toIso8601String(), now()->addSeconds(90));
+        }
+
         $pendingIds = [];
         foreach ($otherClients as $client) {
             foreach (Cache::get('client_pending_marks:' . $client->id, []) as $m) {
@@ -558,10 +565,28 @@ class AdminController extends Controller
             }
         }
 
+        // Which OTHER clients are currently collaborating (seen within the last 45s),
+        // plus how many decisions each has marked so far — shown live on every device.
+        $presence = [];
+        if (Auth::user()->isClient()) {
+            $onlineCutoff = now()->subSeconds(45);
+            foreach ($otherClients as $client) {
+                $lastSeen = Cache::get('client_last_seen:' . $client->id);
+                if ($lastSeen && \Illuminate\Support\Carbon::parse($lastSeen)->gt($onlineCutoff)) {
+                    $presence[] = [
+                        'id'      => $client->id,
+                        'name'    => $client->name,
+                        'pending' => count(Cache::get('client_pending_marks:' . $client->id, [])),
+                    ];
+                }
+            }
+        }
+
         return response()->json([
             'changed'   => $changed->values(),
             'pending'   => $pending,
             'myPending' => $myPending,
+            'presence'  => $presence,
             'myCounts'  => $myCounts,
             'stats'     => [
                 'total'    => Registrant::count(),
