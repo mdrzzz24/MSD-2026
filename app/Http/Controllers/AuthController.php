@@ -78,6 +78,23 @@ class AuthController extends Controller
                     $user->save();
                 }
 
+                // Never land on a JSON/AJAX endpoint after login (e.g. the dashboard
+                // polling endpoint /admin/dashboard/data). If the browser's last
+                // "intended" URL is one of those, drop it so we always land on the
+                // real dashboard page instead of showing raw JSON.
+                $intended = session()->get('url.intended');
+                if ($intended) {
+                    $path = (string) parse_url($intended, PHP_URL_PATH);
+                    $isJsonEndpoint = str_ends_with($path, '/data')
+                        || str_ends_with($path, '/realtime')
+                        || str_ends_with($path, '/rows')
+                        || str_ends_with($path, '/search')
+                        || str_contains($path, '/dashboard/daily/');
+                    if ($isJsonEndpoint) {
+                        session()->forget('url.intended');
+                    }
+                }
+
                 return redirect()->intended(route('admin.dashboard'));
             }
 

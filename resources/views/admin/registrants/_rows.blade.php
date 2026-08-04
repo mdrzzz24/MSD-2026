@@ -138,6 +138,25 @@
                         @endforeach
                     </select>
                 </div>
+                @elseif ($r->client_remark_action === 'waitlist')
+                <div class="flex flex-col items-center gap-1">
+                    <div class="flex items-center gap-1">
+                        <button type="button" onclick="changeWaitlistMark({{ $r->id }}, 'approve')"
+                                class="px-2 py-1 rounded-lg text-xs font-semibold transition whitespace-nowrap border border-gray-200 bg-gray-50 text-gray-500 hover:bg-emerald-50 hover:text-emerald-600 hover:border-emerald-200" title="Change Waiting List to Approved">
+                            ✅
+                        </button>
+                        <button type="button" onclick="changeWaitlistMark({{ $r->id }}, 'reject')"
+                                class="px-2 py-1 rounded-lg text-xs font-semibold transition whitespace-nowrap border border-gray-200 bg-gray-50 text-gray-500 hover:bg-red-50 hover:text-red-600 hover:border-red-200" title="Change Waiting List to Rejected">
+                            ❌
+                        </button>
+                    </div>
+                    <select data-wl-reason data-id="{{ $r->id }}" class="wl-reason hidden mt-1 w-36 text-[10px] border border-gray-300 rounded-lg px-2 py-1 bg-white">
+                        <option value="">— Reason —</option>
+                        @foreach (config('client_reasons.reject') as $reason)
+                            <option value="{{ $reason }}">{{ $reason }}</option>
+                        @endforeach
+                    </select>
+                </div>
                 @else
                 <span class="text-[10px] text-gray-400">Already marked</span>
                 @endif

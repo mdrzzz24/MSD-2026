@@ -467,6 +467,25 @@
                                                     <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                                                 </select>
                                             </div>
+                                            <?php elseif($r->client_remark_action === 'waitlist'): ?>
+                                            <div class="flex flex-col items-center gap-1">
+                                                <div class="flex items-center gap-1">
+                                                    <button type="button" onclick="changeWaitlistMark(<?php echo e($r->id); ?>, 'approve')"
+                                                            class="px-2 py-1 rounded-lg text-xs font-semibold transition whitespace-nowrap border border-gray-200 bg-gray-50 text-gray-500 hover:bg-emerald-50 hover:text-emerald-600 hover:border-emerald-200" title="Change Waiting List to Approved">
+                                                        ✅
+                                                    </button>
+                                                    <button type="button" onclick="changeWaitlistMark(<?php echo e($r->id); ?>, 'reject')"
+                                                            class="px-2 py-1 rounded-lg text-xs font-semibold transition whitespace-nowrap border border-gray-200 bg-gray-50 text-gray-500 hover:bg-red-50 hover:text-red-600 hover:border-red-200" title="Change Waiting List to Rejected">
+                                                        ❌
+                                                    </button>
+                                                </div>
+                                                <select data-wl-reason data-id="<?php echo e($r->id); ?>" class="wl-reason hidden mt-1 w-36 text-[10px] border border-gray-300 rounded-lg px-2 py-1 bg-white">
+                                                    <option value="">— Reason —</option>
+                                                    <?php $__currentLoopData = config('client_reasons.reject'); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $reason): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                                        <option value="<?php echo e($reason); ?>"><?php echo e($reason); ?></option>
+                                                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                                                </select>
+                                            </div>
                                             <?php else: ?>
                                             <span class="text-[10px] text-gray-400">Already marked</span>
                                             <?php endif; ?>
@@ -847,6 +866,62 @@
             el.classList.remove('flex');
         }
     }
+
+    // ---- Change an already-submitted Waiting List row to Approved/Rejected ----
+    // For reject: first click on ❌ reveals the reason dropdown; CHOOSING a reason
+    // submits right away (no need to click ❌ a second time).
+    function submitChangeWaitlistForm(id, action, reason) {
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = '<?php echo e(route("admin.registrants.change-remark", ["registrant" => "REG_ID"])); ?>'.replace('REG_ID', id);
+        form.style.display = 'none';
+        const csrf = document.createElement('input');
+        csrf.type = 'hidden';
+        csrf.name = '_token';
+        csrf.value = '<?php echo e(csrf_token()); ?>';
+        form.appendChild(csrf);
+        const a = document.createElement('input');
+        a.type = 'hidden';
+        a.name = 'action';
+        a.value = action;
+        form.appendChild(a);
+        if (reason !== '') {
+            const r = document.createElement('input');
+            r.type = 'hidden';
+            r.name = 'reason';
+            r.value = reason;
+            form.appendChild(r);
+        }
+        document.body.appendChild(form);
+        form.submit();
+    }
+
+    function changeWaitlistMark(id, action) {
+        if (action === 'approve') {
+            if (!confirm('Change this registrant from Waiting List to Approved?')) return;
+            submitChangeWaitlistForm(id, 'approve', '');
+            return;
+        }
+        // reject — first click just reveals the reason dropdown; picking one submits
+        const sel = document.querySelector('.wl-reason[data-id="' + id + '"]');
+        if (!sel) return;
+        sel.classList.remove('hidden');
+        sel.focus();
+    }
+
+    // Choosing a reason for a waitlist→reject change submits it immediately
+    // (delegated so it also works on rows injected by the live-search AJAX).
+    document.addEventListener('change', function(e) {
+        if (e.target && e.target.classList && e.target.classList.contains('wl-reason')) {
+            const id = e.target.getAttribute('data-id');
+            if (!id || !e.target.value) return;
+            if (!confirm('Change this registrant from Waiting List to Rejected?')) {
+                e.target.value = '';
+                return;
+            }
+            submitChangeWaitlistForm(id, 'reject', e.target.value);
+        }
+    });
 
     // ---- Client decision select & submit (approve / reject+reason / waitlist) ----
     function decisionToggle(btn) {

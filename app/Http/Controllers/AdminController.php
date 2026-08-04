@@ -1482,6 +1482,53 @@ class AdminController extends Controller
     }
 
     /**
+     * Change a registrant currently marked as WAITING LIST to Approved or Rejected.
+     * Client-only. Rows marked approve/reject stay locked ("Already marked"); only
+     * waitlist-marked rows can be changed. Clears any pending claim on the row so
+     * the new decision is final and not double-counted.
+     */
+    public function changeWaitlistMark(Request $request, Registrant $registrant)
+    {
+        if (! Auth::user()->isClient()) {
+            return redirect()->back()->with('error', 'Only clients can change markings.');
+        }
+
+        if ($registrant->client_remark_action !== 'waitlist') {
+            return redirect()->back()->with('error', 'This registrant is not marked as waiting list.');
+        }
+
+        $action = $request->input('action');
+        if (! in_array($action, ['approve', 'reject'], true)) {
+            return redirect()->back()->with('error', 'Invalid action.');
+        }
+
+        $reason = '';
+        if ($action === 'reject') {
+            $reason = trim((string) $request->input('reason'));
+            if ($reason === '') {
+                return redirect()->back()->with('error', 'Please select a reason for the rejection.');
+            }
+        }
+
+        // Clear any pending claim on this row (own or another client's) so the
+        // changed decision is final and not double-counted.
+        ClientPendingMark::where('registrant_id', $registrant->id)->delete();
+
+        $registrant->update([
+            'client_remark'        => $action === 'reject' ? mb_substr($reason, 0, 2000) : null,
+            'client_remark_action' => $action,
+            'client_remarked_by'   => Auth::id(),
+            'client_remarked_at'   => now(),
+            'waitlisted'           => false,
+        ]);
+
+        return redirect()->back()->with('success',
+            'Registrant changed from Waiting List to '
+            . ($action === 'approve' ? "<strong>Approved</strong>." : "<strong>Rejected</strong>.")
+        );
+    }
+
+    /**
      * Bulk reject registrants.
      */
     public function bulkReject(Request $request)

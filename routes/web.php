@@ -132,6 +132,7 @@ Route::middleware(['auth', 'admin', 'no_cache'])->prefix('admin')->name('admin.'
     Route::post('/registrants/{registrant}/approve', [AdminController::class, 'approve'])->name('registrants.approve');
     Route::post('/registrants/{registrant}/reject', [AdminController::class, 'reject'])->name('registrants.reject');
     Route::post('/registrants/{registrant}/toggle-waitlist', [AdminController::class, 'toggleWaitlist'])->name('registrants.toggle-waitlist');
+    Route::post('/registrants/{registrant}/change-remark', [AdminController::class, 'changeWaitlistMark'])->name('registrants.change-remark');
     Route::post('/registrants/{registrant}/resend-credentials', [AdminController::class, 'resendCredentials'])->name('registrants.resend-credentials');
     Route::post('/registrants/bulk-approve', [AdminController::class, 'bulkApprove'])->name('registrants.bulk-approve');
     Route::post('/registrants/bulk-reject', [AdminController::class, 'bulkReject'])->name('registrants.bulk-reject');
