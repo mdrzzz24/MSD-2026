@@ -75,7 +75,8 @@
                 <table class="w-full table-fixed">
                     <colgroup>
                         <col class="w-[22%]">
-                        <col class="w-[30%]">
+                        <col class="w-[23%]">
+                        <col class="w-[7%]">
                         <col class="w-[7%]">
                         <col class="w-[7%]">
                         <col class="w-[7%]">
@@ -90,6 +91,7 @@
                         <th class="px-2 py-2.5 text-center text-[11px] font-semibold text-gray-500 uppercase tracking-wider">Pending</th>
                         <th class="px-2 py-2.5 text-center text-[11px] font-semibold text-gray-500 uppercase tracking-wider">Rejected</th>
                         <th class="px-2 py-2.5 text-center text-[11px] font-semibold text-gray-500 uppercase tracking-wider">Waitlist</th>
+                        <th class="px-2 py-2.5 text-center text-[11px] font-semibold text-gray-500 uppercase tracking-wider">Cancelled</th>
                         <th class="px-2 py-2.5 text-center text-[11px] font-semibold text-gray-500 uppercase tracking-wider">Total</th>
                         <th class="px-2 py-2.5 text-center text-[11px] font-semibold text-gray-500 uppercase tracking-wider">Action</th>
                     </tr></thead>
@@ -119,6 +121,9 @@
                                 </td>
                                 <td class="px-2 py-2.5 text-center">
                                     <span class="text-sm font-bold {{ $w->waitlist_count > 0 ? 'text-amber-600' : 'text-gray-300' }}">{{ $w->waitlist_count }}</span>
+                                </td>
+                                <td class="px-2 py-2.5 text-center">
+                                    <span class="text-sm font-bold {{ $w->cancelled_count > 0 ? 'text-gray-600' : 'text-gray-300' }}">{{ $w->cancelled_count }}</span>
                                 </td>
                                 <td class="px-2 py-2.5 text-center">
                                     <span class="text-sm font-bold text-indigo-600">{{ $w->total_count }}</span>

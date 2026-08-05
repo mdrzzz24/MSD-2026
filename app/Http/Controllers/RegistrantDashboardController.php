@@ -18,27 +18,42 @@ class RegistrantDashboardController extends Controller
         /** @var \App\Models\Registrant $registrant */
         $registrant = Auth::guard('registrant')->user();
 
-        // Workshops the registrant has already signed up for (with pivot status)
+        // Workshops the registrant has signed up for (with pivot status). Cancelled
+        // ones are KEPT so the user can see the "Cancelled" status on the dashboard.
         $myWorkshops = $registrant->workshops()
             ->with('agendaItems')
             ->orderBy('date')
             ->orderBy('start_time')
             ->get();
 
-        // Agenda items (tracks/workshops) the registrant has registered for
+        // Agenda items (tracks/workshops) the registrant has registered for:
+        //  - standalone sessions (no linked workshop) are shown as session rows;
+        //  - sessions of a registered workshop are deduped (the workshop row shows it);
+        //  - sessions whose workshop registration is missing (old-style cancel) are
+        //    shown with a synthesized 'cancelled' status so the user sees they cancelled.
         $myAgendaItems = $registrant->agendaItems()
             ->with('workshop')
             ->orderBy('start_time')
-            ->get();
+            ->get()
+            ->filter(function ($item) use ($myWorkshops) {
+                if (!$item->workshop) {
+                    return true; // standalone session
+                }
+                $ws = $myWorkshops->firstWhere('id', $item->workshop->id);
+                if (!$ws) {
+                    // Workshop pivot missing → the registration was cancelled (old system).
+                    $item->pivot = (object) ['status' => 'cancelled'];
+                    return true;
+                }
+                return false; // the workshop row already shows this registration
+            });
 
-        // Deduplicate: exclude agenda items whose linked workshop already appears in $myWorkshops
-        $workshopIds = $myWorkshops->pluck('id')->toArray();
-        $myAgendaItems = $myAgendaItems->filter(function ($item) use ($workshopIds) {
-            return !$item->workshop || !in_array($item->workshop->id, $workshopIds);
-        });
-
-        // All open workshops where registration is open and not already registered
-        $registeredIds = $myWorkshops->pluck('id')->toArray();
+        // All open workshops where registration is open and not already registered.
+        // Cancelled workshops are treated as "not registered" so the user can re-register.
+        $registeredIds = $myWorkshops
+            ->filter(fn ($w) => ($w->pivot->status ?? '') !== 'cancelled')
+            ->pluck('id')
+            ->toArray();
         $availableWorkshops = Workshop::with('agendaItems')
             ->where('registration_open', true)
             ->whereDate('date', '>=', now())
@@ -106,7 +121,14 @@ class RegistrantDashboardController extends Controller
             return back()->with('error', 'Your registration for this workshop has been approved. Please contact the organizer to cancel.');
         }
 
-        $registrant->workshops()->detach($workshop->id);
+        // Mark as cancelled instead of deleting the pivot, so the admin can see
+        // which registrants cancelled their workshop registration.
+        $registrant->workshops()->updateExistingPivot($workshop->id, [
+            'status'       => 'cancelled',
+            'admin_notes'  => null,
+            'processed_by' => null,
+            'processed_at' => now(),
+        ]);
 
         return back()->with('success', "Successfully unregistered from workshop <strong>{$workshop->title}</strong>.");
     }
@@ -145,7 +167,7 @@ class RegistrantDashboardController extends Controller
         // Check time conflict with agenda items on the same date (exclude rejected)
         $conflict = $registrant->agendaItems()
             ->where('agenda_items.id', '!=', $agendaItem->id)
-            ->wherePivot('status', '!=', 'rejected')
+            ->wherePivot('status', 'not in', ['rejected', 'cancelled'])
             ->where(function ($q) use ($agendaItem) {
                 if ($agendaItem->date) {
                     $q->where('agenda_items.date', $agendaItem->date);
@@ -163,7 +185,7 @@ class RegistrantDashboardController extends Controller
         // Also check time conflict with workshop registrations on the same date (exclude rejected)
         if (!$conflict && $agendaItem->date) {
             $conflict = $registrant->workshops()
-                ->wherePivot('status', '!=', 'rejected')
+                ->wherePivot('status', 'not in', ['rejected', 'cancelled'])
                 ->where('date', $agendaItem->date)
                 ->where(function ($q) use ($agendaItem) {
                     $q->where(function ($q2) use ($agendaItem) {
@@ -216,16 +238,27 @@ class RegistrantDashboardController extends Controller
             return back()->with('error', 'Your registration for this session has been approved. Please contact the organizer to cancel.');
         }
 
-        $registrant->agendaItems()->detach($agendaItem->id);
+        // Mark as cancelled instead of deleting, so the admin can see who cancelled.
+        $registrant->agendaItems()->updateExistingPivot($agendaItem->id, [
+            'status'       => 'cancelled',
+            'admin_notes'  => null,
+            'processed_by' => null,
+            'processed_at' => now(),
+        ]);
 
-        // Also unregister from linked workshop
+        // Also unregister from linked workshop (mark cancelled, don't delete)
         $workshopId = $agendaItem->workshop_id;
         if (!$workshopId && $agendaItem->agenda_type === 'workshop') {
             $matchingWorkshop = \App\Models\Workshop::where('title', $agendaItem->title)->first();
             if ($matchingWorkshop) $workshopId = $matchingWorkshop->id;
         }
         if ($workshopId) {
-            $registrant->workshops()->detach($workshopId);
+            $existW = $registrant->workshops()->where('workshop_id', $workshopId)->first();
+            if ($existW) {
+                $registrant->workshops()->updateExistingPivot($workshopId, [
+                    'status' => 'cancelled', 'admin_notes' => null, 'processed_by' => null, 'processed_at' => now(),
+                ]);
+            }
         }
 
         $displayName = $agendaItem->workshop ? ($agendaItem->workshop->name ?: $agendaItem->workshop->title) : $agendaItem->title;

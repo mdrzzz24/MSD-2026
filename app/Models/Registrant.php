@@ -246,8 +246,8 @@ class Registrant extends Authenticatable
             return $a->format('Y-m-d') === $b->format('Y-m-d');
         };
 
-        // 1) Existing workshop-level registrations (exclude rejected + the workshop being registered)
-        foreach ($this->workshops()->wherePivot('status', '!=', 'rejected')->with('agendaItems')->get() as $w) {
+        // 1) Existing workshop-level registrations (exclude rejected/cancelled + the workshop being registered)
+        foreach ($this->workshops()->wherePivot('status', 'not in', ['rejected', 'cancelled'])->with('agendaItems')->get() as $w) {
             if ($w->id === $excludeWorkshopId) {
                 continue;
             }
@@ -261,8 +261,8 @@ class Registrant extends Authenticatable
             }
         }
 
-        // 2) Existing agenda-item registrations (exclude rejected + the agenda item being registered)
-        foreach ($this->agendaItems()->wherePivot('status', '!=', 'rejected')->get() as $a) {
+        // 2) Existing agenda-item registrations (exclude rejected/cancelled + the agenda item being registered)
+        foreach ($this->agendaItems()->wherePivot('status', 'not in', ['rejected', 'cancelled'])->get() as $a) {
             if ($excludeAgendaItemId && $a->id === $excludeAgendaItemId) {
                 continue;
             }

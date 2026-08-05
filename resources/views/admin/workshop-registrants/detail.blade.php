@@ -99,6 +99,7 @@
                 <span class="text-xs text-gray-400">App: <strong class="text-emerald-600">{{ $registrants->where('pivot.status', 'approved')->count() }}</strong></span>
                 <span class="text-xs text-gray-400">Pend: <strong class="text-amber-600">{{ $registrants->where('pivot.status', 'pending')->count() }}</strong></span>
                 <span class="text-xs text-gray-400">Rej: <strong class="text-red-600">{{ $registrants->where('pivot.status', 'rejected')->count() }}</strong></span>
+                <span class="text-xs text-gray-400">Canc: <strong class="text-gray-600">{{ $registrants->where('pivot.status', 'cancelled')->count() }}</strong></span>
             </div>
         </div>
         <div class="px-5 py-3 border-b border-gray-100 flex items-center gap-3">
@@ -139,7 +140,7 @@
                     <tbody class="divide-y divide-gray-50">
                         @foreach ($registrants as $i => $r)
                             @php $wsStatus = $r->pivot->status ?? 'pending'; @endphp
-                            <tr class="hover:bg-gray-50/50 transition">
+                            <tr class="hover:bg-gray-50/50 transition {{ $wsStatus === 'cancelled' ? 'bg-gray-100/70' : '' }}">
                                 <td class="px-4 py-3.5">
                                     <input type="checkbox" name="registrant_ids[]" value="{{ $r->id }}"
                                            class="cb-item w-4 h-4 rounded border-gray-300 text-indigo-600"
@@ -172,7 +173,7 @@
                                     @endif
                                 </td>
                                 <td class="px-4 py-3.5 text-center">
-                                    @if ($showTrackSelect)
+                                    @if ($showTrackSelect && !($r->cancelled ?? false))
                                         <form method="POST" action="{{ route('admin.workshops.registrants.track', [$workshop, $r->id]) }}" class="inline-block">
                                             @csrf
                                             <select name="track_id" onchange="this.form.submit()"
@@ -197,6 +198,8 @@
                                         <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200"><span class="w-1.5 h-1.5 rounded-full bg-emerald-500 flex-shrink-0"></span><span class="truncate">Approved</span></span>
                                     @elseif ($wsStatus === 'rejected')
                                         <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-red-50 text-red-700 border border-red-200" title="{{ $r->pivot->admin_notes ?? '' }}"><span class="w-1.5 h-1.5 rounded-full bg-red-500 flex-shrink-0"></span><span class="truncate">Rejected</span></span>
+                                    @elseif ($wsStatus === 'cancelled')
+                                        <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-gray-200 text-gray-700 border border-gray-300" title="Unregistered by participant"><span class="w-1.5 h-1.5 rounded-full bg-gray-500 flex-shrink-0"></span><span class="truncate">Cancelled</span></span>
                                     @else
                                         <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-200"><span class="w-1.5 h-1.5 rounded-full bg-amber-500 flex-shrink-0"></span><span class="truncate">Pending</span></span>
                                     @endif
@@ -231,7 +234,7 @@
                                 </td>
                                 <td class="px-4 py-3.5 text-center">
                                     @if ($r->pivot->created_at)
-                                        @php $joinedAt = $r->pivot->created_at->copy()->addHours(7); @endphp
+                                        @php $joinedAt = \Carbon\Carbon::parse($r->pivot->created_at)->addHours(7); @endphp
                                         <span class="text-xs text-gray-600" title="{{ $joinedAt->format('d M Y H:i') }}">{{ $joinedAt->format('d M, H:i') }}</span>
                                     @else<span class="text-xs text-gray-400">—</span>
                                     @endif

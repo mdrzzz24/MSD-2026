@@ -134,4 +134,105 @@ class Workshop extends Model
             'venue_name'        => 'Shangri-La Hotel Jakarta',
         ];
     }
+
+    /**
+     * Ids of the agenda items belonging to this workshop (its own agenda items
+     * plus the agenda items of its tracks). Used to detect cancelled registrations.
+     */
+    private function workshopAgendaItemIds(): \Illuminate\Support\Collection
+    {
+        return $this->agendaItems()->pluck('agenda_items.id')
+            ->merge(\Illuminate\Support\Facades\DB::table('agenda_items')
+                ->whereIn('track_id', $this->tracks()->pluck('tracks.id'))
+                ->pluck('id'))
+            ->unique()
+            ->values();
+    }
+
+    /**
+     * Best-effort detection of registrants who cancelled this workshop registration.
+     *
+     * Older cancels DELETED the registrant_workshop row entirely, so they can't be
+     * read from there. We recover them by comparing agenda_item_registrant (the
+     * session-level pivot, which was not always removed) against registrant_workshop:
+     * a registrant who still has an agenda_item_registrant row for one of this
+     * workshop's sessions but has NO registrant_workshop row for the workshop is
+     * treated as cancelled.
+     */
+    public function cancelledRegistrantIds(): \Illuminate\Support\Collection
+    {
+        $agendaItemIds = $this->workshopAgendaItemIds();
+        if ($agendaItemIds->isEmpty()) {
+            return collect();
+        }
+
+        $workshopRegistrantIds = $this->registrants()->pluck('registrants.id');
+
+        return \Illuminate\Support\Facades\DB::table('agenda_item_registrant')
+            ->whereIn('agenda_item_id', $agendaItemIds)
+            ->whereNotIn('status', ['rejected'])
+            ->whereNotIn('registrant_id', $workshopRegistrantIds)
+            ->pluck('registrant_id')
+            ->unique()
+            ->values();
+    }
+
+    /**
+     * Full cancelled registrants (with optional profile/source/date filters).
+     *
+     * Each returned registrant carries a synthetic $pivot (status='cancelled' and
+     * created_at from the agenda registration) so it renders exactly like a normal
+     * cancelled row in the admin views.
+     */
+    public function cancelledRegistrants(array $filters = []): \Illuminate\Support\Collection
+    {
+        $agendaItemIds = $this->workshopAgendaItemIds();
+        if ($agendaItemIds->isEmpty()) {
+            return collect();
+        }
+
+        $workshopRegistrantIds = $this->registrants()->pluck('registrants.id');
+
+        $airRows = \Illuminate\Support\Facades\DB::table('agenda_item_registrant')
+            ->whereIn('agenda_item_id', $agendaItemIds)
+            ->whereNotIn('status', ['rejected'])
+            ->whereNotIn('registrant_id', $workshopRegistrantIds)
+            ->orderBy('created_at')
+            ->get()
+            ->keyBy('registrant_id');
+
+        if ($airRows->isEmpty()) {
+            return collect();
+        }
+
+        $query = \App\Models\Registrant::whereIn('id', $airRows->keys());
+        if (!empty($filters['profile'])) {
+            $query->whereIn('registrants.job_title', $filters['profile']);
+        }
+        $query->filterBySources($filters['source'] ?? [], 'registrants.utm_source');
+        if (!empty($filters['date_from'])) {
+            $query->whereDate('registrants.created_at', '>=', $filters['date_from']);
+        }
+        if (!empty($filters['date_to'])) {
+            $query->whereDate('registrants.created_at', '<=', $filters['date_to']);
+        }
+
+        return $query->orderBy('name')->get()->map(function ($r) use ($airRows) {
+            $row = $airRows[$r->id] ?? null;
+            $r->cancelled = true;
+            $r->pivot = (object) [
+                'status'       => 'cancelled',
+                'admin_notes'  => null,
+                'processed_by' => null,
+                'processed_at' => $row->updated_at ?? null,
+                'track_id'     => null,
+                'utm_source'   => null,
+                'utm_medium'   => null,
+                'utm_campaign' => null,
+                'utm_content'  => null,
+                'created_at'   => $row->created_at ?? null,
+            ];
+            return $r;
+        });
+    }
 }

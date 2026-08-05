@@ -171,6 +171,10 @@ class AdminWorkshopController extends Controller
                 $q->where('registrant_workshop.status', 'rejected');
                 $applyFilters($q);
             }])
+            ->withCount(['registrants as cancelled_count' => function ($q) use ($applyFilters) {
+                $q->where('registrant_workshop.status', 'cancelled');
+                $applyFilters($q);
+            }])
             ->withCount(['registrants as total_count' => function ($q) use ($applyFilters) {
                 $applyFilters($q);
             }])
@@ -179,6 +183,21 @@ class AdminWorkshopController extends Controller
             ->orderBy('date')
             ->orderBy('start_time')
             ->get();
+
+        // Add cancellations that predate the 'cancelled' status (recovered from the
+        // agenda_item_registrant vs registrant_workshop comparison). They are extra
+        // people not present in registrant_workshop, so they count toward both the
+        // Cancelled column and the Total (matching the detail page).
+        foreach ($workshops as $w) {
+            $detectedCancelled = $w->cancelledRegistrants([
+                'profile'   => $profile,
+                'source'    => $source,
+                'date_from' => $dateFrom,
+                'date_to'   => $dateTo,
+            ])->count();
+            $w->cancelled_count += $detectedCancelled;
+            $w->total_count += $detectedCancelled;
+        }
 
         $profiles = Registrant::whereNotNull('job_title')->distinct()->orderBy('job_title')->pluck('job_title');
         $sources  = Registrant::whereNotNull('utm_source')->distinct()->orderBy('utm_source')->pluck('utm_source');
@@ -206,6 +225,19 @@ class AdminWorkshopController extends Controller
             ->when($dateTo, fn($q) => $q->whereDate('registrants.created_at', '<=', $dateTo))
             ->orderBy('name')
             ->get();
+
+        // Recover cancellations that predate the 'cancelled' status: older cancels
+        // deleted registrant_workshop entirely, so detect them by comparing
+        // agenda_item_registrant with registrant_workshop (see Workshop::cancelledRegistrants).
+        $cancelled = $workshop->cancelledRegistrants([
+            'profile'   => $profile,
+            'source'    => $source,
+            'date_from' => $dateFrom,
+            'date_to'   => $dateTo,
+        ]);
+        if ($cancelled->isNotEmpty()) {
+            $registrants = $registrants->merge($cancelled)->sortBy('name')->values();
+        }
 
         // ── Resolve which track each registrant registered for ──
         // Build a track lookup map
@@ -545,12 +577,26 @@ class AdminWorkshopController extends Controller
 
         foreach ($workshops as $w) {
             $trackLookup = $w->tracks->keyBy('id');
-            foreach ($w->registrants as $r) {
+
+            // Include cancellations that predate the 'cancelled' status (recovered from
+            // the agenda_item_registrant vs registrant_workshop comparison).
+            $allRegistrants = $w->registrants->merge($w->cancelledRegistrants([
+                'profile'   => $profile,
+                'source'    => $source,
+                'date_from' => $dateFrom,
+                'date_to'   => $dateTo,
+            ]));
+
+            foreach ($allRegistrants as $r) {
                 $trackName = '';
                 $pivotTrackId = $r->pivot->track_id ?? null;
                 if ($pivotTrackId && isset($trackLookup[$pivotTrackId])) {
                     $trackName = $trackLookup[$pivotTrackId]->name;
                 }
+
+                $joinedAt = $r->pivot->created_at
+                    ? \Carbon\Carbon::parse($r->pivot->created_at)->addHours(7)->format('Y-m-d H:i')
+                    : '-';
 
                 $rows[] = [
                     $w->name ?: $w->title,
@@ -563,7 +609,7 @@ class AdminWorkshopController extends Controller
                     $r->company ?? '-',
                     $r->job_title ?? '-',
                     $r->pivot->status ?? '-',
-                    $r->pivot->created_at?->copy()->addHours(7)->format('Y-m-d H:i') ?? '-',
+                    $joinedAt,
                     $r->created_at->copy()->addHours(7)->format('Y-m-d H:i'),
                     $r->utm_source ?? '',
                     $r->utm_medium ?? '',
@@ -660,6 +706,15 @@ class AdminWorkshopController extends Controller
             ->orderBy('name')
             ->get();
 
+        // Include cancellations that predate the 'cancelled' status (recovered from
+        // the agenda_item_registrant vs registrant_workshop comparison).
+        $registrants = $registrants->merge($workshop->cancelledRegistrants([
+            'profile'   => $profile,
+            'source'    => $source,
+            'date_from' => $dateFrom,
+            'date_to'   => $dateTo,
+        ]))->sortBy('name');
+
         $workshopName = $workshop->name ?: $workshop->title;
         $headers = ['Workshop', 'Registrant Name', 'Email', 'Phone', 'Company', 'Job Title', 'Track', 'Status', 'Client Mark', 'Marked By', 'Marked At', 'Joined Workshop At', 'Registered to Event At', 'UTM Source', 'UTM Medium', 'UTM Campaign', 'UTM Content'];
         $rows = $registrants->map(fn($r) => [
@@ -679,7 +734,7 @@ class AdminWorkshopController extends Controller
             },
             $r->clientRemarkedBy?->name ?? '',
             $r->client_remarked_at?->copy()->addHours(7)->format('Y-m-d H:i') ?? '',
-            $r->pivot->created_at?->copy()->addHours(7)->format('Y-m-d H:i') ?? '-',
+            $r->pivot->created_at ? \Carbon\Carbon::parse($r->pivot->created_at)->addHours(7)->format('Y-m-d H:i') : '-',
             $r->created_at->copy()->addHours(7)->format('Y-m-d H:i'),
             // Prefer per-workshop link (pivot), fall back to registrant-level UTM
             $r->pivot->utm_source ?? ($r->utm_source ?? ''),

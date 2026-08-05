@@ -34,6 +34,7 @@
         .badge-approved { background: rgba(16,185,129,.15); color: #10b981; border: 1px solid rgba(16,185,129,.25); }
         .badge-rejected { background: rgba(239,68,68,.15); color: #ef4444; border: 1px solid rgba(239,68,68,.25); }
         .badge-pending { background: rgba(245,158,11,.15); color: #f59e0b; border: 1px solid rgba(245,158,11,.25); }
+        .badge-cancelled { background: rgba(107,114,128,.15); color: #9ca3af; border: 1px solid rgba(107,114,128,.25); }
         .badge-workshop { background: rgba(245,158,11,.15); color: #fbbf24; border: 1px solid rgba(245,158,11,.25); }
         .badge-track { background: rgba(129,140,248,.15); color: #818cf8; border: 1px solid rgba(129,140,248,.25); }
         .badge-session { background: rgba(148,163,184,.15); color: #94a3b8; border: 1px solid rgba(148,163,184,.25); }
@@ -228,6 +229,8 @@
                                                 <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold badge-approved"><span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>Approved</span>
                                             @elseif ($agStatus === 'rejected')
                                                 <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold badge-rejected"><span class="w-1.5 h-1.5 rounded-full bg-red-500"></span>Rejected</span>
+                                            @elseif ($agStatus === 'cancelled')
+                                                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold badge-cancelled"><span class="w-1.5 h-1.5 rounded-full bg-gray-400"></span>Cancelled</span>
                                             @else
                                                 <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold badge-pending"><span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>Pending</span>
                                             @endif
@@ -243,7 +246,7 @@
                                                         Feedback
                                                     </a>
                                                 @endif
-                                                @if ($agStatus !== 'approved')
+                                                @if ($agStatus !== 'approved' && $agStatus !== 'cancelled')
                                                 <form action="{{ route('registrant.agenda.unregister', $item) }}" method="POST" onsubmit="return confirm('Cancel registration for {{ $item->title }}?')">
                                                     @csrf
                                                     <button class="px-3 py-1.5 text-xs font-medium rounded-lg transition" style="background:rgba(239,68,68,.15); color:#ef4444; border:1px solid rgba(239,68,68,.25);" onmouseover="this.style.background='rgba(239,68,68,.25)'" onmouseout="this.style.background='rgba(239,68,68,.15)'">Cancel</button>
@@ -280,12 +283,14 @@
                                                 <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold badge-approved"><span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>Approved</span>
                                             @elseif ($wsStatus === 'rejected')
                                                 <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold badge-rejected"><span class="w-1.5 h-1.5 rounded-full bg-red-500"></span>Rejected</span>
+                                            @elseif ($wsStatus === 'cancelled')
+                                                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold badge-cancelled"><span class="w-1.5 h-1.5 rounded-full bg-gray-400"></span>Cancelled</span>
                                             @else
                                                 <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold badge-pending"><span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>Pending</span>
                                             @endif
                                         </td>
                                         <td class="text-center">
-                                            @if ($wsStatus !== 'approved')
+                                            @if ($wsStatus !== 'approved' && $wsStatus !== 'cancelled')
                                             <form action="{{ route('registrant.workshop.unregister', $w) }}" method="POST" onsubmit="return confirm('Cancel registration for {{ $w->name ?: $w->title }}?')">
                                                 @csrf
                                                 <button class="px-3 py-1.5 text-xs font-medium rounded-lg transition" style="background:rgba(239,68,68,.15); color:#ef4444; border:1px solid rgba(239,68,68,.25);" onmouseover="this.style.background='rgba(239,68,68,.25)'" onmouseout="this.style.background='rgba(239,68,68,.15)'">Cancel</button>
