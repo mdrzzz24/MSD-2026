@@ -199,7 +199,7 @@ class AdminWorkshopController extends Controller
         $dateTo   = $request->get('date_to');
 
         $registrants = $workshop->registrants()
-            ->with(['workshops', 'workshopWaitlists'])
+            ->with(['workshops', 'workshopWaitlists', 'clientRemarkedBy'])
             ->when($profile, fn($q) => $q->whereIn('registrants.job_title', $profile))
             ->when($source, fn($q) => $q->filterBySources($source, 'registrants.utm_source'))
             ->when($dateFrom, fn($q) => $q->whereDate('registrants.created_at', '>=', $dateFrom))
@@ -618,6 +618,7 @@ class AdminWorkshopController extends Controller
         $dateTo   = $request->get('date_to');
 
         $registrants = $workshop->registrants()
+            ->with('clientRemarkedBy')
             ->when($profile, fn($q) => $q->whereIn('registrants.job_title', $profile))
             ->when($source, fn($q) => $q->filterBySources($source, 'registrants.utm_source'))
             ->when($dateFrom, fn($q) => $q->whereDate('registrants.created_at', '>=', $dateFrom))
@@ -626,7 +627,7 @@ class AdminWorkshopController extends Controller
             ->get();
 
         $workshopName = $workshop->name ?: $workshop->title;
-        $headers = ['Workshop', 'Registrant Name', 'Email', 'Phone', 'Company', 'Job Title', 'Track', 'Status', 'Joined Workshop At', 'Registered to Event At', 'UTM Source', 'UTM Medium', 'UTM Campaign', 'UTM Content'];
+        $headers = ['Workshop', 'Registrant Name', 'Email', 'Phone', 'Company', 'Job Title', 'Track', 'Status', 'Client Mark', 'Marked By', 'Marked At', 'Joined Workshop At', 'Registered to Event At', 'UTM Source', 'UTM Medium', 'UTM Campaign', 'UTM Content'];
         $rows = $registrants->map(fn($r) => [
             $workshopName,
             $r->display_name ?: $r->name,
@@ -636,6 +637,14 @@ class AdminWorkshopController extends Controller
             $r->job_title ?? '-',
             isset($trackLookup[$r->pivot->track_id]) ? $trackLookup[$r->pivot->track_id]->name : '',
             $r->pivot->status ?? '-',
+            match ($r->client_remark_action) {
+                'approve'  => 'Marked Approve',
+                'reject'   => 'Marked Reject',
+                'waitlist' => 'Marked Waiting List',
+                default    => '',
+            },
+            $r->clientRemarkedBy?->name ?? '',
+            $r->client_remarked_at?->copy()->addHours(7)->format('Y-m-d H:i') ?? '',
             $r->pivot->created_at?->copy()->addHours(7)->format('Y-m-d H:i') ?? '-',
             $r->created_at->copy()->addHours(7)->format('Y-m-d H:i'),
             // Prefer per-workshop link (pivot), fall back to registrant-level UTM

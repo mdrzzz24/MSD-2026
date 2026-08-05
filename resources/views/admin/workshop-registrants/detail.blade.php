@@ -183,6 +183,28 @@
                                     @elseif ($r->status === 'rejected')<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-700"><span class="truncate">Rejected</span></span>
                                     @else<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-600"><span class="truncate">Pending</span></span>
                                     @endif
+                                    @if ($r->hasClientRemark())
+                                        <div class="mt-1.5 flex flex-col items-center gap-1">
+                                            <span class="inline-flex items-center px-1.5 py-0.5 rounded-md text-[10px] font-semibold border {{ $r->client_remark_action === 'approve' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : ($r->client_remark_action === 'reject' ? 'bg-red-50 text-red-700 border-red-200' : 'bg-orange-50 text-orange-700 border-orange-200') }}">
+                                                @if ($r->client_remark_action === 'approve')
+                                                    Marked Approve
+                                                @elseif ($r->client_remark_action === 'reject')
+                                                    Marked Reject
+                                                @else
+                                                    Marked Waiting List
+                                                @endif
+                                            </span>
+                                            @if ($r->clientRemarkedBy)
+                                                <span class="text-[10px] font-medium text-gray-600">{{ $r->clientRemarkedBy->name }}</span>
+                                            @endif
+                                            @if ($r->client_remark)
+                                                <span class="text-[10px] text-gray-500">{{ $r->client_remark }}</span>
+                                            @endif
+                                            @if ($r->client_remarked_at)
+                                                <span class="text-[10px] text-gray-400">{{ $r->client_remarked_at->copy()->addHours(7)->format('d M Y, H:i') }}</span>
+                                            @endif
+                                        </div>
+                                    @endif
                                 </td>
                                 <td class="px-4 py-3.5 text-center">
                                     @if ($r->pivot->created_at)
