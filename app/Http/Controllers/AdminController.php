@@ -842,11 +842,22 @@ class AdminController extends Controller
 
     /**
      * AJAX live-search endpoint for the registrants table.
+     *
+     * When hit by the AJAX live-search fetch (which always sends
+     * X-Requested-With: XMLHttpRequest + Accept: application/json) it returns the
+     * rows/pagination/total as JSON. A plain browser navigation to this URL (e.g.
+     * clicking a pagination link, which points here via ->links()) renders the
+     * full registrants page instead of dumping raw JSON.
      */
     public function search(Request $request)
     {
         if (!Auth::user()->hasPermission('registrants')) {
             return response()->json(['success' => false, 'message' => 'Unauthorized.'], 403);
+        }
+
+        // Direct (non-AJAX) browser request → show the full page, same as /registrants.
+        if (! $request->ajax() && ! $request->wantsJson()) {
+            return $this->index($request);
         }
 
         $query = $this->buildRegistrantQuery($request);
