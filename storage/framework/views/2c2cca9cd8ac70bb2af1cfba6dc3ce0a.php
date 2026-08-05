@@ -118,20 +118,18 @@
             <div class="px-5 py-12 text-center text-gray-400 text-sm">No registrants yet for this workshop.</div>
         <?php else: ?>
             <div class="overflow-x-auto">
+                <?php $showTrackSelect = Auth::user()->isSuperAdmin() && $workshop->tracks->count() > 1; ?>
                 <table class="w-full table-fixed">
                     <thead><tr class="bg-gray-50/80">
                         <th class="px-4 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase w-10">
                             <input type="checkbox" onchange="toggleAll(this.checked)" class="w-4 h-4 rounded border-gray-300 text-indigo-600">
                         </th>
-                        <th class="px-4 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase">Name</th>
-                        <th class="px-4 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase w-48">Email</th>
-                        <th class="px-4 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase hidden md:table-cell w-32">Phone</th>
-                        <th class="px-4 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase hidden lg:table-cell w-36">Company</th>
-                        <th class="px-4 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase hidden xl:table-cell w-36">Job Title</th>
+                        <th class="px-4 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase w-64">Registrant</th>
+                        <th class="px-4 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase hidden lg:table-cell w-56">Company / Job</th>
                         <th class="px-4 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase hidden md:table-cell w-28">Source</th>
-                        <th class="px-4 py-3.5 text-center text-xs font-semibold text-gray-500 uppercase w-20">Track</th>
+                        <th class="px-4 py-3.5 text-center text-xs font-semibold text-gray-500 uppercase <?php echo e($showTrackSelect ? 'w-40' : 'w-20'); ?>">Track</th>
                         <th class="px-4 py-3.5 text-center text-xs font-semibold text-gray-500 uppercase w-28">WS Status</th>
-                        <th class="px-4 py-3.5 text-center text-xs font-semibold text-gray-500 uppercase w-24">Reg Mark</th>
+                        <th class="px-4 py-3.5 text-center text-xs font-semibold text-gray-500 uppercase w-24">Reg Status</th>
                         <th class="px-4 py-3.5 text-center text-xs font-semibold text-gray-500 uppercase w-32">Joined Workshop</th>
                         <th class="px-4 py-3.5 text-center text-xs font-semibold text-gray-500 uppercase w-24">Check-in</th>
                         <?php if(Auth::user()->canWrite()): ?>
@@ -148,11 +146,24 @@
                                            onchange="updateReminderCount()"
                                            <?php echo e($wsStatus !== 'approved' ? 'disabled' : ''); ?>>
                                 </td>
-                                <td class="px-4 py-3.5 max-w-0"><a href="<?php echo e(route('admin.registrants.show', $r)); ?>" class="text-sm font-semibold text-indigo-600 hover:text-indigo-800 hover:underline truncate block" title="<?php echo e($r->display_name); ?>"><?php echo e($r->display_name); ?></a></td>
-                                <td class="px-4 py-3.5 max-w-0"><span class="text-sm text-gray-600 truncate block" title="<?php echo e($r->email); ?>"><?php echo e($r->email); ?></span></td>
-                                <td class="px-4 py-3.5 hidden md:table-cell max-w-0"><span class="text-sm text-gray-600 truncate block" title="<?php echo e($r->phone ?? ''); ?>"><?php echo e($r->phone ?? '—'); ?></span></td>
-                                <td class="px-4 py-3.5 hidden lg:table-cell max-w-0"><span class="text-sm text-gray-600 truncate block" title="<?php echo e($r->company ?? ''); ?>"><?php echo e($r->company ?? '—'); ?></span></td>
-                                <td class="px-4 py-3.5 hidden xl:table-cell max-w-0"><span class="text-sm text-gray-600 truncate block" title="<?php echo e($r->job_title ?? ''); ?>"><?php echo e($r->job_title ?? '—'); ?></span></td>
+                                <td class="px-4 py-3.5 max-w-0">
+                                    <div class="flex items-center gap-2">
+                                        <div class="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-400 to-purple-500 flex items-center justify-center text-white text-[11px] font-bold flex-shrink-0"><?php echo e(strtoupper(substr($r->display_name, 0, 1))); ?></div>
+                                        <div class="min-w-0">
+                                            <a href="<?php echo e(route('admin.registrants.show', $r)); ?>" class="text-sm font-semibold text-indigo-600 hover:text-indigo-800 hover:underline truncate block" title="<?php echo e($r->display_name); ?>"><?php echo e($r->display_name); ?></a>
+                                            <p class="text-[11px] text-gray-500 truncate" title="<?php echo e($r->email); ?>"><?php echo e($r->email); ?></p>
+                                            <?php if($r->phone): ?><p class="text-[11px] text-gray-400 truncate" title="<?php echo e($r->phone); ?>"><?php echo e($r->phone); ?></p><?php endif; ?>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="px-4 py-3.5 hidden lg:table-cell max-w-0">
+                                    <div class="min-w-0 truncate">
+                                        <?php if($r->company): ?><p class="text-sm font-medium text-gray-800 truncate" title="<?php echo e($r->company); ?>"><?php echo e($r->company); ?></p><?php endif; ?>
+                                        <?php if($r->job_title): ?><p class="text-[11px] text-gray-500 truncate" title="<?php echo e($r->job_title); ?>"><?php echo e($r->job_title); ?></p><?php endif; ?>
+                                        <?php if($r->job_role): ?><p class="text-[11px] text-gray-400 truncate" title="<?php echo e($r->job_role); ?>"><?php echo e($r->job_role); ?></p><?php endif; ?>
+                                        <?php if(!$r->company && !$r->job_title && !$r->job_role): ?><span class="text-sm text-gray-400">—</span><?php endif; ?>
+                                    </div>
+                                </td>
                                 <td class="px-4 py-3.5 hidden md:table-cell max-w-0">
                                     <?php if(!empty($r->pivot->utm_source)): ?>
                                         <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-indigo-50 text-indigo-700 border border-indigo-200 truncate" title="UTM: <?php echo e($r->pivot->utm_source); ?> / <?php echo e($r->pivot->utm_medium); ?> / <?php echo e($r->pivot->utm_campaign); ?><?php echo e($r->pivot->utm_content ? ' / '.$r->pivot->utm_content : ''); ?>">🔗 <span class="truncate"><?php echo e($r->pivot->utm_source); ?></span></span>
@@ -161,7 +172,19 @@
                                     <?php endif; ?>
                                 </td>
                                 <td class="px-4 py-3.5 text-center">
-                                    <?php if(isset($r->registered_track_name)): ?>
+                                    <?php if($showTrackSelect): ?>
+                                        <form method="POST" action="<?php echo e(route('admin.workshops.registrants.track', [$workshop, $r->id])); ?>" class="inline-block">
+                                            <?php echo csrf_field(); ?>
+                                            <select name="track_id" onchange="this.form.submit()"
+                                                    title="Assign track (changes save immediately)"
+                                                    class="text-xs border border-gray-200 rounded-lg bg-white px-2 py-1.5 text-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500">
+                                                <option value="">— Assign —</option>
+                                                <?php $__currentLoopData = $workshop->tracks; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $t): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                                    <option value="<?php echo e($t->id); ?>" <?php if(($r->pivot->track_id ?? null) == $t->id): echo 'selected'; endif; ?>><?php echo e($t->name ?: $t->title); ?></option>
+                                                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                                            </select>
+                                        </form>
+                                    <?php elseif(isset($r->registered_track_name)): ?>
                                         <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-teal-100 text-teal-700 border border-teal-200">
                                             <?php echo e($r->registered_track_name); ?>
 

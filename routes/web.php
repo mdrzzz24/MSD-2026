@@ -313,6 +313,7 @@ Route::middleware(['auth', 'admin', 'no_cache'])->prefix('admin')->name('admin.'
     Route::get('/workshop-registrants/export/csv', [AdminWorkshopController::class, 'exportCsv'])->name('workshop-registrants.export-csv');
     Route::post('/workshops/{workshop}/registrants/{registrant}/approve', [AdminWorkshopController::class, 'approveRegistrant'])->name('workshops.registrants.approve');
     Route::post('/workshops/{workshop}/registrants/{registrant}/reject', [AdminWorkshopController::class, 'rejectRegistrant'])->name('workshops.registrants.reject');
+    Route::post('/workshops/{workshop}/registrants/{registrant}/track', [AdminWorkshopController::class, 'assignTrack'])->name('workshops.registrants.track');
     Route::post('/workshops/{workshop}/send-reminder', [AdminWorkshopController::class, 'sendReminder'])->name('workshops.send-reminder');
 
     // ── Agenda Registrants — accessible by all admin roles ──

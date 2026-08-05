@@ -118,18 +118,16 @@
             <div class="px-5 py-12 text-center text-gray-400 text-sm">No registrants yet for this workshop.</div>
         @else
             <div class="overflow-x-auto">
+                @php $showTrackSelect = Auth::user()->isSuperAdmin() && $workshop->tracks->count() > 1; @endphp
                 <table class="w-full table-fixed">
                     <thead><tr class="bg-gray-50/80">
                         <th class="px-4 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase w-10">
                             <input type="checkbox" onchange="toggleAll(this.checked)" class="w-4 h-4 rounded border-gray-300 text-indigo-600">
                         </th>
-                        <th class="px-4 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase">Name</th>
-                        <th class="px-4 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase w-48">Email</th>
-                        <th class="px-4 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase hidden md:table-cell w-32">Phone</th>
-                        <th class="px-4 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase hidden lg:table-cell w-36">Company</th>
-                        <th class="px-4 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase hidden xl:table-cell w-36">Job Title</th>
+                        <th class="px-4 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase w-64">Registrant</th>
+                        <th class="px-4 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase hidden lg:table-cell w-56">Company / Job</th>
                         <th class="px-4 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase hidden md:table-cell w-28">Source</th>
-                        <th class="px-4 py-3.5 text-center text-xs font-semibold text-gray-500 uppercase w-20">Track</th>
+                        <th class="px-4 py-3.5 text-center text-xs font-semibold text-gray-500 uppercase {{ $showTrackSelect ? 'w-40' : 'w-20' }}">Track</th>
                         <th class="px-4 py-3.5 text-center text-xs font-semibold text-gray-500 uppercase w-28">WS Status</th>
                         <th class="px-4 py-3.5 text-center text-xs font-semibold text-gray-500 uppercase w-24">Reg Status</th>
                         <th class="px-4 py-3.5 text-center text-xs font-semibold text-gray-500 uppercase w-32">Joined Workshop</th>
@@ -148,11 +146,24 @@
                                            onchange="updateReminderCount()"
                                            {{ $wsStatus !== 'approved' ? 'disabled' : '' }}>
                                 </td>
-                                <td class="px-4 py-3.5 max-w-0"><a href="{{ route('admin.registrants.show', $r) }}" class="text-sm font-semibold text-indigo-600 hover:text-indigo-800 hover:underline truncate block" title="{{ $r->display_name }}">{{ $r->display_name }}</a></td>
-                                <td class="px-4 py-3.5 max-w-0"><span class="text-sm text-gray-600 truncate block" title="{{ $r->email }}">{{ $r->email }}</span></td>
-                                <td class="px-4 py-3.5 hidden md:table-cell max-w-0"><span class="text-sm text-gray-600 truncate block" title="{{ $r->phone ?? '' }}">{{ $r->phone ?? '—' }}</span></td>
-                                <td class="px-4 py-3.5 hidden lg:table-cell max-w-0"><span class="text-sm text-gray-600 truncate block" title="{{ $r->company ?? '' }}">{{ $r->company ?? '—' }}</span></td>
-                                <td class="px-4 py-3.5 hidden xl:table-cell max-w-0"><span class="text-sm text-gray-600 truncate block" title="{{ $r->job_title ?? '' }}">{{ $r->job_title ?? '—' }}</span></td>
+                                <td class="px-4 py-3.5 max-w-0">
+                                    <div class="flex items-center gap-2">
+                                        <div class="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-400 to-purple-500 flex items-center justify-center text-white text-[11px] font-bold flex-shrink-0">{{ strtoupper(substr($r->display_name, 0, 1)) }}</div>
+                                        <div class="min-w-0">
+                                            <a href="{{ route('admin.registrants.show', $r) }}" class="text-sm font-semibold text-indigo-600 hover:text-indigo-800 hover:underline truncate block" title="{{ $r->display_name }}">{{ $r->display_name }}</a>
+                                            <p class="text-[11px] text-gray-500 truncate" title="{{ $r->email }}">{{ $r->email }}</p>
+                                            @if ($r->phone)<p class="text-[11px] text-gray-400 truncate" title="{{ $r->phone }}">{{ $r->phone }}</p>@endif
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="px-4 py-3.5 hidden lg:table-cell max-w-0">
+                                    <div class="min-w-0 truncate">
+                                        @if ($r->company)<p class="text-sm font-medium text-gray-800 truncate" title="{{ $r->company }}">{{ $r->company }}</p>@endif
+                                        @if ($r->job_title)<p class="text-[11px] text-gray-500 truncate" title="{{ $r->job_title }}">{{ $r->job_title }}</p>@endif
+                                        @if ($r->job_role)<p class="text-[11px] text-gray-400 truncate" title="{{ $r->job_role }}">{{ $r->job_role }}</p>@endif
+                                        @if (!$r->company && !$r->job_title && !$r->job_role)<span class="text-sm text-gray-400">—</span>@endif
+                                    </div>
+                                </td>
                                 <td class="px-4 py-3.5 hidden md:table-cell max-w-0">
                                     @if (!empty($r->pivot->utm_source))
                                         <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-indigo-50 text-indigo-700 border border-indigo-200 truncate" title="UTM: {{ $r->pivot->utm_source }} / {{ $r->pivot->utm_medium }} / {{ $r->pivot->utm_campaign }}{{ $r->pivot->utm_content ? ' / '.$r->pivot->utm_content : '' }}">🔗 <span class="truncate">{{ $r->pivot->utm_source }}</span></span>
@@ -161,7 +172,19 @@
                                     @endif
                                 </td>
                                 <td class="px-4 py-3.5 text-center">
-                                    @if (isset($r->registered_track_name))
+                                    @if ($showTrackSelect)
+                                        <form method="POST" action="{{ route('admin.workshops.registrants.track', [$workshop, $r->id]) }}" class="inline-block">
+                                            @csrf
+                                            <select name="track_id" onchange="this.form.submit()"
+                                                    title="Assign track (changes save immediately)"
+                                                    class="text-xs border border-gray-200 rounded-lg bg-white px-2 py-1.5 text-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500">
+                                                <option value="">— Assign —</option>
+                                                @foreach ($workshop->tracks as $t)
+                                                    <option value="{{ $t->id }}" @selected(($r->pivot->track_id ?? null) == $t->id)>{{ $t->name ?: $t->title }}</option>
+                                                @endforeach
+                                            </select>
+                                        </form>
+                                    @elseif (isset($r->registered_track_name))
                                         <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-teal-100 text-teal-700 border border-teal-200">
                                             {{ $r->registered_track_name }}
                                         </span>

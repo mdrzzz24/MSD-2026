@@ -484,6 +484,40 @@ class AdminWorkshopController extends Controller
     }
 
     /**
+     * Assign a workshop registrant to a track (super admin only, multi-track workshops).
+     * An empty track_id clears the assignment.
+     */
+    public function assignTrack(Request $request, Workshop $workshop, $registrantId)
+    {
+        if (!Auth::user()->isSuperAdmin()) {
+            return back()->with('error', 'Only a super admin can assign tracks to workshop registrants.');
+        }
+
+        $registrant = Registrant::find($registrantId);
+        if (!$registrant) {
+            return back()->with('error', 'Registrant not found.');
+        }
+
+        $trackId = $request->input('track_id') ? (int) $request->input('track_id') : null;
+
+        // The selected track must belong to this workshop (empty = clear assignment)
+        if ($trackId !== null && !$workshop->tracks()->whereKey($trackId)->exists()) {
+            return back()->with('error', 'The selected track does not belong to this workshop.');
+        }
+
+        $workshop->registrants()->updateExistingPivot($registrantId, [
+            'track_id' => $trackId,
+        ]);
+
+        $trackName = $trackId !== null ? ($workshop->tracks()->find($trackId)?->name ?: '') : '';
+        $message = $trackName !== ''
+            ? "Registrant <strong>{$registrant->display_name}</strong> assigned to track <strong>{$trackName}</strong>."
+            : "Track assignment cleared for <strong>{$registrant->display_name}</strong>.";
+
+        return back()->with('success', $message);
+    }
+
+    /**
      * Export all workshops registrants.
      */
     public function exportCsv(Request $request)
