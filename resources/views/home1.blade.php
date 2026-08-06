@@ -51,7 +51,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     <button class="nav-toggle" aria-label="Menu" id="navToggle">☰</button>
     <div class="nav-links" id="navLinks">
       <a href="#overview" class="active">Overview</a>
-      <a href="#agenda-sections">Agenda</a>
+      <a href="#agenda">Agenda</a>
       <a href="#sponsors">Sponsors</a>
       @if (Auth::guard('registrant')->check())
         <a href="{{ route('registrant.dashboard') }}">Dashboard</a>
@@ -165,8 +165,9 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   </div>
 </section>
 
-{{-- AGENDA SCHEDULE (template grid: time+location | topic | speakers | Bookmark) --}}
-<style>
+{{--
+AGENDA SCHEDULE (template grid: time+location | topic | speakers | Bookmark) --}}
+{{-- <style>
   .agenda-sched-header{display:flex;align-items:baseline;gap:24px;padding-bottom:20px;border-bottom:1px solid var(--line);margin-bottom:30px;flex-wrap:wrap}
   .agenda-sched-label{font-size:.9rem;letter-spacing:2px;text-transform:uppercase;color:var(--pink);font-weight:700}
   .agenda-sched-tabs{display:flex;gap:28px;align-items:baseline;flex-wrap:wrap}
@@ -344,7 +345,7 @@ document.addEventListener('DOMContentLoaded', function () {
     });
   });
 });
-</script>
+</script> --}}
 
 <!-- AGENDA -->
 <section id="agenda" class="why reveal">
@@ -1227,7 +1228,7 @@ document.addEventListener('DOMContentLoaded', function() {
     svg.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/>';
     title.textContent = 'Registration Successful';
     document.getElementById('notifMessage').innerHTML = '{!! str_replace(["'"], ["\\'"], session('success')) !!}';
-    modal.setAttribute('data-scroll-to', '#agenda-sections');
+    modal.setAttribute('data-scroll-to', '#agenda');
     modal.style.display = 'flex';
     document.body.style.overflow = 'hidden';
 });

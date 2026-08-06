@@ -51,7 +51,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     <button class="nav-toggle" aria-label="Menu" id="navToggle">☰</button>
     <div class="nav-links" id="navLinks">
       <a href="#overview" class="active">Overview</a>
-      <a href="#agenda-sections">Agenda</a>
+      <a href="#agenda">Agenda</a>
       <a href="#sponsors">Sponsors</a>
       <?php if(Auth::guard('registrant')->check()): ?>
         <a href="<?php echo e(route('registrant.dashboard')); ?>">Dashboard</a>
@@ -166,186 +166,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 </section>
 
 
-<style>
-  .agenda-sched-header{display:flex;align-items:baseline;gap:24px;padding-bottom:20px;border-bottom:1px solid var(--line);margin-bottom:30px;flex-wrap:wrap}
-  .agenda-sched-label{font-size:.9rem;letter-spacing:2px;text-transform:uppercase;color:var(--pink);font-weight:700}
-  .agenda-sched-tabs{display:flex;gap:28px;align-items:baseline;flex-wrap:wrap}
-  .agenda-sched-tab{font-size:1.3rem;font-weight:700;color:var(--muted);cursor:pointer;background:none;border:none;font-family:inherit;transition:color .2s,font-size .2s;padding:0}
-  .agenda-sched-tab.active{color:#fff;font-size:1.6rem}
-  .agenda-sched-tab:hover{color:var(--pink)}
-  .agenda-sched-content{display:none}
-  .agenda-sched-content.active{display:block}
-  .agenda-empty{color:var(--muted);text-align:center;padding:40px 0;font-style:italic}
-  .agenda-row{display:grid;grid-template-columns:140px 1.2fr 1.8fr 120px;gap:24px;padding:24px 0;border-bottom:1px solid var(--line);align-items:start}
-  .agenda-row:last-child{border-bottom:none}
-  .agenda-col-time{display:flex;flex-direction:column;gap:4px;font-size:.85rem}
-  .agenda-col-time .atime{color:var(--ink);font-weight:700}
-  .agenda-col-time .atz{color:var(--muted);margin-bottom:8px}
-  .agenda-col-time .aroom{font-weight:700;font-size:1rem;text-transform:uppercase;color:#fff}
-  .agenda-col-topic{font-size:.95rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#fff;padding-right:15px}
-  .agenda-col-speakers{display:flex;flex-direction:column;gap:14px;font-size:.85rem}
-  .agenda-speaker-card{display:flex;align-items:flex-start;gap:10px}
-  .agenda-sp-photo{width:36px;height:36px;border-radius:50%;object-fit:cover;border:2px solid rgba(255,255,255,.1);flex-shrink:0}
-  .agenda-sp-initial{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:14px;font-weight:700;flex-shrink:0;background:linear-gradient(135deg,#ff3d6e,#e91e63)}
-  .agenda-sp-info{display:flex;flex-direction:column;gap:2px;min-width:0}
-  .agenda-speaker-name{font-weight:700;color:var(--ink)}
-  .agenda-speaker-role{font-style:italic;color:var(--muted);font-weight:400}
-  .agenda-col-action{text-align:right}
-  .agenda-col-action .btn-register{display:inline-flex;align-items:center;gap:5px;padding:7px 16px;border-radius:999px;background:linear-gradient(135deg,#ff3d6e,#e91e63);color:#fff;font-size:.8rem;font-weight:700;border:none;cursor:pointer;transition:transform .2s,box-shadow .2s}
-  .agenda-col-action .btn-register:hover{transform:translateY(-2px);box-shadow:0 8px 20px rgba(233,30,99,.4)}
-  .agenda-col-action .btn-register svg{width:13px;height:13px}
-  @media(max-width:900px){
-    .agenda-sched-header{flex-direction:column;gap:12px}
-    .agenda-row{grid-template-columns:1fr;gap:16px}
-    .agenda-col-action{text-align:left;margin-top:8px}
-    .agenda-sched-tab.active{font-size:1.3rem}
-    .agenda-sched-tab{font-size:1.1rem}
-  }
-</style>
-<section id="agenda-sections" class="why reveal">
-  <div class="container">
 
-    <?php
-        // Dedupe by (start_time, normalized title): keep the entry with the most speakers, then the longest duration.
-        $msdPickBest = function ($items) {
-            $best = [];
-            foreach ($items as $it) {
-                $normTitle = html_entity_decode(strip_tags($it->title), ENT_QUOTES | ENT_HTML5, 'UTF-8');
-                $key = substr($it->start_time, 0, 5) . '|' . mb_strtolower(trim($normTitle));
-                if (!isset($best[$key])) { $best[$key] = $it; continue; }
-                $cur = $best[$key];
-                $curReg = (bool) $cur->is_registrable;
-                $newReg = (bool) $it->is_registrable;
-                $curSc = $cur->speakers->count();
-                $newSc = $it->speakers->count();
-                $curLen = strtotime($cur->end_time) - strtotime($cur->start_time);
-                $newLen = strtotime($it->end_time) - strtotime($it->start_time);
-                if ($newReg && !$curReg) { $best[$key] = $it; continue; }
-                if (!$newReg && $curReg) continue;
-                if ($newSc > $curSc || ($newSc === $curSc && $newLen > $curLen)) $best[$key] = $it;
-            }
-            return array_values($best);
-        };
-
-        // Classify an agenda item into a session type: general | workshop | session | track (null = skip breaks).
-        $msdClassify = function ($it) {
-            if ($it->category === 'break') return null;
-            $t = $it->agenda_type
-                ?: ($it->category === 'workshop' ? 'workshop' : null)
-                ?: ($it->track_id ? 'track' : null)
-                ?: ($it->workshop_id ? 'workshop' : null)
-                ?: 'session';
-            if ($t === 'keynote') return 'general';
-            if (in_array($it->category, ['platinum', 'gold'], true)) return 'track';
-            if ($it->category === 'general') return 'general';
-            return $t;
-        };
-
-        $sessionDefs = [
-            'general'  => ['label' => 'General Session',   'icon' => '🎤'],
-            'workshop' => ['label' => 'Workshop Session',  'icon' => '🛠️'],
-            'track'    => ['label' => 'Track Session',     'icon' => '🛤️'],
-        ];
-        $panels = [];
-        foreach ($sessionDefs as $key => $def) {
-            $panels[] = [
-                'key'   => $key,
-                'label' => $def['label'],
-                'icon'  => $def['icon'],
-                'items' => $msdPickBest($agendaItems->filter(fn ($i) => $msdClassify($i) === $key)),
-            ];
-        }
-    ?>
- <h2 class="section-title">A full day of learning, exchange, and discovery</h2>
-    <div class="agenda-sched-header">
-      <span class="agenda-sched-label">Schedule</span>
-      <nav class="agenda-sched-tabs">
-        <?php $__currentLoopData = $panels; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $panel): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-          <button type="button" class="agenda-sched-tab<?php echo e($loop->first ? ' active' : ''); ?>" data-sess="<?php echo e($panel['key']); ?>">
-            <?php echo e($panel['label']); ?>
-
-          </button>
-        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
-      </nav>
-    </div>
-
-    <?php $__currentLoopData = $panels; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $panel): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-      <div class="agenda-sched-content<?php echo e($loop->first ? ' active' : ''); ?>" data-panel="<?php echo e($panel['key']); ?>">
-        <?php if(empty($panel['items'])): ?>
-          <p class="agenda-empty">No sessions in this category yet.</p>
-        <?php else: ?>
-          <?php $__currentLoopData = $panel['items']; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $it): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-            <?php
-                $linkedName = $it->workshop
-                    ? ($it->workshop->name ?: $it->workshop->title)
-                    : ($it->track ? ($it->track->name ?: $it->track->title) : null);
-                $entryTitle = $linkedName ?: $it->title;
-                $spk = $it->speakers->values();
-            ?>
-            <div class="agenda-row">
-              <div class="agenda-col-time">
-                <div class="atime"><?php echo e(date('H:i', strtotime($it->start_time))); ?>–<?php echo e(date('H:i', strtotime($it->end_time))); ?></div>
-                <div class="atz">(WIB)</div>
-                <?php if($it->room): ?>
-                  <div class="aroom"><?php echo e($it->room); ?></div>
-                <?php endif; ?>
-              </div>
-              <div class="agenda-col-topic"><?php echo e($entryTitle); ?></div>
-              <div class="agenda-col-speakers">
-                <?php $__currentLoopData = $spk; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $sp): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-                  <?php
-                    $spRole = trim(($sp->title ?? '') . ($sp->company ? ' · ' . $sp->company : ''));
-                    $spPhoto = $sp->photo;
-                    if ($spPhoto && !str_starts_with($spPhoto, 'http') && !str_starts_with($spPhoto, '/')) {
-                        $spPhoto = asset('storage/' . $spPhoto);
-                    }
-                  ?>
-                  <div class="agenda-speaker-card">
-                    <?php if($spPhoto): ?>
-                      <img src="<?php echo e($spPhoto); ?>" class="agenda-sp-photo" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
-                      <div class="agenda-sp-initial" style="display:none;"><?php echo e(mb_substr($sp->name, 0, 1)); ?></div>
-                    <?php else: ?>
-                      <div class="agenda-sp-initial"><?php echo e(mb_substr($sp->name, 0, 1)); ?></div>
-                    <?php endif; ?>
-                    <div class="agenda-sp-info">
-                      <span class="agenda-speaker-name"><?php echo e($sp->name); ?></span>
-                      <?php if($spRole): ?>
-                        <span class="agenda-speaker-role"><?php echo e($spRole); ?></span>
-                      <?php endif; ?>
-                    </div>
-                  </div>
-                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
-              </div>
-              <div class="agenda-col-action">
-                <?php if($it->is_registrable): ?>
-                  <button type="button" class="btn-register" onclick="openAgendaModal(<?php echo e($it->id); ?>)">
-                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2z"/></svg>
-                    Register
-                  </button>
-                <?php endif; ?>
-              </div>
-            </div>
-          <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
-        <?php endif; ?>
-      </div>
-    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
-
-  </div>
-</section>
-
-<script>
-document.addEventListener('DOMContentLoaded', function () {
-  var tabs = document.querySelectorAll('#agenda-sections .agenda-sched-tab');
-  var panels = document.querySelectorAll('#agenda-sections .agenda-sched-content');
-  tabs.forEach(function (t) {
-    t.addEventListener('click', function () {
-      var key = t.getAttribute('data-sess');
-      tabs.forEach(function (x) { x.classList.toggle('active', x === t); });
-      panels.forEach(function (p) { p.classList.toggle('active', p.getAttribute('data-panel') === key); });
-    });
-  });
-});
-</script>
 
 <!-- AGENDA -->
 <section id="agenda" class="why reveal">
@@ -1230,7 +1051,7 @@ document.addEventListener('DOMContentLoaded', function() {
     svg.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/>';
     title.textContent = 'Registration Successful';
     document.getElementById('notifMessage').innerHTML = '<?php echo str_replace(["'"], ["\\'"], session('success')); ?>';
-    modal.setAttribute('data-scroll-to', '#agenda-sections');
+    modal.setAttribute('data-scroll-to', '#agenda');
     modal.style.display = 'flex';
     document.body.style.overflow = 'hidden';
 });
