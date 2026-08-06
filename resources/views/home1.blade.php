@@ -351,7 +351,7 @@ document.addEventListener('DOMContentLoaded', function () {
 <section id="agenda" class="why reveal">
   <div class="container">
     {{-- <p class="section-eyebrow">Agenda</p> --}}
-    <h2 class="section-title">Full Agenda</h2>
+    <h2 class="section-title">A full day of learning, exchange, and discovery</h2>
 
     @if(isset($timeSlots) && $timeSlots->isNotEmpty())
       @php
