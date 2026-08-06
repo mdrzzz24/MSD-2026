@@ -211,6 +211,20 @@ Route::middleware(['auth', 'admin', 'no_cache'])->prefix('admin')->name('admin.'
     Route::put('/workshops/{workshop}/tracks/{track}', [App\Http\Controllers\AdminWorkshopTrackController::class, 'update'])->name('workshops.tracks.update');
     Route::post('/workshops/{workshop}/tracks/{track}/toggle', [App\Http\Controllers\AdminWorkshopTrackController::class, 'toggle'])->name('workshops.tracks.toggle');
     Route::delete('/workshops/{workshop}/tracks/{track}', [App\Http\Controllers\AdminWorkshopTrackController::class, 'destroy'])->name('workshops.tracks.destroy');
+    // General Sessions management (super admin only)
+    Route::get('/general-sessions', [App\Http\Controllers\AdminGeneralSessionController::class, 'index'])->name('general-sessions.index');
+    Route::get('/general-sessions/create', [App\Http\Controllers\AdminGeneralSessionController::class, 'create'])->name('general-sessions.create');
+    Route::post('/general-sessions', [App\Http\Controllers\AdminGeneralSessionController::class, 'store'])->name('general-sessions.store');
+    Route::get('/general-sessions/{agendum}/edit', [App\Http\Controllers\AdminGeneralSessionController::class, 'edit'])->name('general-sessions.edit');
+    Route::put('/general-sessions/{agendum}', [App\Http\Controllers\AdminGeneralSessionController::class, 'update'])->name('general-sessions.update');
+    Route::delete('/general-sessions/{agendum}', [App\Http\Controllers\AdminGeneralSessionController::class, 'destroy'])->name('general-sessions.destroy');
+    // Track Sessions management (super admin only)
+    Route::get('/track-sessions', [App\Http\Controllers\AdminTrackSessionController::class, 'index'])->name('track-sessions.index');
+    Route::get('/track-sessions/create', [App\Http\Controllers\AdminTrackSessionController::class, 'create'])->name('track-sessions.create');
+    Route::post('/track-sessions', [App\Http\Controllers\AdminTrackSessionController::class, 'store'])->name('track-sessions.store');
+    Route::get('/track-sessions/{agendum}/edit', [App\Http\Controllers\AdminTrackSessionController::class, 'edit'])->name('track-sessions.edit');
+    Route::put('/track-sessions/{agendum}', [App\Http\Controllers\AdminTrackSessionController::class, 'update'])->name('track-sessions.update');
+    Route::delete('/track-sessions/{agendum}', [App\Http\Controllers\AdminTrackSessionController::class, 'destroy'])->name('track-sessions.destroy');
     // Agenda management
     Route::get('/agenda', [AdminAgendaController::class, 'index'])->name('agenda.index');
     Route::get('/agenda/create', [AdminAgendaController::class, 'create'])->name('agenda.create');

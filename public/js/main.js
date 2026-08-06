@@ -235,6 +235,7 @@ function showSuccessModal(customMessage) {
     if (svg) { svg.style.color = '#10b981'; svg.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/>'; }
     if (title) title.textContent = 'Registration Successful';
     if (msg) msg.innerHTML = customMessage || 'Your data has been received. Please wait for confirmation from the admin via email.';
+    modal.setAttribute('data-scroll-to', '#agenda-sections');
     modal.style.display = 'flex';
   }
 }
@@ -242,7 +243,12 @@ function showSuccessModal(customMessage) {
 function closeSuccessModal() {
   const modal = document.getElementById('successModal');
   if (modal) {
+    const scrollTo = modal.getAttribute('data-scroll-to');
     modal.style.display = 'none';
+    if (scrollTo) {
+      const target = document.querySelector(scrollTo);
+      if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
   }
   document.body.style.overflow = '';
 }

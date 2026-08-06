@@ -8,36 +8,36 @@
     'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
     })(window,document,'script','dataLayer','GTM-T69856QT');</script>
     <!-- End Google Tag Manager -->
-    <link rel="icon" type="image/png" href="{{ asset('img/metrodata.png') }}">
+    <link rel="icon" type="image/png" href="<?php echo e(asset('img/metrodata.png')); ?>">
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Metrodata Solution Day 2026 — Winning with AI</title>
 <meta name="description" content="MSD 2026: Winning with AI — Build, Run, and Scale for Measurable Impact. Jakarta, 20 August 2026, Shangri-La Hotel." />
 
-{{-- Open Graph / Social Media Meta Tags --}}
+
 <meta property="og:type" content="website" />
 <meta property="og:title" content="Metrodata Solution Day 2026 — Winning with AI" />
 <meta property="og:description" content="MSD 2026: Winning with AI — Build, Run, and Scale for Measurable Impact. Jakarta, 20 August 2026, Shangri-La Hotel." />
-<meta property="og:image" content="{{ asset('img/header-sos.jpeg') }}" />
+<meta property="og:image" content="<?php echo e(asset('img/header-sos.jpeg')); ?>" />
 <meta property="og:image:width" content="1200" />
 <meta property="og:image:height" content="630" />
-<meta property="og:url" content="{{ url()->current() }}" />
+<meta property="og:url" content="<?php echo e(url()->current()); ?>" />
 <meta property="og:site_name" content="Metrodata Solution Day 2026" />
 <meta property="og:locale" content="id_ID" />
 
-{{-- Twitter Card --}}
+
 <meta name="twitter:card" content="summary_large_image" />
 <meta name="twitter:title" content="Metrodata Solution Day 2026 — Winning with AI" />
 <meta name="twitter:description" content="MSD 2026: Winning with AI — Build, Run, and Scale for Measurable Impact. Jakarta, 20 August 2026, Shangri-La Hotel." />
-<meta name="twitter:image" content="{{ asset('img/header-sos.jpeg') }}" />
+<meta name="twitter:image" content="<?php echo e(asset('img/header-sos.jpeg')); ?>" />
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="preload" as="image" href="{{ asset('img/Website-BG.jpg?v2') }}" fetchpriority="high">
-<link rel="stylesheet" href="{{ asset('css/style.css') }}?v=7">
+<link rel="preload" as="image" href="<?php echo e(asset('img/Website-BG.jpg?v2')); ?>" fetchpriority="high">
+<link rel="stylesheet" href="<?php echo e(asset('css/style.css')); ?>?v=7">
 </head>
-<body>@include('partials.impersonation-banner')<!-- Google Tag Manager (noscript) -->
+<body><?php echo $__env->make('partials.impersonation-banner', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><!-- Google Tag Manager (noscript) -->
 <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-T69856QT"
 height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 <!-- End Google Tag Manager (noscript) -->
@@ -46,21 +46,21 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 <nav class="nav">
   <div class="container nav-inner">
     <a href="#" class="logo">
-      <img src="{{ asset('img/logo-metrodata.png') }}" alt="Metrodata" style="height:48px;width:auto">
+      <img src="<?php echo e(asset('img/logo-metrodata.png')); ?>" alt="Metrodata" style="height:48px;width:auto">
     </a>
     <button class="nav-toggle" aria-label="Menu" id="navToggle">☰</button>
     <div class="nav-links" id="navLinks">
       <a href="#overview" class="active">Overview</a>
       <a href="#agenda-sections">Agenda</a>
       <a href="#sponsors">Sponsors</a>
-      @if (Auth::guard('registrant')->check())
-        <a href="{{ route('registrant.dashboard') }}">Dashboard</a>
+      <?php if(Auth::guard('registrant')->check()): ?>
+        <a href="<?php echo e(route('registrant.dashboard')); ?>">Dashboard</a>
         <a href="#" onclick="event.preventDefault(); document.getElementById('logoutForm').submit();" style="color:#ef4444;">Logout</a>
-        <form id="logoutForm" action="{{ route('registrant.logout') }}" method="POST" style="display:none;">@csrf</form>
-      @else
+        <form id="logoutForm" action="<?php echo e(route('registrant.logout')); ?>" method="POST" style="display:none;"><?php echo csrf_field(); ?></form>
+      <?php else: ?>
         <a href="#register">Register</a>
-        <a href="{{ route('login') }}" class="btn" style="padding:6px 18px;font-size:13px;">Login</a>
-      @endif
+        <a href="<?php echo e(route('login')); ?>" class="btn" style="padding:6px 18px;font-size:13px;">Login</a>
+      <?php endif; ?>
     </div>
   </div>
 </nav>
@@ -72,7 +72,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   <div class="container hero-content">
     <p class="eyebrow"><strong>Metrodata</strong> Proudly Present</p>
     <div class="hero-title-group">
-      <img src="{{ asset('img/logo-msd.png') }}" alt="MSD" class="logo-glow" style="height:clamp(60px,10vw,100px);width:auto">
+      <img src="<?php echo e(asset('img/logo-msd.png')); ?>" alt="MSD" class="logo-glow" style="height:clamp(60px,10vw,100px);width:auto">
     </div>
     <h1>Winning with AI:<br>Build, Run, and Scale <span class="br-mobile"></span>for Measurable Impact</h1>
     <p class="tagline">Accelerating AI for Real Business and Operational Value</p>
@@ -86,11 +86,11 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         Shangri-La Hotel
       </span>
     </div>
-    @unless (Auth::guard('registrant')->check())
+    <?php if (! (Auth::guard('registrant')->check())): ?>
     <a href="#register" class="btn">Register Now</a>
-    @else
-    <a href="{{ route('registrant.dashboard') }}" class="btn">My Dashboard</a>
-    @endunless
+    <?php else: ?>
+    <a href="<?php echo e(route('registrant.dashboard')); ?>" class="btn">My Dashboard</a>
+    <?php endif; ?>
   </div>
 </header>
 <div id="postHeroContent">
@@ -165,7 +165,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   </div>
 </section>
 
-{{-- AGENDA SCHEDULE (template grid: time+location | topic | speakers | Bookmark) --}}
+
 <style>
   .agenda-sched-header{display:flex;align-items:baseline;gap:24px;padding-bottom:20px;border-bottom:1px solid var(--line);margin-bottom:30px;flex-wrap:wrap}
   .agenda-sched-label{font-size:.9rem;letter-spacing:2px;text-transform:uppercase;color:var(--pink);font-weight:700}
@@ -205,7 +205,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 <section id="agenda-sections" class="why reveal">
   <div class="container">
 
-    @php
+    <?php
         // Dedupe by (start_time, normalized title): keep the entry with the most speakers, then the longest duration.
         $msdPickBest = function ($items) {
             $best = [];
@@ -255,79 +255,80 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                 'items' => $msdPickBest($agendaItems->filter(fn ($i) => $msdClassify($i) === $key)),
             ];
         }
-    @endphp
+    ?>
  <h2 class="section-title">A full day of learning, exchange, and discovery</h2>
     <div class="agenda-sched-header">
       <span class="agenda-sched-label">Schedule</span>
       <nav class="agenda-sched-tabs">
-        @foreach ($panels as $panel)
-          <button type="button" class="agenda-sched-tab{{ $loop->first ? ' active' : '' }}" data-sess="{{ $panel['key'] }}">
-            {{ $panel['label'] }}
+        <?php $__currentLoopData = $panels; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $panel): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+          <button type="button" class="agenda-sched-tab<?php echo e($loop->first ? ' active' : ''); ?>" data-sess="<?php echo e($panel['key']); ?>">
+            <?php echo e($panel['label']); ?>
+
           </button>
-        @endforeach
+        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
       </nav>
     </div>
 
-    @foreach ($panels as $panel)
-      <div class="agenda-sched-content{{ $loop->first ? ' active' : '' }}" data-panel="{{ $panel['key'] }}">
-        @if (empty($panel['items']))
+    <?php $__currentLoopData = $panels; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $panel): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+      <div class="agenda-sched-content<?php echo e($loop->first ? ' active' : ''); ?>" data-panel="<?php echo e($panel['key']); ?>">
+        <?php if(empty($panel['items'])): ?>
           <p class="agenda-empty">No sessions in this category yet.</p>
-        @else
-          @foreach ($panel['items'] as $it)
-            @php
+        <?php else: ?>
+          <?php $__currentLoopData = $panel['items']; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $it): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+            <?php
                 $linkedName = $it->workshop
                     ? ($it->workshop->name ?: $it->workshop->title)
                     : ($it->track ? ($it->track->name ?: $it->track->title) : null);
                 $entryTitle = $linkedName ?: $it->title;
                 $spk = $it->speakers->values();
-            @endphp
+            ?>
             <div class="agenda-row">
               <div class="agenda-col-time">
-                <div class="atime">{{ date('H:i', strtotime($it->start_time)) }}–{{ date('H:i', strtotime($it->end_time)) }}</div>
+                <div class="atime"><?php echo e(date('H:i', strtotime($it->start_time))); ?>–<?php echo e(date('H:i', strtotime($it->end_time))); ?></div>
                 <div class="atz">(WIB)</div>
-                @if ($it->room)
-                  <div class="aroom">{{ $it->room }}</div>
-                @endif
+                <?php if($it->room): ?>
+                  <div class="aroom"><?php echo e($it->room); ?></div>
+                <?php endif; ?>
               </div>
-              <div class="agenda-col-topic">{{ $entryTitle }}</div>
+              <div class="agenda-col-topic"><?php echo e($entryTitle); ?></div>
               <div class="agenda-col-speakers">
-                @foreach ($spk as $sp)
-                  @php
+                <?php $__currentLoopData = $spk; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $sp): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                  <?php
                     $spRole = trim(($sp->title ?? '') . ($sp->company ? ' · ' . $sp->company : ''));
                     $spPhoto = $sp->photo;
                     if ($spPhoto && !str_starts_with($spPhoto, 'http') && !str_starts_with($spPhoto, '/')) {
                         $spPhoto = asset('storage/' . $spPhoto);
                     }
-                  @endphp
+                  ?>
                   <div class="agenda-speaker-card">
-                    @if ($spPhoto)
-                      <img src="{{ $spPhoto }}" class="agenda-sp-photo" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
-                      <div class="agenda-sp-initial" style="display:none;">{{ mb_substr($sp->name, 0, 1) }}</div>
-                    @else
-                      <div class="agenda-sp-initial">{{ mb_substr($sp->name, 0, 1) }}</div>
-                    @endif
+                    <?php if($spPhoto): ?>
+                      <img src="<?php echo e($spPhoto); ?>" class="agenda-sp-photo" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
+                      <div class="agenda-sp-initial" style="display:none;"><?php echo e(mb_substr($sp->name, 0, 1)); ?></div>
+                    <?php else: ?>
+                      <div class="agenda-sp-initial"><?php echo e(mb_substr($sp->name, 0, 1)); ?></div>
+                    <?php endif; ?>
                     <div class="agenda-sp-info">
-                      <span class="agenda-speaker-name">{{ $sp->name }}</span>
-                      @if ($spRole)
-                        <span class="agenda-speaker-role">{{ $spRole }}</span>
-                      @endif
+                      <span class="agenda-speaker-name"><?php echo e($sp->name); ?></span>
+                      <?php if($spRole): ?>
+                        <span class="agenda-speaker-role"><?php echo e($spRole); ?></span>
+                      <?php endif; ?>
                     </div>
                   </div>
-                @endforeach
+                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
               </div>
               <div class="agenda-col-action">
-                @if ($it->is_registrable)
-                  <button type="button" class="btn-register" onclick="openAgendaModal({{ $it->id }})">
+                <?php if($it->is_registrable): ?>
+                  <button type="button" class="btn-register" onclick="openAgendaModal(<?php echo e($it->id); ?>)">
                     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2z"/></svg>
                     Register
                   </button>
-                @endif
+                <?php endif; ?>
               </div>
             </div>
-          @endforeach
-        @endif
+          <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+        <?php endif; ?>
       </div>
-    @endforeach
+    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
 
   </div>
 </section>
@@ -349,25 +350,25 @@ document.addEventListener('DOMContentLoaded', function () {
 <!-- AGENDA -->
 <section id="agenda" class="why reveal">
   <div class="container">
-    {{-- <p class="section-eyebrow">Agenda</p> --}}
+    
     <h2 class="section-title">Full Agenda</h2>
 
-    @if(isset($timeSlots) && $timeSlots->isNotEmpty())
-      @php
+    <?php if(isset($timeSlots) && $timeSlots->isNotEmpty()): ?>
+      <?php
         $roomNames = $rooms->pluck('name')->toArray();
         // Group rooms by floor for dynamic header
         $floorGroups = $rooms->groupBy(fn($r) => $r->floorRelation?->name ?? 'Other');
-      @endphp
+      ?>
       <div class="table-wrap" style="position:relative;">
-        {{-- Overlay instruction --}}
+        
         <div id="agendaOverlay" style="position:absolute;inset:-4px;z-index:50;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(5,13,42,0.88);backdrop-filter:blur(8px);border-radius:20px;cursor:pointer;transition:opacity 0.6s,transform 0.6s;">
-          {{-- Desktop content --}}
+          
           <div id="overlayDesktop" style="display:flex;flex-direction:column;align-items:center;">
             <img src="https://img.icons8.com/?size=100&id=pGqqobAPSa_u&format=png&color=000000" style="width:48px;height:48px;margin-bottom:14px;opacity:0.7;filter:brightness(0) invert(1);">
             <p style="font-size:15px;font-weight:700;color:#e2e8f0;margin-bottom:4px;letter-spacing:-0.01em;">Tap any session to explore</p>
             <p style="font-size:13px;color:#94a3b8;max-width:300px;text-align:center;line-height:1.6;">Click on a <strong style="color:#f472b6;">workshop</strong> or <strong style="color:#818cf8;">track</strong> in the table to view details.</p>
           </div>
-          {{-- Mobile content --}}
+          
           <div id="overlayMobile" style="display:none;flex-direction:column;align-items:center;padding:0 16px;">
             <img src="https://img.icons8.com/?size=100&id=xP7ywSliik10&format=png&color=000000" style="width:44px;height:44px;margin-bottom:12px;opacity:0.7;filter:brightness(0) invert(1);">
             <p style="font-size:15px;font-weight:700;color:#e2e8f0;margin-bottom:4px;letter-spacing:-0.01em;text-align:center;">Swipe to explore</p>
@@ -417,41 +418,42 @@ document.addEventListener('DOMContentLoaded', function () {
           <thead>
             <tr>
               <th rowspan="2">Time</th>
-              @foreach ($floorGroups as $floorName => $floorRooms)
-                <th colspan="{{ $floorRooms->count() }}" style="background:{{ $loop->first ? '#eef2ff' : '#fefce8' }}; color:{{ $loop->first ? '#4338ca' : '#a16207' }};">{{ $floorName }}</th>
-              @endforeach
+              <?php $__currentLoopData = $floorGroups; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $floorName => $floorRooms): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                <th colspan="<?php echo e($floorRooms->count()); ?>" style="background:<?php echo e($loop->first ? '#eef2ff' : '#fefce8'); ?>; color:<?php echo e($loop->first ? '#4338ca' : '#a16207'); ?>;"><?php echo e($floorName); ?></th>
+              <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
             </tr>
             <tr>
-              @foreach ($rooms as $rm)
-                <th>{{ $rm->name }}</th>
-              @endforeach
+              <?php $__currentLoopData = $rooms; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $rm): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                <th><?php echo e($rm->name); ?></th>
+              <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
             </tr>
           </thead>
           <tbody>
-            @php
+            <?php
                 $skipMap = [];
-            @endphp
-            @foreach ($timeSlots as $ts)
-              @php
+            ?>
+            <?php $__currentLoopData = $timeSlots; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $ts): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+              <?php
                 $slotKey = $ts->start_time . '-' . $ts->end_time;
                 $items = collect($itemMap[$slotKey] ?? []);
                 $fullRow = $items->firstWhere(fn($i) => $i->isFullRow());
                 $hasPerRoom = $items->contains(fn($i) => !$i->isFullRow());
                 if ($hasPerRoom) $fullRow = null;
-              @endphp
+              ?>
               <tr>
-                <td class="time">{{ $ts->label() }}</td>
-                @if ($fullRow)
-                  <td class="full" colspan="{{ $rooms->count() }}" data-timeslot="{{ $slotKey }}" data-agenda-id="{{ $fullRow->id }}">
-                    @php $fullTitle = $fullRow->workshop ? ($fullRow->workshop->name ?: $fullRow->workshop->title) : ($fullRow->track ? ($fullRow->track->name ?: $fullRow->track->title) : $fullRow->title); @endphp
-                    @if ($fullRow->category || $fullRow->agenda_type)
-                      <span class="tag {{ \App\Models\AgendaItem::categoryClass($fullRow->category, $fullRow->agenda_type) }}">{{ $fullTitle }}</span>
-                    @else
-                      {{ $fullTitle }}
-                    @endif
+                <td class="time"><?php echo e($ts->label()); ?></td>
+                <?php if($fullRow): ?>
+                  <td class="full" colspan="<?php echo e($rooms->count()); ?>" data-timeslot="<?php echo e($slotKey); ?>" data-agenda-id="<?php echo e($fullRow->id); ?>">
+                    <?php $fullTitle = $fullRow->workshop ? ($fullRow->workshop->name ?: $fullRow->workshop->title) : ($fullRow->track ? ($fullRow->track->name ?: $fullRow->track->title) : $fullRow->title); ?>
+                    <?php if($fullRow->category || $fullRow->agenda_type): ?>
+                      <span class="tag <?php echo e(\App\Models\AgendaItem::categoryClass($fullRow->category, $fullRow->agenda_type)); ?>"><?php echo e($fullTitle); ?></span>
+                    <?php else: ?>
+                      <?php echo e($fullTitle); ?>
+
+                    <?php endif; ?>
                   </td>
-                @else
-                  @php
+                <?php else: ?>
+                  <?php
                     $cells = [];
                     $colCovered = [];
                     foreach ($roomNames as $rm) {
@@ -486,90 +488,91 @@ document.addEventListener('DOMContentLoaded', function () {
                             $cells[] = '<td data-timeslot="' . $slotKey . '">—</td>';
                         }
                     }
-                  @endphp
-                  {!! implode("\n", $cells) !!}
-                @endif
+                  ?>
+                  <?php echo implode("\n", $cells); ?>
+
+                <?php endif; ?>
               </tr>
-              @php
+              <?php
                 foreach ($skipMap as $rm => $rem) {
                     $skipMap[$rm] = $rem - 1;
                     if ($skipMap[$rm] <= 0) unset($skipMap[$rm]);
                 }
-              @endphp
-            @endforeach
+              ?>
+            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
           </tbody>
         </table>
       </div>
-    @else
+    <?php else: ?>
       <div class="table-wrap">
         <table>
           <thead>
             <tr>
               <th rowspan="2">Time</th>
-              @php $floorGroups = $rooms->groupBy(fn($r) => $r->floorRelation?->name ?? 'Other'); @endphp
-              @foreach ($floorGroups as $floorName => $floorRooms)
-                <th colspan="{{ $floorRooms->count() }}" style="background:{{ $loop->first ? '#eef2ff' : '#fefce8' }}; color:{{ $loop->first ? '#4338ca' : '#a16207' }};">{{ $floorName }}</th>
-              @endforeach
+              <?php $floorGroups = $rooms->groupBy(fn($r) => $r->floorRelation?->name ?? 'Other'); ?>
+              <?php $__currentLoopData = $floorGroups; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $floorName => $floorRooms): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                <th colspan="<?php echo e($floorRooms->count()); ?>" style="background:<?php echo e($loop->first ? '#eef2ff' : '#fefce8'); ?>; color:<?php echo e($loop->first ? '#4338ca' : '#a16207'); ?>;"><?php echo e($floorName); ?></th>
+              <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
             </tr>
             <tr>
-              @foreach ($rooms as $rm)
-                <th>{{ $rm->name }}</th>
-              @endforeach
+              <?php $__currentLoopData = $rooms; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $rm): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                <th><?php echo e($rm->name); ?></th>
+              <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
             </tr>
           </thead>
           <tbody>
-            @foreach ($timeSlots as $ts)
+            <?php $__currentLoopData = $timeSlots; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $ts): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
             <tr>
-              <td class="time">{{ $ts->label() }}</td>
-              <td colspan="{{ $rooms->count() }}" class="text-center text-gray-400 py-4" style="color:var(--muted)">—</td>
+              <td class="time"><?php echo e($ts->label()); ?></td>
+              <td colspan="<?php echo e($rooms->count()); ?>" class="text-center text-gray-400 py-4" style="color:var(--muted)">—</td>
             </tr>
-            @endforeach
+            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
           </tbody>
         </table>
       </div>
-    @endif
+    <?php endif; ?>
   </div>
 </section>
 
-{{-- Agenda Detail Modal --}}
+
 <div id="agendaModal" style="display:none;position:fixed;inset:0;z-index:9999;align-items:center;justify-content:center;background:rgba(5,13,42,0.85);backdrop-filter:blur(12px);padding:20px;overflow-y:auto;">
   <div style="background:rgba(255,255,255,0.05);backdrop-filter:blur(16px);border-radius:24px;box-shadow:0 30px 80px rgba(0,0,0,0.5),inset 0 1px 0 rgba(255,255,255,0.08);width:100%;max-width:600px;max-height:90vh;overflow-y:auto;animation:msdFadeIn 0.35s ease-out;border:1px solid rgba(255,255,255,0.08);">
-    {{-- Header bar with close --}}
+    
     <div style="position:sticky;top:0;z-index:10;display:flex;align-items:center;justify-content:space-between;padding:16px 24px;background:linear-gradient(135deg,#050d2a,#0e2461);border-radius:24px 24px 0 0;border-bottom:1px solid rgba(255,255,255,0.06);">
       <div style="display:flex;align-items:center;gap:10px;">
-        <img src="{{ asset('img/logo-msd.png') }}" style="height:22px;width:auto;filter:brightness(0) invert(1);">
-        {{-- <span style="font-size:10px;font-weight:700;color:rgba(255,255,255,0.6);letter-spacing:1.5px;">MSD 2026</span> --}}
+        <img src="<?php echo e(asset('img/logo-msd.png')); ?>" style="height:22px;width:auto;filter:brightness(0) invert(1);">
+        
       </div>
       <button onclick="closeAgendaModal()" style="width:30px;height:30px;border-radius:50%;border:none;background:rgba(255,255,255,0.08);font-size:15px;cursor:pointer;color:rgba(255,255,255,0.6);display:flex;align-items:center;justify-content:center;transition:all 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.15)';this.style.color='#fff'" onmouseout="this.style.background='rgba(255,255,255,0.08)';this.style.color='rgba(255,255,255,0.6)'">✕</button>
     </div>
 
     <div style="padding:28px 28px 32px;">
-      {{-- Date, Time & Room --}}
+      
       <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:14px;font-size:12px;">
         <div id="modalDateTime" style="display:flex;align-items:center;gap:6px;color:#f472b6;font-weight:500;"></div>
         <div id="modalRoom" style="display:flex;align-items:center;gap:6px;color:#94a3b8;"></div>
       </div>
 
-      {{-- Type Badge --}}
+      
       <div style="margin-bottom:16px;">
         <span id="modalTypeBadge" style="display:inline-block;font-size:10px;font-weight:700;text-transform:uppercase;padding:3px 10px;border-radius:20px;letter-spacing:0.8px;"></span>
         <span id="modalCapacity" style="display:inline-block;font-size:12px;color:#94a3b8;margin-left:10px;"></span>
       </div>
 
-      {{-- Title --}}
+      
       <h2 style="font-size:22px;font-weight:800;color:#e2e8f0;margin-bottom:18px;line-height:1.35;letter-spacing:-0.02em;" id="modalTitle"></h2>
 
-      {{-- Speakers --}}
+      
       <div id="modalSpeakers" style="margin-bottom:24px;padding:20px;background:rgba(255,255,255,0.04);border-radius:16px;border:1px solid rgba(255,255,255,0.06);"></div>
 
-      {{-- Description --}}
+      
       <div id="modalDesc" style="font-size:13px;color:#cbd5e1;line-height:1.7;margin-bottom:24px;"></div>
       <style>#modalDesc, #modalDesc * { color: #cbd5e1 !important; } #modalDesc ul, #modalDesc ol { padding-left: 20px; margin: 8px 0; } #modalDesc li { margin-bottom: 4px; } #modalDesc p { margin: 6px 0; } #modalDesc h4 { font-size: 14px; font-weight: 700; color: #e2e8f0 !important; margin: 12px 0 4px; } #modalDesc strong { color: #e2e8f0 !important; }</style>
 
-      {{-- Key Highlights --}}
+      
       <div id="modalHighlights" style="margin-bottom:24px;"></div>
 
-      {{-- Registration --}}
+      
       <div id="modalRegSection" style="border-top:1px solid rgba(255,255,255,0.08);padding-top:20px;margin-top:12px;"></div>
     </div>
   </div>
@@ -581,7 +584,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
 <script>
 // ── Agenda data for modal (available to all) ──
-window._agendaData = {!! json_encode($agendaItems->keyBy('id')->map(function ($item) use ($timeSlots) {
+window._agendaData = <?php echo json_encode($agendaItems->keyBy('id')->map(function ($item) use ($timeSlots) {
     // Calculate display end_time based on rowspan
     $displayEndTime = $item->end_time;
     if ($item->rowspan > 1 && $timeSlots->isNotEmpty()) {
@@ -605,20 +608,20 @@ window._agendaData = {!! json_encode($agendaItems->keyBy('id')->map(function ($i
         'track_title'          => $item->track ? $item->track->title : null,
         'track_description'    => $item->track ? $item->track->description : null,
     ]);
-}), JSON_UNESCAPED_SLASHES) !!};
+}), JSON_UNESCAPED_SLASHES); ?>;
 
-@if (Auth::guard('registrant')->check())
-window._agendaRegistrations = {!! json_encode(
+<?php if(Auth::guard('registrant')->check()): ?>
+window._agendaRegistrations = <?php echo json_encode(
     Auth::guard('registrant')->user()->agendaItems()->get()->mapWithKeys(fn($i) => [$i->id => $i->pivot->status]),
     JSON_UNESCAPED_SLASHES
-) !!};
-window._workshopRegistrations = {!! json_encode(
+); ?>;
+window._workshopRegistrations = <?php echo json_encode(
     Auth::guard('registrant')->user()->workshops()->get()->mapWithKeys(fn($w) => [$w->id => $w->pivot->status]),
     JSON_UNESCAPED_SLASHES
-) !!};
-window._agendaRegisterUrl = '{{ route('registrant.agenda.register', ['agendaItem' => '__ID__']) }}';
-window._agendaUnregisterUrl = '{{ route('registrant.agenda.unregister', ['agendaItem' => '__ID__']) }}';
-@endif
+); ?>;
+window._agendaRegisterUrl = '<?php echo e(route('registrant.agenda.register', ['agendaItem' => '__ID__'])); ?>';
+window._agendaUnregisterUrl = '<?php echo e(route('registrant.agenda.unregister', ['agendaItem' => '__ID__'])); ?>';
+<?php endif; ?>
 
 // ── Modal Functions ──
 function openAgendaModal(id) {
@@ -690,7 +693,7 @@ function openAgendaModal(id) {
             if (sp.photo) {
                 var photoUrl = sp.photo;
                 if (!photoUrl.startsWith('http') && !photoUrl.startsWith('/')) {
-                    photoUrl = '{{ asset('storage') }}/' + photoUrl;
+                    photoUrl = '<?php echo e(asset('storage')); ?>/' + photoUrl;
                 }
                 speakersHtml += '<img src="'+photoUrl+'" style="width:48px;height:48px;border-radius:50%;object-fit:cover;border:2px solid rgba(255,255,255,0.1);flex-shrink:0;margin-top:2px;" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'flex\';">';
                 speakersHtml += '<div style="display:none;width:48px;height:48px;border-radius:50%;background:linear-gradient(135deg,#ff3d6e,#e91e63);align-items:center;justify-content:center;color:#fff;font-size:16px;font-weight:700;flex-shrink:0;margin-top:2px;">'+sp.name.charAt(0).toUpperCase()+'</div>';
@@ -747,7 +750,7 @@ function openAgendaModal(id) {
     if (!canReg) {
         regSection.innerHTML = '<p style="font-size:13px;color:#64748b;text-align:center;">Registration not available for this session.</p>';
     } else if (!isLoggedIn) {
-        var loginUrl = '{{ route('login', request()->only(['utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content'])) }}';
+        var loginUrl = '<?php echo e(route('login', request()->only(['utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content']))); ?>';
         regSection.innerHTML = '<div style="text-align:center;padding:12px 0;">' +
             '<p style="font-size:13px;color:#94a3b8;">Please <a href="'+loginUrl+'" style="color:#f472b6;font-weight:600;text-decoration:underline;text-underline-offset:2px;">login</a> to register for this session.</p>' +
         '</div>';
@@ -761,14 +764,14 @@ function openAgendaModal(id) {
         regSection.innerHTML = '<div style="text-align:center;"><div style="display:inline-flex;align-items:center;gap:8px;padding:8px 20px;border-radius:999px;font-size:13px;font-weight:600;background:rgba(16,185,129,0.15);color:#34d399;border:1px solid rgba(16,185,129,0.2);margin-bottom:14px;"><svg style="width:16px;height:16px;" fill="none" stroke="#34d399" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke-width="2"/><path stroke-width="2.5" d="M8 12l3 3 5-5"/></svg> You are registered</div></div>';
     } else if (regStatus === 'pending') {
         regSection.innerHTML = '<div style="text-align:center;"><div style="display:inline-flex;align-items:center;gap:8px;padding:8px 20px;border-radius:999px;font-size:13px;font-weight:600;background:rgba(251,191,36,0.15);color:#fbbf24;border:1px solid rgba(251,191,36,0.2);margin-bottom:14px;"><svg style="width:16px;height:16px;" fill="none" stroke="#fbbf24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke-width="2"/><path stroke-width="2" d="M12 6v6l4 2"/></svg> Pending Approval</div>' +
-            '<form action="'+window._agendaUnregisterUrl.replace('__ID__',id)+'" method="POST">@csrf<button style="padding:10px 28px;background:rgba(239,68,68,0.1);color:#ef4444;font-weight:600;font-size:13px;border:1px solid rgba(239,68,68,0.2);border-radius:999px;cursor:pointer;transition:all 0.2s;" onmouseover="this.style.background=\'rgba(239,68,68,0.2)\'" onmouseout="this.style.background=\'rgba(239,68,68,0.1)\'">Cancel</button></form></div>';
+            '<form action="'+window._agendaUnregisterUrl.replace('__ID__',id)+'" method="POST"><?php echo csrf_field(); ?><button style="padding:10px 28px;background:rgba(239,68,68,0.1);color:#ef4444;font-weight:600;font-size:13px;border:1px solid rgba(239,68,68,0.2);border-radius:999px;cursor:pointer;transition:all 0.2s;" onmouseover="this.style.background=\'rgba(239,68,68,0.2)\'" onmouseout="this.style.background=\'rgba(239,68,68,0.1)\'">Cancel</button></form></div>';
     } else if (regStatus === 'rejected') {
         regSection.innerHTML = '<div style="text-align:center;"><div style="display:inline-flex;align-items:center;gap:8px;padding:8px 20px;border-radius:999px;font-size:13px;font-weight:600;background:rgba(239,68,68,0.15);color:#ef4444;border:1px solid rgba(239,68,68,0.2);margin-bottom:14px;"><svg style="width:16px;height:16px;" fill="none" stroke="#ef4444" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke-width="2"/><path stroke-width="2" d="M15 9l-6 6M9 9l6 6"/></svg> Rejected</div>' +
-            '<form action="'+window._agendaRegisterUrl.replace('__ID__',id)+'" method="POST">@csrf<button style="padding:12px 36px;background:linear-gradient(135deg,#ff3d6e,#e91e63);color:#fff;font-weight:700;font-size:14px;border:none;border-radius:999px;cursor:pointer;box-shadow:0 8px 24px rgba(233,30,99,0.35);transition:all 0.25s;" onmouseover="this.style.transform=\'translateY(-2px)\';this.style.boxShadow=\'0 12px 30px rgba(233,30,99,0.5)\'" onmouseout="this.style.transform=\'\';this.style.boxShadow=\'0 8px 24px rgba(233,30,99,0.35)\""><svg style="width:15px;height:15px;vertical-align:-2px;margin-right:6px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-width="2.5" d="M1 4v6h6"/><path stroke-width="2.5" d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg> Re-register</button></form></div>';
+            '<form action="'+window._agendaRegisterUrl.replace('__ID__',id)+'" method="POST"><?php echo csrf_field(); ?><button style="padding:12px 36px;background:linear-gradient(135deg,#ff3d6e,#e91e63);color:#fff;font-weight:700;font-size:14px;border:none;border-radius:999px;cursor:pointer;box-shadow:0 8px 24px rgba(233,30,99,0.35);transition:all 0.25s;" onmouseover="this.style.transform=\'translateY(-2px)\';this.style.boxShadow=\'0 12px 30px rgba(233,30,99,0.5)\'" onmouseout="this.style.transform=\'\';this.style.boxShadow=\'0 8px 24px rgba(233,30,99,0.35)\""><svg style="width:15px;height:15px;vertical-align:-2px;margin-right:6px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-width="2.5" d="M1 4v6h6"/><path stroke-width="2.5" d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg> Re-register</button></form></div>';
     } else {
         const capInfo = item.capacity > 0 ? '<div style="font-size:12px;color:#64748b;margin-bottom:10px;">'+ (item.approved_count || 0) +'/'+ item.capacity +' seats filled</div>' : '';
         regSection.innerHTML = '<div style="text-align:center;">'+capInfo+
-            '<form action="'+window._agendaRegisterUrl.replace('__ID__',id)+'" method="POST">@csrf<button style="padding:12px 44px;background:linear-gradient(135deg,#ff3d6e,#e91e63);color:#fff;font-weight:700;font-size:14px;letter-spacing:0.03em;border:none;border-radius:999px;cursor:pointer;box-shadow:0 8px 24px rgba(233,30,99,0.35);transition:all 0.25s;" onmouseover="this.style.transform=\'translateY(-2px)\';this.style.boxShadow=\'0 12px 30px rgba(233,30,99,0.5)\'" onmouseout="this.style.transform=\'\';this.style.boxShadow=\'0 8px 24px rgba(233,30,99,0.35)\'">Register Now</button></form></div>';
+            '<form action="'+window._agendaRegisterUrl.replace('__ID__',id)+'" method="POST"><?php echo csrf_field(); ?><button style="padding:12px 44px;background:linear-gradient(135deg,#ff3d6e,#e91e63);color:#fff;font-weight:700;font-size:14px;letter-spacing:0.03em;border:none;border-radius:999px;cursor:pointer;box-shadow:0 8px 24px rgba(233,30,99,0.35);transition:all 0.25s;" onmouseover="this.style.transform=\'translateY(-2px)\';this.style.boxShadow=\'0 12px 30px rgba(233,30,99,0.5)\'" onmouseout="this.style.transform=\'\';this.style.boxShadow=\'0 8px 24px rgba(233,30,99,0.35)\'">Register Now</button></form></div>';
     }
         }
 
@@ -825,50 +828,50 @@ document.addEventListener('DOMContentLoaded', function() {
     <div class="sponsors-block" style="margin-top:48px">
       <div class="sponsor-tier">Platinum</div>
       <div class="sponsor-grid">
-        <div class="sponsor"><img src="{{ asset('img/PLATINUM/anaplan.png') }}" alt="Anaplan"></div>
-        <div class="sponsor"><img src="{{ asset('img/PLATINUM/aws.png') }}" alt="AWS"></div>
-        <div class="sponsor"><img src="{{ asset('img/PLATINUM/cloudera.png') }}" alt="Cloudera"></div>
-        <div class="sponsor"><img src="{{ asset('img/PLATINUM/google_cloud.png') }}" alt="Google Cloud"></div>
-        <div class="sponsor"><img src="{{ asset('img/PLATINUM/IBM.png') }}" alt="IBM"></div>
-        <div class="sponsor"><img src="{{ asset('img/PLATINUM/Microsoft.png') }}" alt="Microsoft"></div>
-        <div class="sponsor"><img src="{{ asset('img/PLATINUM/PaloAlto Network.png') }}" alt="Palo Alto"></div>
-        <div class="sponsor"><img src="{{ asset('img/PLATINUM/REHDAT.png') }}" alt="Red Hat"></div>
-        <div class="sponsor"><img src="{{ asset('img/PLATINUM/SALESFORCE.png') }}" alt="Salesforce"></div>
+        <div class="sponsor"><img src="<?php echo e(asset('img/PLATINUM/anaplan.png')); ?>" alt="Anaplan"></div>
+        <div class="sponsor"><img src="<?php echo e(asset('img/PLATINUM/aws.png')); ?>" alt="AWS"></div>
+        <div class="sponsor"><img src="<?php echo e(asset('img/PLATINUM/cloudera.png')); ?>" alt="Cloudera"></div>
+        <div class="sponsor"><img src="<?php echo e(asset('img/PLATINUM/google_cloud.png')); ?>" alt="Google Cloud"></div>
+        <div class="sponsor"><img src="<?php echo e(asset('img/PLATINUM/IBM.png')); ?>" alt="IBM"></div>
+        <div class="sponsor"><img src="<?php echo e(asset('img/PLATINUM/Microsoft.png')); ?>" alt="Microsoft"></div>
+        <div class="sponsor"><img src="<?php echo e(asset('img/PLATINUM/PaloAlto Network.png')); ?>" alt="Palo Alto"></div>
+        <div class="sponsor"><img src="<?php echo e(asset('img/PLATINUM/REHDAT.png')); ?>" alt="Red Hat"></div>
+        <div class="sponsor"><img src="<?php echo e(asset('img/PLATINUM/SALESFORCE.png')); ?>" alt="Salesforce"></div>
       </div>
     </div>
 
     <div class="sponsors-block">
       <div class="sponsor-tier">Workshop</div>
       <div class="sponsor-grid">
-        <div class="sponsor"><img src="{{ asset('img/WORKSHOP/Alibaba_Cloud.png') }}" alt="Alicloud"></div>
-        <div class="sponsor"><img src="{{ asset('img/WORKSHOP/Cloudflare.png') }}" alt="Cloudflare"></div>
-        <div class="sponsor"><img src="{{ asset('img/WORKSHOP/Confluent.png') }}" alt="Confluent"></div>
-        <!-- <div class="sponsor"><img src="{{ asset('img/WORKSHOP/Creatio.png') }}" alt="Creatio"></div> -->
-        <div class="sponsor"><img src="{{ asset('img/WORKSHOP/google_cloud.png') }}" alt="Google Cloud"></div>
-        <div class="sponsor"><img src="{{ asset('img/WORKSHOP/NetApp.png') }}" alt="NetApp"></div>
-        <div class="sponsor"><img src="{{ asset('img/WORKSHOP/REHDAT.png') }}" alt="Red Hat"></div>
-        <div class="sponsor"><img src="{{ asset('img/WORKSHOP/SANGFOR.png') }}" alt="Sangfor"></div>
-        <div class="sponsor"><img src="{{ asset('img/WORKSHOP/singleStore.png') }}" alt="SingleStore"></div>
-        <div class="sponsor"><img src="{{ asset('img/WORKSHOP/Workday.png') }}" alt="Workday"></div>
+        <div class="sponsor"><img src="<?php echo e(asset('img/WORKSHOP/Alibaba_Cloud.png')); ?>" alt="Alicloud"></div>
+        <div class="sponsor"><img src="<?php echo e(asset('img/WORKSHOP/Cloudflare.png')); ?>" alt="Cloudflare"></div>
+        <div class="sponsor"><img src="<?php echo e(asset('img/WORKSHOP/Confluent.png')); ?>" alt="Confluent"></div>
+        <!-- <div class="sponsor"><img src="<?php echo e(asset('img/WORKSHOP/Creatio.png')); ?>" alt="Creatio"></div> -->
+        <div class="sponsor"><img src="<?php echo e(asset('img/WORKSHOP/google_cloud.png')); ?>" alt="Google Cloud"></div>
+        <div class="sponsor"><img src="<?php echo e(asset('img/WORKSHOP/NetApp.png')); ?>" alt="NetApp"></div>
+        <div class="sponsor"><img src="<?php echo e(asset('img/WORKSHOP/REHDAT.png')); ?>" alt="Red Hat"></div>
+        <div class="sponsor"><img src="<?php echo e(asset('img/WORKSHOP/SANGFOR.png')); ?>" alt="Sangfor"></div>
+        <div class="sponsor"><img src="<?php echo e(asset('img/WORKSHOP/singleStore.png')); ?>" alt="SingleStore"></div>
+        <div class="sponsor"><img src="<?php echo e(asset('img/WORKSHOP/Workday.png')); ?>" alt="Workday"></div>
       </div>
     </div>
     <div class="sponsors-block">
       <div class="sponsor-tier">Gold</div>
       <div class="sponsor-grid">
-        <div class="sponsor"><img src="{{ asset('img/GOLD/BytePlus.png?v=2') }}" alt="Byteplus"></div>
-        <div class="sponsor"><img src="{{ asset('img/GOLD/Confluent.png') }}" alt="Confluent"></div>
-        <div class="sponsor"><img src="{{ asset('img/GOLD/Cyble.png') }}" alt="Cyble"></div>
-        <div class="sponsor"><img src="{{ asset('img/GOLD/Datadog.png') }}" alt="Datadog"></div>
-        <div class="sponsor"><img src="{{ asset('img/GOLD/Dynatrace.png') }}" alt="Dynatrace"></div>
-        <div class="sponsor"><img src="{{ asset('img/GOLD/EDB.png?v=2') }}" alt="EDB Postgres"></div>
-        <div class="sponsor"><img src="{{ asset('img/GOLD/Fortinet.png') }}" alt="Fortinet"></div>
-        <div class="sponsor"><img src="{{ asset('img/GOLD/HPE.png') }}" alt="HPE"></div>
-        <div class="sponsor"><img src="{{ asset('img/GOLD/HP.png') }}" alt="HP Inc"></div>
-        <div class="sponsor"><img src="{{ asset('img/GOLD/Huawei.png') }}" alt="Huawei"></div>
-        <div class="sponsor"><img src="{{ asset('img/GOLD/KONG.png') }}" alt="KONG"></div>
-        <div class="sponsor"><img src="{{ asset('img/GOLD/LARK.png') }}" alt="Lark"></div>
-        <div class="sponsor"><img src="{{ asset('img/GOLD/Proofpoint.png') }}" alt="Proofpoint"></div>
-        <div class="sponsor"><img src="{{ asset('img/GOLD/Tenable.png') }}" alt="Tenable"></div>
+        <div class="sponsor"><img src="<?php echo e(asset('img/GOLD/BytePlus.png?v=2')); ?>" alt="Byteplus"></div>
+        <div class="sponsor"><img src="<?php echo e(asset('img/GOLD/Confluent.png')); ?>" alt="Confluent"></div>
+        <div class="sponsor"><img src="<?php echo e(asset('img/GOLD/Cyble.png')); ?>" alt="Cyble"></div>
+        <div class="sponsor"><img src="<?php echo e(asset('img/GOLD/Datadog.png')); ?>" alt="Datadog"></div>
+        <div class="sponsor"><img src="<?php echo e(asset('img/GOLD/Dynatrace.png')); ?>" alt="Dynatrace"></div>
+        <div class="sponsor"><img src="<?php echo e(asset('img/GOLD/EDB.png?v=2')); ?>" alt="EDB Postgres"></div>
+        <div class="sponsor"><img src="<?php echo e(asset('img/GOLD/Fortinet.png')); ?>" alt="Fortinet"></div>
+        <div class="sponsor"><img src="<?php echo e(asset('img/GOLD/HPE.png')); ?>" alt="HPE"></div>
+        <div class="sponsor"><img src="<?php echo e(asset('img/GOLD/HP.png')); ?>" alt="HP Inc"></div>
+        <div class="sponsor"><img src="<?php echo e(asset('img/GOLD/Huawei.png')); ?>" alt="Huawei"></div>
+        <div class="sponsor"><img src="<?php echo e(asset('img/GOLD/KONG.png')); ?>" alt="KONG"></div>
+        <div class="sponsor"><img src="<?php echo e(asset('img/GOLD/LARK.png')); ?>" alt="Lark"></div>
+        <div class="sponsor"><img src="<?php echo e(asset('img/GOLD/Proofpoint.png')); ?>" alt="Proofpoint"></div>
+        <div class="sponsor"><img src="<?php echo e(asset('img/GOLD/Tenable.png')); ?>" alt="Tenable"></div>
       </div>
     </div>
 
@@ -876,25 +879,25 @@ document.addEventListener('DOMContentLoaded', function() {
     <div class="sponsors-block">
       <div class="sponsor-tier">Exhibitor</div>
       <div class="sponsor-grid">
-        <!-- <div class="sponsor"><img src="{{ asset('img/metrodata.png') }}" alt="Metrodata Electronics"></div> -->
-        <div class="sponsor"><img src="{{ asset('img/EXHIBITOR/Asus-Business.png') }}" alt="Asus Business"></div>
-        <div class="sponsor"><img src="{{ asset('img/EXHIBITOR/FanRuan.png') }}" alt="FanRuan"></div>
-        <div class="sponsor"><img src="{{ asset('img/EXHIBITOR/Snowflake.png') }}" alt="Snowflake"></div>
-        <div class="sponsor"><img src="{{ asset('img/EXHIBITOR/Splunk.png') }}" alt="Splunk"></div>
+        <!-- <div class="sponsor"><img src="<?php echo e(asset('img/metrodata.png')); ?>" alt="Metrodata Electronics"></div> -->
+        <div class="sponsor"><img src="<?php echo e(asset('img/EXHIBITOR/Asus-Business.png')); ?>" alt="Asus Business"></div>
+        <div class="sponsor"><img src="<?php echo e(asset('img/EXHIBITOR/FanRuan.png')); ?>" alt="FanRuan"></div>
+        <div class="sponsor"><img src="<?php echo e(asset('img/EXHIBITOR/Snowflake.png')); ?>" alt="Snowflake"></div>
+        <div class="sponsor"><img src="<?php echo e(asset('img/EXHIBITOR/Splunk.png')); ?>" alt="Splunk"></div>
       </div>
     </div>
     <div class="sponsors-block">
       <div class="sponsor-tier">Proud Collaborators</div>
       <div class="sponsor-grid">
-        <!-- <div class="sponsor"><img src="{{ asset('img/metrodata.png') }}" alt="Metrodata Electronics"></div> -->
-        <div class="sponsor"><img src="{{ asset('img/METRODATA-GROUP/SMI.png') }}" alt="SMI"></div>
-        <div class="sponsor"><img src="{{ asset('img/METRODATA-GROUP/MII.png') }}" alt="MII"></div>
-        <div class="sponsor"><img src="{{ asset('img/METRODATA-GROUP/SOLTIUS.png') }}" alt="Soltius"></div>
-        <div class="sponsor"><img src="{{ asset('img/METRODATA-GROUP/MY ICON TECHNOLOGY.png') }}" alt="MIT"></div>
-        <div class="sponsor"><img src="{{ asset('img/METRODATA-GROUP/SINERGI TRANSFORMASI DIGITAL-01.png') }}" alt="Sinergi"></div>
-        <div class="sponsor"><img src="{{ asset('img/METRODATA-GROUP/FMI.png') }}" alt="FMI"></div>
-        <div class="sponsor"><img src="{{ asset('img/METRODATA-GROUP/PACKET_SYSTEMS.png') }}" alt="Packet Systems"></div>
-        <div class="sponsor"><img src="{{ asset('img/METRODATA-GROUP/CMI.png') }}" alt="CMI"></div>
+        <!-- <div class="sponsor"><img src="<?php echo e(asset('img/metrodata.png')); ?>" alt="Metrodata Electronics"></div> -->
+        <div class="sponsor"><img src="<?php echo e(asset('img/METRODATA-GROUP/SMI.png')); ?>" alt="SMI"></div>
+        <div class="sponsor"><img src="<?php echo e(asset('img/METRODATA-GROUP/MII.png')); ?>" alt="MII"></div>
+        <div class="sponsor"><img src="<?php echo e(asset('img/METRODATA-GROUP/SOLTIUS.png')); ?>" alt="Soltius"></div>
+        <div class="sponsor"><img src="<?php echo e(asset('img/METRODATA-GROUP/MY ICON TECHNOLOGY.png')); ?>" alt="MIT"></div>
+        <div class="sponsor"><img src="<?php echo e(asset('img/METRODATA-GROUP/SINERGI TRANSFORMASI DIGITAL-01.png')); ?>" alt="Sinergi"></div>
+        <div class="sponsor"><img src="<?php echo e(asset('img/METRODATA-GROUP/FMI.png')); ?>" alt="FMI"></div>
+        <div class="sponsor"><img src="<?php echo e(asset('img/METRODATA-GROUP/PACKET_SYSTEMS.png')); ?>" alt="Packet Systems"></div>
+        <div class="sponsor"><img src="<?php echo e(asset('img/METRODATA-GROUP/CMI.png')); ?>" alt="CMI"></div>
       </div>
     </div>
   </div>
@@ -910,7 +913,7 @@ document.addEventListener('DOMContentLoaded', function() {
   </div>
 </section> -->
 
-@unless (Auth::guard('registrant')->check())
+<?php if (! (Auth::guard('registrant')->check())): ?>
 <!-- REGISTER -->
 <section id="register" class="register reveal">
   <div class="container">
@@ -921,8 +924,8 @@ document.addEventListener('DOMContentLoaded', function() {
       <span>Registration is not yet open. Please check back on <strong>July 20, 2026</strong>.</span>
     </div> -->
     <div class="form-wrap">
-      <form id="regForm" class="form-grid" method="POST" action="{{ route('register.submit') }}" data-force-open="{{ $registrationForcedOpen ? 'true' : 'false' }}">
-        @csrf
+      <form id="regForm" class="form-grid" method="POST" action="<?php echo e(route('register.submit')); ?>" data-force-open="<?php echo e($registrationForcedOpen ? 'true' : 'false'); ?>">
+        <?php echo csrf_field(); ?>
         <div class="field"><label>First Name</label><input required name="firstName" placeholder="First Name" /><span class="field-err" data-field="firstName"></span></div>
         <div class="field"><label>Last Name</label><input required name="lastName" placeholder="Last Name" /><span class="field-err" data-field="lastName"></span></div>
         <div class="field">
@@ -1109,7 +1112,7 @@ document.addEventListener('DOMContentLoaded',function(){var e=document.getElemen
             <span>By submitting this form, I understand Metrodata will process my personal information in accordance with their <strong><a href="https://www.metrodata.co.id/privacy-policy" target="_blank">Privacy Notice</a></strong>. Additionally, I consent to my information being shared with <strong><a href="https://jovenindo.com/privacy-policy" target="_blank">Event Partners</a></strong> in accordance. I understand I may withdraw my consent or update my information at any time.</span>
           </label>
         </div>
-        {{-- UTM hidden fields --}}
+        
         <input type="hidden" name="utm_source" id="utm_source" value="">
         <input type="hidden" name="utm_medium" id="utm_medium" value="">
         <input type="hidden" name="utm_campaign" id="utm_campaign" value="">
@@ -1142,7 +1145,7 @@ document.addEventListener('DOMContentLoaded',function(){var e=document.getElemen
     </div>
   </div>
 </section>
-@endunless
+<?php endif; ?>
 
 <footer>
   <div class="container">
@@ -1152,7 +1155,7 @@ document.addEventListener('DOMContentLoaded',function(){var e=document.getElemen
 
 </div>
 
-<script src="{{ asset('js/main.js') }}?v=11"></script>
+<script src="<?php echo e(asset('js/main.js')); ?>?v=11"></script>
 <script>
 // Job Function / Job Title / Job Role logic:
 // - "Job Role" dropdown only appears when Job Title = "Information Technology"
@@ -1194,7 +1197,7 @@ document.addEventListener('DOMContentLoaded',function(){var e=document.getElemen
 input.field-error, select.field-error { border-color:#ef4444 !important; }
 </style>
 
-{{-- Success / Notification Modal --}}
+
 <div id="successModal" style="display:none; position:fixed; inset:0; z-index:9999; align-items:center; justify-content:center; background:rgba(5,13,42,0.7); backdrop-filter:blur(8px); padding:16px;">
   <div style="background:rgba(255,255,255,0.06); backdrop-filter:blur(12px); border:1px solid rgba(255,255,255,0.1); border-radius:20px; box-shadow:0 25px 60px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.08); width:100%; max-width:420px; overflow:hidden; animation:fadeInUp 0.35s ease-out;">
     <div style="padding:36px 32px 28px; text-align:center;">
@@ -1215,7 +1218,7 @@ input.field-error, select.field-error { border-color:#ef4444 !important; }
 
 <script>
 // ── Theme the notification icon based on flash type ──
-@if (session('success'))
+<?php if(session('success')): ?>
 document.addEventListener('DOMContentLoaded', function() {
     var icon = document.getElementById('notifIcon');
     var svg = document.getElementById('notifIconSvg');
@@ -1226,12 +1229,12 @@ document.addEventListener('DOMContentLoaded', function() {
     svg.style.color = '#10b981';
     svg.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/>';
     title.textContent = 'Registration Successful';
-    document.getElementById('notifMessage').innerHTML = '{!! str_replace(["'"], ["\\'"], session('success')) !!}';
+    document.getElementById('notifMessage').innerHTML = '<?php echo str_replace(["'"], ["\\'"], session('success')); ?>';
     modal.setAttribute('data-scroll-to', '#agenda-sections');
     modal.style.display = 'flex';
     document.body.style.overflow = 'hidden';
 });
-@elseif (session('error'))
+<?php elseif(session('error')): ?>
 document.addEventListener('DOMContentLoaded', function() {
     var icon = document.getElementById('notifIcon');
     var svg = document.getElementById('notifIconSvg');
@@ -1241,11 +1244,11 @@ document.addEventListener('DOMContentLoaded', function() {
     svg.style.color = '#ef4444';
     svg.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/>';
     title.textContent = 'Notice';
-    document.getElementById('notifMessage').innerHTML = '{!! str_replace(["'"], ["\\'"], session('error')) !!}';
+    document.getElementById('notifMessage').innerHTML = '<?php echo str_replace(["'"], ["\\'"], session('error')); ?>';
     document.getElementById('successModal').style.display = 'flex';
     document.body.style.overflow = 'hidden';
 });
-@elseif (session('info'))
+<?php elseif(session('info')): ?>
 document.addEventListener('DOMContentLoaded', function() {
     var icon = document.getElementById('notifIcon');
     var svg = document.getElementById('notifIconSvg');
@@ -1255,7 +1258,7 @@ document.addEventListener('DOMContentLoaded', function() {
     svg.style.color = '#3b82f6';
     svg.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>';
     title.textContent = 'Workshop Invitation';
-    document.getElementById('notifMessage').innerHTML = '{!! str_replace(["'"], ["\\'"], session('info')) !!}';
+    document.getElementById('notifMessage').innerHTML = '<?php echo str_replace(["'"], ["\\'"], session('info')); ?>';
     document.getElementById('successModal').style.display = 'flex';
     document.body.style.overflow = 'hidden';
     setTimeout(function() {
@@ -1263,7 +1266,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }, 800);
 });
-@endif
+<?php endif; ?>
 </script>
 
 <style>
@@ -1282,3 +1285,4 @@ document.addEventListener('DOMContentLoaded', function() {
 
 </body>
 </html>
+<?php /**PATH /Users/mdrz/2026/MSD26/resources/views/home1.blade.php ENDPATH**/ ?>

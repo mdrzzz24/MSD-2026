@@ -111,6 +111,18 @@ header.sticky { top: 44px !important; }
         </a>
         @endif
         @if (Auth::user()->hasPermission('agenda'))
+        @if (Auth::user()->isSuperAdmin())
+        <a href="{{ route('admin.general-sessions.index') }}"
+           class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium {{ request()->routeIs('admin.general-sessions.*') ? 'bg-indigo-50 text-indigo-700' : 'text-gray-600 hover:bg-gray-100' }} transition">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 10v2a7 7 0 0 1-14 0v-2"/><line stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" x1="12" y1="19" x2="12" y2="23"/><line stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" x1="8" y1="23" x2="16" y2="23"/></svg>
+            General Sessions
+        </a>
+        <a href="{{ route('admin.track-sessions.index') }}"
+           class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium {{ request()->routeIs('admin.track-sessions.*') ? 'bg-indigo-50 text-indigo-700' : 'text-gray-600 hover:bg-gray-100' }} transition">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 6h16M4 10h16M4 14h16M4 18h16"/><circle cx="8" cy="6" r="1.5" fill="currentColor" stroke="none"/><circle cx="8" cy="14" r="1.5" fill="currentColor" stroke="none"/></svg>
+            Track Sessions
+        </a>
+        @endif
         <a href="{{ route('admin.agenda.index') }}"
            class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium {{ request()->routeIs('admin.agenda.*') ? 'bg-indigo-50 text-indigo-700' : 'text-gray-600 hover:bg-gray-100' }} transition">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
