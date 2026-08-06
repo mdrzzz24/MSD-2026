@@ -11,6 +11,7 @@ class AgendaItem extends Model
 
     protected $fillable = [
         'title',
+        'topic_headline',
         'description',
         'speaker_name',
         'speaker_title',

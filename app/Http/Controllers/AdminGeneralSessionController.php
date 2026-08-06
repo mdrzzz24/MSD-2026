@@ -74,8 +74,14 @@ class AdminGeneralSessionController extends Controller
         $validated['workshop_id'] = null;
         $validated['track_id']    = ($validated['track_id'] ?? '') === '' ? null : $validated['track_id'];
         $validated['is_registrable'] = $request->boolean('is_registrable');
-        $validated['start_time']    = $validated['start_time'] ?: '00:00:00';
-        $validated['end_time']      = $validated['end_time'] ?: '00:00:00';
+
+        // Preserve existing times if not explicitly provided (avoid 00:00:00 causing item to vanish from agenda)
+        if (empty($validated['start_time']) && empty($validated['end_time'])) {
+            unset($validated['start_time'], $validated['end_time']);
+        } else {
+            $validated['start_time'] = $validated['start_time'] ?: '00:00:00';
+            $validated['end_time']   = $validated['end_time'] ?: '00:00:00';
+        }
 
         if ($request->boolean('is_full_row')) {
             $validated['room'] = null;
@@ -106,6 +112,7 @@ class AdminGeneralSessionController extends Controller
     {
         return $request->validate([
             'title'          => ['required', 'string', 'max:255'],
+            'topic_headline' => ['nullable', 'string', 'max:255'],
             'description'    => ['nullable', 'string', 'max:3000'],
             'key_highlights' => ['nullable', 'string', 'max:3000'],
             'room'           => ['nullable', 'string', 'max:100'],

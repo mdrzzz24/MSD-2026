@@ -35,13 +35,19 @@
     <form action="{{ route('admin.general-sessions.store') }}" method="POST" class="space-y-4">
         @csrf
         <div>
-            <label class="block text-sm font-semibold text-gray-700 mb-1">Title <span class="text-red-500">*</span></label>
+            <label class="block text-sm font-semibold text-gray-700 mb-1">Session Title <span class="text-red-500">*</span></label>
             <input type="text" name="title" value="{{ old('title') }}" required
                    class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
                    placeholder="e.g. Opening Remarks, Keynote: AI in 2026">
         </div>
         <div>
-            <label class="block text-sm font-semibold text-gray-700 mb-1">Description</label>
+            <label class="block text-sm font-semibold text-gray-700 mb-1">Topic Headline</label>
+            <input type="text" name="topic_headline" value="{{ old('topic_headline') }}" maxlength="255"
+                   class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
+                   placeholder="e.g. Winning with AI: Build, Run, and Scale for Measurable Impact">
+        </div>
+        <div>
+            <label class="block text-sm font-semibold text-gray-700 mb-1">Session Description <span class="text-xs font-normal text-gray-400">(brief overview + key takeaways)</span></label>
             <textarea name="description" rows="4"
                       class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
                       placeholder="Session description or agenda notes...">{{ old('description') }}</textarea>

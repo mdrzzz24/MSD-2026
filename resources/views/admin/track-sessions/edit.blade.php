@@ -124,13 +124,14 @@
                 Save Changes
             </button>
             <a href="{{ route('admin.track-sessions.index') }}" class="text-sm text-gray-500 hover:text-gray-700">Cancel</a>
-            <span class="flex-1"></span>
-            <form action="{{ route('admin.track-sessions.destroy', $agendum) }}" method="POST" onsubmit="return confirm('Delete this session?');" class="inline">
-                @csrf @method('DELETE')
-                <button class="px-4 py-2 text-sm font-medium text-red-600 bg-red-50 rounded-lg hover:bg-red-100 transition">Delete</button>
-            </form>
         </div>
     </form>
+    <div class="mt-4 pt-4 border-t border-gray-100">
+        <form action="{{ route('admin.track-sessions.destroy', $agendum) }}" method="POST" onsubmit="return confirm('Delete this session?');" class="inline">
+            @csrf @method('DELETE')
+            <button class="px-4 py-2 text-sm font-medium text-red-600 bg-red-50 rounded-lg hover:bg-red-100 transition">Delete</button>
+        </form>
+    </div>
 </div>
 </div>
 </div>

@@ -1760,6 +1760,20 @@ class AdminController extends Controller
             ->with('success', "Registration form is now <strong>{$status}</strong>.");
     }
 
+    /**
+     * Toggle the new agenda section (Schedule tabs) visibility (super admin only).
+     */
+    public function toggleAgendaSections()
+    {
+        $current = Cache::get('agenda_sections_visible', true);
+        $new = !$current;
+        Cache::put('agenda_sections_visible', $new);
+
+        $status = $new ? 'VISIBLE' : 'HIDDEN';
+        return redirect()->back()
+            ->with('success', "Agenda section on the home page is now <strong>{$status}</strong>.");
+    }
+
     // ── Walk-in Registration ──
 
     /**

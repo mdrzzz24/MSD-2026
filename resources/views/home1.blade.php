@@ -51,7 +51,9 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     <button class="nav-toggle" aria-label="Menu" id="navToggle">☰</button>
     <div class="nav-links" id="navLinks">
       <a href="#overview" class="active">Overview</a>
-      <a href="#agenda">Agenda</a>
+      @if ($agendaSectionsVisible)
+        <a href="#agenda-sections">Agenda</a>
+      @endif
       <a href="#sponsors">Sponsors</a>
       @if (Auth::guard('registrant')->check())
         <a href="{{ route('registrant.dashboard') }}">Dashboard</a>
@@ -165,9 +167,8 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   </div>
 </section>
 
-{{--
-AGENDA SCHEDULE (template grid: time+location | topic | speakers | Bookmark) --}}
-{{-- <style>
+{{-- AGENDA SCHEDULE (template grid: time+location | topic | speakers | Bookmark) --}}
+<style>
   .agenda-sched-header{display:flex;align-items:baseline;gap:24px;padding-bottom:20px;border-bottom:1px solid var(--line);margin-bottom:30px;flex-wrap:wrap}
   .agenda-sched-label{font-size:.9rem;letter-spacing:2px;text-transform:uppercase;color:var(--pink);font-weight:700}
   .agenda-sched-tabs{display:flex;gap:28px;align-items:baseline;flex-wrap:wrap}
@@ -183,7 +184,12 @@ AGENDA SCHEDULE (template grid: time+location | topic | speakers | Bookmark) --}
   .agenda-col-time .atime{color:var(--ink);font-weight:700}
   .agenda-col-time .atz{color:var(--muted);margin-bottom:8px}
   .agenda-col-time .aroom{font-weight:700;font-size:1rem;text-transform:uppercase;color:#fff}
-  .agenda-col-topic{font-size:.95rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#fff;padding-right:15px}
+  .agenda-col-topic{font-size:.95rem;font-weight:700;text-transform:none;letter-spacing:.5px;color:#fff;padding-right:15px}
+  .agenda-col-topic .agenda-topic-title{display:block}
+  .agenda-col-topic .agenda-topic-headline{display:block;margin-bottom:4px;font-size:1.15rem;font-weight:700;text-transform:none;letter-spacing:0;color:#f472b6;line-height:1.4}
+  .agenda-col-topic .agenda-topic-desc{display:block;margin-top:6px;font-size:.8rem;font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted);line-height:1.6}
+  .agenda-col-topic .agenda-topic-highlights{display:flex;flex-direction:column;gap:3px;margin-top:8px}
+  .agenda-col-topic .agenda-hl-item{font-size:.78rem;font-weight:400;text-transform:none;letter-spacing:0;color:#a5b4fc;line-height:1.5}
   .agenda-col-speakers{display:flex;flex-direction:column;gap:14px;font-size:.85rem}
   .agenda-speaker-card{display:flex;align-items:flex-start;gap:10px}
   .agenda-sp-photo{width:36px;height:36px;border-radius:50%;object-fit:cover;border:2px solid rgba(255,255,255,.1);flex-shrink:0}
@@ -195,6 +201,8 @@ AGENDA SCHEDULE (template grid: time+location | topic | speakers | Bookmark) --}
   .agenda-col-action .btn-register{display:inline-flex;align-items:center;gap:5px;padding:7px 16px;border-radius:999px;background:linear-gradient(135deg,#ff3d6e,#e91e63);color:#fff;font-size:.8rem;font-weight:700;border:none;cursor:pointer;transition:transform .2s,box-shadow .2s}
   .agenda-col-action .btn-register:hover{transform:translateY(-2px);box-shadow:0 8px 20px rgba(233,30,99,.4)}
   .agenda-col-action .btn-register svg{width:13px;height:13px}
+  .agenda-row{transition:background .2s,border-radius .2s;cursor:pointer}
+  .agenda-row:hover{background:rgba(255,255,255,.04);border-radius:12px}
   @media(max-width:900px){
     .agenda-sched-header{flex-direction:column;gap:12px}
     .agenda-row{grid-template-columns:1fr;gap:16px}
@@ -203,6 +211,7 @@ AGENDA SCHEDULE (template grid: time+location | topic | speakers | Bookmark) --}
     .agenda-sched-tab{font-size:1.1rem}
   }
 </style>
+@if ($agendaSectionsVisible)
 <section id="agenda-sections" class="why reveal">
   <div class="container">
 
@@ -231,6 +240,11 @@ AGENDA SCHEDULE (template grid: time+location | topic | speakers | Bookmark) --}
         // Classify an agenda item into a session type: general | workshop | session | track (null = skip breaks).
         $msdClassify = function ($it) {
             if ($it->category === 'break') return null;
+            // Hide legacy placeholder track rows ("Track A1".."Track E7") from the site.
+            // They stay in the DB; we just don't surface them on the agenda.
+            $trkLabel = $it->track ? trim((string)($it->track->name ?: $it->track->title)) : '';
+            if ($trkLabel !== '' && preg_match('/^Track [A-E][0-9]+$/i', $trkLabel)) return null;
+            if (trim((string) $it->title) !== '' && preg_match('/^Track [A-E][0-9]+$/i', trim((string) $it->title))) return null;
             $t = $it->agenda_type
                 ?: ($it->category === 'workshop' ? 'workshop' : null)
                 ?: ($it->track_id ? 'track' : null)
@@ -282,15 +296,43 @@ AGENDA SCHEDULE (template grid: time+location | topic | speakers | Bookmark) --}
                 $entryTitle = $linkedName ?: $it->title;
                 $spk = $it->speakers->values();
             @endphp
-            <div class="agenda-row">
+            @php
+                $startTime = date('H:i', strtotime($it->start_time));
+                $endTime   = date('H:i', strtotime($it->end_time));
+                $showTime  = !($startTime === '00:00' && $endTime === '00:00');
+            @endphp
+            <div class="agenda-row" onclick="openAgendaModal({{ $it->id }})" title="View session details">
               <div class="agenda-col-time">
-                <div class="atime">{{ date('H:i', strtotime($it->start_time)) }}–{{ date('H:i', strtotime($it->end_time)) }}</div>
-                <div class="atz">(WIB)</div>
+                @if ($showTime)
+                  <div class="atime">{{ $startTime }}–{{ $endTime }}</div>
+                  <div class="atz">(WIB)</div>
+                @endif
                 @if ($it->room)
                   <div class="aroom">{{ $it->room }}</div>
                 @endif
               </div>
-              <div class="agenda-col-topic">{{ $entryTitle }}</div>
+              @php
+                  $cleanDesc = trim(strip_tags(html_entity_decode($it->description ?? '', ENT_QUOTES | ENT_HTML5, 'UTF-8')));
+                  $cleanHl   = trim(strip_tags(html_entity_decode($it->key_highlights ?? '', ENT_QUOTES | ENT_HTML5, 'UTF-8')));
+              @endphp
+              <div class="agenda-col-topic">
+                @if ($it->topic_headline && trim($it->topic_headline) !== '')
+                  <span class="agenda-topic-headline">{{ $it->topic_headline }}</span>
+                @endif
+                <span class="agenda-topic-title">{{ $entryTitle }}</span>
+                @if ($cleanDesc !== '')
+                  <span class="agenda-topic-desc">{{ \Illuminate\Support\Str::limit($cleanDesc, 160) }}</span>
+                @endif
+                @if ($cleanHl !== '')
+                  <span class="agenda-topic-highlights">
+                    @foreach (preg_split('/\r\n|\r|\n/', $cleanHl) as $line)
+                      @if (trim($line) !== '')
+                        <span class="agenda-hl-item">• {{ trim($line) }}</span>
+                      @endif
+                    @endforeach
+                  </span>
+                @endif
+              </div>
               <div class="agenda-col-speakers">
                 @foreach ($spk as $sp)
                   @php
@@ -318,7 +360,7 @@ AGENDA SCHEDULE (template grid: time+location | topic | speakers | Bookmark) --}
               </div>
               <div class="agenda-col-action">
                 @if ($it->is_registrable)
-                  <button type="button" class="btn-register" onclick="openAgendaModal({{ $it->id }})">
+                  <button type="button" class="btn-register" onclick="event.stopPropagation(); openAgendaModal({{ $it->id }})">
                     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2z"/></svg>
                     Register
                   </button>
@@ -332,6 +374,7 @@ AGENDA SCHEDULE (template grid: time+location | topic | speakers | Bookmark) --}
 
   </div>
 </section>
+@endif
 
 <script>
 document.addEventListener('DOMContentLoaded', function () {
@@ -345,7 +388,7 @@ document.addEventListener('DOMContentLoaded', function () {
     });
   });
 });
-</script> --}}
+</script>
 
 <!-- AGENDA -->
 <section id="agenda" class="why reveal">
@@ -635,17 +678,22 @@ function openAgendaModal(id) {
     document.getElementById('modalRoom').innerHTML =
         '<svg style="width:14px;height:14px;flex-shrink:0;" fill="none" stroke="#94a3b8" viewBox="0 0 24 24"><path stroke-width="2" d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/><circle cx="12" cy="9" r="2.5" stroke-width="2"/></svg> ' +
         '<span>Shangri-La Hotel' + (item.room ? ', ' + item.room + ' Room' : '') + '</span>';
-    // Show workshop/track name as main title, agenda item title as subtitle
+    // Topic headline above the title; workshop/track name as main title, agenda item title as subtitle
+    var topicHeadlineHtml = item.topic_headline ? '<span style="font-size:17px;font-weight:700;color:#f472b6;display:block;margin-bottom:4px;">' + item.topic_headline + '</span>' : '';
     if (item.workshop_name) {
         document.getElementById('modalTitle').innerHTML =
+            topicHeadlineHtml +
             '<span style="font-size:22px;font-weight:800;color:#e2e8f0;">' + item.workshop_name + '</span>' +
             '<span style="font-size:14px;font-weight:500;color:#94a3b8;display:block;margin-top:4px;">' + item.title + '</span>';
     } else if (item.track_name) {
         document.getElementById('modalTitle').innerHTML =
+            topicHeadlineHtml +
             '<span style="font-size:22px;font-weight:800;color:#e2e8f0;">' + item.track_name + '</span>' +
             '<span style="font-size:14px;font-weight:500;color:#94a3b8;display:block;margin-top:4px;">' + item.title + '</span>';
     } else {
-        document.getElementById('modalTitle').textContent = item.title;
+        document.getElementById('modalTitle').innerHTML =
+            topicHeadlineHtml +
+            '<span style="font-size:22px;font-weight:800;color:#e2e8f0;">' + item.title + '</span>';
     }
 
     // Type badge with fallback logic
@@ -1228,7 +1276,7 @@ document.addEventListener('DOMContentLoaded', function() {
     svg.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/>';
     title.textContent = 'Registration Successful';
     document.getElementById('notifMessage').innerHTML = '{!! str_replace(["'"], ["\\'"], session('success')) !!}';
-    modal.setAttribute('data-scroll-to', '#agenda');
+    modal.setAttribute('data-scroll-to', '#agenda-sections');
     modal.style.display = 'flex';
     document.body.style.overflow = 'hidden';
 });

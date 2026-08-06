@@ -35,10 +35,11 @@ Route::get('/', function () {
         $itemMap[$key][] = $item;
     }
     $registrationForcedOpen = \Illuminate\Support\Facades\Cache::get('registration_forced_open', false);
+    $agendaSectionsVisible = \Illuminate\Support\Facades\Cache::get('agenda_sections_visible', true);
     $workshops = \App\Models\Workshop::withCount(['registrants as approved_count' => function ($q) {
         $q->where('registrant_workshop.status', 'approved');
     }])->orderBy('date')->orderBy('start_time')->get();
-    return view('home1', compact('agendaItems', 'timeSlots', 'rooms', 'itemMap', 'registrationForcedOpen', 'workshops'));
+    return view('home1', compact('agendaItems', 'timeSlots', 'rooms', 'itemMap', 'registrationForcedOpen', 'agendaSectionsVisible', 'workshops'));
 })->name('home1');
 // ── Workshop Invitation (public) ──
 Route::get('/invitation/workshop/{token}', [App\Http\Controllers\WorkshopInvitationController::class, 'show'])->name('workshop.invitation');
@@ -158,6 +159,9 @@ Route::middleware(['auth', 'admin', 'no_cache'])->prefix('admin')->name('admin.'
 
     // Registration Form Toggle
     Route::post('/toggle-registration', [AdminController::class, 'toggleRegistration'])->name('toggle-registration');
+
+    // New Agenda Section (Schedule tabs) visibility toggle
+    Route::post('/toggle-agenda-sections', [AdminController::class, 'toggleAgendaSections'])->name('toggle-agenda-sections');
 
     // Mail Settings
     Route::get('/mail-settings', [MailSettingsController::class, 'edit'])->name('mail-settings.edit');
