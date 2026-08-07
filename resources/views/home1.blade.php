@@ -183,7 +183,9 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   .agenda-col-time{display:flex;flex-direction:column;gap:4px;font-size:.85rem}
   .agenda-col-time .atime{color:var(--ink);font-weight:700}
   .agenda-col-time .atz{color:var(--muted);margin-bottom:8px}
-  .agenda-col-time .aroom{font-weight:700;font-size:1rem;text-transform:uppercase;color:#fff}
+  .agenda-col-time .aroom{display:flex;flex-direction:column;gap:2px;margin-top:2px}
+  .agenda-col-time .aroom-label{font-size:.65rem;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+  .agenda-col-time .aroom-value{font-weight:700;font-size:1rem;text-transform:uppercase;color:#fff}
   .agenda-col-topic{font-size:.95rem;font-weight:700;text-transform:none;letter-spacing:.5px;color:#fff;padding-right:15px}
   .agenda-col-topic .agenda-topic-title{display:block}
   .agenda-col-topic .agenda-topic-headline{display:block;margin-bottom:4px;font-size:1.15rem;font-weight:700;text-transform:none;letter-spacing:0;color:#f472b6;line-height:1.4}
@@ -256,6 +258,9 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             return $t;
         };
 
+        // Display helper: speaker name in "Camel Style" (each word capitalized).
+        $msdTitle = fn ($name) => \Illuminate\Support\Str::title(trim((string) $name));
+
         $sessionDefs = [
             'general'  => ['label' => 'General Session',   'icon' => '🎤'],
             'workshop' => ['label' => 'Workshop Session',  'icon' => '🛠️'],
@@ -308,7 +313,10 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                   <div class="atz">(WIB)</div>
                 @endif
                 @if ($it->room)
-                  <div class="aroom">{{ $it->room }}</div>
+                  <div class="aroom">
+                    <span class="aroom-label">Room :</span>
+                    <span class="aroom-value">{{ $it->room }}</span>
+                  </div>
                 @endif
               </div>
               @php
@@ -345,12 +353,12 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                   <div class="agenda-speaker-card">
                     @if ($spPhoto)
                       <img src="{{ $spPhoto }}" class="agenda-sp-photo" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
-                      <div class="agenda-sp-initial" style="display:none;">{{ mb_substr($sp->name, 0, 1) }}</div>
+                      <div class="agenda-sp-initial" style="display:none;">{{ mb_strtoupper(mb_substr($sp->name, 0, 1)) }}</div>
                     @else
-                      <div class="agenda-sp-initial">{{ mb_substr($sp->name, 0, 1) }}</div>
+                      <div class="agenda-sp-initial">{{ mb_strtoupper(mb_substr($sp->name, 0, 1)) }}</div>
                     @endif
                     <div class="agenda-sp-info">
-                      <span class="agenda-speaker-name">{{ $sp->name }}</span>
+                      <span class="agenda-speaker-name">{{ $msdTitle($sp->name) }}</span>
                       @if ($spRole)
                         <span class="agenda-speaker-role">{{ $spRole }}</span>
                       @endif
@@ -641,6 +649,10 @@ window._agendaData = {!! json_encode($agendaItems->keyBy('id')->map(function ($i
         }
     }
     return array_merge($item->toArray(), [
+        // Speaker names in "Camel Style" for the modal display.
+        'speakers'             => $item->speakers->map(fn ($s) => array_merge($s->toArray(), [
+            'name' => \Illuminate\Support\Str::title(trim((string) $s->name)),
+        ]))->values()->all(),
         'display_end_time'     => $displayEndTime,
         'workshop_name'        => $item->workshop ? ($item->workshop->name ?: $item->workshop->title) : null,
         'workshop_title'       => $item->workshop ? $item->workshop->title : null,
