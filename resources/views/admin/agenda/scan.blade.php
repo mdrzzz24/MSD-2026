@@ -40,6 +40,12 @@
         <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
             <h2 class="text-base font-bold text-gray-900 mb-4">Scan QR Code</h2>
 
+            {{-- Check-in / Track-out toggle --}}
+            <div class="flex gap-2 mb-5">
+                <button id="modeCheckin" onclick="switchMode('checkin')" class="flex-1 py-2 text-xs font-semibold rounded-xl transition bg-emerald-600 text-white">✓ Check-in</button>
+                <button id="modeTrackout" onclick="switchMode('trackout')" class="flex-1 py-2 text-xs font-semibold rounded-xl transition bg-gray-100 text-gray-600 hover:bg-gray-200">✕ Track Out</button>
+            </div>
+
             {{-- Tab toggle --}}
             <div class="flex gap-2 mb-5">
                 <button id="tabManual" onclick="switchTab('manual')" class="flex-1 py-2 text-xs font-semibold rounded-xl transition bg-indigo-600 text-white">Manual</button>
@@ -91,6 +97,14 @@ const scanUrl = '{{ route('admin.agenda.scan-process', $agendum) }}';
 const csrfToken = '{{ csrf_token() }}';
 let html5QrCode = null;
 let cameraRunning = false;
+let scanMode = 'checkin';
+
+function switchMode(mode) {
+    scanMode = mode;
+    document.getElementById('modeCheckin').className = 'flex-1 py-2 text-xs font-semibold rounded-xl transition ' + (mode === 'checkin' ? 'bg-emerald-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200');
+    document.getElementById('modeTrackout').className = 'flex-1 py-2 text-xs font-semibold rounded-xl transition ' + (mode === 'trackout' ? 'bg-red-500 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200');
+    document.getElementById('qrInput').focus();
+}
 
 function switchTab(tab) {
     document.getElementById('panelManual').style.display = tab === 'manual' ? '' : 'none';
@@ -164,12 +178,16 @@ function processScan() {
     fetch(scanUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrfToken, 'Accept': 'application/json' },
-        body: JSON.stringify({ qr_token: token }),
+        body: JSON.stringify({ qr_token: token, action: scanMode }),
     })
     .then(res => res.json())
     .then(data => {
         if (data.success) {
-            showResult(data.already_visited ? 'warning' : 'success', data.message, data.registrant);
+            if (scanMode === 'trackout') {
+                showResult(data.already_tracked_out ? 'warning' : 'trackout', data.message, data.registrant);
+            } else {
+                showResult(data.already_visited ? 'warning' : 'success', data.message, data.registrant);
+            }
             input.value = '';
         } else {
             showResult('error', data.message || 'Invalid QR code.');
@@ -202,10 +220,25 @@ function showResult(type, message, registrant) {
     } else if (type === 'warning') {
         html = '<div class="text-center py-6">' +
             '<div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-amber-100 mb-4"><svg class="w-8 h-8 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"/></svg></div>' +
-            '<p class="text-sm font-semibold text-amber-700 mb-1">Already Checked In</p>' +
+            '<p class="text-sm font-semibold text-amber-700 mb-1">Already ' + (scanMode === 'trackout' ? 'Tracked Out' : 'Checked In') + '</p>' +
             '<p class="text-sm text-gray-600 mb-4">' + message + '</p>';
         if (registrant) {
-            html += '<div class="bg-gray-50 rounded-xl p-4 text-left text-sm"><span class="text-gray-400">Checked in at:</span> <span class="font-semibold text-gray-700">' + (registrant.visited_at || '-') + '</span></div>';
+            html += '<div class="bg-gray-50 rounded-xl p-4 text-left text-sm">';
+            html += registrant.visited_at ? '<div class="mb-1"><span class="text-gray-400">Checked in at:</span> <span class="font-semibold text-gray-700">' + registrant.visited_at + '</span></div>' : '';
+            html += registrant.left_at ? '<div><span class="text-gray-400">Tracked out at:</span> <span class="font-semibold text-gray-700">' + registrant.left_at + '</span></div>' : '';
+            html += '</div>';
+        }
+        html += '</div>';
+    } else if (type === 'trackout') {
+        html = '<div class="text-center py-6">' +
+            '<div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-red-100 mb-4"><svg class="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg></div>' +
+            '<p class="text-sm font-semibold text-red-700 mb-1">Track Out Recorded!</p>' +
+            '<p class="text-sm text-gray-600 mb-4">' + message + '</p>';
+        if (registrant) {
+            html += '<div class="bg-gray-50 rounded-xl p-4 text-left text-sm">';
+            html += registrant.visited_at ? '<div class="mb-1"><span class="text-gray-400">Checked in at:</span> <span class="font-semibold text-gray-700">' + registrant.visited_at + '</span></div>' : '';
+            html += registrant.left_at ? '<div><span class="text-gray-400">Tracked out at:</span> <span class="font-semibold text-gray-700">' + registrant.left_at + '</span></div>' : '';
+            html += '</div>';
         }
         html += '</div>';
     } else {

@@ -13,10 +13,12 @@ class AgendaVisit extends Model
         'agenda_item_id',
         'registrant_id',
         'visited_at',
+        'left_at',
     ];
 
     protected $casts = [
         'visited_at' => 'datetime',
+        'left_at'    => 'datetime',
     ];
 
     public function agendaItem()

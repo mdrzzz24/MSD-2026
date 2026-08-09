@@ -19,6 +19,11 @@
     <div class="flex items-center justify-between h-16 px-4 sm:px-6 lg:px-8">
         <div><h1 class="text-lg font-bold text-gray-900">Manage Tracks</h1><p class="text-xs text-gray-500">Manage event tracks</p></div>
         <div class="flex items-center gap-2">
+            <a href="{{ route('admin.tracks.monitoring') }}"
+               class="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-medium rounded-xl border border-gray-200 text-gray-600 bg-white hover:bg-gray-50 transition">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                Monitoring
+            </a>
             @if (Auth::user()->canWrite())
             <button onclick="toggleAddForm()"
                     class="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-medium bg-indigo-500 text-white rounded-xl hover:bg-indigo-600 shadow-sm shadow-indigo-200 transition">
@@ -51,6 +56,7 @@
                     <th class="px-5 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase hidden lg:table-cell">Linked Agenda</th>
                     @endif
                     <th class="px-5 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase hidden md:table-cell">Registrants</th>
+                    <th class="px-5 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase hidden md:table-cell">Scanned</th>
                     <th class="px-5 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase">Status</th>
                     <th class="px-5 py-3.5 text-center text-xs font-semibold text-gray-500 uppercase">Actions</th>
                 </tr></thead>
@@ -86,6 +92,16 @@
                                     <span class="text-sm text-gray-400">—</span>
                                 @endif
                             </td>
+                            <td class="px-5 py-4 hidden md:table-cell">
+                                @if ($tr->scanned_count > 0)
+                                    <a href="{{ route('admin.tracks.visitors', $tr) }}" class="inline-flex items-center gap-1.5 font-bold text-emerald-600 hover:text-emerald-800">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                        {{ $tr->scanned_count }}
+                                    </a>
+                                @else
+                                    <span class="text-sm text-gray-400">—</span>
+                                @endif
+                            </td>
                             <td class="px-5 py-4">
                                 @if ($tr->is_active)
                                     <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200"><span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Active</span>
@@ -111,7 +127,7 @@
                             </td>
                         </tr>
                     @empty
-                        <tr><td colspan="5" class="px-5 py-16 text-center"><p class="text-gray-400 font-medium">No tracks yet</p><p class="text-xs text-gray-400">Create your first track</p></td></tr>
+                        <tr><td colspan="6" class="px-5 py-16 text-center"><p class="text-gray-400 font-medium">No tracks yet</p><p class="text-xs text-gray-400">Create your first track</p></td></tr>
                     @endforelse
                 </tbody>
             </table>

@@ -2,11 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Concerns\Exportable;
 use App\Models\EmailLog;
 use App\Models\EmailTemplate;
 use App\Models\Registrant;
 use App\Models\Track;
 use App\Models\AgendaItem;
+use App\Models\AgendaVisit;
 use App\Services\EmailService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -14,10 +16,94 @@ use Illuminate\Support\Facades\Mail;
 
 class AdminTrackController extends Controller
 {
+    use Exportable;
     public function index()
     {
         $tracks = Track::withCount('agendaItems')->with('agendaItems')->orderBy('title')->get();
+
+        // Attach total scan/check-in count per track (across linked agenda items)
+        foreach ($tracks as $tr) {
+            $tr->scanned_count = $tr->scannedCount();
+        }
+
         return view('admin.tracks.index', compact('tracks'));
+    }
+
+    /**
+     * Track monitoring dashboard — scan/attendance overview per track & session,
+     * with auto-refresh so staff can watch live progress.
+     */
+    public function monitoring()
+    {
+        if (!Auth::user()->hasPermission('tracks')) {
+            return redirect()->route('admin.tracks.index')->with('error', 'You do not have permission to view track monitoring.');
+        }
+
+        $tracks = Track::with(['agendaItems' => function ($q) {
+            $q->withCount([
+                'visits as scanned_count',
+                'registrants as registrants_count' => fn($q2) => $q2->where('agenda_item_registrant.status', 'approved'),
+            ])
+            ->orderBy('start_time')
+            ->orderBy('order');
+        }])
+        ->orderBy('title')
+        ->get();
+
+        // Grand totals across all tracks
+        $totals = (object) [
+            'tracks'       => $tracks->count(),
+            'sessions'     => $tracks->sum(fn($t) => $t->agendaItems->count()),
+            'scanned'      => $tracks->sum(fn($t) => $t->agendaItems->sum('scanned_count')),
+            'registrants'  => $tracks->sum(fn($t) => $t->agendaItems->sum('registrants_count')),
+        ];
+
+        return view('admin.tracks.monitoring', compact('tracks', 'totals'));
+    }
+
+    /**
+     * Export track monitoring data to CSV (one row per session).
+     */
+    public function monitoringExport()
+    {
+        if (!Auth::user()->hasPermission('tracks')) {
+            return redirect()->route('admin.tracks.index')->with('error', 'You do not have permission to export track monitoring.');
+        }
+
+        $tracks = Track::with(['agendaItems' => function ($q) {
+            $q->withCount([
+                'visits as scanned_count',
+                'registrants as registrants_count' => fn($q2) => $q2->where('agenda_item_registrant.status', 'approved'),
+            ])
+            ->orderBy('start_time')
+            ->orderBy('order');
+        }])
+        ->orderBy('title')
+        ->get();
+
+        $rows = [];
+        foreach ($tracks as $track) {
+            foreach ($track->agendaItems as $ai) {
+                $rows[] = [
+                    $track->name ?: $track->title,
+                    $ai->title,
+                    $ai->room ?? '',
+                    $ai->start_time ? substr($ai->start_time, 0, 5) : '',
+                    $ai->end_time ? substr($ai->end_time, 0, 5) : '',
+                    $ai->scanned_count,
+                    $ai->registrants_count,
+                    $ai->registrants_count > 0
+                        ? round($ai->scanned_count / $ai->registrants_count * 100, 1) . '%'
+                        : '',
+                ];
+            }
+        }
+
+        return $this->csvDownload(
+            ['Track', 'Session', 'Room', 'Start', 'End', 'Scanned', 'Registrants', 'Attendance %'],
+            $rows,
+            'track-monitoring-' . now()->format('Y-m-d-His') . '.csv'
+        );
     }
 
     public function store(Request $request)
@@ -82,6 +168,61 @@ class AdminTrackController extends Controller
         }
 
         return view('admin.tracks.registrants', compact('track', 'allRegistrants'));
+    }
+
+    /**
+     * View all scan/check-in records across the track's agenda items.
+     */
+    public function visitors(Track $track)
+    {
+        if (!Auth::user()->hasPermission('tracks')) {
+            return redirect()->route('admin.tracks.index')->with('error', 'You do not have permission to view track visitors.');
+        }
+
+        $agendaItemIds = $track->agendaItems()->pluck('id');
+        $visits = AgendaVisit::with(['registrant', 'agendaItem'])
+            ->whereIn('agenda_item_id', $agendaItemIds)
+            ->orderByDesc('visited_at')
+            ->paginate(30);
+
+        return view('admin.tracks.visitors', compact('track', 'visits'));
+    }
+
+    /**
+     * Export all scan/check-in records (attendees) across the track's agenda
+     * items to CSV.
+     */
+    public function exportTrackCsv(Track $track)
+    {
+        if (!Auth::user()->hasPermission('tracks')) {
+            return redirect()->route('admin.tracks.index')->with('error', 'You do not have permission to export track attendees.');
+        }
+
+        $agendaItemIds = $track->agendaItems()->pluck('id');
+        $visits = AgendaVisit::with(['registrant', 'agendaItem'])
+            ->whereIn('agenda_item_id', $agendaItemIds)
+            ->orderByDesc('visited_at')
+            ->get();
+
+        $rows = [];
+        foreach ($visits as $v) {
+            $rows[] = [
+                $v->registrant?->name ?? '',
+                $v->registrant?->email ?? '',
+                $v->registrant?->company ?? '',
+                $v->registrant?->job_title ?? '',
+                $v->registrant?->phone ?? '',
+                $v->agendaItem?->title ?? '',
+                $v->visited_at ? $v->visited_at->format('Y-m-d H:i:s') : '',
+                $v->left_at ? $v->left_at->format('Y-m-d H:i:s') : '',
+            ];
+        }
+
+        return $this->csvDownload(
+            ['Name', 'Email', 'Company', 'Job Title', 'Phone', 'Session', 'Scanned At', 'Tracked Out At'],
+            $rows,
+            'track-' . \Illuminate\Support\Str::slug($track->name ?: $track->title) . '-attendees-' . now()->format('Y-m-d-His') . '.csv'
+        );
     }
 
     /**

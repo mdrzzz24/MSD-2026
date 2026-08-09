@@ -300,6 +300,10 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                     ? ($it->workshop->name ?: $it->workshop->title)
                     : ($it->track ? ($it->track->name ?: $it->track->title) : null);
                 $entryTitle = $linkedName ?: $it->title;
+                // Pink headline on top: workshops use their session title (judul); others use topic_headline.
+                $pinkTitle = $it->workshop
+                    ? trim((string) ($it->workshop->title ?: $it->title))
+                    : trim((string) ($it->topic_headline ?? ''));
                 $spk = $it->speakers->values();
             ?>
             <?php
@@ -321,17 +325,13 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                 <?php endif; ?>
               </div>
               <?php
-                  $cleanDesc = trim(strip_tags(html_entity_decode($it->description ?? '', ENT_QUOTES | ENT_HTML5, 'UTF-8')));
                   $cleanHl   = trim(strip_tags(html_entity_decode($it->key_highlights ?? '', ENT_QUOTES | ENT_HTML5, 'UTF-8')));
               ?>
               <div class="agenda-col-topic">
-                <?php if($it->topic_headline && trim($it->topic_headline) !== ''): ?>
-                  <span class="agenda-topic-headline"><?php echo e($it->topic_headline); ?></span>
+                <?php if($pinkTitle !== ''): ?>
+                  <span class="agenda-topic-headline"><?php echo e($pinkTitle); ?></span>
                 <?php endif; ?>
                 <span class="agenda-topic-title"><?php echo e($entryTitle); ?></span>
-                <?php if($cleanDesc !== ''): ?>
-                  <span class="agenda-topic-desc"><?php echo e(\Illuminate\Support\Str::limit($cleanDesc, 160)); ?></span>
-                <?php endif; ?>
                 <?php if($cleanHl !== ''): ?>
                   <span class="agenda-topic-highlights">
                     <?php $__currentLoopData = preg_split('/\r\n|\r|\n/', $cleanHl); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $line): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>

@@ -35,6 +35,18 @@ header.sticky { top: 44px !important; }
             Dashboard
         </a>
 
+        {{-- ═══ Mobile App ═══ --}}
+        @if (Auth::user()->isSuperAdmin())
+        <div class="pt-4">
+            <p class="px-3 mb-2 text-xs font-semibold text-gray-400 uppercase tracking-widest">Mobile App</p>
+        </div>
+        <a href="{{ route('admin.app-config') }}"
+           class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium {{ request()->routeIs('admin.app-config') ? 'bg-indigo-50 text-indigo-700' : 'text-gray-600 hover:bg-gray-100' }} transition">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+            App Config & QR
+        </a>
+        @endif
+
         {{-- ═══ Participants ═══ --}}
         <div class="pt-4">
             <p class="px-3 mb-2 text-xs font-semibold text-gray-400 uppercase tracking-widest">Participants</p>
@@ -105,9 +117,14 @@ header.sticky { top: 44px !important; }
         @endif
         @if (Auth::user()->hasPermission('tracks'))
         <a href="{{ route('admin.tracks.index') }}"
-           class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium {{ request()->routeIs('admin.tracks.*') ? 'bg-indigo-50 text-indigo-700' : 'text-gray-600 hover:bg-gray-100' }} transition">
+           class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium {{ request()->routeIs('admin.tracks.*') && !request()->routeIs('admin.tracks.monitoring') ? 'bg-indigo-50 text-indigo-700' : 'text-gray-600 hover:bg-gray-100' }} transition">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
             Tracks
+        </a>
+        <a href="{{ route('admin.tracks.monitoring') }}"
+           class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium ml-6 {{ request()->routeIs('admin.tracks.monitoring') ? 'bg-indigo-50 text-indigo-700' : 'text-gray-600 hover:bg-gray-100' }} transition">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+            Monitoring
         </a>
         @endif
         @if (Auth::user()->hasPermission('agenda'))

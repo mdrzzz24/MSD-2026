@@ -398,9 +398,11 @@ class AdminAgendaController extends Controller
 
         $request->validate([
             'qr_token' => ['required', 'string', 'max:255'],
+            'action'   => ['nullable', 'string', 'in:checkin,trackout'],
         ]);
 
         $token = trim($request->qr_token);
+        $action = $request->input('action', 'checkin');
 
         $registrant = Registrant::where('qr_token', $token)
             ->orWhere('unique_code', $token)
@@ -425,6 +427,45 @@ class AdminAgendaController extends Controller
             ->where('registrant_id', $registrant->id)
             ->first();
 
+        // ── TRACK OUT mode ──
+        if ($action === 'trackout') {
+            if (!$existing) {
+                return response()->json([
+                    'success' => false,
+                    'message' => "{$registrant->name} has not checked in to this session yet.",
+                ]);
+            }
+            if ($existing->left_at) {
+                return response()->json([
+                    'success'            => true,
+                    'message'            => "{$registrant->name} has already been tracked out of this session.",
+                    'already_tracked_out'=> true,
+                    'registrant'         => [
+                        'name'       => $registrant->name,
+                        'email'      => $registrant->email,
+                        'company'    => $registrant->company,
+                        'visited_at' => $existing->visited_at->format('d M Y, H:i'),
+                        'left_at'    => $existing->left_at->format('d M Y, H:i'),
+                    ],
+                ]);
+            }
+            $existing->update(['left_at' => now()]);
+            return response()->json([
+                'success'            => true,
+                'message'            => "Track-out recorded for <strong>{$registrant->name}</strong>!",
+                'already_tracked_out'=> false,
+                'registrant'         => [
+                    'name'       => $registrant->name,
+                    'email'      => $registrant->email,
+                    'company'    => $registrant->company,
+                    'job_title'  => $registrant->job_title,
+                    'visited_at' => $existing->visited_at->format('d M Y, H:i'),
+                    'left_at'    => $existing->fresh()->left_at->format('d M Y, H:i'),
+                ],
+            ]);
+        }
+
+        // ── CHECK-IN mode ──
         if ($existing) {
             return response()->json([
                 'success'   => true,
@@ -434,6 +475,7 @@ class AdminAgendaController extends Controller
                     'email'      => $registrant->email,
                     'company'    => $registrant->company,
                     'visited_at' => $existing->visited_at->format('d M Y, H:i'),
+                    'left_at'    => $existing->left_at ? $existing->left_at->format('d M Y, H:i') : null,
                 ],
                 'already_visited' => true,
             ]);

@@ -18,6 +18,7 @@ use App\Http\Controllers\MailSettingsController;
 use App\Http\Controllers\AdminEmailController;
 use App\Http\Controllers\EmailLogController;
 use App\Http\Controllers\BounceCheckController;
+use App\Http\Controllers\AdminConfigController;
 use App\Models\AgendaItem;
 
 // Public routes
@@ -162,6 +163,9 @@ Route::middleware(['auth', 'admin', 'no_cache'])->prefix('admin')->name('admin.'
 
     // New Agenda Section (Schedule tabs) visibility toggle
     Route::post('/toggle-agenda-sections', [AdminController::class, 'toggleAgendaSections'])->name('toggle-agenda-sections');
+
+    // Event Checker app config + QR code
+    Route::get('/app-config', [AdminConfigController::class, 'show'])->name('app-config');
 
     // Mail Settings
     Route::get('/mail-settings', [MailSettingsController::class, 'edit'])->name('mail-settings.edit');
@@ -324,7 +328,11 @@ Route::middleware(['auth', 'admin', 'no_cache'])->prefix('admin')->name('admin.'
     Route::get('/workshops/{workshop}/registrants', [AdminWorkshopController::class, 'registrants'])->name('workshops.registrants');
     Route::get('/workshops/{workshop}/registrants/export/csv', [AdminWorkshopController::class, 'exportWorkshopCsv'])->name('workshops.registrants.export-csv');
     Route::get('/tracks', [AdminTrackController::class, 'index'])->name('tracks.index');
+    Route::get('/tracks/monitoring', [AdminTrackController::class, 'monitoring'])->name('tracks.monitoring');
+    Route::get('/tracks/monitoring/export', [AdminTrackController::class, 'monitoringExport'])->name('tracks.monitoring.export');
     Route::get('/tracks/{track}/registrants', [AdminTrackController::class, 'registrants'])->name('tracks.registrants');
+    Route::get('/tracks/{track}/visitors', [AdminTrackController::class, 'visitors'])->name('tracks.visitors');
+    Route::get('/tracks/{track}/export', [AdminTrackController::class, 'exportTrackCsv'])->name('tracks.export');
 
     // ── Workshop Registrants Management (admin + super_admin) ──
     Route::get('/workshop-registrants', [AdminWorkshopController::class, 'workshopRegistrants'])->name('workshop-registrants.index');

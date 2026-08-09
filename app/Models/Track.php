@@ -55,6 +55,14 @@ class Track extends Model
         return $this->countByStatus('rejected');
     }
 
+    /**
+     * Total scan/check-ins across all agenda items linked to this track.
+     */
+    public function scannedCount(): int
+    {
+        return \App\Models\AgendaVisit::whereIn('agenda_item_id', $this->agendaItems()->select('id'))->count();
+    }
+
     private function countByStatus(string $status): int
     {
         return \App\Models\Registrant::whereIn('id', function ($q) use ($status) {

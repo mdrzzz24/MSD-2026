@@ -60,6 +60,7 @@
                         <th class="px-4 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase hidden md:table-cell w-32">Phone</th>
                         <th class="px-4 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase hidden lg:table-cell w-36">Company</th>
                         <th class="px-4 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase">Checked In At</th>
+                        <th class="px-4 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase">Tracked Out At</th>
                     </tr></thead>
                     <tbody class="divide-y divide-gray-50">
                         @foreach ($visits as $i => $visit)
@@ -74,6 +75,16 @@
                             <td class="px-4 py-3.5 hidden md:table-cell max-w-0"><span class="text-sm text-gray-600 truncate block" title="{{ $visit->registrant->phone ?? '' }}">{{ $visit->registrant->phone ?? '—' }}</span></td>
                             <td class="px-4 py-3.5 hidden lg:table-cell max-w-0"><span class="text-sm text-gray-600 truncate block" title="{{ $visit->registrant->company ?? '' }}">{{ $visit->registrant->company ?? '—' }}</span></td>
                             <td class="px-4 py-3.5"><span class="text-sm text-gray-600 whitespace-nowrap">{{ $visit->visited_at ? $visit->visited_at->format('d M Y, H:i') : '—' }}</span></td>
+                            <td class="px-4 py-3.5">
+                                @if ($visit->left_at)
+                                    <span class="inline-flex items-center gap-1 text-sm font-medium text-red-600 whitespace-nowrap">
+                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+                                        {{ $visit->left_at->format('d M Y, H:i') }}
+                                    </span>
+                                @else
+                                    <span class="text-sm text-gray-400">—</span>
+                                @endif
+                            </td>
                         </tr>
                         @endforeach
                     </tbody>
