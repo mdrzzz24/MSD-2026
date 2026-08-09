@@ -12,6 +12,7 @@ use App\Models\AgendaVisit;
 use App\Services\EmailService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 
 class AdminTrackController extends Controller
@@ -136,8 +137,28 @@ class AdminTrackController extends Controller
 
     public function destroy(Track $track)
     {
-        $track->delete();
-        return back()->with('success', 'Track deleted.');
+        $sessionCount = $track->agendaItems()->count();
+        $label = $track->name ?: $track->title;
+
+        DB::transaction(function () use ($track) {
+            // Deleting a track also removes its linked track sessions,
+            // keeping /admin/tracks and /admin/agenda in sync.
+            foreach ($track->agendaItems()->get() as $item) {
+                $item->registrants()->detach();
+                $item->speakers()->detach();
+                $item->feedbackQuestions()->delete();
+                $item->feedback()->delete();
+                $item->visits()->delete();
+                $item->delete();
+            }
+            $track->delete();
+        });
+
+        $msg = $sessionCount > 0
+            ? 'Track <strong>' . e($label) . '</strong> and its ' . $sessionCount . ' linked session(s) deleted.'
+            : 'Track <strong>' . e($label) . '</strong> deleted.';
+
+        return back()->with('success', $msg);
     }
 
     public function toggle(Track $track)

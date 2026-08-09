@@ -72,7 +72,11 @@
                                 <?php $linked = $tr->agendaItems; ?>
                                 <?php if($linked->isNotEmpty()): ?>
                                     <?php $__currentLoopData = $linked; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $ai): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                        <?php if(Auth::user()->isSuperAdmin()): ?>
+                                        <a href="<?php echo e(route('admin.agenda.edit', $ai)); ?>" title="Edit this session in the agenda" class="inline-block px-2 py-0.5 rounded text-xs font-medium bg-indigo-50 text-indigo-700 mb-1 hover:bg-indigo-100 hover:text-indigo-900 transition"><?php echo e($ai->title); ?></a>
+                                        <?php else: ?>
                                         <span class="inline-block px-2 py-0.5 rounded text-xs font-medium bg-indigo-50 text-indigo-700 mb-1"><?php echo e($ai->title); ?></span>
+                                        <?php endif; ?>
                                     <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                                 <?php else: ?>
                                     <span class="text-xs text-gray-400">—</span>
@@ -113,6 +117,9 @@
                             <td class="px-5 py-4 text-center">
                                 <div class="flex justify-center gap-1.5">
                                     <a href="<?php echo e(route('admin.tracks.registrants', $tr)); ?>" class="px-2.5 py-1.5 text-xs font-medium rounded-lg bg-indigo-50 text-indigo-700 hover:bg-indigo-100 transition">View</a>
+                                    <?php if(Auth::user()->isSuperAdmin()): ?>
+                                    <a href="<?php echo e(route('admin.agenda.create', ['track_id' => $tr->id, 'agenda_type' => 'track'])); ?>" title="Add a session for this track in the agenda" class="px-2.5 py-1.5 text-xs font-medium rounded-lg bg-emerald-50 text-emerald-700 hover:bg-emerald-100 transition">+ Session</a>
+                                    <?php endif; ?>
                                     <?php if(Auth::user()->canWrite()): ?>
                                     <button onclick="editTrack(<?php echo e($tr->id); ?>,'<?php echo e(e($tr->name)); ?>','<?php echo e(e($tr->title)); ?>','<?php echo e(e($tr->description)); ?>')" class="px-2.5 py-1.5 text-xs font-medium rounded-lg bg-amber-100 text-amber-700 hover:bg-amber-200 transition">Edit</button>
                                     <form action="<?php echo e(route('admin.tracks.toggle', $tr)); ?>" method="POST"><?php echo csrf_field(); ?>

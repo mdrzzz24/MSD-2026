@@ -226,13 +226,6 @@ Route::middleware(['auth', 'admin', 'no_cache'])->prefix('admin')->name('admin.'
     Route::get('/general-sessions/{agendum}/edit', [App\Http\Controllers\AdminGeneralSessionController::class, 'edit'])->name('general-sessions.edit');
     Route::put('/general-sessions/{agendum}', [App\Http\Controllers\AdminGeneralSessionController::class, 'update'])->name('general-sessions.update');
     Route::delete('/general-sessions/{agendum}', [App\Http\Controllers\AdminGeneralSessionController::class, 'destroy'])->name('general-sessions.destroy');
-    // Track Sessions management (super admin only)
-    Route::get('/track-sessions', [App\Http\Controllers\AdminTrackSessionController::class, 'index'])->name('track-sessions.index');
-    Route::get('/track-sessions/create', [App\Http\Controllers\AdminTrackSessionController::class, 'create'])->name('track-sessions.create');
-    Route::post('/track-sessions', [App\Http\Controllers\AdminTrackSessionController::class, 'store'])->name('track-sessions.store');
-    Route::get('/track-sessions/{agendum}/edit', [App\Http\Controllers\AdminTrackSessionController::class, 'edit'])->name('track-sessions.edit');
-    Route::put('/track-sessions/{agendum}', [App\Http\Controllers\AdminTrackSessionController::class, 'update'])->name('track-sessions.update');
-    Route::delete('/track-sessions/{agendum}', [App\Http\Controllers\AdminTrackSessionController::class, 'destroy'])->name('track-sessions.destroy');
     // Agenda management
     Route::get('/agenda', [AdminAgendaController::class, 'index'])->name('agenda.index');
     Route::get('/agenda/create', [AdminAgendaController::class, 'create'])->name('agenda.create');

@@ -47,10 +47,13 @@
                     <option value="">— Select —</option>
                     <optgroup label="🗂️ Tracks">
                         @foreach ($tracks as $tr)
+                        @php $fs = $tr->agendaItems->first(); @endphp
                         <option value="track_{{ $tr->id }}"
                             data-name="{{ e($tr->name) }}"
                             data-title="{{ e($tr->title) }}"
                             data-desc="{{ e($tr->description) }}"
+                            data-session-title="{{ e($fs?->title ?? '') }}"
+                            data-session-desc="{{ e($fs?->description ?? '') }}"
                             data-type="track">{{ $tr->name ?: $tr->title }}</option>
                         @endforeach
                     </optgroup>
@@ -119,19 +122,20 @@
                     <label class="block text-sm font-semibold text-gray-700 mb-1.5">Session Type</label>
                     <select name="agenda_type" id="agendaTypeSelect" class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 focus:bg-white transition">
                         <option value="">— None —</option>
-                        <option value="track" {{ old('agenda_type')==='track'?'selected':'' }}>Track</option>
+                        <option value="track" {{ old('agenda_type', request('agenda_type'))==='track'?'selected':'' }}>Track</option>
                         <option value="workshop" {{ old('agenda_type')==='workshop'?'selected':'' }}>Workshop</option>
                         <option value="keynote" {{ old('agenda_type')==='keynote'?'selected':'' }}>Keynote</option>
                     </select>
                 </div>
                 <div>
                     <label class="block text-sm font-semibold text-gray-700 mb-1.5">Link to Track <span class="text-xs text-gray-400 font-normal">(optional)</span></label>
-                    @php $trackList = \App\Models\Track::orderBy('title')->get(); @endphp
+                    @php $trackList = \App\Models\Track::with(['agendaItems' => fn($q) => $q->orderBy('start_time')->orderBy('order')])->orderBy('title')->get(); @endphp
                     <select name="track_id" id="trackSelect" class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 focus:bg-white transition" onchange="onTrackSelect(this)">
                         <option value="">— None —</option>
                         <option value="__new__" style="font-weight:700;color:#4f46e5;">+ Create New Track</option>
                         @foreach ($trackList as $tr)
-                            <option value="{{ $tr->id }}" data-title="{{ e($tr->title) }}" data-desc="{{ e($tr->description) }}" {{ old('track_id')==$tr->id?'selected':'' }}>{{ $tr->title }}</option>
+                            @php $fs = $tr->agendaItems->first(); @endphp
+                            <option value="{{ $tr->id }}" data-name="{{ e($tr->name) }}" data-title="{{ e($tr->title) }}" data-desc="{{ e($tr->description) }}" data-session-title="{{ e($fs?->title ?? '') }}" data-session-desc="{{ e($fs?->description ?? '') }}" {{ old('track_id', request('track_id'))==$tr->id?'selected':'' }}>{{ $tr->name ?: $tr->title }}</option>
                         @endforeach
                     </select>
                     <div id="newTrackFields" class="hidden mt-2 p-3 bg-indigo-50 border border-indigo-200 rounded-xl space-y-2">
@@ -258,10 +262,11 @@ function onTrackSelect(sel) {
     } else if (sel.value) {
         newFields.classList.add('hidden');
         var opt = sel.options[sel.selectedIndex];
+        var trName = opt.getAttribute('data-name');
         var trTitle = opt.getAttribute('data-title');
         var trDesc = opt.getAttribute('data-desc');
-        if (trTitle) titleInput.value = trTitle;
-        if (trDesc) descInput.value = trDesc;
+        fillTrackFields(titleInput, descInput, trName, trTitle, trDesc,
+            opt.getAttribute('data-session-title'), opt.getAttribute('data-session-desc'));
     } else {
         newFields.classList.add('hidden');
     }
@@ -279,6 +284,27 @@ function toggleFormMode(mode) {
         section.classList.add('hidden');
         formFields.classList.remove('hidden');
     }
+}
+
+// ── Auto-fill helpers ──
+function decodeEntities(v) {
+    if (!v) return '';
+    var ta = document.createElement('textarea');
+    ta.innerHTML = v;
+    return ta.value;
+}
+function isPlaceholderDesc(v) {
+    var t = decodeEntities(v || '').replace(/<[^>]*>/g, '').trim();
+    return t === '' || t === '-';
+}
+function fillTrackFields(titleInput, descInput, name, title, desc, sessionTitle, sessionDesc) {
+    // Title: track's own descriptive title → first session's title → track name
+    var fillTitle = (title && title !== '-') ? title : (sessionTitle || name || title);
+    if (fillTitle) titleInput.value = decodeEntities(fillTitle);
+    // Description: track's own real description → first session's description (skip "-" placeholders)
+    var fillDesc = (desc && !isPlaceholderDesc(desc)) ? desc
+        : ((sessionDesc && !isPlaceholderDesc(sessionDesc)) ? sessionDesc : '');
+    if (fillDesc) descInput.value = decodeEntities(fillDesc);
 }
 
 // ── Existing source data pre-fill ──
@@ -299,12 +325,13 @@ function onExistingSourceSelect(sel) {
     var isReg = document.getElementById('inputIsRegistrable');
 
     var type = opt.getAttribute('data-type');
+    var wsName = opt.getAttribute('data-name');
     var wsTitle = opt.getAttribute('data-title');
     var wsDesc = opt.getAttribute('data-desc');
 
-    // Always fill title & description
-    if (wsTitle) titleInput.value = wsTitle;
-    if (wsDesc) descInput.value = wsDesc;
+    // Fill title & description (falling back to the first session's content)
+    fillTrackFields(titleInput, descInput, wsName, wsTitle, wsDesc,
+        opt.getAttribute('data-session-title'), opt.getAttribute('data-session-desc'));
 
     if (type === 'track') {
         agendaType.value = 'track';

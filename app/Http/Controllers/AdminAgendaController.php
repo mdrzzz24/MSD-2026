@@ -31,7 +31,9 @@ class AdminAgendaController extends Controller
     public function create()
     {
         $rooms = Room::ordered()->get();
-        $tracks = \App\Models\Track::orderBy('title')->get(['id', 'name', 'title', 'description']);
+        $tracks = \App\Models\Track::with(['agendaItems' => function ($q) {
+            $q->orderBy('start_time')->orderBy('order');
+        }])->orderBy('title')->get(['id', 'name', 'title', 'description']);
         $workshops = \App\Models\Workshop::orderBy('title')->get(['id', 'name', 'title', 'description', 'room', 'start_time', 'end_time', 'capacity', 'registration_open']);
         return view('admin.agenda.create', compact('rooms', 'tracks', 'workshops'));
     }
@@ -100,6 +102,9 @@ class AdminAgendaController extends Controller
             ]);
             $agendaItem->update(['track_id' => $track->id]);
         }
+
+        // Keep a 1:1 track's title in sync with this session
+        $this->syncTrackTitle($agendaItem);
 
         // Sync speakers with all pivot fields
         if ($speakerIds = $request->input('speaker_ids')) {
@@ -193,6 +198,9 @@ class AdminAgendaController extends Controller
             $agendum->update(['track_id' => $track->id]);
         }
 
+        // Keep a 1:1 track's title in sync with this session
+        $this->syncTrackTitle($agendum);
+
         // Sync speakers with all pivot fields
         if ($request->has('speaker_ids')) {
             $syncData = [];
@@ -214,6 +222,21 @@ class AdminAgendaController extends Controller
 
         return redirect()->route('admin.agenda.index')
             ->with('success', 'Agenda item <strong>' . e($agendum->title) . '</strong> updated successfully.');
+    }
+
+    /**
+     * Keep a 1:1 track's title in sync with its session's title.
+     * Only applied when the track has exactly one linked session, so a
+     * multi-session track never gets its title clobbered by one session.
+     */
+    private function syncTrackTitle(AgendaItem $agendaItem): void
+    {
+        $track = $agendaItem->track;
+        if (!$track) return;
+
+        if ($track->agendaItems()->count() === 1 && $track->title !== $agendaItem->title) {
+            $track->update(['title' => $agendaItem->title]);
+        }
     }
 
     public function destroy(AgendaItem $agendum)
