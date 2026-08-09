@@ -23,6 +23,20 @@
 <div class="p-4 sm:p-6 lg:p-8">
     @include('admin.partials.notification')
 
+    {{-- Validation errors (e.g. photo too large / wrong format) --}}
+    @if ($errors->any())
+        <div class="mb-6 flex items-start gap-3 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl">
+            <svg class="w-5 h-5 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+            <ul class="list-disc list-inside text-sm">
+                @foreach ($errors->all() as $e)
+                    <li>{{ $e }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
+
     {{-- Add Form --}}
     <div id="addForm" class="hidden bg-white rounded-2xl border border-gray-100 shadow-sm p-6 mb-6">
         <h3 class="text-sm font-bold text-gray-900 mb-4">New Speaker</h3>
@@ -34,7 +48,8 @@
                     <div class="relative">
                         <img id="addPhotoPreview" src="" class="w-20 h-20 rounded-xl object-cover border border-gray-200 hidden">
                         <div id="addPhotoPlaceholder" class="w-20 h-20 rounded-xl bg-gray-100 border-2 border-dashed border-gray-300 flex items-center justify-center text-gray-400 text-2xl cursor-pointer hover:border-indigo-400 hover:text-indigo-400 transition" onclick="document.getElementById('addPhotoInput').click()">+</div>
-                        <input type="file" name="photo" id="addPhotoInput" accept="image/*" class="hidden" onchange="previewAddPhoto(this)">
+                        <input type="file" name="photo" id="addPhotoInput" accept="image/jpeg,image/png,image/webp" class="hidden" onchange="previewAddPhoto(this)">
+                        <p class="mt-1 text-[10px] text-gray-400">JPG, PNG or WebP · max 10 MB</p>
                     </div>
                 </div>
                 <div class="flex-1 space-y-3">
@@ -115,8 +130,9 @@
                 <div class="relative">
                     <img id="editPhotoPreview" src="" class="w-20 h-20 rounded-xl object-cover border border-gray-200 hidden">
                     <div id="editPhotoPlaceholder" class="w-20 h-20 rounded-xl bg-gray-100 border-2 border-dashed border-gray-300 flex items-center justify-center text-gray-400 text-2xl cursor-pointer hover:border-indigo-400 hover:text-indigo-400 transition" onclick="document.getElementById('editPhotoInput').click()">+</div>
-                    <input type="file" name="photo" id="editPhotoInput" accept="image/*" class="hidden" onchange="previewEditPhoto(this)">
+                    <input type="file" name="photo" id="editPhotoInput" accept="image/jpeg,image/png,image/webp" class="hidden" onchange="previewEditPhoto(this)">
                     <input type="hidden" name="remove_photo" id="editRemovePhoto" value="0">
+                    <p class="mt-1 text-[10px] text-gray-400">JPG, PNG or WebP · max 10 MB</p>
                 </div>
                 <button type="button" id="editRemovePhotoBtn" class="hidden mt-1 text-[10px] text-red-500 hover:text-red-700 font-medium" onclick="removeEditPhoto()">Remove photo</button>
             </div>

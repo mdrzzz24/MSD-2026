@@ -20,7 +20,7 @@ class AdminSpeakerController extends Controller
             'name'    => ['required', 'string', 'max:255'],
             'title'   => ['nullable', 'string', 'max:255'],
             'company' => ['nullable', 'string', 'max:255'],
-            'photo'   => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
+            'photo'   => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:10240'],
             'bio'     => ['nullable', 'string', 'max:2000'],
         ]);
 
@@ -43,7 +43,7 @@ class AdminSpeakerController extends Controller
             'name'    => ['required', 'string', 'max:255'],
             'title'   => ['nullable', 'string', 'max:255'],
             'company' => ['nullable', 'string', 'max:255'],
-            'photo'   => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
+            'photo'   => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:10240'],
             'bio'     => ['nullable', 'string', 'max:2000'],
         ]);
 
