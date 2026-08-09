@@ -138,6 +138,12 @@
                             <option value="<?php echo e($tr->id); ?>" data-name="<?php echo e(e($tr->name)); ?>" data-title="<?php echo e(e($tr->title)); ?>" data-desc="<?php echo e(e($tr->description)); ?>" data-session-title="<?php echo e(e($fs?->title ?? '')); ?>" data-session-desc="<?php echo e(e($fs?->description ?? '')); ?>" <?php echo e(old('track_id', request('track_id'))==$tr->id?'selected':''); ?>><?php echo e($tr->name ?: $tr->title); ?></option>
                         <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                     </select>
+                    <div id="trackSessionWrap" class="hidden mt-2">
+                        <label class="block text-xs font-semibold text-gray-600 mb-1">Session <span class="text-xs text-gray-400 font-normal">(pilih sesi dari track ini)</span></label>
+                        <select id="trackSessionSelect" class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 focus:bg-white transition" onchange="onTrackSessionSelect(this)">
+                            <option value="">— Auto / None —</option>
+                        </select>
+                    </div>
                     <div id="newTrackFields" class="hidden mt-2 p-3 bg-indigo-50 border border-indigo-200 rounded-xl space-y-2">
                         <p class="text-xs font-semibold text-indigo-700">Create New Track</p>
                         <input type="text" name="new_track_title" placeholder="Track title..." class="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500/20">
@@ -252,23 +258,83 @@ function onWorkshopSelect(sel) {
         newFields.classList.add('hidden');
     }
 }
-function onTrackSelect(sel) {
-    var newFields = document.getElementById('newTrackFields');
+// Session data per track: trackId -> [{id, title, description, start_time, end_time}]
+<?php
+    $trackSessionsJson = $trackList->mapWithKeys(fn($t) => [(string) $t->id => $t->agendaItems->map(fn($s) => [
+        'id'          => $s->id,
+        'title'       => $s->title,
+        'description' => $s->description,
+        'start_time'  => $s->start_time,
+        'end_time'    => $s->end_time,
+    ])->values()])->toArray();
+?>
+var TRACK_SESSIONS = <?php echo json_encode($trackSessionsJson, 15, 512) ?>;
+
+function getTrackSessionWrap() { return document.getElementById('trackSessionWrap'); }
+function getTrackSessionSelect() { return document.getElementById('trackSessionSelect'); }
+
+function hideTrackSessions() {
+    var wrap = getTrackSessionWrap();
+    if (wrap) wrap.classList.add('hidden');
+}
+
+function populateTrackSessions(trackId, opt) {
+    var wrap = getTrackSessionWrap();
+    var sel = getTrackSessionSelect();
     var titleInput = document.getElementById('inputTitle');
     var descInput = document.getElementById('inputDescription');
+    if (!wrap || !sel) return;
 
+    var sessions = (TRACK_SESSIONS && TRACK_SESSIONS[trackId]) ? TRACK_SESSIONS[trackId] : [];
+    sel.innerHTML = '<option value="">— Auto / None —</option>';
+    for (var i = 0; i < sessions.length; i++) {
+        var s = sessions[i];
+        var o = document.createElement('option');
+        o.value = s.id;
+        o.textContent = (s.title || ('Session #' + s.id))
+            + ((s.start_time && s.start_time !== '00:00:00') ? ' · ' + String(s.start_time).slice(0, 5) : '');
+        o.setAttribute('data-title', s.title || '');
+        o.setAttribute('data-desc', s.description || '');
+        sel.appendChild(o);
+    }
+
+    if (sessions.length > 0) {
+        wrap.classList.remove('hidden');
+        // Auto-select the first session, but the user can switch to any session
+        sel.selectedIndex = 1;
+        onTrackSessionSelect(sel);
+    } else {
+        wrap.classList.add('hidden');
+        // No sessions on this track yet — fall back to the track's own data
+        var trName = opt ? opt.getAttribute('data-name') : '';
+        var trTitle = opt ? opt.getAttribute('data-title') : '';
+        var trDesc = opt ? opt.getAttribute('data-desc') : '';
+        fillTrackFields(titleInput, descInput, trName, trTitle, trDesc, '', '');
+    }
+}
+
+function onTrackSessionSelect(sel) {
+    var titleInput = document.getElementById('inputTitle');
+    var descInput = document.getElementById('inputDescription');
+    var opt = sel.options[sel.selectedIndex];
+    if (!opt || !opt.value) return;
+    var t = opt.getAttribute('data-title');
+    var d = opt.getAttribute('data-desc');
+    if (t) titleInput.value = decodeEntities(t);
+    if (d) descInput.value = decodeEntities(d);
+}
+
+function onTrackSelect(sel) {
+    var newFields = document.getElementById('newTrackFields');
     if (sel.value === '__new__') {
         newFields.classList.remove('hidden');
+        hideTrackSessions();
     } else if (sel.value) {
         newFields.classList.add('hidden');
-        var opt = sel.options[sel.selectedIndex];
-        var trName = opt.getAttribute('data-name');
-        var trTitle = opt.getAttribute('data-title');
-        var trDesc = opt.getAttribute('data-desc');
-        fillTrackFields(titleInput, descInput, trName, trTitle, trDesc,
-            opt.getAttribute('data-session-title'), opt.getAttribute('data-session-desc'));
+        populateTrackSessions(sel.value, sel.options[sel.selectedIndex]);
     } else {
         newFields.classList.add('hidden');
+        hideTrackSessions();
     }
 }
 
@@ -347,6 +413,8 @@ function onExistingSourceSelect(sel) {
                 break;
             }
         }
+        // Populate the session dropdown so the user can pick which session of the track
+        populateTrackSessions(trackId, trackSelect.options[trackSelect.selectedIndex]);
     } else if (type === 'workshop') {
         agendaType.value = 'workshop';
         var wsStart = opt.getAttribute('data-start');

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Mail\RegistrantApproved;
 use App\Mail\RegistrantCredentials;
 use App\Mail\RegistrantRejected;
+use App\Models\AgendaItem;
 use App\Models\ClientPendingMark;
 use App\Models\EmailTemplate;
 use App\Models\Registrant;
@@ -166,6 +167,10 @@ class AdminController extends Controller
             ['path' => $request->url(), 'query' => $request->query()]
         );
 
+        // Suspected duplicate agenda sessions — surfaced for manual cleanup
+        $data['duplicateGroups'] = $this->duplicateAgendaGroups();
+        $data['duplicateCount'] = $data['duplicateGroups']->sum(fn($g) => $g->count() - 1);
+
         return view('admin.dashboard', $data);
     }
 
@@ -176,6 +181,25 @@ class AdminController extends Controller
     {
         $data = $this->getDashboardStats();
         return response()->json($data);
+    }
+
+    /**
+     * Detect agenda items that look like duplicates: same title within the same
+     * workshop/track/date (ignoring exact times), so the admin can review & delete.
+     *
+     * @return \Illuminate\Support\Collection<int, \Illuminate\Support\Collection<int, \App\Models\AgendaItem>>
+     */
+    private function duplicateAgendaGroups(): \Illuminate\Support\Collection
+    {
+        return AgendaItem::with(['workshop', 'track'])
+            ->get()
+            ->groupBy(fn($i) => strtolower(trim($i->title)) . '|'
+                . ($i->workshop_id ?: '-') . '|'
+                . ($i->track_id ?: '-') . '|'
+                . ($i->date ? $i->date->format('Y-m-d') : '-'))
+            ->filter(fn($g) => $g->count() > 1)
+            ->map(fn($g) => $g->sortBy('start_time')->values())
+            ->values();
     }
 
     /**

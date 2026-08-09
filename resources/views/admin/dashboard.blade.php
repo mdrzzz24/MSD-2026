@@ -612,6 +612,80 @@
                 </div>
             </div>
 
+            {{-- ===== ROW 5: Suspected Duplicate Agenda Items (manual cleanup) ===== --}}
+            @if (isset($duplicateGroups) && $duplicateGroups->isNotEmpty())
+            <div class="bg-white rounded-2xl border border-red-200 shadow-sm overflow-hidden">
+                <div class="flex items-center justify-between px-5 py-4 border-b border-red-100 bg-red-50/40">
+                    <div>
+                        <h3 class="text-sm font-bold text-gray-900 flex items-center gap-2">
+                            <svg class="w-4 h-4 text-red-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                            </svg>
+                            Agenda Duplikat (Perlu Dicek)
+                        </h3>
+                        <p class="text-xs text-gray-500">
+                            {{ $duplicateGroups->count() }} kelompok sesi diduga dobel ({{ $duplicateCount }} salinan berlebih) — hapus yang tidak dipakai
+                        </p>
+                    </div>
+                </div>
+                <div class="divide-y divide-gray-100">
+                    @foreach ($duplicateGroups as $group)
+                    <div class="px-5 py-4">
+                        <div class="flex items-center justify-between mb-3">
+                            <div class="min-w-0">
+                                <p class="text-sm font-bold text-gray-900 truncate">{{ $group->first()->title }}</p>
+                                <p class="text-xs text-gray-500 mt-0.5">
+                                    {{ $group->count() }} salinan
+                                    @if ($group->first()->workshop) &middot; Workshop: {{ $group->first()->workshop->name ?: $group->first()->workshop->title }}@endif
+                                    @if ($group->first()->track) &middot; Track: {{ $group->first()->track->name ?: $group->first()->track->title }}@endif
+                                </p>
+                            </div>
+                        </div>
+                        <div class="overflow-x-auto border border-gray-100 rounded-xl">
+                            <table class="w-full text-sm">
+                                <thead>
+                                    <tr class="bg-gray-50/80 border-b border-gray-100 text-left">
+                                        <th class="px-4 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">ID</th>
+                                        <th class="px-4 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">Waktu</th>
+                                        <th class="px-4 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">Tipe</th>
+                                        <th class="px-4 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">Dibuat</th>
+                                        <th class="px-4 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wider text-right">Aksi</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-gray-50">
+                                    @foreach ($group as $item)
+                                    <tr class="hover:bg-gray-50/50 transition">
+                                        <td class="px-4 py-2 font-mono text-xs text-gray-700">#{{ $item->id }}</td>
+                                        <td class="px-4 py-2 text-gray-700 whitespace-nowrap">
+                                            {{ $item->start_time ? substr($item->start_time, 0, 5) : '—' }} – {{ $item->end_time ? substr($item->end_time, 0, 5) : '—' }}
+                                        </td>
+                                        <td class="px-4 py-2 text-gray-500">{{ $item->agenda_type ?: ($item->category ?: '—') }}</td>
+                                        <td class="px-4 py-2 text-gray-500 whitespace-nowrap">{{ $item->created_at->format('d M Y H:i') }}</td>
+                                        <td class="px-4 py-2 text-right">
+                                            <form action="{{ route('admin.agenda.destroy', $item) }}" method="POST"
+                                                  onsubmit="return confirm('Hapus sesi &quot;{{ $item->title }}&quot; (ID #{{ $item->id }})?')">
+                                                @csrf
+                                                @method('DELETE')
+                                                <input type="hidden" name="return_to" value="dashboard">
+                                                <button type="submit" class="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-semibold text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition">
+                                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                                    </svg>
+                                                    Hapus
+                                                </button>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    @endforeach
+                </div>
+            </div>
+            @endif
+
         </div>
     </main>
 </div>

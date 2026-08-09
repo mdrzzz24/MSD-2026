@@ -52,9 +52,7 @@
             <table class="w-full">
                 <thead><tr class="bg-gray-50/80">
                     <th class="px-5 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase">Track</th>
-                    <?php if(Auth::user()->canWrite()): ?>
                     <th class="px-5 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase hidden lg:table-cell">Linked Agenda</th>
-                    <?php endif; ?>
                     <th class="px-5 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase hidden md:table-cell">Registrants</th>
                     <th class="px-5 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase hidden md:table-cell">Scanned</th>
                     <th class="px-5 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase">Status</th>
@@ -67,22 +65,30 @@
                                 <?php if($tr->name): ?><p class="text-xs text-gray-500 mt-0.5"><?php echo e($tr->title); ?></p><?php endif; ?>
                                 <?php if($tr->description): ?><p class="text-xs text-gray-400 mt-0.5 truncate max-w-[250px]"><?php echo e($tr->description); ?></p><?php endif; ?>
                             </td>
-                            <?php if(Auth::user()->canWrite()): ?>
                             <td class="px-5 py-4 hidden lg:table-cell">
                                 <?php $linked = $tr->agendaItems; ?>
                                 <?php if($linked->isNotEmpty()): ?>
                                     <?php $__currentLoopData = $linked; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $ai): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-                                        <?php if(Auth::user()->isSuperAdmin()): ?>
-                                        <a href="<?php echo e(route('admin.agenda.edit', $ai)); ?>" title="Edit this session in the agenda" class="inline-block px-2 py-0.5 rounded text-xs font-medium bg-indigo-50 text-indigo-700 mb-1 hover:bg-indigo-100 hover:text-indigo-900 transition"><?php echo e($ai->title); ?></a>
-                                        <?php else: ?>
-                                        <span class="inline-block px-2 py-0.5 rounded text-xs font-medium bg-indigo-50 text-indigo-700 mb-1"><?php echo e($ai->title); ?></span>
-                                        <?php endif; ?>
+                                        <span class="inline-flex items-center gap-1 mb-1">
+                                            <?php if(Auth::user()->isSuperAdmin()): ?>
+                                            <a href="<?php echo e(route('admin.agenda.edit', $ai)); ?>" title="Edit this session in the agenda" class="px-2 py-0.5 rounded text-xs font-medium bg-indigo-50 text-indigo-700 hover:bg-indigo-100 hover:text-indigo-900 transition"><?php echo e($ai->title); ?></a>
+                                            <?php else: ?>
+                                            <span class="px-2 py-0.5 rounded text-xs font-medium bg-indigo-50 text-indigo-700"><?php echo e($ai->title); ?></span>
+                                            <?php endif; ?>
+                                            <?php if(Auth::user()->canWrite()): ?>
+                                            <form action="<?php echo e(route('admin.agenda.destroy', $ai)); ?>" method="POST" class="inline" onsubmit="return confirm('Hapus sesi &quot;<?php echo e($ai->title); ?>&quot; dari track ini?')">
+                                                <?php echo csrf_field(); ?>
+                                                <?php echo method_field('DELETE'); ?>
+                                                <input type="hidden" name="return_to" value="tracks">
+                                                <button type="submit" title="Hapus sesi ini" class="px-1.5 py-0.5 rounded text-[10px] font-bold text-red-500 bg-red-50 hover:bg-red-100 hover:text-red-700 transition">✕</button>
+                                            </form>
+                                            <?php endif; ?>
+                                        </span>
                                     <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                                 <?php else: ?>
                                     <span class="text-xs text-gray-400">—</span>
                                 <?php endif; ?>
                             </td>
-                            <?php endif; ?>
                             <td class="px-5 py-4 hidden md:table-cell">
                                 <?php $total = $tr->registrantsCount() + $tr->pendingCount() + $tr->rejectedCount(); ?>
                                 <?php if($total > 0): ?>

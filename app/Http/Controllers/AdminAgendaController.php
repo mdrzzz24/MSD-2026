@@ -239,10 +239,20 @@ class AdminAgendaController extends Controller
         }
     }
 
-    public function destroy(AgendaItem $agendum)
+    public function destroy(Request $request, AgendaItem $agendum)
     {
         $title = $agendum->title;
         $agendum->delete();
+
+        $returnTo = $request->input('return_to');
+        if ($returnTo === 'dashboard') {
+            return redirect()->route('admin.dashboard')
+                ->with('success', 'Agenda item <strong>' . e($title) . '</strong> (duplicate) deleted.');
+        }
+        if ($returnTo === 'tracks') {
+            return redirect()->route('admin.tracks.index')
+                ->with('success', 'Session <strong>' . e($title) . '</strong> deleted from the track.');
+        }
 
         return redirect()->route('admin.agenda.index')
             ->with('success', 'Agenda item <strong>' . e($title) . '</strong> deleted successfully.');

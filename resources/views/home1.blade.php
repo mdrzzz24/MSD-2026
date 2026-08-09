@@ -242,6 +242,9 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         // Classify an agenda item into a session type: general | workshop | session | track (null = skip breaks).
         $msdClassify = function ($it) {
             if ($it->category === 'break') return null;
+            // Hide the generic "General Sessions" banner row (the placeholder that just
+            // repeats the time + room). The individual keynote sessions still show.
+            if (mb_strtolower(trim((string) $it->title)) === 'general sessions') return null;
             // Hide legacy placeholder track rows ("Track A1".."Track E7") from the site.
             // They stay in the DB; we just don't surface them on the agenda.
             $trkLabel = $it->track ? trim((string)($it->track->name ?: $it->track->title)) : '';
@@ -299,10 +302,18 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                     ? ($it->workshop->name ?: $it->workshop->title)
                     : ($it->track ? ($it->track->name ?: $it->track->title) : null);
                 $entryTitle = $linkedName ?: $it->title;
-                // Pink headline on top: workshops use their session title (judul); others use topic_headline.
+                // Pink headline on top: workshops use their session title;
+                // track sessions show the TRACK TITLE above the company name;
+                // other sessions fall back to topic_headline.
                 $pinkTitle = $it->workshop
                     ? trim((string) ($it->workshop->title ?: $it->title))
-                    : trim((string) ($it->topic_headline ?? ''));
+                    : trim((string) (
+                        $it->track
+                            ? (($it->track->title && $it->track->title !== '-')
+                                ? $it->track->title
+                                : ($it->topic_headline ?: $it->title))
+                            : ($it->topic_headline ?? '')
+                    ));
                 $spk = $it->speakers->values();
             @endphp
             @php
@@ -627,6 +638,17 @@ document.addEventListener('DOMContentLoaded', function () {
   </div>
 </div>
 
+{{-- Speaker Bio Modal --}}
+<div id="speakerBioModal" style="display:none;position:fixed;inset:0;z-index:10000;align-items:center;justify-content:center;background:rgba(5,13,42,0.85);backdrop-filter:blur(12px);padding:20px;overflow-y:auto;" onclick="if(event.target===this)closeSpeakerBio()">
+  <div style="background:rgba(255,255,255,0.05);backdrop-filter:blur(16px);border-radius:24px;box-shadow:0 30px 80px rgba(0,0,0,0.5),inset 0 1px 0 rgba(255,255,255,0.08);width:100%;max-width:520px;max-height:85vh;overflow-y:auto;animation:msdFadeIn 0.3s ease-out;border:1px solid rgba(255,255,255,0.08);">
+    <div style="position:sticky;top:0;z-index:10;display:flex;align-items:center;justify-content:space-between;padding:16px 24px;background:linear-gradient(135deg,#050d2a,#0e2461);border-radius:24px 24px 0 0;border-bottom:1px solid rgba(255,255,255,0.06);">
+      <span style="font-size:11px;font-weight:700;color:rgba(255,255,255,0.6);letter-spacing:1.5px;text-transform:uppercase;">Speaker Bio</span>
+      <button onclick="closeSpeakerBio()" style="width:30px;height:30px;border-radius:50%;border:none;background:rgba(255,255,255,0.08);font-size:15px;cursor:pointer;color:rgba(255,255,255,0.6);display:flex;align-items:center;justify-content:center;transition:all 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.15)';this.style.color='#fff'" onmouseout="this.style.background='rgba(255,255,255,0.08)';this.style.color='rgba(255,255,255,0.6)'">✕</button>
+    </div>
+    <div id="speakerBioBody" style="padding:28px;"></div>
+  </div>
+</div>
+
 <style>
 @keyframes msdFadeIn{from{opacity:0;transform:scale(0.92) translateY(20px);}to{opacity:1;transform:scale(1) translateY(0);}}
 </style>
@@ -690,7 +712,8 @@ function openAgendaModal(id) {
     document.getElementById('modalRoom').innerHTML =
         '<svg style="width:14px;height:14px;flex-shrink:0;" fill="none" stroke="#94a3b8" viewBox="0 0 24 24"><path stroke-width="2" d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/><circle cx="12" cy="9" r="2.5" stroke-width="2"/></svg> ' +
         '<span>Shangri-La Hotel' + (item.room ? ', ' + item.room + ' Room' : '') + '</span>';
-    // Topic headline above the title; workshop/track name as main title, agenda item title as subtitle
+    // Topic headline above the title; workshop/track name as main title, agenda item title as subtitle.
+    // Track sessions show the TRACK TITLE in pink above the company name.
     var topicHeadlineHtml = item.topic_headline ? '<span style="font-size:17px;font-weight:700;color:#f472b6;display:block;margin-bottom:4px;">' + item.topic_headline + '</span>' : '';
     if (item.workshop_name) {
         document.getElementById('modalTitle').innerHTML =
@@ -698,8 +721,10 @@ function openAgendaModal(id) {
             '<span style="font-size:22px;font-weight:800;color:#e2e8f0;">' + item.workshop_name + '</span>' +
             '<span style="font-size:14px;font-weight:500;color:#94a3b8;display:block;margin-top:4px;">' + item.title + '</span>';
     } else if (item.track_name) {
+        var trackPink = (item.track_title && item.track_title !== '-') ? item.track_title : (item.topic_headline || '');
+        var trackPinkHtml = trackPink ? '<span style="font-size:17px;font-weight:700;color:#f472b6;display:block;margin-bottom:4px;">' + trackPink + '</span>' : '';
         document.getElementById('modalTitle').innerHTML =
-            topicHeadlineHtml +
+            trackPinkHtml +
             '<span style="font-size:22px;font-weight:800;color:#e2e8f0;">' + item.track_name + '</span>' +
             '<span style="font-size:14px;font-weight:500;color:#94a3b8;display:block;margin-top:4px;">' + item.title + '</span>';
     } else {
@@ -743,23 +768,26 @@ function openAgendaModal(id) {
     }
 
     // Speakers from relationship with all details
+    window._currentAgendaItem = item;   // keep current item for the speaker bio popup
     let speakersHtml = '';
     if (item.speakers && item.speakers.length > 0) {
         speakersHtml += '<h4 style="font-size:12px;font-weight:700;color:#94a3b8;margin-bottom:14px;text-transform:uppercase;letter-spacing:1px;"><svg style="width:14px;height:14px;vertical-align:-2px;margin-right:6px;" fill="none" stroke="#94a3b8" viewBox="0 0 24 24"><path stroke-width="2" d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path stroke-width="2" d="M19 10v2a7 7 0 0 1-14 0v-2"/><line stroke-width="2" x1="12" y1="19" x2="12" y2="23"/><line stroke-width="2" x1="8" y1="23" x2="16" y2="23"/></svg> Speaker' + (item.speakers.length > 1 ? 's' : '') + '</h4>';
-        item.speakers.forEach(function(sp) {
+        item.speakers.forEach(function(sp, idx) {
             speakersHtml += '<div style="display:flex;align-items:flex-start;gap:14px;margin-bottom:18px;padding-bottom:16px;border-bottom:1px solid rgba(255,255,255,0.06);">';
+            var avatarInner = '';
             if (sp.photo) {
                 var photoUrl = sp.photo;
                 if (!photoUrl.startsWith('http') && !photoUrl.startsWith('/')) {
                     photoUrl = '{{ asset('storage') }}/' + photoUrl;
                 }
-                speakersHtml += '<img src="'+photoUrl+'" style="width:48px;height:48px;border-radius:50%;object-fit:cover;border:2px solid rgba(255,255,255,0.1);flex-shrink:0;margin-top:2px;" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'flex\';">';
-                speakersHtml += '<div style="display:none;width:48px;height:48px;border-radius:50%;background:linear-gradient(135deg,#ff3d6e,#e91e63);align-items:center;justify-content:center;color:#fff;font-size:16px;font-weight:700;flex-shrink:0;margin-top:2px;">'+sp.name.charAt(0).toUpperCase()+'</div>';
+                avatarInner = '<img src="'+photoUrl+'" style="width:48px;height:48px;border-radius:50%;object-fit:cover;border:2px solid rgba(255,255,255,0.1);flex-shrink:0;margin-top:2px;" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'flex\';">'
+                    + '<div style="display:none;width:48px;height:48px;border-radius:50%;background:linear-gradient(135deg,#ff3d6e,#e91e63);align-items:center;justify-content:center;color:#fff;font-size:16px;font-weight:700;flex-shrink:0;margin-top:2px;">'+sp.name.charAt(0).toUpperCase()+'</div>';
             } else {
-                speakersHtml += '<div style="width:48px;height:48px;border-radius:50%;background:linear-gradient(135deg,#ff3d6e,#e91e63);display:flex;align-items:center;justify-content:center;color:#fff;font-size:16px;font-weight:700;flex-shrink:0;margin-top:2px;">'+sp.name.charAt(0).toUpperCase()+'</div>';
+                avatarInner = '<div style="width:48px;height:48px;border-radius:50%;background:linear-gradient(135deg,#ff3d6e,#e91e63);display:flex;align-items:center;justify-content:center;color:#fff;font-size:16px;font-weight:700;flex-shrink:0;margin-top:2px;">'+sp.name.charAt(0).toUpperCase()+'</div>';
             }
+            speakersHtml += '<button type="button" onclick="openSpeakerBio('+idx+')" title="View speaker bio" style="padding:0;border:none;background:none;cursor:pointer;border-radius:50%;flex-shrink:0;transition:transform 0.15s,box-shadow 0.15s;" onmouseover="this.style.transform=\'scale(1.08)\';this.style.boxShadow=\'0 0 0 3px rgba(244,114,182,0.25)\'" onmouseout="this.style.transform=\'\';this.style.boxShadow=\'\'">'+avatarInner+'</button>';
             speakersHtml += '<div style="flex:1;min-width:0;">';
-            speakersHtml += '<p style="font-weight:700;font-size:14px;color:#e2e8f0;">'+sp.name+'</p>';
+            speakersHtml += '<p style="font-weight:700;font-size:14px;color:#e2e8f0;cursor:pointer;display:inline-block;border-bottom:1px solid transparent;transition:border-color 0.15s,color 0.15s;" onmouseover="this.style.borderColor=\'#f472b6\';this.style.color=\'#f472b6\'" onmouseout="this.style.borderColor=\'transparent\';this.style.color=\'#e2e8f0\'" onclick="openSpeakerBio('+idx+')">'+sp.name+'</p>';
             speakersHtml += '<p style="font-size:12px;color:#64748b;margin-bottom:6px;">'+(sp.title||'')+(sp.company ? ' <span style="color:#475569;">·</span> '+sp.company : '')+'</p>';
 
             // Presentation title
@@ -847,9 +875,56 @@ document.getElementById('agendaModal').addEventListener('click', function(e) {
     if (e.target === this) closeAgendaModal();
 });
 
+// ── Speaker bio popup ──
+function escHtml(v) {
+    return String(v == null ? '' : v)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+function openSpeakerBio(idx) {
+    var item = window._currentAgendaItem;
+    if (!item || !item.speakers || !item.speakers[idx]) return;
+    var sp = item.speakers[idx];
+    var body = document.getElementById('speakerBioBody');
+    if (!body) return;
+    var photoUrl = sp.photo || '';
+    if (photoUrl && !photoUrl.startsWith('http') && !photoUrl.startsWith('/')) {
+        photoUrl = '{{ asset('storage') }}/' + photoUrl;
+    }
+    var bio = escHtml(sp.bio || '').trim();
+    var isPlaceholder = bio.length === 0 || /^(tbc|to be confirm(ed)?|work in progress|wip|pending)$/i.test(bio.replace(/[^a-zA-Z]/g, ''));
+    var avatarInner = photoUrl
+        ? '<img src="'+photoUrl+'" style="width:72px;height:72px;border-radius:50%;object-fit:cover;border:2px solid rgba(255,255,255,0.12);flex-shrink:0;" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'flex\';">'
+          + '<div style="display:none;width:72px;height:72px;border-radius:50%;background:linear-gradient(135deg,#ff3d6e,#e91e63);align-items:center;justify-content:center;color:#fff;font-size:26px;font-weight:700;flex-shrink:0;">'+escHtml((sp.name||'?').charAt(0).toUpperCase())+'</div>'
+        : '<div style="width:72px;height:72px;border-radius:50%;background:linear-gradient(135deg,#ff3d6e,#e91e63);display:flex;align-items:center;justify-content:center;color:#fff;font-size:26px;font-weight:700;flex-shrink:0;">'+escHtml((sp.name||'?').charAt(0).toUpperCase())+'</div>';
+    body.innerHTML =
+        '<div style="display:flex;align-items:center;gap:18px;margin-bottom:22px;">'
+        + avatarInner
+        + '<div style="min-width:0;">'
+        + '<p style="font-size:19px;font-weight:800;color:#e2e8f0;line-height:1.3;">' + escHtml(sp.name) + '</p>'
+        + ((sp.title || sp.company) ? '<p style="font-size:13px;color:#94a3b8;margin-top:3px;">' + escHtml(sp.title || '') + (sp.title && sp.company ? ' <span style="color:#475569;">·</span> ' : '') + escHtml(sp.company || '') + '</p>' : '')
+        + '</div></div>'
+        + (isPlaceholder
+            ? '<p style="font-size:13px;color:#64748b;font-style:italic;">Bio not yet available for this speaker.</p>'
+            : '<div style="font-size:13px;color:#cbd5e1;line-height:1.8;white-space:pre-wrap;">' + bio + '</div>');
+    document.getElementById('speakerBioModal').style.display = 'flex';
+}
+function closeSpeakerBio() {
+    document.getElementById('speakerBioModal').style.display = 'none';
+}
+
 // Close on Escape
 document.addEventListener('keydown', function(e) {
-    if (e.key === 'Escape') closeAgendaModal();
+    if (e.key === 'Escape') {
+        if (document.getElementById('speakerBioModal').style.display === 'flex') {
+            closeSpeakerBio();
+        } else {
+            closeAgendaModal();
+        }
+    }
 });
 
 // ── Make agenda items clickable ──

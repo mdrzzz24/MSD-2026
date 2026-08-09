@@ -52,9 +52,7 @@
             <table class="w-full">
                 <thead><tr class="bg-gray-50/80">
                     <th class="px-5 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase">Track</th>
-                    @if (Auth::user()->canWrite())
                     <th class="px-5 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase hidden lg:table-cell">Linked Agenda</th>
-                    @endif
                     <th class="px-5 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase hidden md:table-cell">Registrants</th>
                     <th class="px-5 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase hidden md:table-cell">Scanned</th>
                     <th class="px-5 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase">Status</th>
@@ -67,22 +65,30 @@
                                 @if($tr->name)<p class="text-xs text-gray-500 mt-0.5">{{ $tr->title }}</p>@endif
                                 @if($tr->description)<p class="text-xs text-gray-400 mt-0.5 truncate max-w-[250px]">{{ $tr->description }}</p>@endif
                             </td>
-                            @if (Auth::user()->canWrite())
                             <td class="px-5 py-4 hidden lg:table-cell">
                                 @php $linked = $tr->agendaItems; @endphp
                                 @if ($linked->isNotEmpty())
                                     @foreach ($linked as $ai)
-                                        @if (Auth::user()->isSuperAdmin())
-                                        <a href="{{ route('admin.agenda.edit', $ai) }}" title="Edit this session in the agenda" class="inline-block px-2 py-0.5 rounded text-xs font-medium bg-indigo-50 text-indigo-700 mb-1 hover:bg-indigo-100 hover:text-indigo-900 transition">{{ $ai->title }}</a>
-                                        @else
-                                        <span class="inline-block px-2 py-0.5 rounded text-xs font-medium bg-indigo-50 text-indigo-700 mb-1">{{ $ai->title }}</span>
-                                        @endif
+                                        <span class="inline-flex items-center gap-1 mb-1">
+                                            @if (Auth::user()->isSuperAdmin())
+                                            <a href="{{ route('admin.agenda.edit', $ai) }}" title="Edit this session in the agenda" class="px-2 py-0.5 rounded text-xs font-medium bg-indigo-50 text-indigo-700 hover:bg-indigo-100 hover:text-indigo-900 transition">{{ $ai->title }}</a>
+                                            @else
+                                            <span class="px-2 py-0.5 rounded text-xs font-medium bg-indigo-50 text-indigo-700">{{ $ai->title }}</span>
+                                            @endif
+                                            @if (Auth::user()->canWrite())
+                                            <form action="{{ route('admin.agenda.destroy', $ai) }}" method="POST" class="inline" onsubmit="return confirm('Hapus sesi &quot;{{ $ai->title }}&quot; dari track ini?')">
+                                                @csrf
+                                                @method('DELETE')
+                                                <input type="hidden" name="return_to" value="tracks">
+                                                <button type="submit" title="Hapus sesi ini" class="px-1.5 py-0.5 rounded text-[10px] font-bold text-red-500 bg-red-50 hover:bg-red-100 hover:text-red-700 transition">✕</button>
+                                            </form>
+                                            @endif
+                                        </span>
                                     @endforeach
                                 @else
                                     <span class="text-xs text-gray-400">—</span>
                                 @endif
                             </td>
-                            @endif
                             <td class="px-5 py-4 hidden md:table-cell">
                                 @php $total = $tr->registrantsCount() + $tr->pendingCount() + $tr->rejectedCount(); @endphp
                                 @if ($total > 0)
