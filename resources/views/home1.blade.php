@@ -341,7 +341,9 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                 @if ($pinkTitle !== '')
                   <span class="agenda-topic-title">{{ $entryTitle }}</span>
                 @endif
-                <span class="agenda-topic-headline">{{ $pinkTitle }}</span>
+                @if ($pinkTitle !== '' && $pinkTitle !== '-')
+                  <span class="agenda-topic-headline">{{ $pinkTitle }}</span>
+                @endif
 
                 @if ($cleanHl !== '')
                   <span class="agenda-topic-highlights">

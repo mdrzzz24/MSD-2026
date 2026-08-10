@@ -342,7 +342,9 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                 <?php if($pinkTitle !== ''): ?>
                   <span class="agenda-topic-title"><?php echo e($entryTitle); ?></span>
                 <?php endif; ?>
-                <span class="agenda-topic-headline"><?php echo e($pinkTitle); ?></span>
+                <?php if($pinkTitle !== '' && $pinkTitle !== '-'): ?>
+                  <span class="agenda-topic-headline"><?php echo e($pinkTitle); ?></span>
+                <?php endif; ?>
 
                 <?php if($cleanHl !== ''): ?>
                   <span class="agenda-topic-highlights">
