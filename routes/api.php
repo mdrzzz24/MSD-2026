@@ -19,3 +19,9 @@ Route::get('/booths/{booth}/attendees', [ApiController::class, 'boothAttendees']
 Route::get('/agenda/{agendum}/attendees', [ApiController::class, 'agendaAttendees']);
 // Offline scan sync — app queues scans while offline, uploads here when back online.
 Route::post('/sync/scans', [ApiController::class, 'syncScans']);
+
+// Mobile app support — config, MQTT status/test, recent activity feed
+Route::get('/config', [ApiController::class, 'config']);
+Route::get('/mqtt/status', [ApiController::class, 'mqttStatus']);
+Route::post('/mqtt/test', [ApiController::class, 'mqttTest']);
+Route::get('/activity', [ApiController::class, 'activity']);

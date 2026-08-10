@@ -7,12 +7,14 @@ use App\Models\AgendaVisit;
 use App\Models\Booth;
 use App\Models\BoothVisit;
 use App\Models\Registrant;
+use App\Models\ScanLog;
 use App\Models\User;
 use App\Models\Workshop;
 use App\Services\MqttService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 
 class ApiController extends Controller
 {
@@ -172,6 +174,18 @@ class ApiController extends Controller
             'visited_at'    => now(),
         ]);
 
+        $this->logScan([
+            'action'          => 'booth_scan',
+            'registrant_id'   => $registrant->id,
+            'registrant_name' => $registrant->name,
+            'qr_token'        => $token,
+            'item_id'         => $booth->id,
+            'item_type'       => 'booth',
+            'item_label'      => $booth->name,
+            'success'         => true,
+            'message'         => 'Visit recorded.',
+        ]);
+
         return response()->json([
             'success'        => true,
             'message'        => 'Visit recorded.',
@@ -266,6 +280,18 @@ class ApiController extends Controller
             'visited_at'     => $visitedAt,
         ]);
 
+        $this->logScan([
+            'action'          => 'agenda_scan',
+            'registrant_id'   => $registrant->id,
+            'registrant_name' => $registrant->name,
+            'qr_token'        => $token,
+            'item_id'         => $agendum->id,
+            'item_type'       => 'agenda',
+            'item_label'      => $agendum->title,
+            'success'         => true,
+            'message'         => 'Check-in recorded.',
+        ]);
+
         return response()->json([
             'success'        => true,
             'message'        => 'Check-in recorded.',
@@ -352,6 +378,18 @@ class ApiController extends Controller
         // konsisten dengan track-in; fallback ke waktu server.
         $visit->update(['left_at' => $request->input('scanned_at') ?: now()]);
 
+        $this->logScan([
+            'action'          => 'agenda_trackout',
+            'registrant_id'   => $registrant->id,
+            'registrant_name' => $registrant->name,
+            'qr_token'        => $token,
+            'item_id'         => $agendum->id,
+            'item_type'       => 'agenda',
+            'item_label'      => $agendum->title,
+            'success'         => true,
+            'message'         => 'Track-out recorded.',
+        ]);
+
         return response()->json([
             'success'            => true,
             'message'            => 'Track-out recorded.',
@@ -431,16 +469,31 @@ class ApiController extends Controller
         $alreadyCheckedIn = $registrant->checked_in_at !== null;
 
         // Mirror the Onsite Event flow: publish the badge to the printer via MQTT.
+        // The printer follows the logged-in user: admin_id = the user id from
+        // /api/login, so the badge goes to print/admin-{their id}.
         $service = app(MqttService::class);
-        $adminId = $validated['admin_id']
-            ?? User::where('role', 'super_admin')->orderBy('id')->value('id')
-            ?? 1;
+        $adminId = $this->resolvePrinterAdminId($validated['admin_id'] ?? null);
         $printedIds = $service->publishBadges(collect([$registrant]), $adminId);
 
         // A registration arrival always counts as checked in (badge print is optional).
         if ($registrant->checked_in_at === null) {
             $registrant->update(['checked_in_at' => now()]);
         }
+
+        $this->logScan([
+            'action'          => 'registration_scan',
+            'registrant_id'   => $registrant->id,
+            'registrant_name' => $registrant->name,
+            'qr_token'        => $token,
+            'item_type'       => 'registration',
+            'item_label'      => 'Registration / Onsite',
+            'admin_id'        => $adminId,
+            'success'         => true,
+            'printed'         => count($printedIds) > 0,
+            'message'         => $alreadyCheckedIn
+                ? 'Already checked in. Badge print triggered.'
+                : 'Check-in recorded. Badge print triggered.',
+        ]);
 
         return response()->json([
             'success'            => true,
@@ -560,6 +613,18 @@ class ApiController extends Controller
                 ]);
             }
         }
+
+        $this->logScan([
+            'action'          => 'workshop_register',
+            'registrant_id'   => $registrant->id,
+            'registrant_name' => $registrant->name,
+            'qr_token'        => $validated['qr_token'] ?? null,
+            'item_id'         => $workshop->id,
+            'item_type'       => 'workshop',
+            'item_label'      => $workshop->name ?: $workshop->title,
+            'success'         => true,
+            'message'         => 'Registrant registered & approved for this workshop.',
+        ]);
 
         return response()->json([
             'success'            => true,
@@ -699,7 +764,7 @@ class ApiController extends Controller
     {
         $action = $scan['action'];
 
-        return match ($action) {
+        $result = match ($action) {
             'registration_scan' => $this->syncRegistration($scan),
             'agenda_scan'       => $this->syncAgenda($scan),
             'agenda_trackout'   => $this->syncAgendaTrackOut($scan),
@@ -712,6 +777,55 @@ class ApiController extends Controller
                 'message'   => 'Unknown action.',
             ],
         };
+
+        // Persist an audit log for each queued scan (feeds the activity feed).
+        $this->logSyncScan($scan, $result);
+
+        return $result;
+    }
+
+    /**
+     * Persist a scan/print activity log (audit trail + activity feed).
+     * Never throws — logging must never break a scan.
+     */
+    private function logScan(array $data): void
+    {
+        try {
+            ScanLog::create(array_merge([
+                'source'  => 'mobile',
+                'success' => true,
+                'printed' => false,
+            ], $data));
+        } catch (\Throwable $e) {
+            Log::warning('ScanLog write failed: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Log an offline queued scan (batch sync) from its result.
+     */
+    private function logSyncScan(array $scan, array $result): void
+    {
+        $registrant = $result['registrant'] ?? null;
+
+        $this->logScan([
+            'action'          => $scan['action'] ?? ($result['action'] ?? 'scan'),
+            'registrant_id'   => is_array($registrant) ? ($registrant['id'] ?? null) : null,
+            'registrant_name' => is_array($registrant) ? ($registrant['name'] ?? null) : null,
+            'qr_token'        => $scan['qr_token'] ?? null,
+            'item_id'         => $scan['item_id'] ?? null,
+            'item_type'       => match ($scan['action'] ?? null) {
+                'agenda_scan', 'agenda_trackout' => 'agenda',
+                'booth_scan'                     => 'booth',
+                'workshop_register'              => 'workshop',
+                default                          => 'registration',
+            },
+            'source'    => 'sync',
+            'client_id' => $scan['client_id'] ?? null,
+            'success'   => (bool) ($result['success'] ?? false),
+            'printed'   => false,
+            'message'   => $result['message'] ?? null,
+        ]);
     }
 
     /**
@@ -1093,5 +1207,203 @@ class ApiController extends Controller
             ],
             'status' => 'approved',
         ];
+    }
+
+    // ────────────────────────────────────────────────────────────────────
+    // Mobile app support — config, MQTT status/test, activity feed
+    // ────────────────────────────────────────────────────────────────────
+
+    /**
+     * Resolve which admin's printer to use as the default for the logged-in
+     * user. Priority: the provided admin_id (if it is an existing admin) →
+     * first super admin → 1.
+     *
+     * The mobile app passes the id of the user who logged in via /api/login
+     * (e.g. ?admin_id=12 or body { "admin_id": 12 }), so the default printer
+     * topic follows whoever is logged in (print/admin-{their id}) instead of
+     * always print/admin-1.
+     */
+    private function resolvePrinterAdminId(?int $adminId): int
+    {
+        if ($adminId && User::where('id', $adminId)->where('is_admin', true)->exists()) {
+            return $adminId;
+        }
+
+        return User::where('role', 'super_admin')->orderBy('id')->value('id') ?? 1;
+    }
+
+    /**
+     * App configuration for the mobile app (base URL, event, MQTT, printers).
+     *
+     * GET /api/config?admin_id={userId}   — admin_id (optional) = the logged-in
+     * user's id; default_topic follows it. Falls back to first super admin.
+     */
+    public function config(Request $request): JsonResponse
+    {
+        $defaultAdminId = $this->resolvePrinterAdminId($request->integer('admin_id') ?: null);
+        $prefix         = config('mqtt.topic_prefix', 'print');
+        $base           = $request->getSchemeAndHttpHost();
+
+        return response()->json([
+            'success' => true,
+            'data'    => [
+                'app' => [
+                    'name'           => config('app.name'),
+                    'event_id'       => '',
+                    'base_url'       => $base,
+                    'api_base_url'   => $base . '/api',
+                    'request_format' => 'json',
+                    'version'        => '1.0.0',
+                ],
+                'mqtt' => [
+                    'enabled'          => config('mqtt.enabled', false),
+                    'host'             => config('mqtt.host'),
+                    'port'             => (int) config('mqtt.port'),
+                    'topic_prefix'     => $prefix,
+                    'default_admin_id' => $defaultAdminId,
+                    'default_topic'    => $prefix . '/admin-' . $defaultAdminId,
+                ],
+                'printers' => User::where('is_admin', true)
+                    ->orderBy('id')
+                    ->get()
+                    ->map(fn ($u) => [
+                        'id'    => $u->id,
+                        'name'  => $u->name,
+                        'email' => $u->email,
+                        'role'  => $u->role,
+                        'topic' => $prefix . '/admin-' . $u->id,
+                    ])
+                    ->values(),
+                'server_time' => now()->toIso8601String(),
+            ],
+        ]);
+    }
+
+    /**
+     * MQTT broker + printer status (which topic each admin's printer listens on).
+     *
+     * GET /api/mqtt/status?admin_id={userId}  — admin_id (optional) = the
+     * logged-in user's id; default_topic follows it. Falls back to first super
+     * admin.
+     */
+    public function mqttStatus(Request $request): JsonResponse
+    {
+        $service        = app(MqttService::class);
+        $prefix         = config('mqtt.topic_prefix', 'print');
+        $defaultAdminId = $this->resolvePrinterAdminId($request->integer('admin_id') ?: null);
+
+        return response()->json([
+            'success' => true,
+            'data'    => [
+                'enabled'          => $service->enabled(),
+                'host'             => config('mqtt.host'),
+                'port'             => (int) config('mqtt.port'),
+                'topic_prefix'     => $prefix,
+                'default_admin_id' => $defaultAdminId,
+                'default_topic'    => $prefix . '/admin-' . $defaultAdminId,
+                'printers'         => User::where('is_admin', true)
+                    ->orderBy('id')
+                    ->get()
+                    ->map(fn ($u) => [
+                        'id'    => $u->id,
+                        'name'  => $u->name,
+                        'role'  => $u->role,
+                        'topic' => $prefix . '/admin-' . $u->id,
+                    ])
+                    ->values(),
+            ],
+        ]);
+    }
+
+    /**
+     * Send a test badge to an admin's printer via MQTT — verifies the whole
+     * chain (server → broker → printer) without scanning a real participant.
+     *
+     * POST /api/mqtt/test  body: { admin_id?, name?, company? }
+     */
+    public function mqttTest(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'admin_id' => ['nullable', 'integer'],
+            'name'     => ['nullable', 'string', 'max:255'],
+            'company'  => ['nullable', 'string', 'max:255'],
+        ]);
+
+        $adminId = $this->resolvePrinterAdminId($validated['admin_id'] ?? null);
+
+        $service = app(MqttService::class);
+        $topic   = config('mqtt.topic_prefix', 'print') . '/admin-' . $adminId;
+
+        $published = $service->publish($topic, [
+            'objQRCode'    => 'TEST-' . now()->format('His'),
+            'objName'      => $validated['name'] ?? 'Test Print',
+            'objCompany'   => $validated['company'] ?? 'MQTT Test',
+            'objFirstName' => 'Test',
+            'objLastName'  => 'Print',
+            'objJob'       => '',
+            'objTrackCode' => '',
+            'objTableNum'  => '',
+            'test'         => true,
+        ]);
+
+        $this->logScan([
+            'action'    => 'mqtt_test',
+            'item_type' => 'printer',
+            'item_label'=> $topic,
+            'admin_id'  => $adminId,
+            'success'   => $published,
+            'printed'   => $published,
+            'message'   => $published ? 'Test print published.' : 'MQTT publish failed (disabled or broker unreachable).',
+        ]);
+
+        return response()->json([
+            'success'      => $published,
+            'message'      => $published
+                ? 'Test print published to ' . $topic . '.'
+                : 'MQTT is not enabled or the broker is unreachable.',
+            'published'    => $published,
+            'mqtt_enabled' => $service->enabled(),
+            'topic'        => $topic,
+        ], $published ? 200 : 422);
+    }
+
+    /**
+     * Recent scan/print activity feed — for live monitoring of the mobile app.
+     *
+     * GET /api/activity?limit=20&action=registration_scan
+     */
+    public function activity(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'action' => ['nullable', 'string', 'max:50'],
+            'limit'  => ['nullable', 'integer', 'min:1', 'max:100'],
+        ]);
+
+        $query = ScanLog::query();
+        if (!empty($validated['action'])) {
+            $query->where('action', $validated['action']);
+        }
+
+        $logs = $query->latest()->limit($validated['limit'] ?? 20)->get()->map(fn ($l) => [
+            'id'              => $l->id,
+            'action'          => $l->action,
+            'registrant_id'   => $l->registrant_id,
+            'registrant_name' => $l->registrant_name,
+            'item_id'         => $l->item_id,
+            'item_type'       => $l->item_type,
+            'item_label'      => $l->item_label,
+            'source'          => $l->source,
+            'client_id'       => $l->client_id,
+            'admin_id'        => $l->admin_id,
+            'success'         => $l->success,
+            'printed'         => $l->printed,
+            'message'         => $l->message,
+            'created_at'      => $l->created_at?->toIso8601String(),
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'data'    => $logs,
+        ]);
     }
 }
