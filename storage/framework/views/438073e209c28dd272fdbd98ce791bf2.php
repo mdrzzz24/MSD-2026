@@ -415,7 +415,7 @@ document.addEventListener('DOMContentLoaded', function () {
 <section id="agenda" class="why reveal">
   <div class="container">
     <p class="section-eyebrow">Agenda</p>
-    <h2 class="section-title">A full day of learning, exchange, and discovery</h2>
+    <h2 class="section-title">Full Agenda</h2>
 
     <?php if(isset($timeSlots) && $timeSlots->isNotEmpty()): ?>
       <?php
@@ -1290,7 +1290,7 @@ document.addEventListener('DOMContentLoaded',function(){var e=document.getElemen
 
 </div>
 
-<script src="<?php echo e(asset('js/main.js')); ?>?v=11"></script>
+<script src="<?php echo e(asset('js/main.js')); ?>?v=12"></script>
 <script>
 // Job Function / Job Title / Job Role logic:
 // - "Job Role" dropdown only appears when Job Title = "Information Technology"
