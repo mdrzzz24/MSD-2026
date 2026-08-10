@@ -318,14 +318,14 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                 $spk = $it->speakers->values();
             ?>
             <?php
-                $startTime = date('H:i', strtotime($it->start_time));
-                $endTime   = date('H:i', strtotime($it->end_time));
-                $showTime  = !($startTime === '00:00' && $endTime === '00:00');
+                $startTime = date('H.i', strtotime($it->start_time));
+                $endTime   = date('H.i', strtotime($it->end_time));
+                $showTime  = !($startTime === '00.00' && $endTime === '00.00');
             ?>
             <div class="agenda-row" onclick="openAgendaModal(<?php echo e($it->id); ?>)" title="View session details">
               <div class="agenda-col-time">
                 <?php if($showTime): ?>
-                  <div class="atime"><?php echo e($startTime); ?>–<?php echo e($endTime); ?></div>
+                  <div class="atime"><?php echo e($startTime); ?> - <?php echo e($endTime); ?></div>
                   <div class="atz">(WIB)</div>
                 <?php endif; ?>
                 <?php if($it->room): ?>
@@ -340,9 +340,10 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
               ?>
               <div class="agenda-col-topic">
                 <?php if($pinkTitle !== ''): ?>
-                  <span class="agenda-topic-headline"><?php echo e($pinkTitle); ?></span>
+                  <span class="agenda-topic-title"><?php echo e($entryTitle); ?></span>
                 <?php endif; ?>
-                <span class="agenda-topic-title"><?php echo e($entryTitle); ?></span>
+                <span class="agenda-topic-headline"><?php echo e($pinkTitle); ?></span>
+
                 <?php if($cleanHl !== ''): ?>
                   <span class="agenda-topic-highlights">
                     <?php $__currentLoopData = preg_split('/\r\n|\r|\n/', $cleanHl); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $line): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
@@ -711,12 +712,11 @@ function openAgendaModal(id) {
         '<span>' + (item.date || '20 August 2026') + '</span>' +
         '<span style="color:#475569;">·</span>' +
         '<svg style="width:14px;height:14px;flex-shrink:0;" fill="none" stroke="#f472b6" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke-width="2"/><path stroke-width="2" d="M12 6v6l4 2"/></svg> ' +
-        '<span>' + (item.start_time || '').substring(0,5) + ' – ' + ((item.display_end_time || item.end_time) || '').substring(0,5) + '</span>';
+        '<span>' + ((item.start_time || '').substring(0,5).replace(':', '.')) + ' - ' + (((item.display_end_time || item.end_time) || '').substring(0,5).replace(':', '.')) + '</span>';
     document.getElementById('modalRoom').innerHTML =
         '<svg style="width:14px;height:14px;flex-shrink:0;" fill="none" stroke="#94a3b8" viewBox="0 0 24 24"><path stroke-width="2" d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/><circle cx="12" cy="9" r="2.5" stroke-width="2"/></svg> ' +
         '<span>Shangri-La Hotel' + (item.room ? ', ' + item.room + ' Room' : '') + '</span>';
     // Topic headline above the title; workshop/track name as main title, agenda item title as subtitle.
-    // Track sessions show the TRACK TITLE in pink above the company name.
     var topicHeadlineHtml = item.topic_headline ? '<span style="font-size:17px;font-weight:700;color:#f472b6;display:block;margin-bottom:4px;">' + item.topic_headline + '</span>' : '';
     if (item.workshop_name) {
         document.getElementById('modalTitle').innerHTML =
@@ -724,16 +724,15 @@ function openAgendaModal(id) {
             '<span style="font-size:22px;font-weight:800;color:#e2e8f0;">' + item.workshop_name + '</span>' +
             '<span style="font-size:14px;font-weight:500;color:#94a3b8;display:block;margin-top:4px;">' + item.title + '</span>';
     } else if (item.track_name) {
-        var trackPink = (item.track_title && item.track_title !== '-') ? item.track_title : (item.topic_headline || '');
-        var trackPinkHtml = trackPink ? '<span style="font-size:17px;font-weight:700;color:#f472b6;display:block;margin-bottom:4px;">' + trackPink + '</span>' : '';
         document.getElementById('modalTitle').innerHTML =
-            trackPinkHtml +
+            topicHeadlineHtml +
             '<span style="font-size:22px;font-weight:800;color:#e2e8f0;">' + item.track_name + '</span>' +
             '<span style="font-size:14px;font-weight:500;color:#94a3b8;display:block;margin-top:4px;">' + item.title + '</span>';
     } else {
+        // General / session: company as the main title, topic_headline as the subtitle (same layout as workshop).
         document.getElementById('modalTitle').innerHTML =
-            topicHeadlineHtml +
-            '<span style="font-size:22px;font-weight:800;color:#e2e8f0;">' + item.title + '</span>';
+            '<span style="font-size:22px;font-weight:800;color:#e2e8f0;">' + item.title + '</span>' +
+            ((item.topic_headline && item.topic_headline !== '-') ? '<span style="font-size:14px;font-weight:500;color:#94a3b8;display:block;margin-top:4px;">' + item.topic_headline + '</span>' : '');
     }
 
     // Type badge with fallback logic
