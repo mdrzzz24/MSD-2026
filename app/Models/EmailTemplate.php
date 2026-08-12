@@ -144,7 +144,7 @@ class EmailTemplate extends Model
      *   {{ workshop_title }}, {{ workshop_room }}, {{ workshop_date }},
      *   {{ workshop_time }}, {{ workshop_capacity }}, {{ venue_name }},
      *   {{ track_name }}, {{ event_date }}, {{ login_url }},
-     *   {{ qr_code }}, {{ qr_checkin_url }}
+     *   {{ qr_code }}, {{ qr_checkin_url }}, {{ qr_link }}
      */
     public function renderSubject(array $data = []): string
     {
@@ -156,6 +156,7 @@ class EmailTemplate extends Model
             'venue_name' => 'Shangri-La Hotel Jakarta',
             'qr_code'    => '',
             'qr_checkin_url' => '',
+            'qr_link'    => '',
         ];
         $data = array_merge($defaults, $data);
 
@@ -176,7 +177,7 @@ class EmailTemplate extends Model
      *   {{ workshop_title }}, {{ workshop_room }}, {{ workshop_date }},
      *   {{ workshop_time }}, {{ workshop_capacity }}, {{ venue_name }},
      *   {{ track_name }}, {{ event_date }}, {{ login_url }},
-     *   {{ qr_code }}, {{ qr_checkin_url }}
+     *   {{ qr_code }}, {{ qr_checkin_url }}, {{ qr_link }}
      */
     public function render(array $data = []): string
     {
@@ -189,6 +190,7 @@ class EmailTemplate extends Model
             'venue_name' => 'Shangri-La Hotel Jakarta',
             'qr_code'    => '',
             'qr_checkin_url' => '',
+            'qr_link'    => '',
         ];
         $data = array_merge($defaults, $data);
 

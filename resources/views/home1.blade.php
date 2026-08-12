@@ -446,7 +446,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                 @endforeach
               </div>
               <div class="agenda-col-action">
-                @if ($panel['key'] === 'general')
+                @if ($panel['key'] === 'track' && in_array(trim((string) $it->room), ['Ballroom A', 'Ballroom B', 'Ballroom C'], true))
                   <span class="agenda-silent-badge" title="This session is a silent session (audio delivered via headset interpretation)">
                     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12a9 9 0 0 1 18 0M3 12a2 2 0 0 1 2-2h1v6H5a2 2 0 0 1-2-2v-2zm18 0a2 2 0 0 0-2-2h-1v6h1a2 2 0 0 0 2-2v-2z"/></svg>
                     Silent Session

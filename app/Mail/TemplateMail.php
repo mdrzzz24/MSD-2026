@@ -38,6 +38,7 @@ class TemplateMail extends Mailable
                 ? '<img src="' . $this->registrant->qr_code_url . '" alt="QR Code" style="width:200px;height:200px;display:block;margin:16px auto;">'
                 : '',
             'qr_checkin_url' => $this->registrant->qr_checkin_url ?? '',
+            'qr_link'        => $this->registrant->qr_share_url,
         ], $this->extraData);
 
         $subject = $this->template->renderSubject($data);
@@ -58,6 +59,7 @@ class TemplateMail extends Mailable
                 ? '<img src="' . $this->registrant->qr_code_url . '" alt="QR Code" style="width:200px;height:200px;display:block;margin:16px auto;">'
                 : '',
             'qr_checkin_url' => $this->registrant->qr_checkin_url ?? '',
+            'qr_link'        => $this->registrant->qr_share_url,
         ], $this->extraData);
 
         $htmlContent = $this->template->render($data);

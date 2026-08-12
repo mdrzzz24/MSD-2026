@@ -132,6 +132,7 @@ class AdminEmailController extends Controller
                     'login_url' => route('login'),
                     'qr_code' => '<img src="' . $sampleQrUrl . '" alt="QR Code" style="width:150px;height:150px;display:block;margin:16px auto;">',
                     'qr_checkin_url' => $sampleCheckinUrl,
+                    'qr_link' => route('registrant.qr-share', $sampleToken),
                 ];
 
                 $htmlContent = $template->render($renderData);

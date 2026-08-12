@@ -36,6 +36,7 @@ class EmailService
                 ? '<img src="' . $registrant->qr_code_url . '" alt="QR Code" style="width:150px;height:150px;display:block;margin:16px auto;">'
                 : '',
             'qr_checkin_url' => $registrant->qr_checkin_url ?? '',
+            'qr_link'        => $registrant->qr_share_url,
         ], $extraData);
 
         $htmlContent = $template->render($renderData);

@@ -666,6 +666,7 @@ class EmailTemplateController extends Controller
             'login_url'         => route('registrant.login'),
             'qr_code'           => '<img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=sample-qr-data" alt="QR Code" style="width:200px;height:200px;display:block;margin:16px auto;">',
             'qr_checkin_url'    => route('registrant.login'),
+            'qr_link'           => route('registrant.qr-share', 'sample-qr-token'),
         ]);
 
         return view('admin.templates.preview', compact('template', 'html'));
@@ -690,6 +691,7 @@ class EmailTemplateController extends Controller
                     'password'      => $log->registrant->plain_password ?? '••••••••••',
                     'workshop_name' => '',
                     'track_name'    => '',
+                    'qr_link'       => $log->registrant->qr_share_url,
                 ]);
             }
             return $log;
