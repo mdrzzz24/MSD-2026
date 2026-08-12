@@ -417,6 +417,14 @@ td.full{background:rgba(59,91,255,.15);color:#c9d6ff;font-weight:600}
 .tag-general{background:#ffe4ec;color:#be185d}
 .tag-break{background:#f3f4f6;color:#4b5563}
 
+/* Agenda color legend */
+.agenda-legend{display:flex;flex-wrap:wrap;gap:18px;margin-top:24px;justify-content:center}
+.legend-item{display:inline-flex;align-items:center;gap:8px;font-size:13px;color:var(--muted);font-weight:600}
+.legend-swatch{width:14px;height:14px;border-radius:999px;display:inline-block;flex-shrink:0;border:1px solid rgba(255,255,255,.08)}
+.legend-general{background:#ffe4ec;border-color:rgba(190,24,93,.4)}
+.legend-track{background:#e0e7ff;border-color:rgba(55,48,163,.4)}
+.legend-ws{background:#fef3c7;border-color:rgba(146,64,14,.4)}
+
 /* Sponsors */
 .sponsors-block+.sponsors-block{margin-top:56px}
 .sponsor-tier{

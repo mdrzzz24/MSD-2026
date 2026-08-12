@@ -348,17 +348,25 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                 $startTime = date('H.i', strtotime($it->start_time));
                 $endTime   = date('H.i', strtotime($it->end_time));
                 $showTime  = !($startTime === '00.00' && $endTime === '00.00');
-                // Insert a break banner before the first workshop of each afternoon batch.
+                // Insert a break banner before the first workshop/track of each afternoon batch.
                 $itHm = date('H:i', strtotime($it->start_time));
-                $showBreak = ($panel['key'] === 'workshop')
-                    && in_array($itHm, ['13:00', '15:00'], true)
-                    && ($lastBreakHm ?? null) !== $itHm;
-                if ($showBreak) { $lastBreakHm = $itHm; }
-                // Track sessions: draw a thick separator line between time groups.
+                $breakKey = $panel['key'] . '|' . $itHm;
+                $showBreak = (
+                        ($panel['key'] === 'workshop' && in_array($itHm, ['13:00', '15:00'], true))
+                        || ($panel['key'] === 'track' && $itHm === '15:00')
+                    )
+                    && ($lastBreakKey ?? null) !== $breakKey;
+                if ($showBreak) { $lastBreakKey = $breakKey; }
+                $breakLabel = $showBreak
+                    ? ($itHm === '13:00' ? 'Lunch, Networking & Exhibition Booths' : 'Break Session & Exhibition Booths')
+                    : '';
+                // Track sessions: draw a thick separator line between time groups,
+                // except where the break banner replaces it.
                 $itSlot = $it->start_time . '|' . $it->end_time;
                 $showTrackSep = ($panel['key'] === 'track')
                     && !$loop->first
-                    && ($prevTrackSlot ?? null) !== $itSlot;
+                    && ($prevTrackSlot ?? null) !== $itSlot
+                    && !$showBreak;
                 $prevTrackSlot = $itSlot;
             @endphp
             @if ($showTrackSep)
@@ -367,7 +375,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             @if ($showBreak)
               <div class="agenda-break-banner">
                 <div class="b-text">
-                  <span class="b-label">{{ $itHm === '13:00' ? 'Lunch, Networking & Exhibition Booths' : 'Break Session & Exhibition Booths' }}</span>
+                  <span class="b-label">{{ $breakLabel }}</span>
                 </div>
               </div>
             @endif
@@ -650,6 +658,12 @@ document.addEventListener('DOMContentLoaded', function () {
         </table>
       </div>
     @endif
+
+    <div class="agenda-legend">
+      <span class="legend-item"><span class="legend-swatch legend-general"></span>General</span>
+      <span class="legend-item"><span class="legend-swatch legend-track"></span>Track Session</span>
+      <span class="legend-item"><span class="legend-swatch legend-ws"></span>Workshop</span>
+    </div>
   </div>
 </section>
 
