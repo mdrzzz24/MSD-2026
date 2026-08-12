@@ -199,7 +199,14 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   .agenda-sp-info{display:flex;flex-direction:column;gap:2px;min-width:0}
   .agenda-speaker-name{font-weight:700;color:var(--ink)}
   .agenda-speaker-role{font-style:italic;color:var(--muted);font-weight:400}
-  .agenda-col-action{text-align:right}
+  .agenda-col-action{display:flex;flex-direction:column;align-items:flex-end;gap:10px;text-align:right}
+  .agenda-silent-badge{display:inline-flex;align-items:center;gap:6px;font-size:.68rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--pink);border:1px solid rgba(244,114,182,.45);background:rgba(244,114,182,.12);border-radius:999px;padding:5px 12px;white-space:nowrap}
+  .agenda-silent-badge svg{width:13px;height:13px;flex-shrink:0}
+  .agenda-break-banner{display:flex;justify-content:center;align-items:center;gap:12px;padding:16px 20px;margin:10px 0;border-radius:12px;background:linear-gradient(135deg,rgba(255,61,110,.16),rgba(233,30,99,.07));border:1px solid rgba(244,114,182,.35)}
+  .agenda-break-banner .b-text{display:flex;flex-direction:column;gap:2px}
+  .agenda-break-banner .b-label{font-size:.9rem;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#f472b6;line-height:1.3}
+  .agenda-track-sep{height:3px;border:none;background:linear-gradient(90deg,transparent,rgba(244,114,182,.8) 20%,rgba(244,114,182,.8) 80%,transparent);margin:22px 0;border-radius:999px}
+  .agenda-row-last{border-bottom:none}
   .agenda-col-action .btn-register{display:inline-flex;align-items:center;gap:5px;padding:7px 16px;border-radius:999px;background:linear-gradient(135deg,#ff3d6e,#e91e63);color:#fff;font-size:.8rem;font-weight:700;border:none;cursor:pointer;transition:transform .2s,box-shadow .2s}
   .agenda-col-action .btn-register:hover{transform:translateY(-2px);box-shadow:0 8px 20px rgba(233,30,99,.4)}
   .agenda-col-action .btn-register svg{width:13px;height:13px}
@@ -208,7 +215,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   @media(max-width:900px){
     .agenda-sched-header{flex-direction:column;gap:12px}
     .agenda-row{grid-template-columns:1fr;gap:16px}
-    .agenda-col-action{text-align:left;margin-top:8px}
+    .agenda-col-action{align-items:flex-start;text-align:left;margin-top:8px}
     .agenda-sched-tab.active{font-size:1.3rem}
     .agenda-sched-tab{font-size:1.1rem}
   }
@@ -271,11 +278,32 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         ];
         $panels = [];
         foreach ($sessionDefs as $key => $def) {
+            $items = $msdPickBest($agendaItems->filter(fn ($i) => $msdClassify($i) === $key));
+            if ($key === 'track') {
+                // Track sessions: order by time slot, then by room order
+                // (Ballroom A, Ballroom B, Ballroom C, Kalimantan, Maluku).
+                $roomOrder = ['Ballroom A', 'Ballroom B', 'Ballroom C', 'Kalimantan', 'Maluku'];
+                $roomIdx = array_flip($roomOrder);
+                usort($items, function ($a, $b) use ($roomIdx) {
+                    $timeCmp = strcmp((string) $a->start_time, (string) $b->start_time);
+                    if ($timeCmp !== 0) return $timeCmp;
+                    $ra = $roomIdx[trim((string) $a->room)] ?? PHP_INT_MAX;
+                    $rb = $roomIdx[trim((string) $b->room)] ?? PHP_INT_MAX;
+                    if ($ra !== $rb) return $ra <=> $rb;
+                    return strcmp(trim((string) $a->room), trim((string) $b->room));
+                });
+                // Mark the last session of each time slot so its thin bottom
+                // border can be merged into the thick group separator line.
+                foreach ($items as $idx => $it) {
+                    $next = $items[$idx + 1] ?? null;
+                    $it->track_is_last_in_slot = $next ? ((string) $it->start_time !== (string) $next->start_time) : true;
+                }
+            }
             $panels[] = [
                 'key'   => $key,
                 'label' => $def['label'],
                 'icon'  => $def['icon'],
-                'items' => $msdPickBest($agendaItems->filter(fn ($i) => $msdClassify($i) === $key)),
+                'items' => $items,
             ];
         }
     ?>
@@ -321,8 +349,30 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                 $startTime = date('H.i', strtotime($it->start_time));
                 $endTime   = date('H.i', strtotime($it->end_time));
                 $showTime  = !($startTime === '00.00' && $endTime === '00.00');
+                // Insert a break banner before the first workshop of each afternoon batch.
+                $itHm = date('H:i', strtotime($it->start_time));
+                $showBreak = ($panel['key'] === 'workshop')
+                    && in_array($itHm, ['13:00', '15:00'], true)
+                    && ($lastBreakHm ?? null) !== $itHm;
+                if ($showBreak) { $lastBreakHm = $itHm; }
+                // Track sessions: draw a thick separator line between time groups.
+                $itSlot = $it->start_time . '|' . $it->end_time;
+                $showTrackSep = ($panel['key'] === 'track')
+                    && !$loop->first
+                    && ($prevTrackSlot ?? null) !== $itSlot;
+                $prevTrackSlot = $itSlot;
             ?>
-            <div class="agenda-row" onclick="openAgendaModal(<?php echo e($it->id); ?>)" title="View session details">
+            <?php if($showTrackSep): ?>
+              <hr class="agenda-track-sep">
+            <?php endif; ?>
+            <?php if($showBreak): ?>
+              <div class="agenda-break-banner">
+                <div class="b-text">
+                  <span class="b-label"><?php echo e($itHm === '13:00' ? 'Lunch, Networking & Exhibition Booths' : 'Break Session & Exhibition Booths'); ?></span>
+                </div>
+              </div>
+            <?php endif; ?>
+            <div class="agenda-row<?php echo e(($panel['key'] === 'track' && ($it->track_is_last_in_slot ?? false)) ? ' agenda-row-last' : ''); ?>" onclick="openAgendaModal(<?php echo e($it->id); ?>)" title="View session details">
               <div class="agenda-col-time">
                 <?php if($showTime): ?>
                   <div class="atime"><?php echo e($startTime); ?> - <?php echo e($endTime); ?></div>
@@ -382,6 +432,12 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                 <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
               </div>
               <div class="agenda-col-action">
+                <?php if($panel['key'] === 'general'): ?>
+                  <span class="agenda-silent-badge" title="This session is a silent session (audio delivered via headset interpretation)">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12a9 9 0 0 1 18 0M3 12a2 2 0 0 1 2-2h1v6H5a2 2 0 0 1-2-2v-2zm18 0a2 2 0 0 0-2-2h-1v6h1a2 2 0 0 0 2-2v-2z"/></svg>
+                    Silent Session
+                  </span>
+                <?php endif; ?>
                 <?php if($it->is_registrable): ?>
                   <button type="button" class="btn-register" onclick="event.stopPropagation(); openAgendaModal(<?php echo e($it->id); ?>)">
                     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2z"/></svg>
