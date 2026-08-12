@@ -195,7 +195,7 @@ header.sticky { top: 44px !important; }
         <?php endif; ?>
 
         
-        <?php if(Auth::user()->isSuperAdmin() || Auth::user()->hasPermission('email_templates') || Auth::user()->hasPermission('utm_sources') || Auth::user()->hasPermission('qr_codes')): ?>
+        <?php if(Auth::user()->isSuperAdmin() || Auth::user()->isAdmin() || Auth::user()->hasPermission('email_templates') || Auth::user()->hasPermission('utm_sources') || Auth::user()->hasPermission('qr_codes')): ?>
         <div class="pt-4">
             <p class="px-3 mb-2 text-xs font-semibold text-gray-400 uppercase tracking-widest">Communications</p>
         </div>
@@ -212,12 +212,14 @@ header.sticky { top: 44px !important; }
             Mail Settings
         </a>
         <?php endif; ?>
-        <?php if(Auth::user()->hasPermission('email_templates')): ?>
+        <?php if(Auth::user()->isAdmin() || Auth::user()->isSuperAdmin()): ?>
         <a href="<?php echo e(route('admin.email-logs.reminder-form')); ?>"
            class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium <?php echo e(request()->routeIs('admin.email-logs.reminder-form') ? 'bg-indigo-50 text-indigo-700' : 'text-gray-600 hover:bg-gray-100'); ?> transition">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
             Send Reminder
         </a>
+        <?php endif; ?>
+        <?php if(Auth::user()->hasPermission('email_templates')): ?>
         <a href="<?php echo e(route('admin.email-logs.index')); ?>"
            class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium <?php echo e(request()->routeIs('admin.email-logs.*') && !request()->routeIs('admin.email-logs.reminder-form') ? 'bg-indigo-50 text-indigo-700' : 'text-gray-600 hover:bg-gray-100'); ?> transition">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>

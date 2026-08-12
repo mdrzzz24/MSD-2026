@@ -7,6 +7,7 @@ use App\Mail\RegistrantCredentials;
 use App\Mail\RegistrantRejected;
 use App\Models\AgendaItem;
 use App\Models\ClientPendingMark;
+use App\Models\EmailLog;
 use App\Models\EmailTemplate;
 use App\Models\Registrant;
 use App\Models\User;
@@ -786,6 +787,14 @@ class AdminController extends Controller
 
         $registrants = $query->paginate(20)->withQueryString();
 
+        // Registrants who have already been sent a gentle reminder (for the badge in the table).
+        $remindedIds = EmailLog::where('template_type', EmailTemplate::TYPE_REMINDER)
+            ->where('status', 'sent')
+            ->pluck('registrant_id')
+            ->unique()
+            ->values()
+            ->toArray();
+
         // Stats — scoped to current filters
         $statsQuery = Registrant::query();
         if ($search) {
@@ -858,7 +867,7 @@ class AdminController extends Controller
         $sources  = Registrant::whereNotNull('utm_source')->distinct()->orderBy('utm_source')->pluck('utm_source');
 
         return view('admin.registrants.index', compact(
-            'registrants', 'total', 'pending', 'approved', 'rejected',
+            'registrants', 'remindedIds', 'total', 'pending', 'approved', 'rejected',
             'status', 'utmFilter', 'search', 'profiles', 'sources', 'my', 'myCounts',
             'sort', 'direction'
         ));
@@ -887,9 +896,17 @@ class AdminController extends Controller
         $query = $this->buildRegistrantQuery($request);
         $registrants = $query->paginate(20)->withQueryString();
 
+        // Registrants who have already been sent a gentle reminder (for the badge in the table).
+        $remindedIds = EmailLog::where('template_type', EmailTemplate::TYPE_REMINDER)
+            ->where('status', 'sent')
+            ->pluck('registrant_id')
+            ->unique()
+            ->values()
+            ->toArray();
+
         return response()->json([
             'success'    => true,
-            'rows'       => view('admin.registrants._rows', ['registrants' => $registrants])->render(),
+            'rows'       => view('admin.registrants._rows', ['registrants' => $registrants, 'remindedIds' => $remindedIds])->render(),
             'pagination' => $registrants->links()->render(),
             'total'      => $registrants->total(),
         ]);
@@ -1733,6 +1750,7 @@ class AdminController extends Controller
                 'Registered At', 'Processed At',
                 'UTM Source', 'UTM Medium', 'UTM Campaign',
                 'Client Recommendation', 'Client Remark', 'Remarked By', 'Remarked At',
+                'QR Link',
             ]);
 
             foreach ($registrants as $r) {
@@ -1761,6 +1779,7 @@ class AdminController extends Controller
                     $r->client_remark ?? '',
                     $r->clientRemarkedBy?->name ?? '',
                     $r->client_remarked_at?->copy()->addHours(7)->format('Y-m-d H:i:s'),
+                    $r->qr_share_url,
                 ]);
             }
 

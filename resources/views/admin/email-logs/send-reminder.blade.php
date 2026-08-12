@@ -52,18 +52,47 @@
                 </div>
             </div>
 
+            {{-- Search --}}
+            <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 mb-4">
+                <form method="GET" action="{{ route('admin.email-logs.reminder-form') }}" class="flex flex-wrap items-end gap-3">
+                    <div class="flex-1 min-w-[220px]">
+                        <label class="block text-xs font-medium text-gray-500 mb-1">Search registrants</label>
+                        <input type="text" name="search" value="{{ request('search') }}"
+                               placeholder="Name / Email / Unique Code"
+                               class="w-full px-3 py-2 rounded-xl border border-gray-200 text-sm focus:ring-2 focus:ring-indigo-500">
+                    </div>
+                    <div class="flex gap-2">
+                        <button type="submit" class="px-4 py-2 bg-indigo-500 text-white text-sm font-semibold rounded-xl hover:bg-indigo-600 transition shadow-sm shadow-indigo-200">
+                            Search
+                        </button>
+                        @if (request('search'))
+                            <a href="{{ route('admin.email-logs.reminder-form') }}" class="px-4 py-2 bg-gray-100 text-gray-600 text-sm font-medium rounded-xl hover:bg-gray-200 transition">
+                                Clear
+                            </a>
+                        @endif
+                    </div>
+                </form>
+            </div>
+
             <form method="POST" action="{{ route('admin.email-logs.send-reminder') }}" id="reminderForm">
                 @csrf
 
-                {{-- Select All / Deselect --}}
-                <div class="flex items-center gap-4 mb-4">
-                    <button type="button" onclick="toggleAll(true)" class="px-3 py-1.5 text-xs font-medium rounded-lg bg-indigo-100 text-indigo-700 hover:bg-indigo-200 transition">
-                        Select All
+                {{-- Top action bar: select tools + send button --}}
+                <div class="flex flex-wrap items-center justify-between gap-4 mb-4">
+                    <div class="flex items-center gap-4">
+                        <button type="button" onclick="toggleAll(true)" class="px-3 py-1.5 text-xs font-medium rounded-lg bg-indigo-100 text-indigo-700 hover:bg-indigo-200 transition">
+                            Select All
+                        </button>
+                        <button type="button" onclick="toggleAll(false)" class="px-3 py-1.5 text-xs font-medium rounded-lg bg-gray-100 text-gray-600 hover:bg-gray-200 transition">
+                            Deselect All
+                        </button>
+                        <span class="text-xs text-gray-400" id="selectedCount">0 selected</span>
+                    </div>
+                    <button type="submit" {{ !$activeTemplate ? 'disabled' : '' }}
+                            class="px-5 py-2.5 {{ $activeTemplate ? 'bg-violet-500 hover:bg-violet-600 shadow-sm shadow-violet-200' : 'bg-gray-300 cursor-not-allowed' }} text-white text-sm font-semibold rounded-xl transition flex items-center gap-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
+                        Send Reminder
                     </button>
-                    <button type="button" onclick="toggleAll(false)" class="px-3 py-1.5 text-xs font-medium rounded-lg bg-gray-100 text-gray-600 hover:bg-gray-200 transition">
-                        Deselect All
-                    </button>
-                    <span class="text-xs text-gray-400" id="selectedCount">0 selected</span>
                 </div>
 
                 {{-- Table --}}
@@ -82,20 +111,29 @@
                             </thead>
                             <tbody class="divide-y divide-gray-50">
                                 @forelse ($registrants as $r)
-                                    <tr class="hover:bg-gray-50/50 transition">
+                                    @php $alreadyReminded = in_array($r->id, $remindedIds ?? [], true); @endphp
+                                    <tr class="hover:bg-gray-50/50 transition {{ $alreadyReminded ? 'bg-emerald-50/50' : '' }}">
                                         <td class="px-5 py-3">
                                             <input type="checkbox" name="registrant_ids[]" value="{{ $r->id }}"
                                                    class="cb-item w-4 h-4 rounded border-gray-300 text-indigo-600"
-                                                   onchange="updateCount()">
+                                                   onchange="updateCount()" {{ $alreadyReminded ? 'disabled' : '' }}>
                                         </td>
-                                        <td class="px-5 py-3 text-sm font-medium text-gray-900">{{ $r->display_name }}</td>
+                                        <td class="px-5 py-3 text-sm font-medium text-gray-900">
+                                            {{ $r->display_name }}
+                                            @if ($alreadyReminded)
+                                                <span class="ml-2 inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-100 text-emerald-700 border border-emerald-200">
+                                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                                                    Reminded
+                                                </span>
+                                            @endif
+                                        </td>
                                         <td class="px-5 py-3 text-sm text-gray-600">{{ $r->email }}</td>
                                         <td class="px-5 py-3 text-sm text-gray-400 font-mono">{{ $r->unique_code }}</td>
                                     </tr>
                                 @empty
                                     <tr>
                                         <td colspan="4" class="px-5 py-16 text-center">
-                                            <p class="text-gray-400 font-medium">No approved registrants yet.</p>
+                                            <p class="text-gray-400 font-medium">{{ request('search') ? 'No registrants match your search.' : 'No approved registrants yet.' }}</p>
                                         </td>
                                     </tr>
                                 @endforelse
@@ -104,23 +142,20 @@
                     </div>
                 </div>
 
-                {{-- Submit --}}
-                <div class="mt-6 flex items-center justify-between">
-                    <p class="text-xs text-gray-400">Gentle Reminder will be sent to selected registrants.</p>
-                    <button type="submit" {{ !$activeTemplate ? 'disabled' : '' }}
-                            class="px-5 py-2.5 {{ $activeTemplate ? 'bg-violet-500 hover:bg-violet-600 shadow-sm shadow-violet-200' : 'bg-gray-300 cursor-not-allowed' }} text-white text-sm font-semibold rounded-xl transition flex items-center gap-2">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
-                        Send Reminder
-                    </button>
-                </div>
             </form>
+
+            {{-- Pagination --}}
+            <div class="mt-4">
+                {{ $registrants->withQueryString()->links() }}
+            </div>
         </div>
     </main>
 </div>
 
 <script>
 function toggleAll(checked) {
-    document.querySelectorAll('.cb-item').forEach(cb => cb.checked = checked);
+    // Skip disabled (already reminded) checkboxes
+    document.querySelectorAll('.cb-item:not(:disabled)').forEach(cb => cb.checked = checked);
     updateCount();
     // Also toggle header checkbox
     document.querySelector('thead input[type="checkbox"]').checked = checked;

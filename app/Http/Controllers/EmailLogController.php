@@ -112,9 +112,9 @@ class EmailLogController extends Controller
     /**
      * Show send reminder form with list of approved registrants.
      */
-    public function reminderForm()
+    public function reminderForm(Request $request)
     {
-        if (!auth()->user()->hasPermission('email_templates')) {
+        if (!auth()->user()->isAdmin() && !auth()->user()->isSuperAdmin()) {
             return redirect()->route('admin.dashboard')
                 ->with('error', 'You do not have permission to send reminders.');
         }
@@ -122,14 +122,32 @@ class EmailLogController extends Controller
         $types = EmailTemplate::types();
         $reminderType = EmailTemplate::TYPE_REMINDER;
 
-        $registrants = Registrant::where('status', 'approved')
-            ->orderBy('name')
-            ->get();
+        $query = Registrant::where('status', 'approved');
+
+        // Search by name, email, or unique code.
+        if ($request->filled('search')) {
+            $s = trim($request->search);
+            $query->where(function ($q) use ($s) {
+                $q->where('name', 'like', "%{$s}%")
+                  ->orWhere('email', 'like', "%{$s}%")
+                  ->orWhere('unique_code', 'like', "%{$s}%");
+            });
+        }
+
+        $registrants = $query->orderBy('name')->paginate(25)->withQueryString();
+
+        // Registrants who have already been sent a gentle reminder (marked in the UI).
+        $remindedIds = EmailLog::where('template_type', $reminderType)
+            ->where('status', 'sent')
+            ->pluck('registrant_id')
+            ->unique()
+            ->values()
+            ->toArray();
 
         $activeTemplate = EmailTemplate::activeOfType($reminderType);
 
         return view('admin.email-logs.send-reminder', compact(
-            'registrants', 'types', 'reminderType', 'activeTemplate'
+            'registrants', 'types', 'reminderType', 'activeTemplate', 'remindedIds'
         ));
     }
 
@@ -138,7 +156,7 @@ class EmailLogController extends Controller
      */
     public function sendReminder(Request $request)
     {
-        if (!auth()->user()->hasPermission('email_templates')) {
+        if (!auth()->user()->isAdmin() && !auth()->user()->isSuperAdmin()) {
             return redirect()->route('admin.dashboard')
                 ->with('error', 'You do not have permission to send reminders.');
         }

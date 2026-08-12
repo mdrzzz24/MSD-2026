@@ -279,10 +279,13 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         $panels = [];
         foreach ($sessionDefs as $key => $def) {
             $items = $msdPickBest($agendaItems->filter(fn ($i) => $msdClassify($i) === $key));
-            if ($key === 'track') {
-                // Track sessions: order by time slot, then by room order
-                // (Ballroom A, Ballroom B, Ballroom C, Kalimantan, Maluku).
-                $roomOrder = ['Ballroom A', 'Ballroom B', 'Ballroom C', 'Kalimantan', 'Maluku'];
+            if ($key === 'track' || $key === 'workshop') {
+                // Order sessions by time slot, then by room order:
+                //   track    → Ballroom A, Ballroom B, Ballroom C, Kalimantan, Maluku
+                //   workshop → Sumatra, Java, Sulawesi
+                $roomOrder = $key === 'track'
+                    ? ['Ballroom A', 'Ballroom B', 'Ballroom C', 'Kalimantan', 'Maluku']
+                    : ['Sumatra', 'Java', 'Sulawesi'];
                 $roomIdx = array_flip($roomOrder);
                 usort($items, function ($a, $b) use ($roomIdx) {
                     $timeCmp = strcmp((string) $a->start_time, (string) $b->start_time);
@@ -293,10 +296,12 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                     return strcmp(trim((string) $a->room), trim((string) $b->room));
                 });
                 // Mark the last session of each time slot so its thin bottom
-                // border can be merged into the thick group separator line.
-                foreach ($items as $idx => $it) {
-                    $next = $items[$idx + 1] ?? null;
-                    $it->track_is_last_in_slot = $next ? ((string) $it->start_time !== (string) $next->start_time) : true;
+                // border can be merged into the thick group separator line (track only).
+                if ($key === 'track') {
+                    foreach ($items as $idx => $it) {
+                        $next = $items[$idx + 1] ?? null;
+                        $it->track_is_last_in_slot = $next ? ((string) $it->start_time !== (string) $next->start_time) : true;
+                    }
                 }
             }
             $panels[] = [
