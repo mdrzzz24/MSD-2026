@@ -348,6 +348,13 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             <?php
                 $startTime = date('H.i', strtotime($it->start_time));
                 $endTime   = date('H.i', strtotime($it->end_time));
+                // Display-only override: workshop batches run the full slot even if the
+                // underlying row's end_time is shorter. The modal keeps the real data.
+                if ($panel['key'] === 'workshop') {
+                    $hm = date('H:i', strtotime($it->start_time));
+                    if ($hm === '13:00') { $endTime = '14.30'; }
+                    elseif ($hm === '15:00') { $endTime = '16.30'; }
+                }
                 $showTime  = !($startTime === '00.00' && $endTime === '00.00');
                 // Insert a break banner before the first workshop/track of each afternoon batch.
                 $itHm = date('H:i', strtotime($it->start_time));
