@@ -36,12 +36,12 @@
         @csrf @method('PUT')
         <div>
             <label class="block text-sm font-semibold text-gray-700 mb-1">Session Title <span class="text-red-500">*</span></label>
-            <input type="text" name="title" value="{{ old('title', $agendum->title) }}" required
+            <input type="text" name="title" value="{{ old('title', clean_text($agendum->title)) }}" required
                    class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500">
         </div>
         <div>
             <label class="block text-sm font-semibold text-gray-700 mb-1">Topic Headline</label>
-            <input type="text" name="topic_headline" value="{{ old('topic_headline', $agendum->topic_headline) }}" maxlength="255"
+            <input type="text" name="topic_headline" value="{{ old('topic_headline', clean_text($agendum->topic_headline)) }}" maxlength="255"
                    class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
                    placeholder="e.g. Winning with AI: Build, Run, and Scale for Measurable Impact">
         </div>
@@ -49,7 +49,7 @@
             <label class="block text-sm font-semibold text-gray-700 mb-1">Session Description <span class="text-xs font-normal text-gray-400">(brief overview + key takeaways)</span></label>
             <textarea name="description" rows="4"
                       class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
-                      placeholder="Session description or agenda notes...">{{ old('description', $agendum->description) }}</textarea>
+                      placeholder="Session description or agenda notes...">{{ old('description', clean_text($agendum->description)) }}</textarea>
         </div>
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div>
@@ -104,7 +104,7 @@
             <label class="block text-sm font-semibold text-gray-700 mb-1">Key Highlights</label>
             <textarea name="key_highlights" rows="3"
                       class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
-                      placeholder="One bullet point per line…">{{ old('key_highlights', $agendum->key_highlights ?? '') }}</textarea>
+                      placeholder="One bullet point per line…">{{ old('key_highlights', clean_text($agendum->key_highlights ?? '')) }}</textarea>
         </div>
         <div class="flex items-center gap-4 pt-2">
             <label class="flex items-center gap-2 cursor-pointer">

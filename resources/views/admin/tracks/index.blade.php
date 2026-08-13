@@ -126,7 +126,7 @@
                                     <a href="{{ route('admin.agenda.create', ['track_id' => $tr->id, 'agenda_type' => 'track']) }}" title="Add a session for this track in the agenda" class="px-2.5 py-1.5 text-xs font-medium rounded-lg bg-emerald-50 text-emerald-700 hover:bg-emerald-100 transition">+ Session</a>
                                     @endif
                                     @if (Auth::user()->canWrite())
-                                    <button onclick="editTrack({{ $tr->id }},'{{ e($tr->name) }}','{{ e($tr->title) }}','{{ e($tr->description) }}')" class="px-2.5 py-1.5 text-xs font-medium rounded-lg bg-amber-100 text-amber-700 hover:bg-amber-200 transition">Edit</button>
+                                    <button onclick="editTrack({{ $tr->id }})" class="px-2.5 py-1.5 text-xs font-medium rounded-lg bg-amber-100 text-amber-700 hover:bg-amber-200 transition">Edit</button>
                                     <form action="{{ route('admin.tracks.toggle', $tr) }}" method="POST">@csrf
                                         <button class="px-2.5 py-1.5 text-xs font-medium rounded-lg {{ $tr->is_active ? 'bg-red-100 text-red-600 hover:bg-red-200' : 'bg-emerald-100 text-emerald-600 hover:bg-emerald-200' }} transition">
                                             {{ $tr->is_active ? 'Disable' : 'Enable' }}
@@ -167,6 +167,14 @@
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/summernote@0.9.0/dist/summernote-lite.min.js"></script>
 <script>
+// Track data with decoded text (avoids "&amp;amp;" style junk in the edit form).
+window._tracks = @json($tracks->map(fn($tr) => [
+    'id'          => $tr->id,
+    'name'        => clean_text($tr->name),
+    'title'       => clean_text($tr->title),
+    'description' => clean_text($tr->description),
+])->keyBy('id'));
+
 var addSnInitialized = false;
 
 function toggleAddForm() {
@@ -197,14 +205,16 @@ function toggleAddForm() {
     }
 }
 
-function editTrack(id,name,title,desc){
+function editTrack(id){
+    const tr = window._tracks[id];
+    if (!tr) return;
     // Destroy previous edit Summernote instance if any
     if (window._editSn) {
         $('#editDesc').summernote('destroy');
     }
     document.getElementById('editForm').action='{{ route('admin.tracks.update', ['track' => '__ID__']) }}'.replace('__ID__', id);
-    document.getElementById('editName').value=name||'';
-    document.getElementById('editTitle').value=title;
+    document.getElementById('editName').value=tr.name||'';
+    document.getElementById('editTitle').value=tr.title;
     document.getElementById('editModal').style.display='flex';
     // Init Summernote after modal is visible
     setTimeout(function() {
@@ -226,7 +236,7 @@ function editTrack(id,name,title,desc){
                 }
             }
         });
-        $('#editDesc').summernote('code', desc||'');
+        $('#editDesc').summernote('code', tr.description||'');
         window._editSn = true;
     }, 100);
 }

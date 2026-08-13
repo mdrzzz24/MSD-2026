@@ -110,7 +110,7 @@ class AdminGeneralSessionController extends Controller
 
     private function validateItem(Request $request): array
     {
-        return $request->validate([
+        $validated = $request->validate([
             'title'          => ['required', 'string', 'max:255'],
             'topic_headline' => ['nullable', 'string', 'max:255'],
             'description'    => ['nullable', 'string', 'max:3000'],
@@ -130,6 +130,14 @@ class AdminGeneralSessionController extends Controller
             'speaker_presentation_title' => ['nullable', 'array'],
             'speaker_presentation_desc'  => ['nullable', 'array'],
         ]);
+
+        // Decode any over-encoded HTML entities so values stay clean
+        $validated['title']          = clean_text($validated['title']);
+        $validated['topic_headline'] = clean_text($validated['topic_headline'] ?? null);
+        $validated['description']    = clean_text($validated['description'] ?? null);
+        $validated['key_highlights'] = clean_text($validated['key_highlights'] ?? null);
+
+        return $validated;
     }
 
     private function syncSpeakers(AgendaItem $agendaItem, Request $request): void

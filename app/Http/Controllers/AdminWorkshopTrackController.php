@@ -34,9 +34,9 @@ class AdminWorkshopTrackController extends Controller
         $allSpeakers = Speaker::orderBy('name')->get();
         $trackData = $tracks->map(fn($t) => [
             'id' => $t->id,
-            'name' => $t->name,
-            'title' => $t->title,
-            'description' => $t->description,
+            'name' => clean_text($t->name),
+            'title' => clean_text($t->title),
+            'description' => clean_text($t->description),
             'start_time' => $t->start_time,
             'end_time' => $t->end_time,
             'speaker_ids' => $t->speakers->pluck('id')->toArray(),
@@ -61,9 +61,9 @@ class AdminWorkshopTrackController extends Controller
         ]);
 
         $track = $workshop->tracks()->create([
-            'name'        => $validated['name'],
-            'title'       => $validated['title'] ?? $validated['name'],
-            'description' => $validated['description'] ?? null,
+            'name'        => clean_text($validated['name']),
+            'title'       => clean_text($validated['title'] ?? $validated['name']),
+            'description' => clean_text($validated['description'] ?? null),
             'start_time'  => $validated['start_time'] ?? null,
             'end_time'    => $validated['end_time'] ?? null,
             'is_active'   => true,
@@ -100,9 +100,9 @@ class AdminWorkshopTrackController extends Controller
         ]);
 
         $track->update([
-            'name'        => $validated['name'],
-            'title'       => $validated['title'] ?? $validated['name'],
-            'description' => $validated['description'] ?? null,
+            'name'        => clean_text($validated['name']),
+            'title'       => clean_text($validated['title'] ?? $validated['name']),
+            'description' => clean_text($validated['description'] ?? null),
             'start_time'  => $validated['start_time'] ?? null,
             'end_time'    => $validated['end_time'] ?? null,
         ]);

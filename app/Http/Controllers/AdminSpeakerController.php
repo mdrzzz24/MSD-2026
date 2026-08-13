@@ -24,6 +24,12 @@ class AdminSpeakerController extends Controller
             'bio'     => ['nullable', 'string', 'max:2000'],
         ]);
 
+        // Decode any over-encoded HTML entities so values stay clean
+        $validated['name']    = clean_text($validated['name'] ?? '');
+        $validated['title']   = clean_text($validated['title'] ?? null);
+        $validated['company'] = clean_text($validated['company'] ?? null);
+        $validated['bio']     = clean_text($validated['bio'] ?? null);
+
         // Handle photo upload
         if ($request->hasFile('photo')) {
             $path = $request->file('photo')->store('speakers', 'public');
@@ -46,6 +52,12 @@ class AdminSpeakerController extends Controller
             'photo'   => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:10240'],
             'bio'     => ['nullable', 'string', 'max:2000'],
         ]);
+
+        // Decode any over-encoded HTML entities so values stay clean
+        $validated['name']    = clean_text($validated['name'] ?? '');
+        $validated['title']   = clean_text($validated['title'] ?? null);
+        $validated['company'] = clean_text($validated['company'] ?? null);
+        $validated['bio']     = clean_text($validated['bio'] ?? null);
 
         // Handle photo upload
         if ($request->hasFile('photo')) {

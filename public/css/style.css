@@ -409,6 +409,13 @@ tbody tr:hover{background:rgba(255,255,255,.08)}
 td.time{font-weight:700;color:#fff;text-align:left;white-space:nowrap}
 td.full{background:rgba(59,91,255,.15);color:#c9d6ff;font-weight:600}
 .tag{display:inline-block;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:600}
+/* Full Agenda — uniform session bubbles (consistent height, one line, ellipsis) */
+#agenda .tag{
+  display:inline-flex;align-items:center;justify-content:center;
+  height:28px;max-width:100%;padding:0 12px;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;vertical-align:middle;
+}
+#agenda td.full .tag{height:30px;padding:0 18px}
 .tag.plat{background:#e0e7ff;color:#3730a3}
 .tag.gold{background:#fef3c7;color:#92400e}
 .tag.ws{background:#fef3c7;color:#92400e}

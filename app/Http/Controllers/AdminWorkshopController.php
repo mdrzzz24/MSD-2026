@@ -57,6 +57,9 @@ class AdminWorkshopController extends Controller
             'title'       => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string', 'max:65535'],
         ]);
+        $validated['name']        = clean_text($validated['name'] ?? null);
+        $validated['title']       = clean_text($validated['title']);
+        $validated['description'] = clean_text($validated['description'] ?? null);
 
         Workshop::create($validated + ['registration_open' => true]);
 
@@ -82,6 +85,9 @@ class AdminWorkshopController extends Controller
             'title'       => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string', 'max:65535'],
         ]);
+        $validated['name']        = clean_text($validated['name'] ?? null);
+        $validated['title']       = clean_text($validated['title']);
+        $validated['description'] = clean_text($validated['description'] ?? null);
 
         $workshop->update($validated);
 

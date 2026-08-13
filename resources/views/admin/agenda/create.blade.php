@@ -241,8 +241,8 @@ function onWorkshopSelect(sel) {
         var wsEnd = opt.getAttribute('data-end');
         var wsRoom = opt.getAttribute('data-room');
         var wsCapacity = opt.getAttribute('data-capacity');
-        if (wsTitle) titleInput.value = wsTitle;
-        if (wsDesc) descInput.value = wsDesc;
+        if (wsTitle) titleInput.value = decodeEntities(wsTitle);
+        if (wsDesc) descInput.value = decodeEntities(wsDesc);
         if (wsStart) startTime.value = wsStart;
         if (wsEnd) endTime.value = wsEnd;
         if (wsRoom) {

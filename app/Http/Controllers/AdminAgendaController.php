@@ -68,6 +68,11 @@ class AdminAgendaController extends Controller
             'speaker_presentation_desc'  => ['nullable', 'array'],
         ]);
 
+        // Decode any over-encoded HTML entities so values stay clean
+        $validated['title']          = clean_text($validated['title']);
+        $validated['description']    = clean_text($validated['description'] ?? null);
+        $validated['key_highlights'] = clean_text($validated['key_highlights'] ?? null);
+
         // If full row, room is null
         if ($request->boolean('is_full_row')) {
             $validated['room'] = null;
@@ -85,9 +90,9 @@ class AdminAgendaController extends Controller
         // Handle inline workshop creation
         if ($request->input('workshop_id') === '__new__' && $request->input('new_workshop_title')) {
             $workshop = \App\Models\Workshop::create([
-                'name' => $request->input('new_workshop_name') ?: $request->input('new_workshop_title'),
-                'title' => $request->input('new_workshop_title'),
-                'description' => $request->input('new_workshop_desc'),
+                'name' => clean_text($request->input('new_workshop_name') ?: $request->input('new_workshop_title')),
+                'title' => clean_text($request->input('new_workshop_title')),
+                'description' => clean_text($request->input('new_workshop_desc')),
                 'registration_open' => true,
             ]);
             $agendaItem->update(['workshop_id' => $workshop->id]);
@@ -96,9 +101,9 @@ class AdminAgendaController extends Controller
         // Handle inline track creation
         if ($request->input('track_id') === '__new__' && $request->input('new_track_title')) {
             $track = \App\Models\Track::create([
-                'name' => $request->input('new_track_name') ?: null,
-                'title' => $request->input('new_track_title'),
-                'description' => $request->input('new_track_desc'),
+                'name' => clean_text($request->input('new_track_name') ?: null),
+                'title' => clean_text($request->input('new_track_title')),
+                'description' => clean_text($request->input('new_track_desc')),
                 'is_active' => true,
             ]);
             $agendaItem->update(['track_id' => $track->id]);
@@ -116,9 +121,9 @@ class AdminAgendaController extends Controller
             foreach ($speakerIds as $i => $id) {
                 $syncData[$id] = [
                     'order' => $i,
-                    'key_highlights' => $highlights[$id] ?? null,
-                    'presentation_title' => $presTitles[$id] ?? null,
-                    'presentation_description' => $presDescs[$id] ?? null,
+                    'key_highlights' => clean_text($highlights[$id] ?? null),
+                    'presentation_title' => clean_text($presTitles[$id] ?? null),
+                    'presentation_description' => clean_text($presDescs[$id] ?? null),
                 ];
             }
             $agendaItem->speakers()->sync($syncData);
@@ -165,6 +170,11 @@ class AdminAgendaController extends Controller
             'speaker_presentation_desc'  => ['nullable', 'array'],
         ]);
 
+        // Decode any over-encoded HTML entities so values stay clean
+        $validated['title']          = clean_text($validated['title']);
+        $validated['description']    = clean_text($validated['description'] ?? null);
+        $validated['key_highlights'] = clean_text($validated['key_highlights'] ?? null);
+
         if ($request->boolean('is_full_row')) {
             $validated['room'] = null;
         }
@@ -181,9 +191,9 @@ class AdminAgendaController extends Controller
         // Handle inline workshop creation
         if ($request->input('workshop_id') === '__new__' && $request->input('new_workshop_title')) {
             $workshop = \App\Models\Workshop::create([
-                'name' => $request->input('new_workshop_name') ?: $request->input('new_workshop_title'),
-                'title' => $request->input('new_workshop_title'),
-                'description' => $request->input('new_workshop_desc'),
+                'name' => clean_text($request->input('new_workshop_name') ?: $request->input('new_workshop_title')),
+                'title' => clean_text($request->input('new_workshop_title')),
+                'description' => clean_text($request->input('new_workshop_desc')),
                 'registration_open' => true,
             ]);
             $agendum->update(['workshop_id' => $workshop->id]);
@@ -192,9 +202,9 @@ class AdminAgendaController extends Controller
         // Handle inline track creation
         if ($request->input('track_id') === '__new__' && $request->input('new_track_title')) {
             $track = \App\Models\Track::create([
-                'name' => $request->input('new_track_name') ?: null,
-                'title' => $request->input('new_track_title'),
-                'description' => $request->input('new_track_desc'),
+                'name' => clean_text($request->input('new_track_name') ?: null),
+                'title' => clean_text($request->input('new_track_title')),
+                'description' => clean_text($request->input('new_track_desc')),
                 'is_active' => true,
             ]);
             $agendum->update(['track_id' => $track->id]);
@@ -212,9 +222,9 @@ class AdminAgendaController extends Controller
             foreach ($request->input('speaker_ids', []) as $i => $id) {
                 $syncData[$id] = [
                     'order' => $i,
-                    'key_highlights' => $highlights[$id] ?? null,
-                    'presentation_title' => $presTitles[$id] ?? null,
-                    'presentation_description' => $presDescs[$id] ?? null,
+                    'key_highlights' => clean_text($highlights[$id] ?? null),
+                    'presentation_title' => clean_text($presTitles[$id] ?? null),
+                    'presentation_description' => clean_text($presDescs[$id] ?? null),
                 ];
             }
             $agendum->speakers()->sync($syncData);
