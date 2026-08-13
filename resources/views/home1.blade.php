@@ -352,12 +352,17 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             @php
                 $startTime = date('H.i', strtotime($it->start_time));
                 $endTime   = date('H.i', strtotime($it->end_time));
-                // Display-only override: workshop batches run the full slot even if the
-                // underlying row's end_time is shorter. The modal keeps the real data.
+                // Display-only overrides — the underlying data (and the Full Agenda) stay
+                // untouched. Workshop batches run the full slot; the 14:10 / 16:05 track
+                // slots render an extended end time.
+                $hm = date('H:i', strtotime($it->start_time));
                 if ($panel['key'] === 'workshop') {
-                    $hm = date('H:i', strtotime($it->start_time));
                     if ($hm === '13:00') { $endTime = '14.30'; }
                     elseif ($hm === '15:00') { $endTime = '16.30'; }
+                }
+                if ($panel['key'] === 'track') {
+                    if ($hm === '14:10') { $endTime = '14.40'; }
+                    elseif ($hm === '16:05') { $endTime = '16.35'; }
                 }
                 $showTime  = !($startTime === '00.00' && $endTime === '00.00');
                 // Insert a break banner before the first workshop/track of each afternoon batch.
@@ -754,6 +759,14 @@ window._agendaData = {!! json_encode($agendaItems->keyBy('id')->map(function ($i
                 $displayEndTime = $lastSlot->end_time;
             }
         }
+    }
+    // Display-only override: the 14:10 / 16:05 slots render an extended end time
+    // in the detail modal (matching the schedule list) without changing the underlying data.
+    $hm = date('H:i', strtotime($item->start_time));
+    if ($hm === '14:10') {
+        $displayEndTime = '14:40:00';
+    } elseif ($hm === '16:05') {
+        $displayEndTime = '16:40:00';
     }
     return array_merge($item->toArray(), [
         // Speaker names in "Camel Style" for the modal display.
