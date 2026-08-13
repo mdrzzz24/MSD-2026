@@ -11,7 +11,20 @@ class AdminSpeakerController extends Controller
     public function index()
     {
         $speakers = Speaker::orderBy('name')->get();
-        return view('admin.speakers.index', compact('speakers'));
+
+        // Data for the edit modal (text decoded so it displays cleanly). Built here
+        // instead of inside @json in the view, because complex arrow-function
+        // expressions inside @json can fail to compile on some Blade versions.
+        $speakersJson = $speakers->map(fn($s) => [
+            'id'      => $s->id,
+            'name'    => clean_text($s->name),
+            'title'   => clean_text($s->title),
+            'company' => clean_text($s->company),
+            'photo'   => $s->photo,
+            'bio'     => clean_text($s->bio),
+        ])->keyBy('id');
+
+        return view('admin.speakers.index', compact('speakers', 'speakersJson'));
     }
 
     public function store(Request $request)

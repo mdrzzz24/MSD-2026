@@ -27,7 +27,17 @@ class AdminTrackController extends Controller
             $tr->scanned_count = $tr->scannedCount();
         }
 
-        return view('admin.tracks.index', compact('tracks'));
+        // Data for the edit modal (text decoded so it displays cleanly). Built here
+        // instead of inside @json in the view, because complex arrow-function
+        // expressions inside @json can fail to compile on some Blade versions.
+        $tracksJson = $tracks->map(fn($tr) => [
+            'id'          => $tr->id,
+            'name'        => clean_text($tr->name),
+            'title'       => clean_text($tr->title),
+            'description' => clean_text($tr->description),
+        ])->keyBy('id');
+
+        return view('admin.tracks.index', compact('tracks', 'tracksJson'));
     }
 
     /**

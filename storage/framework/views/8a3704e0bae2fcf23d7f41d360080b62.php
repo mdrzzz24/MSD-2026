@@ -105,7 +105,7 @@
                 </div>
             </div>
             <div class="flex gap-1 mt-3 pt-3 border-t border-gray-100">
-                <button onclick="editSpeaker(<?php echo e($s->id); ?>,'<?php echo e(e($s->name)); ?>','<?php echo e(e($s->title)); ?>','<?php echo e(e($s->company)); ?>','<?php echo e(e($s->photo)); ?>','<?php echo e(e($s->bio)); ?>')" class="flex-1 px-2 py-1.5 text-[11px] font-medium rounded-lg bg-gray-100 text-gray-700 hover:bg-gray-200 transition text-center">Edit</button>
+                <button onclick="editSpeaker(<?php echo e($s->id); ?>)" class="flex-1 px-2 py-1.5 text-[11px] font-medium rounded-lg bg-gray-100 text-gray-700 hover:bg-gray-200 transition text-center">Edit</button>
                 <form action="<?php echo e(route('admin.speakers.toggle', $s)); ?>" method="POST" class="flex-1"><?php echo csrf_field(); ?><button class="w-full px-2 py-1.5 text-[11px] font-medium rounded-lg bg-amber-50 text-amber-700 hover:bg-amber-100 transition"><?php echo e($s->is_active ? 'Disable' : 'Enable'); ?></button></form>
                 <form action="<?php echo e(route('admin.speakers.destroy', $s)); ?>" method="POST" class="flex-1" onsubmit="return confirm('Delete <?php echo e($s->name); ?>?')"><?php echo csrf_field(); ?> <?php echo method_field('DELETE'); ?><button class="w-full px-2 py-1.5 text-[11px] font-medium rounded-lg bg-red-50 text-red-700 hover:bg-red-100 transition">Delete</button></form>
             </div>
@@ -154,14 +154,19 @@
 </div>
 
 <script>
+// Speaker data with decoded text (avoids "&amp;amp;" style junk in the edit form).
+window._speakers = <?php echo json_encode($speakersJson, 15, 512) ?>;
+
 let _editCurrentPhoto = '';
 
-function editSpeaker(id,name,title,company,photo,bio){
+function editSpeaker(id){
+    const s = window._speakers[id];
+    if (!s) return;
     document.getElementById('editForm').action='<?php echo e(route('admin.speakers.update', ['speaker' => '__ID__'])); ?>'.replace('__ID__', id);
-    document.getElementById('editName').value=name;
-    document.getElementById('editTitle').value=title;
-    document.getElementById('editCompany').value=company;
-    document.getElementById('editBio').value=bio;
+    document.getElementById('editName').value=s.name;
+    document.getElementById('editTitle').value=s.title || '';
+    document.getElementById('editCompany').value=s.company || '';
+    document.getElementById('editBio').value=s.bio || '';
     document.getElementById('editPhotoInput').value='';
     document.getElementById('editRemovePhoto').value='0';
 
@@ -169,9 +174,9 @@ function editSpeaker(id,name,title,company,photo,bio){
     const placeholder = document.getElementById('editPhotoPlaceholder');
     const removeBtn = document.getElementById('editRemovePhotoBtn');
 
-    if (photo) {
-        _editCurrentPhoto = photo;
-        preview.src = '<?php echo e(asset('storage')); ?>/' + photo;
+    if (s.photo) {
+        _editCurrentPhoto = s.photo;
+        preview.src = '<?php echo e(asset('storage')); ?>/' + s.photo;
         preview.classList.remove('hidden');
         placeholder.classList.add('hidden');
         removeBtn.classList.remove('hidden');

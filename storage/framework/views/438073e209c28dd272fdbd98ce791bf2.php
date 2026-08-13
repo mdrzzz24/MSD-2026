@@ -35,7 +35,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="preload" as="image" href="<?php echo e(asset('img/Website-BG.jpg?v2')); ?>" fetchpriority="high">
-<link rel="stylesheet" href="<?php echo e(asset('css/style.css')); ?>?v=16">
+<link rel="stylesheet" href="<?php echo e(asset('css/style.css')); ?>?v=15">
 </head>
 <body><?php echo $__env->make('partials.impersonation-banner', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><!-- Google Tag Manager (noscript) -->
 <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-T69856QT"

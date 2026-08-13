@@ -168,12 +168,7 @@
 <script src="https://cdn.jsdelivr.net/npm/summernote@0.9.0/dist/summernote-lite.min.js"></script>
 <script>
 // Track data with decoded text (avoids "&amp;amp;" style junk in the edit form).
-window._tracks = @json($tracks->map(fn($tr) => [
-    'id'          => $tr->id,
-    'name'        => clean_text($tr->name),
-    'title'       => clean_text($tr->title),
-    'description' => clean_text($tr->description),
-])->keyBy('id'));
+window._tracks = @json($tracksJson);
 
 var addSnInitialized = false;
 

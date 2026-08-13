@@ -155,14 +155,7 @@
 
 <script>
 // Speaker data with decoded text (avoids "&amp;amp;" style junk in the edit form).
-window._speakers = @json($speakers->map(fn($s) => [
-    'id'      => $s->id,
-    'name'    => clean_text($s->name),
-    'title'   => clean_text($s->title),
-    'company' => clean_text($s->company),
-    'photo'   => $s->photo,
-    'bio'     => clean_text($s->bio),
-])->keyBy('id'));
+window._speakers = @json($speakersJson);
 
 let _editCurrentPhoto = '';
 

@@ -88,7 +88,7 @@
                 </div>
 
                 
-                <?php $__empty_1 = true; $__currentLoopData = $dateGroups; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $date => $group): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
+                <?php $__empty_2 = true; $__currentLoopData = $dateGroups; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $date => $group): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_2 = false; ?>
                     <?php
                         $remindedCount = $group->filter(fn ($r) => in_array($r->id, $remindedIds ?? [], true))->count();
                         $notRemindedCount = $group->count() - $remindedCount;
@@ -162,7 +162,7 @@
                             </table>
                         </div>
                     </details>
-                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
+                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_2): ?>
                     <div class="bg-white rounded-2xl border border-gray-100 shadow-sm">
                         <div class="px-5 py-16 text-center">
                             <p class="text-gray-400 font-medium">No approved registrants yet.</p>

@@ -187,8 +187,8 @@ function onWorkshopSelect(sel) {
     else if (sel.value) {
         newFields.classList.add('hidden');
         var opt = sel.options[sel.selectedIndex];
-        if (opt.getAttribute('data-title')) titleInput.value = opt.getAttribute('data-title');
-        if (opt.getAttribute('data-desc')) descInput.value = opt.getAttribute('data-desc');
+        if (opt.getAttribute('data-title')) titleInput.value = decodeEntities(opt.getAttribute('data-title'));
+        if (opt.getAttribute('data-desc')) descInput.value = decodeEntities(opt.getAttribute('data-desc'));
         var wsStart = opt.getAttribute('data-start');
         var wsEnd = opt.getAttribute('data-end');
         var wsRoom = opt.getAttribute('data-room');
