@@ -336,7 +336,7 @@
                 </div>
                 <div>
                     <h3 class="text-lg font-bold text-gray-900">Bulk Rejection</h3>
-                    <p class="text-xs text-gray-500">Reject <span id="bulkRejectCount" class="font-bold">0</span> selected registrants</p>
+                    <p class="text-xs text-gray-500">Reject <span id="bulkRejectCountHeader" class="font-bold">0</span> selected registrants</p>
                 </div>
             </div>
         </div>
@@ -383,6 +383,7 @@
         var checked = document.querySelectorAll('.registrant-checkbox:checked');
         if (checked.length === 0) { alert('Please select at least one registrant.'); return; }
         document.getElementById('bulkRejectCount').textContent = checked.length;
+        document.getElementById('bulkRejectCountHeader').textContent = checked.length;
         var container = document.getElementById('bulkRejectIds');
         container.innerHTML = '';
         checked.forEach(function(cb) {
