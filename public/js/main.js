@@ -350,9 +350,13 @@ function hideFormError() {
     return form.getAttribute('data-force-open') === 'true';
   }
 
+  function isClosedFull() {
+    return form.getAttribute('data-closed-full') === 'true';
+  }
+
   function toggleForm() {
     const now = Date.now();
-    const isOpen = isForcedOpen() || now >= targetDate;
+    const isOpen = !isClosedFull() && (isForcedOpen() || now >= targetDate);
 
     form.querySelectorAll('input, select, button').forEach(el => {
       if (el.type !== 'hidden') el.disabled = !isOpen;

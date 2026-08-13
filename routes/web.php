@@ -26,7 +26,10 @@ use App\Models\AgendaItem;
 //     return view('home');
 // });
 Route::get('/', function () {
-    $agendaItems = AgendaItem::ordered()->with('speakers', 'workshop', 'track')->get();
+    $agendaItems = AgendaItem::ordered()
+        ->with('speakers', 'workshop', 'track')
+        ->withCount(['registrants as approved_count' => fn ($q) => $q->where('agenda_item_registrant.status', 'approved')])
+        ->get();
     $timeSlots = \App\Models\TimeSlot::ordered()->get();
     $rooms = \App\Models\Room::ordered()->get();
     // Group items by time slot key
@@ -36,16 +39,20 @@ Route::get('/', function () {
         $itemMap[$key][] = $item;
     }
     $registrationForcedOpen = \Illuminate\Support\Facades\Cache::get('registration_forced_open', false);
+    $registrationClosedFull = \Illuminate\Support\Facades\Cache::get('registration_closed_full', false);
     $agendaSectionsVisible = \Illuminate\Support\Facades\Cache::get('agenda_sections_visible', true);
     $workshops = \App\Models\Workshop::withCount(['registrants as approved_count' => function ($q) {
         $q->where('registrant_workshop.status', 'approved');
     }])->orderBy('date')->orderBy('start_time')->get();
-    return view('home1', compact('agendaItems', 'timeSlots', 'rooms', 'itemMap', 'registrationForcedOpen', 'agendaSectionsVisible', 'workshops'));
+    return view('home1', compact('agendaItems', 'timeSlots', 'rooms', 'itemMap', 'registrationForcedOpen', 'registrationClosedFull', 'agendaSectionsVisible', 'workshops'));
 })->name('home1');
 // ── Test preview page: same layout as home1 but agenda sections are ALWAYS visible ──
 // Use this URL to preview the agenda even when the super admin has hidden it publicly.
 Route::get('/home1-test', function () {
-    $agendaItems = AgendaItem::ordered()->with('speakers', 'workshop', 'track')->get();
+    $agendaItems = AgendaItem::ordered()
+        ->with('speakers', 'workshop', 'track')
+        ->withCount(['registrants as approved_count' => fn ($q) => $q->where('agenda_item_registrant.status', 'approved')])
+        ->get();
     $timeSlots = \App\Models\TimeSlot::ordered()->get();
     $rooms = \App\Models\Room::ordered()->get();
     // Group items by time slot key
@@ -55,12 +62,13 @@ Route::get('/home1-test', function () {
         $itemMap[$key][] = $item;
     }
     $registrationForcedOpen = \Illuminate\Support\Facades\Cache::get('registration_forced_open', false);
+    $registrationClosedFull = \Illuminate\Support\Facades\Cache::get('registration_closed_full', false);
     // Always show the agenda sections, regardless of the super admin toggle
     $agendaSectionsVisible = true;
     $workshops = \App\Models\Workshop::withCount(['registrants as approved_count' => function ($q) {
         $q->where('registrant_workshop.status', 'approved');
     }])->orderBy('date')->orderBy('start_time')->get();
-    return view('home1', compact('agendaItems', 'timeSlots', 'rooms', 'itemMap', 'registrationForcedOpen', 'agendaSectionsVisible', 'workshops'));
+    return view('home1', compact('agendaItems', 'timeSlots', 'rooms', 'itemMap', 'registrationForcedOpen', 'registrationClosedFull', 'agendaSectionsVisible', 'workshops'));
 })->name('home1-test');
 // ── Workshop Invitation (public) ──
 Route::get('/invitation/workshop/{token}', [App\Http\Controllers\WorkshopInvitationController::class, 'show'])->name('workshop.invitation');
@@ -180,6 +188,9 @@ Route::middleware(['auth', 'admin', 'no_cache'])->prefix('admin')->name('admin.'
 
     // Registration Form Toggle
     Route::post('/toggle-registration', [AdminController::class, 'toggleRegistration'])->name('toggle-registration');
+
+    // Registration Form — close because event reached full capacity
+    Route::post('/toggle-registration-full', [AdminController::class, 'toggleRegistrationFull'])->name('toggle-registration-full');
 
     // New Agenda Section (Schedule tabs) visibility toggle
     Route::post('/toggle-agenda-sections', [AdminController::class, 'toggleAgendaSections'])->name('toggle-agenda-sections');

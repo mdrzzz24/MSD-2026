@@ -207,6 +207,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   .agenda-break-banner .b-label{font-size:.9rem;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#f472b6;line-height:1.3}
   .agenda-track-sep{height:3px;border:none;background:linear-gradient(90deg,transparent,rgba(244,114,182,.8) 20%,rgba(244,114,182,.8) 80%,transparent);margin:22px 0;border-radius:999px}
   .agenda-row-last{border-bottom:none}
+  .agenda-full-badge{display:inline-flex;align-items:center;gap:5px;padding:7px 16px;border-radius:999px;background:rgba(148,163,184,.12);border:1px solid rgba(148,163,184,.4);color:#94a3b8;font-size:.8rem;font-weight:700;letter-spacing:.02em;text-transform:uppercase;white-space:nowrap}
   .agenda-col-action .btn-register{display:inline-flex;align-items:center;gap:5px;padding:7px 16px;border-radius:999px;background:linear-gradient(135deg,#ff3d6e,#e91e63);color:#fff;font-size:.8rem;font-weight:700;border:none;cursor:pointer;transition:transform .2s,box-shadow .2s}
   .agenda-col-action .btn-register:hover{transform:translateY(-2px);box-shadow:0 8px 20px rgba(233,30,99,.4)}
   .agenda-col-action .btn-register svg{width:13px;height:13px}
@@ -464,7 +465,9 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                     Silent Session
                   </span>
                 <?php endif; ?>
-                <?php if($it->is_registrable): ?>
+                <?php if($it->is_registrable && !$it->canRegister()): ?>
+                  <span class="agenda-full-badge" title="Registration is now closed as we have reached full capacity.">Registration Full</span>
+                <?php elseif($it->is_registrable): ?>
                   <button type="button" class="btn-register" onclick="event.stopPropagation(); openAgendaModal(<?php echo e($it->id); ?>)">
                     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2z"/></svg>
                     Register
@@ -936,10 +939,13 @@ function openAgendaModal(id) {
     // Registration section
     const regSection = document.getElementById('modalRegSection');
     const isLoggedIn = typeof window._agendaRegistrations !== 'undefined';
-    const canReg = item.is_registrable;
+    const canReg = item.is_registrable && !item.registration_closed;
 
     if (!canReg) {
-        regSection.innerHTML = '<p style="font-size:13px;color:#64748b;text-align:center;">Registration not available for this session.</p>';
+        const reason = item.is_registrable
+            ? 'Registration is now closed as we have reached full capacity.'
+            : 'Registration not available for this session.';
+        regSection.innerHTML = '<p style="font-size:13px;color:#94a3b8;text-align:center;">' + reason + '</p>';
     } else if (!isLoggedIn) {
         var loginUrl = '<?php echo e(route('login', request()->only(['utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content']))); ?>';
         regSection.innerHTML = '<div style="text-align:center;padding:12px 0;">' +
@@ -1161,8 +1167,14 @@ document.addEventListener('DOMContentLoaded', function() {
       <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
       <span>Registration is not yet open. Please check back on <strong>July 20, 2026</strong>.</span>
     </div> -->
+    <?php if($registrationClosedFull): ?>
+      <div class="reg-notice reg-closed" role="alert">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        <span>Registration is now closed as we have reached full capacity.</span>
+      </div>
+    <?php endif; ?>
     <div class="form-wrap">
-      <form id="regForm" class="form-grid" method="POST" action="<?php echo e(route('register.submit')); ?>" data-force-open="<?php echo e($registrationForcedOpen ? 'true' : 'false'); ?>">
+      <form id="regForm" class="form-grid" method="POST" action="<?php echo e(route('register.submit')); ?>" data-force-open="<?php echo e($registrationForcedOpen ? 'true' : 'false'); ?>" data-closed-full="<?php echo e($registrationClosedFull ? 'true' : 'false'); ?>">
         <?php echo csrf_field(); ?>
         <div class="field"><label>First Name</label><input required name="firstName" placeholder="First Name" /><span class="field-err" data-field="firstName"></span></div>
         <div class="field"><label>Last Name</label><input required name="lastName" placeholder="Last Name" /><span class="field-err" data-field="lastName"></span></div>

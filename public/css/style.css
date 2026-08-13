@@ -461,6 +461,8 @@ td.full{background:rgba(59,91,255,.15);color:#c9d6ff;font-weight:600}
 }
 .reg-notice svg{flex:none;width:20px;height:20px;color:#fbbf24}
 .reg-notice strong{color:#fff;font-weight:700}
+.reg-notice.reg-closed{background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.3);color:#f87171}
+.reg-notice.reg-closed svg{color:#f87171}
 .form-wrap{
   margin-top:40px;display:grid;grid-template-columns:1fr 1fr;gap:40px;align-items:start;
   background:var(--card-bg);padding:36px;border-radius:16px;border:1px solid var(--line);

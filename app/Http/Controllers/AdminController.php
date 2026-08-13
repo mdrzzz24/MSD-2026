@@ -1797,8 +1797,30 @@ class AdminController extends Controller
         $current = Cache::get('registration_forced_open', false);
         $new = !$current;
         Cache::put('registration_forced_open', $new);
+        // Forcing open overrides any "full capacity" closure.
+        if ($new) {
+            Cache::forget('registration_closed_full');
+        }
 
         $status = $new ? 'OPEN' : 'CLOSED (follows countdown)';
+        return redirect()->back()
+            ->with('success', "Registration form is now <strong>{$status}</strong>.");
+    }
+
+    /**
+     * Toggle registration closure because the event reached full capacity (super admin only).
+     */
+    public function toggleRegistrationFull()
+    {
+        $current = Cache::get('registration_closed_full', false);
+        $new = !$current;
+        Cache::put('registration_closed_full', $new);
+        // Closing for full capacity overrides the "forced open" state.
+        if ($new) {
+            Cache::forget('registration_forced_open');
+        }
+
+        $status = $new ? 'CLOSED (full capacity)' : 'OPEN';
         return redirect()->back()
             ->with('success', "Registration form is now <strong>{$status}</strong>.");
     }

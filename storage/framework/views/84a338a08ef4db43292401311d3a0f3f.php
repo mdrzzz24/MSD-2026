@@ -121,6 +121,14 @@
                     </label>
                 </div>
             </div>
+            <div class="mt-3">
+                <label class="flex items-center gap-2 cursor-pointer">
+                    <input type="hidden" name="registration_closed" value="0">
+                    <input type="checkbox" name="registration_closed" value="1" <?php echo e(old('registration_closed', $agendum->registration_closed) ? 'checked' : ''); ?> class="w-4 h-4 rounded border-gray-300 text-red-600 focus:ring-red-500">
+                    <span class="text-sm font-medium text-red-700">Registration Closed — Full Capacity</span>
+                </label>
+                <p class="text-xs text-gray-400 mt-1">When checked, this session shows "Registration is now closed as we have reached full capacity." and new registrations are blocked.</p>
+            </div>
         </div>
 
         

@@ -74,6 +74,7 @@ class AdminAgendaController extends Controller
         }
 
         $validated['is_registrable'] = $request->boolean('is_registrable');
+        $validated['registration_closed'] = $request->boolean('registration_closed');
 
         // Don't pass __new__ as workshop_id or track_id
         if (($validated['workshop_id'] ?? '') === '__new__') $validated['workshop_id'] = null;
@@ -169,6 +170,7 @@ class AdminAgendaController extends Controller
         }
 
         $validated['is_registrable'] = $request->boolean('is_registrable');
+        $validated['registration_closed'] = $request->boolean('registration_closed');
 
         // Don't pass __new__ as workshop_id or track_id
         if (($validated['workshop_id'] ?? '') === '__new__') $validated['workshop_id'] = null;

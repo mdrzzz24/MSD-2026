@@ -32,6 +32,7 @@ class AgendaItem extends Model
         'rowspan',
         'colspan',
         'is_registrable',
+        'registration_closed',
         'capacity',
         'feedback_enabled',
     ];
@@ -41,6 +42,7 @@ class AgendaItem extends Model
         'start_time'        => 'string',
         'end_time'          => 'string',
         'is_registrable'     => 'boolean',
+        'registration_closed' => 'boolean',
         'capacity'          => 'integer',
         'feedback_enabled'   => 'boolean',
     ];
@@ -108,12 +110,19 @@ class AgendaItem extends Model
 
     public function isFull(): bool
     {
-        return $this->capacity > 0 && $this->registrants()->wherePivot('status', 'approved')->count() >= $this->capacity;
+        if ($this->capacity <= 0) {
+            return false;
+        }
+        // Use the eager-loaded count when available (home page), otherwise query.
+        $approved = isset($this->approved_count)
+            ? (int) $this->approved_count
+            : $this->registrants()->wherePivot('status', 'approved')->count();
+        return $approved >= $this->capacity;
     }
 
     public function canRegister(): bool
     {
-        return $this->is_registrable && !$this->isFull();
+        return $this->is_registrable && !$this->registration_closed && !$this->isFull();
     }
 
     public function approvedCount(): int
