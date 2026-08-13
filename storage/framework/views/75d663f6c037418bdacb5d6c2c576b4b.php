@@ -187,15 +187,35 @@
         
         <div class="border-t border-gray-100 pt-4 mt-2">
             <h3 class="text-sm font-bold text-gray-900 mb-3">Speaker & Content</h3>
-            <?php $allSpeakers = \App\Models\Speaker::active()->orderBy('name')->get(); ?>
+            <?php
+                $allSpeakers = \App\Models\Speaker::active()->orderBy('name')->get();
+                $byId = $allSpeakers->keyBy('id');
+                $orderedSpeakerModels = collect(old('speaker_ids', []))->map(fn($id) => $byId[$id] ?? null)->filter()->values();
+            ?>
             <?php if($allSpeakers->isNotEmpty()): ?>
+            <div class="mb-4">
+                <label class="block text-sm font-semibold text-gray-700 mb-1.5">Assigned Speaker Order <span class="text-xs text-gray-400 font-normal">(use ↑/↓ to reorder — alphabetical by default)</span></label>
+                <div id="speakerOrderList" class="space-y-1.5 border border-gray-200 rounded-xl p-2 bg-gray-50 min-h-[40px]">
+                    <?php $__empty_2 = true; $__currentLoopData = $orderedSpeakerModels; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $osp): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_2 = false; ?>
+                        <div class="flex items-center gap-2 bg-white border border-gray-200 rounded-lg px-2 py-1.5" data-id="<?php echo e($osp->id); ?>">
+                            <input type="hidden" name="speaker_ids[]" value="<?php echo e($osp->id); ?>">
+                            <button type="button" onclick="moveSpeaker(this,-1)" title="Move up" class="w-6 h-6 flex items-center justify-center rounded bg-gray-100 text-gray-600 hover:bg-indigo-100 hover:text-indigo-700 transition text-xs font-bold">↑</button>
+                            <button type="button" onclick="moveSpeaker(this,1)" title="Move down" class="w-6 h-6 flex items-center justify-center rounded bg-gray-100 text-gray-600 hover:bg-indigo-100 hover:text-indigo-700 transition text-xs font-bold">↓</button>
+                            <span class="order-badge w-5 h-5 flex items-center justify-center rounded-full bg-indigo-100 text-indigo-700 text-[10px] font-bold flex-shrink-0"><?php echo e($loop->iteration); ?></span>
+                            <span class="text-sm font-medium text-gray-800 flex-1 min-w-0 truncate"><?php echo e($osp->name); ?></span>
+                        </div>
+                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_2): ?>
+                        <p id="speakerOrderEmpty" class="text-xs text-gray-400 text-center py-2">No speakers assigned yet.</p>
+                    <?php endif; ?>
+                </div>
+            </div>
             <div>
                 <label class="block text-sm font-semibold text-gray-700 mb-1.5">Assign Speakers</label>
                 <div class="space-y-3 max-h-80 overflow-y-auto border border-gray-200 rounded-xl p-3 bg-gray-50">
                     <?php $__currentLoopData = $allSpeakers; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $sp): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                     <div class="flex items-start gap-3 p-2 rounded-lg hover:bg-white transition">
                         <label class="flex items-center gap-2 cursor-pointer flex-shrink-0 pt-1">
-                            <input type="checkbox" name="speaker_ids[]" value="<?php echo e($sp->id); ?>" <?php echo e(in_array($sp->id, old('speaker_ids', [])) ? 'checked' : ''); ?> class="w-4 h-4 rounded border-gray-300 text-indigo-600 speaker-check">
+                            <input type="checkbox" value="<?php echo e($sp->id); ?>" data-name="<?php echo e($sp->name); ?>" <?php echo e(in_array($sp->id, old('speaker_ids', [])) ? 'checked' : ''); ?> onchange="toggleSpeaker(this)" class="w-4 h-4 rounded border-gray-300 text-indigo-600 speaker-check">
                         </label>
                         <div class="flex-1 min-w-0 space-y-2">
                             <p class="text-sm font-semibold text-gray-900"><?php echo e($sp->name); ?></p>
@@ -462,6 +482,75 @@ document.addEventListener('DOMContentLoaded', function() {
     var tsel = document.getElementById('trackSelect');
     if (tsel && tsel.value && tsel.value !== '__new__') onTrackSelect(tsel);
 });
+
+// ── Speaker reorder (assigned list) ──
+function getSpeakerOrderList(){ return document.getElementById('speakerOrderList'); }
+function getSpeakerOrderEmpty(){ return document.getElementById('speakerOrderEmpty'); }
+
+function addSpeakerToOrder(id, name) {
+    var list = getSpeakerOrderList();
+    var empty = getSpeakerOrderEmpty();
+    if (empty) empty.remove();
+    if (list.querySelector('[data-id="'+id+'"]')) return;
+    var div = document.createElement('div');
+    div.className = 'flex items-center gap-2 bg-white border border-gray-200 rounded-lg px-2 py-1.5';
+    div.setAttribute('data-id', id);
+    div.innerHTML = '<input type="hidden" name="speaker_ids[]" value="'+id+'">' +
+        '<button type="button" onclick="moveSpeaker(this,-1)" title="Move up" class="w-6 h-6 flex items-center justify-center rounded bg-gray-100 text-gray-600 hover:bg-indigo-100 hover:text-indigo-700 transition text-xs font-bold">↑</button>' +
+        '<button type="button" onclick="moveSpeaker(this,1)" title="Move down" class="w-6 h-6 flex items-center justify-center rounded bg-gray-100 text-gray-600 hover:bg-indigo-100 hover:text-indigo-700 transition text-xs font-bold">↓</button>' +
+        '<span class="order-badge w-5 h-5 flex items-center justify-center rounded-full bg-indigo-100 text-indigo-700 text-[10px] font-bold flex-shrink-0">0</span>' +
+        '<span class="text-sm font-medium text-gray-800 flex-1 min-w-0 truncate">'+name+'</span>';
+    // Insert alphabetically by name (default order)
+    var rows = Array.from(list.querySelectorAll('[data-id]'));
+    var target = name.toLowerCase();
+    var inserted = false;
+    for (var i = 0; i < rows.length; i++) {
+        var rn = rows[i].querySelector('span.flex-1').textContent.toLowerCase();
+        if (target < rn) { list.insertBefore(div, rows[i]); inserted = true; break; }
+    }
+    if (!inserted) list.appendChild(div);
+    refreshOrderNumbers();
+}
+
+function removeSpeakerFromOrder(id) {
+    var list = getSpeakerOrderList();
+    var row = list.querySelector('[data-id="'+id+'"]');
+    if (row) row.remove();
+    refreshOrderNumbers();
+    if (!list.querySelector('[data-id]')) {
+        var p = document.createElement('p');
+        p.id = 'speakerOrderEmpty';
+        p.className = 'text-xs text-gray-400 text-center py-2';
+        p.textContent = 'No speakers assigned yet.';
+        list.appendChild(p);
+    }
+}
+
+function toggleSpeaker(cb) {
+    if (cb.checked) addSpeakerToOrder(cb.value, cb.getAttribute('data-name'));
+    else removeSpeakerFromOrder(cb.value);
+}
+
+function moveSpeaker(btn, dir) {
+    var row = btn.closest('[data-id]');
+    if (!row) return;
+    if (dir === -1 && row.previousElementSibling && row.previousElementSibling.tagName === 'DIV') {
+        row.parentNode.insertBefore(row, row.previousElementSibling);
+    } else if (dir === 1 && row.nextElementSibling && row.nextElementSibling.tagName === 'DIV') {
+        row.parentNode.insertBefore(row.nextElementSibling, row);
+    }
+    refreshOrderNumbers();
+}
+
+function refreshOrderNumbers() {
+    var list = getSpeakerOrderList();
+    var idx = 0;
+    list.querySelectorAll('[data-id]').forEach(function(row){
+        idx++;
+        var b = row.querySelector('.order-badge');
+        if (b) b.textContent = idx;
+    });
+}
 </script>
 </div></div></div>
 </main>

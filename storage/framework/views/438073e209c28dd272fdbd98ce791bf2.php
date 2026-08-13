@@ -349,7 +349,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                                 : ($it->topic_headline ?: $it->title))
                             : ($it->topic_headline ?? '')
                     ));
-                $spk = $it->speakers->values();
+                $spk = $it->orderedSpeakers();
             ?>
             <?php
                 $startTime = date('H.i', strtotime($it->start_time));
@@ -785,7 +785,7 @@ window._agendaData = <?php echo json_encode($agendaItems->keyBy('id')->map(funct
     }
     return array_merge($item->toArray(), [
         // Speaker names in "Camel Style" for the modal display.
-        'speakers'             => $item->speakers->map(fn ($s) => array_merge($s->toArray(), [
+        'speakers'             => $item->orderedSpeakers()->map(fn ($s) => array_merge($s->toArray(), [
             'name' => \Illuminate\Support\Str::title(trim((string) $s->name)),
         ]))->values()->all(),
         'display_start_time'   => $displayStartTime,

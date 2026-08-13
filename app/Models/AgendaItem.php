@@ -69,6 +69,28 @@ class AgendaItem extends Model
                     ->orderByPivot('order');
     }
 
+    /**
+     * Speakers in display order. If no explicit order was ever stored for the
+     * pivot (all orders are 0), fall back to alphabetical by name so the agenda
+     * shows them alphabetically by default.
+     */
+    public function orderedSpeakers()
+    {
+        $spk = $this->speakers; // already ordered by pivot 'order'
+
+        if ($spk->isEmpty()) {
+            return $spk;
+        }
+
+        $allZero = $spk->every(fn ($s) => (int) $s->pivot->order === 0);
+
+        if ($allZero) {
+            return $spk->sortBy(fn ($s) => mb_strtolower($s->name))->values();
+        }
+
+        return $spk->values();
+    }
+
     public function workshop()
     {
         return $this->belongsTo(Workshop::class);
