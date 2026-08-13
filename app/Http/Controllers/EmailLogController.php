@@ -122,32 +122,41 @@ class EmailLogController extends Controller
         $types = EmailTemplate::types();
         $reminderType = EmailTemplate::TYPE_REMINDER;
 
-        $query = Registrant::where('status', 'approved');
+        // All approved registrants ordered by day (oldest first), then name.
+        // Searching is done client-side in real time, so no server filtering here.
+        $registrants = Registrant::where('status', 'approved')
+            ->orderBy('created_at')
+            ->orderBy('name')
+            ->get();
 
-        // Search by name, email, or unique code.
-        if ($request->filled('search')) {
-            $s = trim($request->search);
-            $query->where(function ($q) use ($s) {
-                $q->where('name', 'like', "%{$s}%")
-                  ->orWhere('email', 'like', "%{$s}%")
-                  ->orWhere('unique_code', 'like', "%{$s}%");
-            });
-        }
+        // Group by registration date (WIB), oldest day first.
+        $dateGroups = $registrants->groupBy(function ($r) {
+            return $r->created_at ? $r->created_at->copy()->addHours(7)->format('Y-m-d') : 'Unknown';
+        })->sortKeys();
 
-        $registrants = $query->orderBy('name')->paginate(25)->withQueryString();
+        // Reminder email logs, tracking sent vs failed attempts.
+        $reminderLogs = EmailLog::where('template_type', $reminderType)->get(['registrant_id', 'status']);
 
-        // Registrants who have already been sent a gentle reminder (marked in the UI).
-        $remindedIds = EmailLog::where('template_type', $reminderType)
-            ->where('status', 'sent')
+        // Registrants with a successfully sent gentle reminder (marked in the UI).
+        $remindedIds = $reminderLogs->where('status', 'sent')->pluck('registrant_id')->unique()->values()->toArray();
+
+        // Registrants whose gentle reminder attempt failed (still shown, but can be re-sent).
+        $failedReminderIds = $reminderLogs->where('status', 'failed')->pluck('registrant_id')->unique()->values()->toArray();
+
+        // Registrants approved via the "Approve + Gentle Reminder" flow:
+        // they have a reminder record but never received the approval-confirmation email.
+        $approvalIds = EmailLog::where('template_type', 'approval')
             ->pluck('registrant_id')
             ->unique()
             ->values()
             ->toArray();
+        $hasReminderIds = $reminderLogs->pluck('registrant_id')->unique()->values()->toArray();
+        $approveReminderIds = array_values(array_diff($hasReminderIds, $approvalIds));
 
         $activeTemplate = EmailTemplate::activeOfType($reminderType);
 
         return view('admin.email-logs.send-reminder', compact(
-            'registrants', 'types', 'reminderType', 'activeTemplate', 'remindedIds'
+            'dateGroups', 'types', 'reminderType', 'activeTemplate', 'remindedIds', 'failedReminderIds', 'approveReminderIds'
         ));
     }
 

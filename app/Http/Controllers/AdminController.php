@@ -319,6 +319,41 @@ class AdminController extends Controller
     }
 
     /**
+     * Approve a registrant AND send a gentle reminder (TYPE_REMINDER),
+     * instead of the approval-confirmation email.
+     */
+    public function approveWithReminder(Request $request, Registrant $registrant)
+    {
+        if (!Auth::user()->hasPermission('registrants')) {
+            return redirect()->back()->with('error', 'You do not have permission to approve registrants.');
+        }
+
+        $plainPassword = Str::random(10);
+
+        $registrant->update([
+            'status'         => 'approved',
+            'waitlisted'     => false,
+            'approved_by'    => Auth::id(),
+            'password'       => $plainPassword,
+            'plain_password' => $plainPassword,
+            'qr_token'       => Registrant::generateQrToken(),
+            'admin_notes'    => $request->input('admin_notes'),
+            'processed_at'   => now(),
+        ]);
+
+        // Send a gentle reminder instead of the approval confirmation.
+        $sent = EmailService::sendByType($registrant, EmailTemplate::TYPE_REMINDER);
+
+        $msg = "Registrant <strong>{$registrant->name}</strong> has been approved and a gentle reminder was sent.";
+        $msg .= " <br><small class='text-gray-600'>Password: <code class='bg-gray-100 px-1.5 py-0.5 rounded text-xs'>{$plainPassword}</code></small>";
+        if (!$sent) {
+            $msg .= " <br><small class='text-amber-600'>No active Gentle Reminder template — no reminder email was sent.</small>";
+        }
+
+        return back()->with('success', $msg);
+    }
+
+    /**
      * Reject a registrant and send email.
      */
     public function reject(Request $request, Registrant $registrant)
@@ -1461,6 +1496,52 @@ class AdminController extends Controller
 
         return redirect()->back()
             ->with('success', "<strong>{$count}</strong> registrant(s) have been approved and notified.");
+    }
+
+    /**
+     * Bulk approve registrants AND send a gentle reminder (TYPE_REMINDER)
+     * instead of the approval-confirmation email.
+     */
+    public function bulkApproveWithReminder(Request $request)
+    {
+        if (!Auth::user()->hasPermission('registrants')) {
+            return redirect()->back()->with('error', 'You do not have permission to bulk approve.');
+        }
+
+        $request->validate([
+            'ids'   => ['required', 'array', 'min:1'],
+            'ids.*' => ['exists:registrants,id'],
+        ]);
+
+        $count = 0;
+        $noTemplate = 0;
+        $registrants = Registrant::whereIn('id', $request->ids)->pending()->get();
+
+        foreach ($registrants as $registrant) {
+            $plainPassword = Str::random(10);
+            $registrant->update([
+                'status'         => 'approved',
+                'approved_by'    => Auth::id(),
+                'password'       => $plainPassword,
+                'plain_password' => $plainPassword,
+                'qr_token'       => Registrant::generateQrToken(),
+                'processed_at'   => now(),
+            ]);
+
+            // Send a gentle reminder instead of the approval confirmation.
+            if (!EmailService::sendByType($registrant, EmailTemplate::TYPE_REMINDER)) {
+                $noTemplate++;
+            }
+
+            $count++;
+        }
+
+        $msg = "<strong>{$count}</strong> registrant(s) have been approved and sent a gentle reminder.";
+        if ($noTemplate > 0) {
+            $msg .= " <br><small class='text-amber-600'>{$noTemplate} not emailed — no active Gentle Reminder template.</small>";
+        }
+
+        return redirect()->back()->with('success', $msg);
     }
 
     /**

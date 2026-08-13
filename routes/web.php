@@ -160,11 +160,13 @@ Route::middleware(['auth', 'admin', 'no_cache'])->prefix('admin')->name('admin.'
     Route::put('/registrants/{registrant}', [AdminController::class, 'update'])->name('registrants.update');
     Route::delete('/registrants/{registrant}', [AdminController::class, 'destroy'])->name('registrants.destroy');
     Route::post('/registrants/{registrant}/approve', [AdminController::class, 'approve'])->name('registrants.approve');
+    Route::post('/registrants/{registrant}/approve-reminder', [AdminController::class, 'approveWithReminder'])->name('registrants.approve-reminder');
     Route::post('/registrants/{registrant}/reject', [AdminController::class, 'reject'])->name('registrants.reject');
     Route::post('/registrants/{registrant}/toggle-waitlist', [AdminController::class, 'toggleWaitlist'])->name('registrants.toggle-waitlist');
     Route::post('/registrants/{registrant}/change-remark', [AdminController::class, 'changeWaitlistMark'])->name('registrants.change-remark');
     Route::post('/registrants/{registrant}/resend-credentials', [AdminController::class, 'resendCredentials'])->name('registrants.resend-credentials');
     Route::post('/registrants/bulk-approve', [AdminController::class, 'bulkApprove'])->name('registrants.bulk-approve');
+    Route::post('/registrants/bulk-approve-reminder', [AdminController::class, 'bulkApproveWithReminder'])->name('registrants.bulk-approve-reminder');
     Route::post('/registrants/bulk-reject', [AdminController::class, 'bulkReject'])->name('registrants.bulk-reject');
     Route::post('/registrants/submit-decisions', [AdminController::class, 'submitClientDecisions'])->name('registrants.submit-decisions');
     Route::get('/registrants/export/csv', [AdminController::class, 'exportCsv'])->name('registrants.export-csv');

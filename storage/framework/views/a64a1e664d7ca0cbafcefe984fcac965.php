@@ -54,24 +54,15 @@
 
             
             <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 mb-4">
-                <form method="GET" action="<?php echo e(route('admin.email-logs.reminder-form')); ?>" class="flex flex-wrap items-end gap-3">
-                    <div class="flex-1 min-w-[220px]">
-                        <label class="block text-xs font-medium text-gray-500 mb-1">Search registrants</label>
-                        <input type="text" name="search" value="<?php echo e(request('search')); ?>"
-                               placeholder="Name / Email / Unique Code"
-                               class="w-full px-3 py-2 rounded-xl border border-gray-200 text-sm focus:ring-2 focus:ring-indigo-500">
+                <label class="block text-xs font-medium text-gray-500 mb-1">Search registrants <span class="text-gray-400 font-normal">(real-time)</span></label>
+                <div class="flex items-center gap-2">
+                    <div class="relative flex-1">
+                        <svg class="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                        <input type="text" id="searchRegistrants" placeholder="Search name / email / unique code..."
+                               class="w-full pl-9 pr-8 py-2 rounded-xl border border-gray-200 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
                     </div>
-                    <div class="flex gap-2">
-                        <button type="submit" class="px-4 py-2 bg-indigo-500 text-white text-sm font-semibold rounded-xl hover:bg-indigo-600 transition shadow-sm shadow-indigo-200">
-                            Search
-                        </button>
-                        <?php if(request('search')): ?>
-                            <a href="<?php echo e(route('admin.email-logs.reminder-form')); ?>" class="px-4 py-2 bg-gray-100 text-gray-600 text-sm font-medium rounded-xl hover:bg-gray-200 transition">
-                                Clear
-                            </a>
-                        <?php endif; ?>
-                    </div>
-                </form>
+                    <button type="button" onclick="clearSearch()" class="px-3 py-2 text-xs font-medium rounded-xl bg-gray-100 text-gray-600 hover:bg-gray-200 transition">Clear</button>
+                </div>
             </div>
 
             <form method="POST" action="<?php echo e(route('admin.email-logs.send-reminder')); ?>" id="reminderForm">
@@ -97,60 +88,89 @@
                 </div>
 
                 
-                <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-                    <div class="overflow-x-auto">
-                        <table class="w-full">
-                            <thead>
-                                <tr class="bg-gray-50/80">
-                                    <th class="px-5 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider w-10">
-                                        <input type="checkbox" onchange="toggleAll(this.checked)" class="w-4 h-4 rounded border-gray-300 text-indigo-600">
-                                    </th>
-                                    <th class="px-5 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Name</th>
-                                    <th class="px-5 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Email</th>
-                                    <th class="px-5 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Unique Code</th>
-                                </tr>
-                            </thead>
-                            <tbody class="divide-y divide-gray-50">
-                                <?php $__empty_1 = true; $__currentLoopData = $registrants; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $r): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
-                                    <?php $alreadyReminded = in_array($r->id, $remindedIds ?? [], true); ?>
-                                    <tr class="hover:bg-gray-50/50 transition <?php echo e($alreadyReminded ? 'bg-emerald-50/50' : ''); ?>">
-                                        <td class="px-5 py-3">
-                                            <input type="checkbox" name="registrant_ids[]" value="<?php echo e($r->id); ?>"
-                                                   class="cb-item w-4 h-4 rounded border-gray-300 text-indigo-600"
-                                                   onchange="updateCount()" <?php echo e($alreadyReminded ? 'disabled' : ''); ?>>
-                                        </td>
-                                        <td class="px-5 py-3 text-sm font-medium text-gray-900">
-                                            <?php echo e($r->display_name); ?>
+                <?php $__empty_1 = true; $__currentLoopData = $dateGroups; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $date => $group): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
+                    <?php
+                        $remindedCount = $group->filter(fn ($r) => in_array($r->id, $remindedIds ?? [], true))->count();
+                        $notRemindedCount = $group->count() - $remindedCount;
+                    ?>
+                    <details class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden mb-4" <?php echo e($loop->first ? 'open' : ''); ?>>
+                        <summary class="px-5 py-3.5 flex items-center justify-between cursor-pointer hover:bg-gray-50 transition select-none list-none">
+                            <div class="flex items-center gap-3 flex-wrap">
+                                <span class="inline-flex items-center gap-1.5 text-sm font-bold text-gray-900">
+                                    <svg class="w-4 h-4 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2z"/></svg>
+                                    <?php echo e($date === 'Unknown' ? 'Unknown date' : \Carbon\Carbon::parse($date)->format('l, d M Y')); ?>
 
-                                            <?php if($alreadyReminded): ?>
-                                                <span class="ml-2 inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-100 text-emerald-700 border border-emerald-200">
-                                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-                                                    Reminded
-                                                </span>
-                                            <?php endif; ?>
-                                        </td>
-                                        <td class="px-5 py-3 text-sm text-gray-600"><?php echo e($r->email); ?></td>
-                                        <td class="px-5 py-3 text-sm text-gray-400 font-mono"><?php echo e($r->unique_code); ?></td>
+                                </span>
+                                <span class="text-xs text-gray-400 grp-count"><?php echo e($group->count()); ?> registrant<?php echo e($group->count() === 1 ? '' : 's'); ?></span>
+                                <span class="text-xs text-gray-300">·</span>
+                                <span class="inline-flex items-center gap-1 text-xs font-semibold text-emerald-600"><span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span><span class="grp-reminded"><?php echo e($remindedCount); ?></span> reminded</span>
+                                <span class="text-xs text-gray-300">·</span>
+                                <span class="inline-flex items-center gap-1 text-xs font-semibold text-gray-500"><span class="w-1.5 h-1.5 rounded-full bg-gray-400"></span><span class="grp-not"><?php echo e($notRemindedCount); ?></span> not reminded</span>
+                            </div>
+                            <svg class="w-4 h-4 text-gray-400 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                        </summary>
+                        <div class="overflow-x-auto border-t border-gray-100">
+                            <table class="w-full">
+                                <thead>
+                                    <tr class="bg-gray-50/80">
+                                        <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider w-10"></th>
+                                        <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Name</th>
+                                        <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Email</th>
+                                        <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Reminder</th>
                                     </tr>
-                                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
-                                    <tr>
-                                        <td colspan="4" class="px-5 py-16 text-center">
-                                            <p class="text-gray-400 font-medium"><?php echo e(request('search') ? 'No registrants match your search.' : 'No approved registrants yet.'); ?></p>
-                                        </td>
-                                    </tr>
-                                <?php endif; ?>
-                            </tbody>
-                        </table>
+                                </thead>
+                                <tbody class="divide-y divide-gray-50">
+                                    <?php $__currentLoopData = $group; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $r): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                        <?php
+                                            $approvedViaReminder = in_array($r->id, $approveReminderIds ?? [], true);
+                                            $reminderSent = in_array($r->id, $remindedIds ?? [], true);
+                                            $alreadyReminded = $reminderSent || $approvedViaReminder;
+                                            $reminderFailed = !$alreadyReminded && in_array($r->id, $failedReminderIds ?? [], true);
+                                        ?>
+                                        <tr class="hover:bg-gray-50/50 transition <?php echo e($alreadyReminded ? 'bg-emerald-50/50' : ''); ?>"
+                                            data-search="<?php echo e(strtolower($r->name)); ?>|<?php echo e(strtolower($r->email)); ?>|<?php echo e(strtolower($r->unique_code ?? '')); ?>"
+                                            data-reminded="<?php echo e($alreadyReminded ? '1' : '0'); ?>">
+                                            <td class="px-5 py-3">
+                                                <input type="checkbox" name="registrant_ids[]" value="<?php echo e($r->id); ?>"
+                                                       class="cb-item w-4 h-4 rounded border-gray-300 text-indigo-600"
+                                                       onchange="updateCount()" <?php echo e($alreadyReminded ? 'disabled' : ''); ?>>
+                                            </td>
+                                            <td class="px-5 py-3 text-sm font-medium text-gray-900"><?php echo e($r->display_name); ?></td>
+                                            <td class="px-5 py-3 text-sm text-gray-600"><?php echo e($r->email); ?></td>
+                                            <td class="px-5 py-3">
+                                                <?php if($approvedViaReminder): ?>
+                                                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-violet-50 text-violet-700 border border-violet-200">
+                                                        <span class="w-1.5 h-1.5 rounded-full bg-violet-500"></span> Approved + Reminder
+                                                    </span>
+                                                <?php elseif($reminderSent): ?>
+                                                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Reminded
+                                                    </span>
+                                                <?php elseif($reminderFailed): ?>
+                                                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-200" title="Reminder email failed to send">
+                                                        <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span> Reminder Failed
+                                                    </span>
+                                                <?php else: ?>
+                                                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-500 border border-gray-200">
+                                                        <span class="w-1.5 h-1.5 rounded-full bg-gray-400"></span> Not Reminded
+                                                    </span>
+                                                <?php endif; ?>
+                                            </td>
+                                        </tr>
+                                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                                </tbody>
+                            </table>
+                        </div>
+                    </details>
+                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
+                    <div class="bg-white rounded-2xl border border-gray-100 shadow-sm">
+                        <div class="px-5 py-16 text-center">
+                            <p class="text-gray-400 font-medium">No approved registrants yet.</p>
+                        </div>
                     </div>
-                </div>
+                <?php endif; ?>
 
             </form>
-
-            
-            <div class="mt-4">
-                <?php echo e($registrants->withQueryString()->links()); ?>
-
-            </div>
         </div>
     </main>
 </div>
@@ -160,14 +180,51 @@ function toggleAll(checked) {
     // Skip disabled (already reminded) checkboxes
     document.querySelectorAll('.cb-item:not(:disabled)').forEach(cb => cb.checked = checked);
     updateCount();
-    // Also toggle header checkbox
-    document.querySelector('thead input[type="checkbox"]').checked = checked;
+    // Toggle header checkbox if present
+    const header = document.querySelector('thead input[type="checkbox"]');
+    if (header) header.checked = checked;
 }
 function updateCount() {
     const count = document.querySelectorAll('.cb-item:checked').length;
     document.getElementById('selectedCount').textContent = count + ' selected';
 }
-document.addEventListener('DOMContentLoaded', updateCount);
+
+// ── Real-time search (client-side filter across all date groups) ──
+function applyFilter() {
+    const input = document.getElementById('searchRegistrants');
+    const q = input ? input.value.trim().toLowerCase() : '';
+    document.querySelectorAll('#reminderForm details').forEach(function(group, i) {
+        let visible = 0, reminded = 0;
+        group.querySelectorAll('tr[data-search]').forEach(function(tr) {
+            const match = !q || (tr.getAttribute('data-search') || '').indexOf(q) !== -1;
+            tr.style.display = match ? '' : 'none';
+            if (match) {
+                visible++;
+                if (tr.getAttribute('data-reminded') === '1') reminded++;
+            }
+        });
+        group.style.display = visible ? '' : 'none';
+        const countEl = group.querySelector('.grp-count');
+        if (countEl) countEl.textContent = visible + ' registrant' + (visible === 1 ? '' : 's');
+        const remindedEl = group.querySelector('.grp-reminded');
+        if (remindedEl) remindedEl.textContent = reminded;
+        const notEl = group.querySelector('.grp-not');
+        if (notEl) notEl.textContent = visible - reminded;
+        // While searching, expand groups that have matches; otherwise keep first open.
+        group.open = q ? visible > 0 : i === 0;
+    });
+    updateCount();
+}
+function clearSearch() {
+    const input = document.getElementById('searchRegistrants');
+    if (input) input.value = '';
+    applyFilter();
+}
+document.addEventListener('DOMContentLoaded', function() {
+    const input = document.getElementById('searchRegistrants');
+    if (input) input.addEventListener('input', applyFilter);
+    applyFilter();
+});
 </script>
 </body>
 </html>

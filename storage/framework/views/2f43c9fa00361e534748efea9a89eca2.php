@@ -131,6 +131,7 @@
                             <div id="bulkActions" class="hidden items-center gap-2 mr-2">
                                 <span class="text-xs text-gray-500" id="selectedCount">0 selected</span>
                                 <button onclick="bulkApprove()" class="px-3 py-1.5 text-xs font-medium rounded-lg bg-emerald-500 text-white hover:bg-emerald-600 transition">Approve Selected</button>
+                                <button onclick="bulkApproveWithReminder()" class="px-3 py-1.5 text-xs font-medium rounded-lg bg-violet-500 text-white hover:bg-violet-600 transition">Approve + Reminder</button>
                                 <button onclick="openBulkRejectModal()" class="px-3 py-1.5 text-xs font-medium rounded-lg bg-red-500 text-white hover:bg-red-600 transition">Reject Selected</button>
                             </div>
                             <div class="flex items-center gap-2 text-xs flex-wrap">
@@ -157,6 +158,7 @@
                                     <input type="checkbox" id="selectAll" class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500">
                                 </th>
                                 <th class="text-left px-5 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider w-44">Name</th>
+                                <th class="text-left px-5 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider hidden md:table-cell">Profile</th>
                                 <th class="text-center px-5 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Recommend</th>
                                 <th class="text-center px-5 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider hidden sm:table-cell">Status</th>
                                 <th class="text-center px-5 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Action</th>
@@ -178,6 +180,23 @@
                                                 <a href="<?php echo e(route('admin.registrants.show', $r)); ?>" class="text-sm font-semibold text-gray-900 hover:text-indigo-600 transition truncate block"><?php echo e($r->name); ?></a>
                                                 <p class="text-[11px] text-gray-500 truncate"><?php echo e($r->email); ?></p>
                                             </div>
+                                        </div>
+                                    </td>
+                                    <td class="px-5 py-3 hidden md:table-cell max-w-0">
+                                        <div class="min-w-0 truncate">
+                                            <?php if($r->company || $r->job_title || $r->job_role): ?>
+                                                <?php if($r->company): ?>
+                                                    <p class="text-sm font-medium text-gray-800 truncate" title="<?php echo e($r->company); ?>"><?php echo e($r->company); ?></p>
+                                                <?php endif; ?>
+                                                <?php if($r->job_title): ?>
+                                                    <p class="text-[11px] text-gray-500 truncate" title="<?php echo e($r->job_title); ?>"><?php echo e($r->job_title); ?></p>
+                                                <?php endif; ?>
+                                                <?php if($r->job_role): ?>
+                                                    <p class="text-[11px] text-gray-400 truncate" title="<?php echo e($r->job_role); ?>"><?php echo e($r->job_role); ?></p>
+                                                <?php endif; ?>
+                                            <?php else: ?>
+                                                <span class="text-sm text-gray-400">—</span>
+                                            <?php endif; ?>
                                         </div>
                                     </td>
                                     <td class="px-5 py-3 text-center">
@@ -225,6 +244,12 @@
                                                 <?php echo csrf_field(); ?>
                                                 <button type="submit" title="Approve" class="p-1 text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition">
                                                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                                                </button>
+                                            </form>
+                                            <form action="<?php echo e(route('admin.registrants.approve-reminder', $r)); ?>" method="POST" class="inline" onsubmit="return confirm('Approve <?php echo e(addslashes($r->name)); ?> and send a gentle reminder?')">
+                                                <?php echo csrf_field(); ?>
+                                                <button type="submit" title="Approve + Gentle Reminder" class="p-1 text-gray-400 hover:text-violet-600 hover:bg-violet-50 rounded-lg transition">
+                                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
                                                 </button>
                                             </form>
                                             <button onclick="openRejectModal('<?php echo e($r->id); ?>', '<?php echo e(addslashes($r->name)); ?>')" title="Reject" class="p-1 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition">
@@ -385,6 +410,31 @@
         var form = document.createElement('form');
         form.method = 'POST';
         form.action = '<?php echo e(route("admin.registrants.bulk-approve")); ?>';
+        form.style.display = 'none';
+
+        var csrf = document.createElement('input');
+        csrf.type = 'hidden'; csrf.name = '_token'; csrf.value = '<?php echo e(csrf_token()); ?>';
+        form.appendChild(csrf);
+
+        checked.forEach(function(cb) {
+            var input = document.createElement('input');
+            input.type = 'hidden'; input.name = 'ids[]'; input.value = cb.value;
+            form.appendChild(input);
+        });
+
+        document.body.appendChild(form);
+        form.submit();
+    }
+
+    // ---- Bulk Approve + Gentle Reminder ----
+    function bulkApproveWithReminder() {
+        var checked = document.querySelectorAll('.registrant-checkbox:checked');
+        if (checked.length === 0) { alert('Please select at least one registrant.'); return; }
+        if (!confirm('Approve ' + checked.length + ' selected registrant(s) and send a gentle reminder?')) return;
+
+        var form = document.createElement('form');
+        form.method = 'POST';
+        form.action = '<?php echo e(route("admin.registrants.bulk-approve-reminder")); ?>';
         form.style.display = 'none';
 
         var csrf = document.createElement('input');
