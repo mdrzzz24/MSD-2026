@@ -35,7 +35,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="preload" as="image" href="<?php echo e(asset('img/Website-BG.jpg?v2')); ?>" fetchpriority="high">
-<link rel="stylesheet" href="<?php echo e(asset('css/style.css')); ?>?v=7">
+<link rel="stylesheet" href="<?php echo e(asset('css/style.css')); ?>?v=16">
 </head>
 <body><?php echo $__env->make('partials.impersonation-banner', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><!-- Google Tag Manager (noscript) -->
 <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-T69856QT"
@@ -619,9 +619,13 @@ document.addEventListener('DOMContentLoaded', function () {
                                 $skipMap[$rm] = $item->rowspan;
                             }
                             if ($item->colspan > 1) {
-                                $attrs .= ' colspan="' . $item->colspan . '"';
+                                // Clamp colspan so it never spans beyond the remaining
+                                // room columns. This keeps full-width banners (Registration /
+                                // Lunch / Break) identical in width, so they stay aligned.
                                 $idx = array_search($rm, $roomNames);
-                                for ($i = 1; $i < $item->colspan; $i++) {
+                                $colspan = min((int) $item->colspan, max(1, count($roomNames) - $idx));
+                                $attrs .= ' colspan="' . $colspan . '"';
+                                for ($i = 1; $i < $colspan; $i++) {
                                     if (isset($roomNames[$idx + $i])) {
                                         $colCovered[$roomNames[$idx + $i]] = true;
                                         if ($item->rowspan > 1) {
