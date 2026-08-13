@@ -364,6 +364,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                 if ($panel['key'] === 'track') {
                     if ($hm === '14:10') { $endTime = '14.40'; }
                     elseif ($hm === '16:05') { $endTime = '16.35'; }
+                    elseif ($hm === '16:30') { $startTime = '16.35'; }
                 }
                 $showTime  = !($startTime === '00.00' && $endTime === '00.00');
                 // Insert a break banner before the first workshop/track of each afternoon batch.
@@ -763,19 +764,24 @@ window._agendaData = <?php echo json_encode($agendaItems->keyBy('id')->map(funct
             }
         }
     }
-    // Display-only override: the 14:10 / 16:05 slots render an extended end time
-    // in the detail modal (matching the schedule list) without changing the underlying data.
+    // Display-only overrides for the detail modal (matching the schedule list) without
+    // changing the underlying data. 14:10 / 16:05 render an extended end time; 16:30
+    // track sessions render an earlier start time.
     $hm = date('H:i', strtotime($item->start_time));
+    $displayStartTime = $item->start_time;
     if ($hm === '14:10') {
         $displayEndTime = '14:40:00';
     } elseif ($hm === '16:05') {
-        $displayEndTime = '16:40:00';
+        $displayEndTime = '16:35:00';
+    } elseif ($hm === '16:30') {
+        $displayStartTime = '16:35:00';
     }
     return array_merge($item->toArray(), [
         // Speaker names in "Camel Style" for the modal display.
         'speakers'             => $item->speakers->map(fn ($s) => array_merge($s->toArray(), [
             'name' => \Illuminate\Support\Str::title(trim((string) $s->name)),
         ]))->values()->all(),
+        'display_start_time'   => $displayStartTime,
         'display_end_time'     => $displayEndTime,
         'workshop_name'        => $item->workshop ? ($item->workshop->name ?: $item->workshop->title) : null,
         'workshop_title'       => $item->workshop ? $item->workshop->title : null,
@@ -809,7 +815,7 @@ function openAgendaModal(id) {
         '<span>' + (item.date || '20 August 2026') + '</span>' +
         '<span style="color:#475569;">·</span>' +
         '<svg style="width:14px;height:14px;flex-shrink:0;" fill="none" stroke="#f472b6" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke-width="2"/><path stroke-width="2" d="M12 6v6l4 2"/></svg> ' +
-        '<span>' + ((item.start_time || '').substring(0,5).replace(':', '.')) + ' - ' + (((item.display_end_time || item.end_time) || '').substring(0,5).replace(':', '.')) + '</span>';
+        '<span>' + ((item.display_start_time || item.start_time || '').substring(0,5).replace(':', '.')) + ' - ' + (((item.display_end_time || item.end_time) || '').substring(0,5).replace(':', '.')) + '</span>';
     document.getElementById('modalRoom').innerHTML =
         '<svg style="width:14px;height:14px;flex-shrink:0;" fill="none" stroke="#94a3b8" viewBox="0 0 24 24"><path stroke-width="2" d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/><circle cx="12" cy="9" r="2.5" stroke-width="2"/></svg> ' +
         '<span>Shangri-La Hotel' + (item.room ? ', ' + item.room + ' Room' : '') + '</span>';
