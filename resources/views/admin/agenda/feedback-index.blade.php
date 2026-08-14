@@ -30,15 +30,15 @@
             {{-- Filter by feedback status --}}
             <div class="flex flex-wrap items-center gap-2 mb-6">
                 <span class="text-xs font-semibold text-gray-400 uppercase tracking-wider mr-1">Status:</span>
-                <a href="{{ route('feedback.index', ['status' => 'all']) }}"
+                <a href="{{ route('admin.feedback.index', ['status' => 'all']) }}"
                    class="px-3.5 py-1.5 text-xs font-semibold rounded-full border transition {{ $status === 'all' ? 'bg-indigo-600 text-white border-indigo-600 shadow-sm shadow-indigo-200' : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50' }}">
                     All ({{ $totalAll }})
                 </a>
-                <a href="{{ route('feedback.index', ['status' => 'on']) }}"
+                <a href="{{ route('admin.feedback.index', ['status' => 'on']) }}"
                    class="px-3.5 py-1.5 text-xs font-semibold rounded-full border transition {{ $status === 'on' ? 'bg-emerald-600 text-white border-emerald-600 shadow-sm shadow-emerald-200' : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50' }}">
                     On ({{ $totalOn }})
                 </a>
-                <a href="{{ route('feedback.index', ['status' => 'off']) }}"
+                <a href="{{ route('admin.feedback.index', ['status' => 'off']) }}"
                    class="px-3.5 py-1.5 text-xs font-semibold rounded-full border transition {{ $status === 'off' ? 'bg-gray-700 text-white border-gray-700 shadow-sm' : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50' }}">
                     Off ({{ $totalOff }})
                 </a>

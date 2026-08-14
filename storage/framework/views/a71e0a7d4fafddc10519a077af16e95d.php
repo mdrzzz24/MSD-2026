@@ -30,15 +30,15 @@
             
             <div class="flex flex-wrap items-center gap-2 mb-6">
                 <span class="text-xs font-semibold text-gray-400 uppercase tracking-wider mr-1">Status:</span>
-                <a href="<?php echo e(route('feedback.index', ['status' => 'all'])); ?>"
+                <a href="<?php echo e(route('admin.feedback.index', ['status' => 'all'])); ?>"
                    class="px-3.5 py-1.5 text-xs font-semibold rounded-full border transition <?php echo e($status === 'all' ? 'bg-indigo-600 text-white border-indigo-600 shadow-sm shadow-indigo-200' : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'); ?>">
                     All (<?php echo e($totalAll); ?>)
                 </a>
-                <a href="<?php echo e(route('feedback.index', ['status' => 'on'])); ?>"
+                <a href="<?php echo e(route('admin.feedback.index', ['status' => 'on'])); ?>"
                    class="px-3.5 py-1.5 text-xs font-semibold rounded-full border transition <?php echo e($status === 'on' ? 'bg-emerald-600 text-white border-emerald-600 shadow-sm shadow-emerald-200' : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'); ?>">
                     On (<?php echo e($totalOn); ?>)
                 </a>
-                <a href="<?php echo e(route('feedback.index', ['status' => 'off'])); ?>"
+                <a href="<?php echo e(route('admin.feedback.index', ['status' => 'off'])); ?>"
                    class="px-3.5 py-1.5 text-xs font-semibold rounded-full border transition <?php echo e($status === 'off' ? 'bg-gray-700 text-white border-gray-700 shadow-sm' : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'); ?>">
                     Off (<?php echo e($totalOff); ?>)
                 </a>
@@ -62,7 +62,7 @@
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-gray-50">
-                            <?php $__empty_2 = true; $__currentLoopData = $groupItems; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $item): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_2 = false; ?>
+                            <?php $__empty_1 = true; $__currentLoopData = $groupItems; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $item): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
                                 <tr class="hover:bg-gray-50/50 transition">
                                     <td class="px-5 py-4">
                                         <a href="<?php echo e(route('admin.agenda.feedback.show', $item)); ?>" class="text-sm font-semibold text-gray-900 hover:text-indigo-600 transition"><?php echo e($item->title); ?></a>
@@ -105,7 +105,7 @@
                                         </div>
                                     </td>
                                 </tr>
-                            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_2): ?>
+                            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
                                 <tr>
                                     <td colspan="5" class="px-5 py-10 text-center text-sm text-gray-400">No sessions in this group.</td>
                                 </tr>
