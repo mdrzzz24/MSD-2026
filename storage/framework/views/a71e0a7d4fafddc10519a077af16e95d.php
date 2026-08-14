@@ -75,7 +75,7 @@
                                         <a href="<?php echo e(route('admin.agenda.feedback.show', $item)); ?>" class="text-sm font-semibold text-gray-900 hover:text-indigo-600 transition"><?php echo e($item->title); ?></a>
                                     </td>
                                     <td class="px-5 py-4 hidden sm:table-cell">
-                                        <span class="text-sm text-gray-500"><?php echo e($item->timeLabel()); ?></span>
+                                        <span class="text-sm text-gray-500"><?php echo e($item->timeLabelWith($timeSlots)); ?></span>
                                     </td>
                                     <td class="px-5 py-4 text-center">
                                         <?php if($item->feedback_enabled): ?>

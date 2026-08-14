@@ -75,7 +75,7 @@
                                         <a href="{{ route('admin.agenda.feedback.show', $item) }}" class="text-sm font-semibold text-gray-900 hover:text-indigo-600 transition">{{ $item->title }}</a>
                                     </td>
                                     <td class="px-5 py-4 hidden sm:table-cell">
-                                        <span class="text-sm text-gray-500">{{ $item->timeLabel() }}</span>
+                                        <span class="text-sm text-gray-500">{{ $item->timeLabelWith($timeSlots) }}</span>
                                     </td>
                                     <td class="px-5 py-4 text-center">
                                         @if ($item->feedback_enabled)

@@ -64,7 +64,9 @@ class AdminFeedbackController extends Controller
         $totalOn  = AgendaItem::where('feedback_enabled', true)->count();
         $totalOff = AgendaItem::where('feedback_enabled', false)->count();
 
-        return view('admin.agenda.feedback-index', compact('groups', 'status', 'totalAll', 'totalOn', 'totalOff'));
+        $timeSlots = \App\Models\TimeSlot::ordered()->get();
+
+        return view('admin.agenda.feedback-index', compact('groups', 'status', 'totalAll', 'totalOn', 'totalOff', 'timeSlots'));
     }
 
     /**
@@ -81,6 +83,8 @@ class AdminFeedbackController extends Controller
             ->withCount('feedback')
             ->orderBy('start_time')
             ->get();
+
+        $timeSlots = \App\Models\TimeSlot::ordered()->get();
 
         $headers = ['No', 'Session', 'Company', 'Type', 'Time', 'Feedback', 'Responses', 'Normal Link', 'Short Link', 'QR Full Link', 'QR Short Link'];
 
@@ -100,7 +104,7 @@ class AdminFeedbackController extends Controller
                 $item->title,
                 $this->companyName($item) ?? '',
                 $type,
-                $item->timeLabel(),
+                $item->timeLabelWith($timeSlots),
                 $item->feedback_enabled ? 'On' : 'Off',
                 $item->feedback_count,
                 $normalLink,

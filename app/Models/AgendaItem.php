@@ -204,6 +204,39 @@ class AgendaItem extends Model
     }
 
     /**
+     * Effective end time for sessions rendered as multi-slot blocks (rowspan > 1).
+     * When a session's cell spans several time-slot rows, the visible end time is
+     * the last spanned slot's end (e.g. rowspan=3 from 13:00-13:30 ends at 14:30),
+     * not the raw end_time column. Mirrors the home page modal logic.
+     */
+    public function displayEndTime(?\Illuminate\Support\Collection $timeSlots = null): ?string
+    {
+        if ($this->rowspan > 1) {
+            $timeSlots = $timeSlots ?? \App\Models\TimeSlot::ordered()->get();
+            if ($timeSlots->isNotEmpty()) {
+                $slotIndex = $timeSlots->search(fn ($ts) => $ts->start_time === $this->start_time && $ts->end_time === $this->end_time);
+                if ($slotIndex !== false) {
+                    $lastSlotIndex = min($slotIndex + $this->rowspan - 1, $timeSlots->count() - 1);
+                    $lastSlot = $timeSlots->get($lastSlotIndex);
+                    if ($lastSlot) {
+                        return $lastSlot->end_time;
+                    }
+                }
+            }
+        }
+
+        return $this->end_time;
+    }
+
+    /**
+     * Time label using the rowspan-aware display end time.
+     */
+    public function timeLabelWith(?\Illuminate\Support\Collection $timeSlots = null): string
+    {
+        return date('H.i', strtotime($this->start_time)) . ' – ' . date('H.i', strtotime($this->displayEndTime($timeSlots)));
+    }
+
+    /**
      * All available rooms in display order.
      */
     public static function rooms(): array

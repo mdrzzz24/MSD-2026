@@ -43,7 +43,10 @@ class FeedbackController extends Controller
                 ->first();
         }
 
-        return view('feedback.form', compact('agendum', 'questions', 'registrant', 'existingFeedback', 'needsLogin'));
+        // Time slots are needed to render the correct end time for multi-slot (rowspan) sessions.
+        $timeSlots = \App\Models\TimeSlot::ordered()->get();
+
+        return view('feedback.form', compact('agendum', 'questions', 'registrant', 'existingFeedback', 'needsLogin', 'timeSlots'));
     }
 
     /**
