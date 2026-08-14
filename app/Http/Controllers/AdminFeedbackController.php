@@ -6,6 +6,7 @@ use App\Http\Controllers\Concerns\Exportable;
 use App\Models\AgendaItem;
 use App\Models\AgendaFeedback;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Http;
 
 class AdminFeedbackController extends Controller
 {
@@ -67,22 +68,21 @@ class AdminFeedbackController extends Controller
     }
 
     /**
-     * Export the active session list (type, normal link, short link, etc.) to Excel.
-     * Only sessions used in the agenda (have a room assigned) are exported.
-    /**
      * Export sessions with feedback ENABLED (On) to Excel.
-     * Contains: No, Session, Type (General/Track/Workshop), Time, Feedback,
-     * Responses, Normal Link, Short Link.
+     * Contains: No, Session, Company, Type (General/Track/Workshop), Time,
+     * Feedback, Responses, Normal Link, Short Link, plus QR codes for the
+     * normal (full) link and the short link.
      */
     public function exportExcel()
     {
         // Only sessions whose feedback form is turned ON are exported.
         $items = AgendaItem::where('feedback_enabled', true)
+            ->with(['workshop', 'track'])
             ->withCount('feedback')
             ->orderBy('start_time')
             ->get();
 
-        $headers = ['No', 'Session', 'Type', 'Time', 'Feedback', 'Responses', 'Normal Link', 'Short Link'];
+        $headers = ['No', 'Session', 'Company', 'Type', 'Time', 'Feedback', 'Responses', 'Normal Link', 'Short Link', 'QR Full Link', 'QR Short Link'];
 
         $rows = [];
         foreach ($items as $i => $item) {
@@ -92,21 +92,73 @@ class AdminFeedbackController extends Controller
                 default                                                           => 'General',
             };
 
+            $normalLink = route('feedback.form', $item->slug);
+            $shortLink  = $item->shortUrl();
+
             $rows[] = [
                 $i + 1,
                 $item->title,
+                $this->companyName($item) ?? '',
                 $type,
                 $item->timeLabel(),
                 $item->feedback_enabled ? 'On' : 'Off',
                 $item->feedback_count,
-                route('feedback.form', $item->slug),
-                $item->shortUrl(),
+                $normalLink,
+                $shortLink,
+                $this->qrCell($normalLink),
+                $this->qrCell($shortLink),
             ];
         }
 
         $filename = 'sessions-feedback-'.now()->format('YmdHis').'.xlsx';
 
         return \App\Services\XlsxExporter::download($headers, $rows, $filename);
+    }
+
+    /**
+     * Fetch a QR code PNG for the given URL and wrap it as an image cell.
+     * Falls back to an empty string if the QR service is unreachable.
+     */
+    private function qrCell(string $url): array|string
+    {
+        try {
+            $response = Http::timeout(10)
+                ->get('https://api.qrserver.com/v1/create-qr-code/', [
+                    'size'   => '120x120',
+                    'margin' => 0,
+                    'data'   => $url,
+                ]);
+
+            if ($response->successful() && str_starts_with($response->header('Content-Type'), 'image/')) {
+                return \App\Services\XlsxExporter::imageCell($response->body());
+            }
+        } catch (\Throwable $e) {
+            // Ignore QR fetch errors; the cell stays empty.
+        }
+
+        return '';
+    }
+
+    /**
+     * Resolve the vendor/company label for a session, mirroring the feedback
+     * form's "{company} - {title}" logic (workshop name, else track name/title).
+     */
+    private function companyName(AgendaItem $item): ?string
+    {
+        if (!in_array($item->agenda_type, ['track', 'workshop'], true)
+            && empty($item->track_id) && empty($item->workshop_id)) {
+            return null;
+        }
+
+        $name = null;
+        if ($item->workshop) {
+            $name = trim((string) $item->workshop->name);
+        }
+        if ((empty($name) || $name === '-') && $item->track) {
+            $name = trim((string) ($item->track->name ?: $item->track->title));
+        }
+
+        return (empty($name) || $name === '-') ? null : $name;
     }
 
     /**

@@ -10,10 +10,21 @@ use ZipArchive;
  *
  * Generates a valid spreadsheet from an array of headers + rows and streams it
  * as a download. No third-party packages required (uses PHP's built-in
- * ZipArchive). Cells support bold headers, numbers, and long text (links).
+ * ZipArchive). Cells support bold headers, numbers, long text (links), and
+ * embedded PNG images (e.g. QR codes) via imageCell().
  */
 class XlsxExporter
 {
+    /**
+     * Marker for a cell whose value is an embedded PNG image.
+     *
+     * @return array{__image__: string}
+     */
+    public static function imageCell(string $png): array
+    {
+        return ['__image__' => $png];
+    }
+
     /**
      * Stream a download response with the given sheet content.
      *
@@ -48,28 +59,48 @@ class XlsxExporter
             throw new \RuntimeException('Could not create the spreadsheet archive.');
         }
 
-        $zip->addFromString('[Content_Types].xml', self::contentTypes());
+        $images = []; // ['bytes' => png, 'col' => 0-based, 'row' => 0-based]
+        $sheet = self::sheetXml($headers, $rows, $images);
+        $hasImages = count($images) > 0;
+
+        $zip->addFromString('[Content_Types].xml', self::contentTypes($hasImages));
         $zip->addFromString('_rels/.rels', self::rootRels());
         $zip->addFromString('xl/workbook.xml', self::workbook());
         $zip->addFromString('xl/_rels/workbook.xml.rels', self::workbookRels());
         $zip->addFromString('xl/styles.xml', self::styles());
-        $zip->addFromString('xl/worksheets/sheet1.xml', self::sheetXml($headers, $rows));
+        $zip->addFromString('xl/worksheets/sheet1.xml', $sheet);
+
+        if ($hasImages) {
+            foreach ($images as $i => $img) {
+                $zip->addFromString('xl/media/image'.($i + 1).'.png', $img['bytes']);
+            }
+            $zip->addFromString('xl/drawings/drawing1.xml', self::drawingXml($images));
+            $zip->addFromString('xl/drawings/_rels/drawing1.xml.rels', self::drawingRels(count($images)));
+            $zip->addFromString('xl/worksheets/_rels/sheet1.xml.rels', self::sheetRels());
+        }
+
         $zip->close();
 
         readfile($tmp);
         @unlink($tmp);
     }
 
-    private static function contentTypes(): string
+    private static function contentTypes(bool $hasImages): string
     {
-        return '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+        $xml = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
             .'<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">'
             .'<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>'
             .'<Default Extension="xml" ContentType="application/xml"/>'
             .'<Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>'
             .'<Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>'
-            .'<Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/>'
-            .'</Types>';
+            .'<Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/>';
+
+        if ($hasImages) {
+            $xml .= '<Default Extension="png" ContentType="image/png"/>'
+                .'<Override PartName="/xl/drawings/drawing1.xml" ContentType="application/vnd.openxmlformats-officedocument.drawing+xml"/>';
+        }
+
+        return $xml.'</Types>';
     }
 
     private static function rootRels(): string
@@ -123,13 +154,15 @@ class XlsxExporter
     /**
      * @param  array<string>  $headers
      * @param  array<array<mixed>>  $rows
+     * @param  array<int, array{bytes: string, col: int, row: int}>  $images  (by reference, filled)
      */
-    private static function sheetXml(array $headers, array $rows): string
+    private static function sheetXml(array $headers, array $rows, array &$images): string
     {
         $numCols = count($headers);
 
         $xml = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
-            .'<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">';
+            .'<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"'
+            .' xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">';
 
         // Column widths (estimate from content, capped for links).
         $widths = [];
@@ -138,8 +171,8 @@ class XlsxExporter
         }
         foreach ($rows as $row) {
             foreach ($row as $i => $cell) {
-                if ($i >= $numCols) {
-                    break;
+                if ($i >= $numCols || self::isImage($cell)) {
+                    continue;
                 }
                 $len = min(mb_strlen((string) $cell), 60);
                 if ($len > $widths[$i]) {
@@ -167,14 +200,29 @@ class XlsxExporter
             $r = $rIdx + 2;
             $xml .= '<row r="'.$r.'">';
             foreach ($row as $i => $value) {
+                if (self::isImage($value)) {
+                    // Register the image anchored to this cell, emit an empty cell.
+                    $images[] = ['bytes' => $value['__image__'], 'col' => $i, 'row' => $rIdx + 1];
+                    $xml .= '<c r="'.self::colLetter($i + 1).$r.'"/>';
+                    continue;
+                }
                 $xml .= self::cell($i + 1, $r, $value);
             }
             $xml .= '</row>';
         }
 
-        $xml .= '</sheetData></worksheet>';
+        $xml .= '</sheetData>';
 
-        return $xml;
+        if (count($images) > 0) {
+            $xml .= '<drawing r:id="rId1"/>';
+        }
+
+        return $xml.'</worksheet>';
+    }
+
+    private static function isImage(mixed $value): bool
+    {
+        return is_array($value) && isset($value['__image__']);
     }
 
     private static function cell(int $col, int $row, mixed $value, bool $bold = false): string
@@ -201,5 +249,54 @@ class XlsxExporter
         }
 
         return $letter;
+    }
+
+    /**
+     * @param  array<int, array{bytes: string, col: int, row: int}>  $images
+     */
+    private static function drawingXml(array $images): string
+    {
+        $xml = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+            .'<xdr:wsDr xmlns:xdr="http://schemas.openxmlformats.org/drawingml/2006/spreadsheetDrawing"'
+            .' xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"'
+            .' xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">';
+
+        foreach ($images as $i => $img) {
+            $n = $i + 1;
+            $xml .= '<xdr:oneCellAnchor>'
+                .'<xdr:from>'
+                .'<xdr:col>'.$img['col'].'</xdr:col><xdr:colOff>0</xdr:colOff>'
+                .'<xdr:row>'.$img['row'].'</xdr:row><xdr:rowOff>0</xdr:rowOff>'
+                .'</xdr:from>'
+                .'<xdr:ext cx="1143000" cy="1143000"/>'
+                .'<xdr:pic>'
+                .'<xdr:nvPicPr><xdr:cNvPr id="'.($i + 2).'" name="image'.$n.'.png"/><xdr:cNvPicPr><a:picLocks noChangeAspect="1"/></xdr:cNvPicPr></xdr:nvPicPr>'
+                .'<xdr:blipFill><a:blip r:embed="rId'.$n.'"/><a:stretch><a:fillRect/></a:stretch></xdr:blipFill>'
+                .'<xdr:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="1143000" cy="1143000"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></xdr:spPr>'
+                .'</xdr:pic>'
+                .'<xdr:clientData/>'
+                .'</xdr:oneCellAnchor>';
+        }
+
+        return $xml.'</xdr:wsDr>';
+    }
+
+    private static function drawingRels(int $count): string
+    {
+        $xml = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+            .'<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">';
+        for ($i = 1; $i <= $count; $i++) {
+            $xml .= '<Relationship Id="rId'.$i.'" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="../media/image'.$i.'.png"/>';
+        }
+
+        return $xml.'</Relationships>';
+    }
+
+    private static function sheetRels(): string
+    {
+        return '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+            .'<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'
+            .'<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/drawing" Target="../drawings/drawing1.xml"/>'
+            .'</Relationships>';
     }
 }
