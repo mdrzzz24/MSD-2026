@@ -8,10 +8,10 @@
         if ($agendum->workshop) {
             $fbName = trim((string) $agendum->workshop->name);
         }
-        if (($fbName === '' || $fbName === '-') && $agendum->track) {
+        if ((empty($fbName) || $fbName === '-') && $agendum->track) {
             $fbName = trim((string) ($agendum->track->name ?: $agendum->track->title));
         }
-        if ($fbName !== '' && $fbName !== '-') {
+        if (!empty($fbName) && $fbName !== '-') {
             $fbCompany = $fbName;
         }
     }
