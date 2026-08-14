@@ -67,23 +67,22 @@ class AdminFeedbackController extends Controller
     }
 
     /**
-     * Export the session list (type, normal link, short link, etc.) to Excel.
-     * Respects the ?status=all|on|off filter used on the index page.
+     * Export the active session list (type, normal link, short link, etc.) to Excel.
+     * Only sessions used in the agenda (have a room assigned) are exported.
+    /**
+     * Export sessions with feedback ENABLED (On) to Excel.
+     * Contains: No, Session, Type (General/Track/Workshop), Time, Feedback,
+     * Responses, Normal Link, Short Link.
      */
-    public function exportExcel(Request $request)
+    public function exportExcel()
     {
-        $status = $request->query('status', 'all'); // all | on | off
+        // Only sessions whose feedback form is turned ON are exported.
+        $items = AgendaItem::where('feedback_enabled', true)
+            ->withCount('feedback')
+            ->orderBy('start_time')
+            ->get();
 
-        $baseQuery = AgendaItem::query();
-        if ($status === 'on') {
-            $baseQuery->where('feedback_enabled', true);
-        } elseif ($status === 'off') {
-            $baseQuery->where('feedback_enabled', false);
-        }
-
-        $items = (clone $baseQuery)->withCount('feedback')->orderBy('start_time')->get();
-
-        $headers = ['No', 'Group', 'Session', 'Type', 'Time', 'Feedback', 'Responses', 'Normal Link', 'Short Link'];
+        $headers = ['No', 'Session', 'Type', 'Time', 'Feedback', 'Responses', 'Normal Link', 'Short Link'];
 
         $rows = [];
         foreach ($items as $i => $item) {
@@ -95,7 +94,6 @@ class AdminFeedbackController extends Controller
 
             $rows[] = [
                 $i + 1,
-                $item->room ? 'Active' : 'Inactive',
                 $item->title,
                 $type,
                 $item->timeLabel(),

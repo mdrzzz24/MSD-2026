@@ -23,10 +23,10 @@
                 <span class="text-gray-300">/</span>
                 <h1 class="text-lg font-bold text-gray-900">Session Feedback</h1>
                 <div class="ml-auto flex items-center gap-2">
-                    <a href="<?php echo e(route('admin.feedback.export-excel', ['status' => $status])); ?>"
+                    <a href="<?php echo e(route('admin.feedback.export-excel')); ?>"
                        class="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-semibold rounded-xl bg-emerald-500 text-white hover:bg-emerald-600 shadow-sm transition">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3M3 17V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>
-                        Export Excel
+                        Export Excel (On)
                     </a>
                 </div>
             </div>
@@ -69,7 +69,7 @@
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-gray-50">
-                            <?php $__empty_1 = true; $__currentLoopData = $groupItems; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $item): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
+                            <?php $__empty_2 = true; $__currentLoopData = $groupItems; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $item): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_2 = false; ?>
                                 <tr class="hover:bg-gray-50/50 transition">
                                     <td class="px-5 py-4">
                                         <a href="<?php echo e(route('admin.agenda.feedback.show', $item)); ?>" class="text-sm font-semibold text-gray-900 hover:text-indigo-600 transition"><?php echo e($item->title); ?></a>
@@ -112,7 +112,7 @@
                                         </div>
                                     </td>
                                 </tr>
-                            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
+                            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_2): ?>
                                 <tr>
                                     <td colspan="5" class="px-5 py-10 text-center text-sm text-gray-400">No sessions in this group.</td>
                                 </tr>
