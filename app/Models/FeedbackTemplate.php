@@ -45,6 +45,8 @@ class FeedbackTemplate extends Model
                 'required'                    => $q->required,
                 'parent_question_id'          => null,
                 'trigger_value'               => $q->trigger_value,
+                'allow_other'                 => $q->allow_other,
+                'rating_max'                  => $q->rating_max,
             ]);
             $idMap[$q->id] = $newQ->id;
         }

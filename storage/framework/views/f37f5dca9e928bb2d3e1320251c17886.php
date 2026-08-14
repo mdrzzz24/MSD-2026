@@ -80,17 +80,37 @@
                                             class="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition">
                                         <option value="text">Text</option>
                                         <option value="rating">Rating (1-5)</option>
-                                        <option value="choice">Multiple Choice</option>
+                                        <option value="choice">Single Choice</option>
+                                        <option value="multi_choice">Multiple Choice (checkboxes)</option>
                                         <option value="yes_no">Yes / No</option>
                                     </select>
                                 </div>
                             </div>
 
-                            <div x-show="q.type === 'choice'" class="mb-3">
+                            <div x-show="q.type === 'choice' || q.type === 'multi_choice'" class="mb-3">
                                 <label class="block text-xs font-medium text-gray-600 mb-1">Options (one per line)</label>
                                 <textarea x-model="q.options" :name="'questions[' + i + '][options]'" rows="3"
                                           class="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition resize-none"
                                           placeholder="Option 1&#10;Option 2&#10;Option 3"></textarea>
+                            </div>
+
+                            <div class="mb-3" x-show="q.type === 'choice' || q.type === 'multi_choice'">
+                                <label class="flex items-center gap-2 text-xs font-medium text-gray-600">
+                                    <input type="hidden" :name="'questions[' + i + '][allow_other]'" :value="q.allow_other ? '1' : '0'">
+                                    <input type="checkbox" x-model="q.allow_other" class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500">
+                                    Add an "Other" option with a free-text field
+                                </label>
+                            </div>
+
+                            <div class="mb-3" x-show="q.type === 'rating'">
+                                <label class="flex items-center gap-2 text-xs font-medium text-gray-600">
+                                    <span>Rating Scale:</span>
+                                    <input type="hidden" :name="'questions[' + i + '][rating_max]'" :value="q.rating_max">
+                                    <select x-model.number="q.rating_max" class="px-2 py-1 text-xs border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500">
+                                        <option value="5">1 - 5</option>
+                                        <option value="10">1 - 10</option>
+                                    </select>
+                                </label>
                             </div>
 
                             
@@ -110,9 +130,18 @@
                                     </div>
                                     <div x-show="q.parent_id !== '' && q.parent_id !== undefined">
                                         <label class="block text-xs font-medium text-gray-600 mb-1">Show when answer is</label>
-                                        <input type="text" x-model="q.trigger_value" :name="'questions[' + i + '][trigger_value]'"
+                                        <select x-show="parentTriggerOptions(q.parent_id).length > 0"
+                                                x-model="q.trigger_value" :name="'questions[' + i + '][trigger_value]'"
+                                                class="w-full px-3 py-2 text-xs border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition">
+                                            <option value="">— Select —</option>
+                                            <template x-for="(o, oi) in parentTriggerOptions(q.parent_id)" :key="oi">
+                                                <option :value="o.value" x-text="o.label"></option>
+                                            </template>
+                                        </select>
+                                        <input type="text" x-show="parentTriggerOptions(q.parent_id).length === 0"
+                                               x-model="q.trigger_value" :name="'questions[' + i + '][trigger_value]'"
                                                class="w-full px-3 py-2 text-xs border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition"
-                                               placeholder="e.g. Yes, or option text">
+                                               placeholder="e.g. type the exact answer value">
                                     </div>
                                 </div>
                             </div>
@@ -168,6 +197,8 @@
                 'required' => $q->required,
                 'parent_id' => $parentIdx !== null ? (string) $parentIdx : '',
                 'trigger_value' => $q->trigger_value ?? '',
+                'allow_other' => (bool) $q->allow_other,
+                'rating_max' => (int) ($q->rating_max ?? 5),
             ];
         })->values()->toArray();
     }
@@ -180,7 +211,24 @@
         return {
             questions: existing.length > 0 ? existing : [],
             addQuestion() {
-                this.questions.push({ text: '', type: 'text', options: '', required: true, parent_id: '', trigger_value: '' });
+                this.questions.push({ text: '', type: 'text', options: '', required: true, parent_id: '', trigger_value: '', allow_other: false, rating_max: 5 });
+            },
+            parentTriggerOptions(index) {
+                const parent = this.questions[index];
+                if (!parent) return [];
+                if (parent.type === 'yes_no') {
+                    return [{ value: 'yes', label: 'Yes' }, { value: 'no', label: 'No' }];
+                }
+                if (parent.type === 'choice' || parent.type === 'multi_choice') {
+                    const opts = String(parent.options || '')
+                        .split('\n')
+                        .map(s => s.trim())
+                        .filter(Boolean)
+                        .map(opt => ({ value: opt, label: opt }));
+                    if (parent.allow_other) opts.push({ value: '__other__', label: 'Other' });
+                    return opts;
+                }
+                return [];
             },
             removeQuestion(i) {
                 if (this.questions.length > 1) {

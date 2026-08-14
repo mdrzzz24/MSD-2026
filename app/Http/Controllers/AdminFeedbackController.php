@@ -67,7 +67,12 @@ class AdminFeedbackController extends Controller
 
             foreach ($questions as $q) {
                 $answer = $fb->answers->firstWhere('agenda_item_question_id', $q->id);
-                $row[] = $answer ? $answer->answer_value : '';
+                $value = $answer ? $answer->answer_value : '';
+                if ($q->question_type === 'multi_choice' && $value) {
+                    $decoded = json_decode($value, true);
+                    $value = is_array($decoded) ? implode(' | ', $decoded) : $value;
+                }
+                $row[] = $value;
             }
 
             $rows[] = $row;

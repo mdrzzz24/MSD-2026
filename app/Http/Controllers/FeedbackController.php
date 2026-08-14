@@ -21,7 +21,20 @@ class FeedbackController extends Controller
 
         $registrant = Auth::guard('registrant')->user();
         $questions = $agendum->feedbackQuestions;
-        return view('feedback.form', compact('agendum', 'questions', 'registrant'));
+
+        // Unauthenticated visitors can open the page but must sign in (login popup).
+        $needsLogin = $registrant === null;
+        $existingFeedback = null;
+
+        if (!$needsLogin) {
+            // If this registrant has already submitted, show a read-only summary of their answers.
+            $existingFeedback = AgendaFeedback::where('agenda_item_id', $agendum->id)
+                ->where('registrant_id', $registrant->id)
+                ->with('answers')
+                ->first();
+        }
+
+        return view('feedback.form', compact('agendum', 'questions', 'registrant', 'existingFeedback', 'needsLogin'));
     }
 
     /**
@@ -51,7 +64,13 @@ class FeedbackController extends Controller
             $isVisible = true;
             if ($q->parent_question_id) {
                 $parentAnswer = $requestAnswers[$q->parent_question_id] ?? null;
-                $isVisible = $parentAnswer === $q->trigger_value;
+                $triggerValue = strtolower(trim((string) $q->trigger_value));
+                $norm = fn ($v) => strtolower(trim((string) $v));
+                if (is_array($parentAnswer)) {
+                    $isVisible = collect($parentAnswer)->contains(fn ($v) => $norm($v) === $triggerValue);
+                } else {
+                    $isVisible = $norm($parentAnswer) === $triggerValue;
+                }
             }
 
             if ($q->required && $isVisible) {
@@ -63,9 +82,14 @@ class FeedbackController extends Controller
             if ($q->question_type === 'rating') {
                 $fieldRules[] = 'integer';
                 $fieldRules[] = 'min:1';
-                $fieldRules[] = 'max:5';
+                $fieldRules[] = 'max:' . ($q->rating_max ?: 5);
             } elseif ($q->question_type === 'choice') {
                 $fieldRules[] = 'string';
+            } elseif ($q->question_type === 'multi_choice') {
+                $fieldRules[] = 'array';
+                $rules[$field . '.*'] = ['string', 'max:255'];
+                // Optional free-text field shown when "Other" is selected
+                $rules['other_answers.' . $q->id] = ['nullable', 'string', 'max:1000'];
             } elseif ($q->question_type === 'yes_no') {
                 $fieldRules[] = 'in:yes,no';
             } else {
@@ -97,7 +121,25 @@ class FeedbackController extends Controller
 
         // Save answers
         foreach ($questions as $q) {
-            $answerValue = $validated['answers'][$q->id] ?? null;
+            $raw = $validated['answers'][$q->id] ?? null;
+            $otherText = trim((string) ($validated['other_answers'][$q->id] ?? ''));
+
+            if ($q->question_type === 'multi_choice' && is_array($raw)) {
+                $selected = array_values(array_filter($raw, fn ($v) => $v !== '' && $v !== null));
+                if (in_array('__other__', $selected, true)) {
+                    $selected = array_values(array_map(function ($v) use ($otherText) {
+                        return $v === '__other__'
+                            ? ('Other' . ($otherText !== '' ? ": {$otherText}" : ''))
+                            : $v;
+                    }, $selected));
+                }
+                $answerValue = count($selected) > 0 ? json_encode($selected) : null;
+            } elseif ($q->question_type === 'choice' && $raw === '__other__') {
+                $answerValue = 'Other' . ($otherText !== '' ? ": {$otherText}" : '');
+            } else {
+                $answerValue = $raw;
+            }
+
             if ($answerValue !== null && $answerValue !== '') {
                 AgendaFeedbackAnswer::create([
                     'agenda_feedback_id'     => $feedback->id,

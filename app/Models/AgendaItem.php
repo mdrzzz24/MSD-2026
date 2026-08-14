@@ -9,8 +9,29 @@ class AgendaItem extends Model
 {
     use HasFactory;
 
+    protected static function booted(): void
+    {
+        static::saving(function (AgendaItem $item) {
+            $item->slug = static::uniqueSlug($item->title, $item->id);
+        });
+    }
+
+    protected static function uniqueSlug(?string $title, $ignoreId = null): string
+    {
+        $base = \Illuminate\Support\Str::slug((string) $title) ?: 'session';
+        $slug = $base;
+        $i = 2;
+        while (static::where('slug', $slug)
+            ->when($ignoreId, fn ($q) => $q->where('id', '!=', $ignoreId))
+            ->exists()) {
+            $slug = $base . '-' . $i++;
+        }
+        return $slug;
+    }
+
     protected $fillable = [
         'title',
+        'slug',
         'topic_headline',
         'description',
         'speaker_name',

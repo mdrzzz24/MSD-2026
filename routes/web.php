@@ -85,10 +85,10 @@ Route::get('/home3', function () {
 Route::post('/register', [RegistrantAuthController::class, 'register'])->name('register.submit');
 Route::get('/register/success', [RegistrantAuthController::class, 'success'])->name('register.success');
 
-// ── Feedback (registrant only) ──
+// ── Feedback (public page; login required to submit) ──
+Route::get('/feedback/{agendum:slug}', [App\Http\Controllers\FeedbackController::class, 'form'])->name('feedback.form');
 Route::middleware('auth:registrant')->group(function () {
-    Route::get('/feedback/{agendum}', [App\Http\Controllers\FeedbackController::class, 'form'])->name('feedback.form');
-    Route::post('/feedback/{agendum}', [App\Http\Controllers\FeedbackController::class, 'store'])->name('feedback.store');
+    Route::post('/feedback/{agendum:slug}', [App\Http\Controllers\FeedbackController::class, 'store'])->name('feedback.store');
 });
 
 // ── QR Scan (public) ──

@@ -77,7 +77,8 @@
                                                     class="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition">
                                                 <option value="text" <?php echo e($q->question_type === 'text' ? 'selected' : ''); ?>>Text</option>
                                                 <option value="rating" <?php echo e($q->question_type === 'rating' ? 'selected' : ''); ?>>Rating (1-5)</option>
-                                                <option value="choice" <?php echo e($q->question_type === 'choice' ? 'selected' : ''); ?>>Multiple Choice</option>
+                                                <option value="choice" <?php echo e($q->question_type === 'choice' ? 'selected' : ''); ?>>Single Choice</option>
+                                                <option value="multi_choice" <?php echo e($q->question_type === 'multi_choice' ? 'selected' : ''); ?>>Multiple Choice (checkboxes)</option>
                                                 <option value="yes_no" <?php echo e($q->question_type === 'yes_no' ? 'selected' : ''); ?>>Yes / No</option>
                                             </select>
                                         </div>
@@ -88,12 +89,26 @@
                                                    placeholder="e.g. Yes">
                                         </div>
                                     </div>
-                                    <?php if($q->question_type === 'choice'): ?>
+                                    <?php if($q->question_type === 'choice' || $q->question_type === 'multi_choice'): ?>
                                     <div>
                                         <label class="block text-xs font-medium text-gray-600 mb-1">Options (one per line)</label>
                                         <textarea name="options" rows="3"
                                                   class="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition resize-none"><?php echo e(is_array($q->options) ? implode("\n", $q->options) : ''); ?></textarea>
                                     </div>
+                                    <label class="flex items-center gap-2 text-xs text-gray-600">
+                                        <input type="hidden" name="allow_other" value="0">
+                                        <input type="checkbox" name="allow_other" value="1" <?php echo e($q->allow_other ? 'checked' : ''); ?> class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500">
+                                        Add an "Other" option with a free-text field
+                                    </label>
+                                    <?php endif; ?>
+                                    <?php if($q->question_type === 'rating'): ?>
+                                    <label class="flex items-center gap-2 text-xs text-gray-600">
+                                        <span>Rating Scale:</span>
+                                        <select name="rating_max" class="px-2 py-1 text-xs border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500">
+                                            <option value="5" <?php echo e(($q->rating_max ?? 5) == 5 ? 'selected' : ''); ?>>1 - 5</option>
+                                            <option value="10" <?php echo e(($q->rating_max ?? 5) == 10 ? 'selected' : ''); ?>>1 - 10</option>
+                                        </select>
+                                    </label>
                                     <?php endif; ?>
                                     <div class="flex items-center gap-2">
                                         <input type="hidden" name="required" value="0">

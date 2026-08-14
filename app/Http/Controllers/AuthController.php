@@ -128,7 +128,9 @@ class AuthController extends Controller
                     $registrant->save();
                 }
 
-                return redirect()->intended(route('home1'));
+                // Allow the feedback login popup to send the user back to the page they were on.
+                $redirectTo = $this->postLoginRedirect($request);
+                return $redirectTo ? redirect()->to($redirectTo) : redirect()->intended(route('home1'));
             }
 
             // Not approved yet
@@ -158,7 +160,9 @@ class AuthController extends Controller
                     'session_id' => $request->session()->getId(),
                 ]);
 
-                return redirect()->intended(route('home1'));
+                // Allow the feedback login popup to send the user back to the page they were on.
+                $redirectTo = $this->postLoginRedirect($request);
+                return $redirectTo ? redirect()->to($redirectTo) : redirect()->intended(route('home1'));
             }
         }
 
@@ -166,6 +170,21 @@ class AuthController extends Controller
         throw ValidationException::withMessages([
             'email' => 'Invalid email or password.',
         ]);
+    }
+
+    /**
+     * Resolve an internal post-login redirect (used by the feedback login popup).
+     * Only same-origin paths are allowed to prevent open redirects.
+     */
+    private function postLoginRedirect(Request $request): ?string
+    {
+        $next = (string) $request->input('redirect', '');
+
+        if ($next !== '' && str_starts_with($next, '/') && !str_starts_with($next, '//')) {
+            return $next;
+        }
+
+        return null;
     }
 
     public function logout(Request $request)

@@ -19,12 +19,16 @@ class AgendaItemQuestion extends Model
         'required',
         'parent_question_id',
         'trigger_value',
+        'allow_other',
+        'rating_max',
     ];
 
     protected $casts = [
-        'options'  => 'array',
-        'required' => 'boolean',
-        'order'    => 'integer',
+        'options'     => 'array',
+        'required'    => 'boolean',
+        'order'       => 'integer',
+        'allow_other' => 'boolean',
+        'rating_max'  => 'integer',
     ];
 
     public function agendaItem(): BelongsTo

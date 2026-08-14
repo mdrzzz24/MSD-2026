@@ -37,9 +37,11 @@ class FeedbackTemplateController extends Controller
             'description' => ['nullable', 'string', 'max:1000'],
             'questions'   => ['required', 'array', 'min:1'],
             'questions.*.text'     => ['required', 'string', 'max:500'],
-            'questions.*.type'     => ['required', 'in:text,rating,choice,yes_no'],
+            'questions.*.type'     => ['required', 'in:text,rating,choice,multi_choice,yes_no'],
             'questions.*.options'  => ['nullable', 'string'],
             'questions.*.required' => ['boolean'],
+            'questions.*.allow_other' => ['boolean'],
+            'questions.*.rating_max' => ['nullable', 'integer', 'min:1', 'max:10'],
             'questions.*.parent_id' => ['nullable', 'string'],
             'questions.*.trigger_value' => ['nullable', 'string', 'max:255'],
         ]);
@@ -54,7 +56,7 @@ class FeedbackTemplateController extends Controller
 
         foreach ($validated['questions'] as $i => $q) {
             $options = null;
-            if ($q['type'] === 'choice' && !empty($q['options'])) {
+            if (($q['type'] === 'choice' || $q['type'] === 'multi_choice') && !empty($q['options'])) {
                 $options = array_map('trim', explode("\n", $q['options']));
             }
 
@@ -67,6 +69,8 @@ class FeedbackTemplateController extends Controller
                 'required'      => $q['required'] ?? true,
                 'parent_question_id' => null,
                 'trigger_value' => $q['trigger_value'] ?? null,
+                'allow_other'   => $q['allow_other'] ?? false,
+                'rating_max'    => $q['rating_max'] ?? 5,
             ]);
             $idMap[$i] = $newQ->id;
         }
@@ -103,9 +107,11 @@ class FeedbackTemplateController extends Controller
             'description' => ['nullable', 'string', 'max:1000'],
             'questions'   => ['required', 'array', 'min:1'],
             'questions.*.text'     => ['required', 'string', 'max:500'],
-            'questions.*.type'     => ['required', 'in:text,rating,choice,yes_no'],
+            'questions.*.type'     => ['required', 'in:text,rating,choice,multi_choice,yes_no'],
             'questions.*.options'  => ['nullable', 'string'],
             'questions.*.required' => ['boolean'],
+            'questions.*.allow_other' => ['boolean'],
+            'questions.*.rating_max' => ['nullable', 'integer', 'min:1', 'max:10'],
             'questions.*.parent_id' => ['nullable', 'string'],
             'questions.*.trigger_value' => ['nullable', 'string', 'max:255'],
         ]);
@@ -122,7 +128,7 @@ class FeedbackTemplateController extends Controller
 
         foreach ($validated['questions'] as $i => $q) {
             $options = null;
-            if ($q['type'] === 'choice' && !empty($q['options'])) {
+            if (($q['type'] === 'choice' || $q['type'] === 'multi_choice') && !empty($q['options'])) {
                 $options = array_map('trim', explode("\n", $q['options']));
             }
 
@@ -135,6 +141,8 @@ class FeedbackTemplateController extends Controller
                 'required'      => $q['required'] ?? true,
                 'parent_question_id' => null,
                 'trigger_value' => $q['trigger_value'] ?? null,
+                'allow_other'   => $q['allow_other'] ?? false,
+                'rating_max'    => $q['rating_max'] ?? 5,
             ]);
             $idMap[$i] = $newQ->id;
         }
@@ -217,14 +225,16 @@ class FeedbackTemplateController extends Controller
 
         $validated = $request->validate([
             'question_text' => ['required', 'string', 'max:500'],
-            'question_type' => ['required', 'in:text,rating,choice,yes_no'],
+            'question_type' => ['required', 'in:text,rating,choice,multi_choice,yes_no'],
             'options'       => ['nullable', 'string'],
             'required'      => ['boolean'],
+            'allow_other'   => ['boolean'],
+            'rating_max'    => ['nullable', 'integer', 'min:1', 'max:10'],
             'trigger_value' => ['nullable', 'string', 'max:255'],
         ]);
 
         $options = null;
-        if ($validated['question_type'] === 'choice' && !empty($validated['options'])) {
+        if (in_array($validated['question_type'], ['choice', 'multi_choice']) && !empty($validated['options'])) {
             $options = array_map('trim', explode("\n", $validated['options']));
         }
 
@@ -233,6 +243,8 @@ class FeedbackTemplateController extends Controller
             'question_type' => $validated['question_type'],
             'options'       => $options,
             'required'      => $validated['required'] ?? true,
+            'allow_other'   => $validated['allow_other'] ?? false,
+            'rating_max'    => $validated['rating_max'] ?? 5,
             'trigger_value' => $validated['trigger_value'] ?? null,
         ]);
 

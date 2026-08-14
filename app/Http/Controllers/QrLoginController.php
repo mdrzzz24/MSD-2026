@@ -8,8 +8,15 @@ use Illuminate\Support\Facades\Auth;
 
 class QrLoginController extends Controller
 {
-    public function showForm()
+    public function showForm(Request $request)
     {
+        // Remember where the visitor came from (e.g. the feedback login popup)
+        // so they are sent back there after a successful QR login.
+        $redirect = $this->validatedRedirect($request->input('redirect'));
+        if ($redirect) {
+            session(['qr_login_redirect' => $redirect]);
+        }
+
         return view('auth.qr-login');
     }
 
@@ -59,9 +66,25 @@ class QrLoginController extends Controller
         Auth::guard('registrant')->login($registrant);
         session()->forget('qr_login_email');
 
+        // Send the user back to the page they were on (e.g. the feedback page).
+        $redirect = session('qr_login_redirect');
+        session()->forget('qr_login_redirect');
+
         return response()->json([
             'success'  => true,
-            'redirect' => route('home1'),
+            'redirect' => $redirect ?: route('home1'),
         ]);
+    }
+
+    /**
+     * Validate a same-origin redirect path (prevents open redirects).
+     */
+    private function validatedRedirect(?string $redirect): ?string
+    {
+        if ($redirect !== null && str_starts_with($redirect, '/') && !str_starts_with($redirect, '//')) {
+            return $redirect;
+        }
+
+        return null;
     }
 }
