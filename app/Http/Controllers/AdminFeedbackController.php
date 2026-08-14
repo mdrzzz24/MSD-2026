@@ -67,6 +67,51 @@ class AdminFeedbackController extends Controller
     }
 
     /**
+     * Export the session list (type, normal link, short link, etc.) to Excel.
+     * Respects the ?status=all|on|off filter used on the index page.
+     */
+    public function exportExcel(Request $request)
+    {
+        $status = $request->query('status', 'all'); // all | on | off
+
+        $baseQuery = AgendaItem::query();
+        if ($status === 'on') {
+            $baseQuery->where('feedback_enabled', true);
+        } elseif ($status === 'off') {
+            $baseQuery->where('feedback_enabled', false);
+        }
+
+        $items = (clone $baseQuery)->withCount('feedback')->orderBy('start_time')->get();
+
+        $headers = ['No', 'Group', 'Session', 'Type', 'Time', 'Feedback', 'Responses', 'Normal Link', 'Short Link'];
+
+        $rows = [];
+        foreach ($items as $i => $item) {
+            $type = match (true) {
+                ($item->agenda_type === 'workshop' || !empty($item->workshop_id)) => 'Workshop',
+                ($item->agenda_type === 'track' || !empty($item->track_id))       => 'Track',
+                default                                                           => 'General',
+            };
+
+            $rows[] = [
+                $i + 1,
+                $item->room ? 'Active' : 'Inactive',
+                $item->title,
+                $type,
+                $item->timeLabel(),
+                $item->feedback_enabled ? 'On' : 'Off',
+                $item->feedback_count,
+                route('feedback.form', $item->slug),
+                $item->shortUrl(),
+            ];
+        }
+
+        $filename = 'sessions-feedback-'.now()->format('YmdHis').'.xlsx';
+
+        return \App\Services\XlsxExporter::download($headers, $rows, $filename);
+    }
+
+    /**
      * Export feedback responses for an agenda item as CSV.
      */
     public function exportCsv(AgendaItem $agendum)

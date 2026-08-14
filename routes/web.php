@@ -272,6 +272,7 @@ Route::middleware(['auth', 'admin', 'no_cache'])->prefix('admin')->name('admin.'
     // Feedback management
     Route::post('/agenda/{agendum}/feedback/toggle', [App\Http\Controllers\AdminFeedbackController::class, 'toggle'])->name('agenda.feedback.toggle');
     Route::get('/feedback', [App\Http\Controllers\AdminFeedbackController::class, 'index'])->name('feedback.index');
+    Route::get('/feedback/export/excel', [App\Http\Controllers\AdminFeedbackController::class, 'exportExcel'])->name('feedback.export-excel');
     Route::get('/agenda/{agendum}/feedback', [App\Http\Controllers\AdminFeedbackController::class, 'show'])->name('agenda.feedback.show');
     Route::get('/agenda/{agendum}/feedback/export/csv', [App\Http\Controllers\AdminFeedbackController::class, 'exportCsv'])->name('agenda.feedback.export-csv');
     // Feedback Templates

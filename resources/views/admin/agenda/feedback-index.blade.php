@@ -22,6 +22,13 @@
                 </a>
                 <span class="text-gray-300">/</span>
                 <h1 class="text-lg font-bold text-gray-900">Session Feedback</h1>
+                <div class="ml-auto flex items-center gap-2">
+                    <a href="{{ route('admin.feedback.export-excel', ['status' => $status]) }}"
+                       class="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-semibold rounded-xl bg-emerald-500 text-white hover:bg-emerald-600 shadow-sm transition">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3M3 17V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>
+                        Export Excel
+                    </a>
+                </div>
             </div>
         </header>
         <div class="p-4 sm:p-6 lg:p-8">
