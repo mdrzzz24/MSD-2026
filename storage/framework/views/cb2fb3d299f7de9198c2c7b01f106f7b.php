@@ -1,10 +1,24 @@
 <!DOCTYPE html>
 <html lang="en">
+<?php
+    // For Track sessions, show the company (vendor) name before the title: "{company} - {title}".
+    $fbCompany = null;
+    if ($agendum->agenda_type === 'track' || !empty($agendum->track_id)) {
+        $track = $agendum->track;
+        if ($track) {
+            $fbCompany = trim((string) ($track->name ?: $track->title));
+            if ($fbCompany === '' || $fbCompany === '-') {
+                $fbCompany = null;
+            }
+        }
+    }
+    $fbTitle = $fbCompany ? $fbCompany . ' - ' . $agendum->title : $agendum->title;
+?>
 <head>
     <link rel="icon" type="image/png" href="<?php echo e(asset('img/metrodata.png')); ?>">
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Feedback — <?php echo e($agendum->title); ?> — MSD 2026</title>
+    <title>Feedback — <?php echo e($fbTitle); ?> — MSD 2026</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
@@ -26,7 +40,7 @@
         
         <div class="text-center mb-8">
             <img src="<?php echo e(asset('img/logo-msd.png')); ?>" alt="MSD 2026" style="height:44px;width:auto;filter:brightness(0) invert(1)" class="mx-auto mb-4">
-            <h1 class="text-2xl sm:text-3xl font-bold text-white"><?php echo e($agendum->title); ?></h1>
+            <h1 class="text-2xl sm:text-3xl font-bold text-white"><?php echo e($fbTitle); ?></h1>
             <div class="flex items-center justify-center gap-2 mt-3 flex-wrap">
                 <?php if($agendum->start_time): ?>
                     <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-white/5 border border-white/10 text-xs text-indigo-200">
