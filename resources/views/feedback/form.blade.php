@@ -1,15 +1,18 @@
 <!DOCTYPE html>
 <html lang="en">
 @php
-    // For Track sessions, show the company (vendor) name before the title: "{company} - {title}".
+    // For Track / Workshop sessions, show the company (vendor) name before the title: "{company} - {title}".
     $fbCompany = null;
-    if ($agendum->agenda_type === 'track' || !empty($agendum->track_id)) {
-        $track = $agendum->track;
-        if ($track) {
-            $fbCompany = trim((string) ($track->name ?: $track->title));
-            if ($fbCompany === '' || $fbCompany === '-') {
-                $fbCompany = null;
-            }
+    if (in_array($agendum->agenda_type, ['track', 'workshop'], true) || !empty($agendum->track_id) || !empty($agendum->workshop_id)) {
+        $fbName = null;
+        if ($agendum->workshop) {
+            $fbName = trim((string) $agendum->workshop->name);
+        }
+        if (($fbName === '' || $fbName === '-') && $agendum->track) {
+            $fbName = trim((string) ($agendum->track->name ?: $agendum->track->title));
+        }
+        if ($fbName !== '' && $fbName !== '-') {
+            $fbCompany = $fbName;
         }
     }
     $fbTitle = $fbCompany ? $fbCompany . ' - ' . $agendum->title : $agendum->title;
