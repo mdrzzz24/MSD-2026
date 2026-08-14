@@ -40,15 +40,30 @@ class AdminFeedbackController extends Controller
      * Sessions are split into two groups:
      * - Active: placed in the /admin/agenda grid (they have a room assigned).
      * - Inactive: not used in the agenda (no room assigned).
+     *
+     * Both groups can be filtered by feedback status (?status=all|on|off).
      */
-    public function index()
+    public function index(Request $request)
     {
+        $status = $request->query('status', 'all'); // all | on | off
+
+        $baseQuery = AgendaItem::query();
+        if ($status === 'on') {
+            $baseQuery->where('feedback_enabled', true);
+        } elseif ($status === 'off') {
+            $baseQuery->where('feedback_enabled', false);
+        }
+
         $groups = [
-            'Active Sessions (in Agenda)'   => AgendaItem::whereNotNull('room')->withCount('feedback')->orderBy('start_time')->get(),
-            'Inactive Sessions (not in Agenda)' => AgendaItem::whereNull('room')->withCount('feedback')->orderBy('start_time')->get(),
+            'Active Sessions (in Agenda)'   => (clone $baseQuery)->whereNotNull('room')->withCount('feedback')->orderBy('start_time')->get(),
+            'Inactive Sessions (not in Agenda)' => (clone $baseQuery)->whereNull('room')->withCount('feedback')->orderBy('start_time')->get(),
         ];
 
-        return view('admin.agenda.feedback-index', compact('groups'));
+        $totalAll = AgendaItem::count();
+        $totalOn  = AgendaItem::where('feedback_enabled', true)->count();
+        $totalOff = AgendaItem::where('feedback_enabled', false)->count();
+
+        return view('admin.agenda.feedback-index', compact('groups', 'status', 'totalAll', 'totalOn', 'totalOff'));
     }
 
     /**
