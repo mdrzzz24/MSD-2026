@@ -36,11 +36,19 @@ class AdminFeedbackController extends Controller
 
     /**
      * Show list of all agenda items with feedback status.
+     *
+     * Sessions are split into two groups:
+     * - Active: placed in the /admin/agenda grid (they have a room assigned).
+     * - Inactive: not used in the agenda (no room assigned).
      */
     public function index()
     {
-        $agendaItems = AgendaItem::withCount('feedback')->orderBy('start_time')->get();
-        return view('admin.agenda.feedback-index', compact('agendaItems'));
+        $groups = [
+            'Active Sessions (in Agenda)'   => AgendaItem::whereNotNull('room')->withCount('feedback')->orderBy('start_time')->get(),
+            'Inactive Sessions (not in Agenda)' => AgendaItem::whereNull('room')->withCount('feedback')->orderBy('start_time')->get(),
+        ];
+
+        return view('admin.agenda.feedback-index', compact('groups'));
     }
 
     /**

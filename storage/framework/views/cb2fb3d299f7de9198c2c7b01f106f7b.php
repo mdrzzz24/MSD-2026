@@ -215,7 +215,7 @@
                             </div>
 
                             <?php if($q->question_type === 'text'): ?>
-                                <textarea name="answers[<?php echo e($q->id); ?>]" rows="3"
+                                <textarea name="answers[<?php echo e($q->id); ?>]" rows="3" x-model="answers[<?php echo e($q->id); ?>]"
                                           :required="isVisible(<?php echo e($q->id); ?>) && <?php echo e($isReq); ?>"
                                           class="w-full px-4 py-3 text-sm text-white bg-white/[0.04] border border-white/10 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-400/40 focus:border-indigo-400 placeholder-indigo-300/40 transition resize-none"
                                           placeholder="Type your answer here..."><?php echo e(old('answers.' . $q->id)); ?></textarea>

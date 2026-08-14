@@ -86,6 +86,8 @@ Route::post('/register', [RegistrantAuthController::class, 'register'])->name('r
 Route::get('/register/success', [RegistrantAuthController::class, 'success'])->name('register.success');
 
 // ── Feedback (public page; login required to submit) ──
+// Short link: /f/{code} redirects to the full feedback URL.
+Route::get('/f/{code}', [App\Http\Controllers\FeedbackController::class, 'shortlink'])->name('feedback.short');
 Route::get('/feedback/{agendum:slug}', [App\Http\Controllers\FeedbackController::class, 'form'])->name('feedback.form');
 Route::middleware('auth:registrant')->group(function () {
     Route::post('/feedback/{agendum:slug}', [App\Http\Controllers\FeedbackController::class, 'store'])->name('feedback.store');

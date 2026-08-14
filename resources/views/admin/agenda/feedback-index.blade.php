@@ -26,9 +26,11 @@
         </header>
         <div class="p-4 sm:p-6 lg:p-8">
             @include('admin.partials.notification')
-            <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-                <div class="px-6 py-5 border-b border-gray-100">
-                    <h2 class="text-sm font-bold text-gray-800">All Sessions</h2>
+            @foreach ($groups as $groupLabel => $groupItems)
+            <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden {{ $loop->last ? '' : 'mb-6' }}">
+                <div class="px-6 py-5 border-b border-gray-100 flex items-center justify-between">
+                    <h2 class="text-sm font-bold text-gray-800">{{ $groupLabel }}</h2>
+                    <span class="text-xs font-semibold text-gray-500 bg-gray-100 px-2.5 py-1 rounded-full">{{ $groupItems->count() }} sessions</span>
                 </div>
                 <div class="overflow-x-auto">
                     <table class="w-full">
@@ -42,7 +44,7 @@
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-gray-50">
-                            @forelse ($agendaItems as $item)
+                            @forelse ($groupItems as $item)
                                 <tr class="hover:bg-gray-50/50 transition">
                                     <td class="px-5 py-4">
                                         <a href="{{ route('admin.agenda.feedback.show', $item) }}" class="text-sm font-semibold text-gray-900 hover:text-indigo-600 transition">{{ $item->title }}</a>
@@ -84,13 +86,14 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="5" class="px-5 py-10 text-center text-sm text-gray-400">No agenda items found.</td>
+                                    <td colspan="5" class="px-5 py-10 text-center text-sm text-gray-400">No sessions in this group.</td>
                                 </tr>
                             @endforelse
                         </tbody>
                     </table>
                 </div>
             </div>
+            @endforeach
         </div>
     </main>
 </div>

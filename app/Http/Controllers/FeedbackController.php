@@ -11,6 +11,15 @@ use Illuminate\Support\Facades\Auth;
 class FeedbackController extends Controller
 {
     /**
+     * Resolve a short link code (/f/{code}) to its feedback page.
+     */
+    public function shortlink(string $code)
+    {
+        $agendum = AgendaItem::where('short_code', $code)->firstOrFail();
+        return redirect()->route('feedback.form', $agendum->slug);
+    }
+
+    /**
      * Show feedback form for an agenda item.
      */
     public function form(AgendaItem $agendum)

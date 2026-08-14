@@ -155,19 +155,34 @@
                 </div>
             </div>
 
-            {{-- Public Feedback Link --}}
+            {{-- Public Feedback Links --}}
             @if ($agendum->feedback_enabled)
-                <div class="mt-6 bg-indigo-50 rounded-2xl p-5 border border-indigo-200">
-                    <p class="text-sm font-semibold text-indigo-800 mb-1">Public Feedback Link</p>
-                    <p class="text-xs text-indigo-600 mb-2">Share this link with attendees to collect feedback:</p>
-                    <div class="flex items-center gap-2">
-                        <input type="text" value="{{ route('feedback.form', $agendum) }}" readonly
-                               class="text-xs text-indigo-700 bg-white px-3 py-2 rounded-lg border border-indigo-200 w-full"
-                               id="feedbackUrl">
-                        <button onclick="copyFeedbackUrl()"
-                                class="px-3 py-2 text-xs font-medium rounded-lg bg-indigo-500 text-white hover:bg-indigo-600 transition flex-shrink-0">
-                            Copy
-                        </button>
+                <div class="mt-6 bg-indigo-50 rounded-2xl p-5 border border-indigo-200 space-y-3">
+                    <p class="text-sm font-semibold text-indigo-800">Public Feedback Links</p>
+                    <p class="text-xs text-indigo-600">Share these links with attendees to collect feedback:</p>
+                    <div>
+                        <label class="block text-[11px] font-semibold text-indigo-500 uppercase tracking-wide mb-1">Short Link</label>
+                        <div class="flex items-center gap-2">
+                            <input type="text" value="{{ $agendum->shortUrl() }}" readonly
+                                   class="text-xs text-indigo-700 bg-white px-3 py-2 rounded-lg border border-indigo-200 w-full"
+                                   id="shortUrl">
+                            <button onclick="copyLink('shortUrl', this)"
+                                    class="px-3 py-2 text-xs font-medium rounded-lg bg-indigo-500 text-white hover:bg-indigo-600 transition flex-shrink-0">
+                                Copy
+                            </button>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-semibold text-indigo-500 uppercase tracking-wide mb-1">Full Link</label>
+                        <div class="flex items-center gap-2">
+                            <input type="text" value="{{ route('feedback.form', $agendum) }}" readonly
+                                   class="text-xs text-indigo-700 bg-white px-3 py-2 rounded-lg border border-indigo-200 w-full"
+                                   id="feedbackUrl">
+                            <button onclick="copyLink('feedbackUrl', this)"
+                                    class="px-3 py-2 text-xs font-medium rounded-lg bg-indigo-500 text-white hover:bg-indigo-600 transition flex-shrink-0">
+                                Copy
+                            </button>
+                        </div>
                     </div>
                 </div>
             @endif
@@ -175,16 +190,16 @@
     </main>
 </div>
 <script>
-    function copyFeedbackUrl() {
-        const el = document.getElementById('feedbackUrl');
+    function copyLink(inputId, btn) {
+        const el = document.getElementById(inputId);
         if (!el) return;
         navigator.clipboard.writeText(el.value).then(() => {
-            const btn = event.target;
+            const original = btn.textContent;
             btn.textContent = 'Copied!';
             btn.classList.add('bg-emerald-500');
             btn.classList.remove('bg-indigo-500', 'hover:bg-indigo-600');
             setTimeout(() => {
-                btn.textContent = 'Copy';
+                btn.textContent = original;
                 btn.classList.remove('bg-emerald-500');
                 btn.classList.add('bg-indigo-500', 'hover:bg-indigo-600');
             }, 1500);

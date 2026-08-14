@@ -13,6 +13,9 @@ class AgendaItem extends Model
     {
         static::saving(function (AgendaItem $item) {
             $item->slug = static::uniqueSlug($item->title, $item->id);
+            if (empty($item->short_code)) {
+                $item->short_code = static::uniqueShortCode();
+            }
         });
     }
 
@@ -29,9 +32,18 @@ class AgendaItem extends Model
         return $slug;
     }
 
+    protected static function uniqueShortCode(int $length = 6): string
+    {
+        do {
+            $code = \Illuminate\Support\Str::lower(\Illuminate\Support\Str::random($length));
+        } while (static::where('short_code', $code)->exists());
+        return $code;
+    }
+
     protected $fillable = [
         'title',
         'slug',
+        'short_code',
         'topic_headline',
         'description',
         'speaker_name',
@@ -130,6 +142,14 @@ class AgendaItem extends Model
     public function feedbackQuestions()
     {
         return $this->hasMany(AgendaItemQuestion::class, 'agenda_item_id')->orderBy('order');
+    }
+
+    /**
+     * Compact URL that redirects to this session's feedback page.
+     */
+    public function shortUrl(): string
+    {
+        return route('feedback.short', $this->short_code);
     }
 
     public function visits()
