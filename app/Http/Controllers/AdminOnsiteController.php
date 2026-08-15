@@ -68,8 +68,10 @@ class AdminOnsiteController extends Controller
         $companies = Registrant::whereNotNull('company')->distinct()->orderBy('company')->limit(200)->pluck('company');
 
         // MQTT badge printer info (topic + status) for display on the page.
+        // Status auto-follows the REAL printer presence: the logged-in admin's
+        // printer must report ONLINE on its status topic (else it shows OFF).
         // Topic uses the logged-in user's id, e.g. print/admin-11.
-        $mqttEnabled = config('mqtt.enabled', false);
+        $mqttEnabled = app(\App\Services\MqttService::class)->printerActive(Auth::id());
         $mqttTopic = config('mqtt.topic_prefix', 'print') . '/admin-' . Auth::id();
 
         // Number of participants that "Print Badges" (bulk, no selection) would send
@@ -275,7 +277,21 @@ class AdminOnsiteController extends Controller
             'published'    => count($printedIds),
             'ids'          => $printedIds,
             'checked_in_at'=> now()->addHours(7)->format('H:i'),
-            'enabled'      => $service->enabled(),
+            'enabled'      => $service->printerActive(Auth::id()),
+        ]);
+    }
+
+    /**
+     * Live MQTT printer status for the logged-in admin (used by the badge
+     * poller on the Onsite page). Short cache TTL for near-real-time updates.
+     */
+    public function mqttStatus(Request $request): \Illuminate\Http\JsonResponse
+    {
+        $service = app(\App\Services\MqttService::class);
+
+        return response()->json([
+            'enabled' => $service->printerActive(Auth::id(), 10, true), // live key, short TTL
+            'topic'   => config('mqtt.topic_prefix', 'print') . '/admin-' . Auth::id(),
         ]);
     }
 }

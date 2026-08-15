@@ -1256,7 +1256,7 @@ class ApiController extends Controller
                     'version'        => '1.0.0',
                 ],
                 'mqtt' => [
-                    'enabled'          => config('mqtt.enabled', false),
+                    'enabled'          => app(\App\Services\MqttService::class)->isActive(),
                     'host'             => config('mqtt.host'),
                     'port'             => (int) config('mqtt.port'),
                     'topic_prefix'     => $prefix,
@@ -1266,13 +1266,18 @@ class ApiController extends Controller
                 'printers' => User::where('is_admin', true)
                     ->orderBy('id')
                     ->get()
-                    ->map(fn ($u) => [
-                        'id'    => $u->id,
-                        'name'  => $u->name,
-                        'email' => $u->email,
-                        'role'  => $u->role,
-                        'topic' => $prefix . '/admin-' . $u->id,
-                    ])
+                    ->pipe(function ($admins) use ($prefix) {
+                        $online = app(\App\Services\MqttService::class)->printersActive($admins->pluck('id')->all());
+
+                        return $admins->map(fn ($u) => [
+                            'id'     => $u->id,
+                            'name'   => $u->name,
+                            'email'  => $u->email,
+                            'role'   => $u->role,
+                            'topic'  => $prefix . '/admin-' . $u->id,
+                            'online' => (bool) ($online[$u->id] ?? false),
+                        ]);
+                    })
                     ->values(),
                 'server_time' => now()->toIso8601String(),
             ],
@@ -1295,7 +1300,7 @@ class ApiController extends Controller
         return response()->json([
             'success' => true,
             'data'    => [
-                'enabled'          => $service->enabled(),
+                'enabled'          => $service->isActive(),
                 'host'             => config('mqtt.host'),
                 'port'             => (int) config('mqtt.port'),
                 'topic_prefix'     => $prefix,
@@ -1304,12 +1309,17 @@ class ApiController extends Controller
                 'printers'         => User::where('is_admin', true)
                     ->orderBy('id')
                     ->get()
-                    ->map(fn ($u) => [
-                        'id'    => $u->id,
-                        'name'  => $u->name,
-                        'role'  => $u->role,
-                        'topic' => $prefix . '/admin-' . $u->id,
-                    ])
+                    ->pipe(function ($admins) use ($prefix) {
+                        $online = app(\App\Services\MqttService::class)->printersActive($admins->pluck('id')->all());
+
+                        return $admins->map(fn ($u) => [
+                            'id'     => $u->id,
+                            'name'   => $u->name,
+                            'role'   => $u->role,
+                            'topic'  => $prefix . '/admin-' . $u->id,
+                            'online' => (bool) ($online[$u->id] ?? false),
+                        ]);
+                    })
                     ->values(),
             ],
         ]);

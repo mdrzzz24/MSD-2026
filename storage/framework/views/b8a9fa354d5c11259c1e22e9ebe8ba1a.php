@@ -28,10 +28,10 @@
     <svg class="w-3.5 h-3.5 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
     <span id="realtimeClock" class="font-mono tabular-nums">--:--:--</span>
 </span>
-<span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold border <?php echo e($mqttEnabled ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-gray-100 text-gray-500 border-gray-200'); ?>" title="Topik MQTT badge printer">
-    <span class="w-2 h-2 rounded-full <?php echo e($mqttEnabled ? 'bg-emerald-500 animate-pulse' : 'bg-gray-400'); ?>"></span>
+<span id="mqttBadge" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold border <?php echo e($mqttEnabled ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-gray-100 text-gray-500 border-gray-200'); ?>" title="Topik MQTT badge printer">
+    <span id="mqttDot" class="w-2 h-2 rounded-full <?php echo e($mqttEnabled ? 'bg-emerald-500 animate-pulse' : 'bg-gray-400'); ?>"></span>
     <span class="font-mono"><?php echo e($mqttTopic); ?></span>
-    <span class="ml-0.5 <?php echo e($mqttEnabled ? 'text-emerald-600' : 'text-gray-400'); ?>"><?php echo e($mqttEnabled ? 'ON' : 'OFF'); ?></span>
+    <span id="mqttStatusText" class="ml-0.5 <?php echo e($mqttEnabled ? 'text-emerald-600' : 'text-gray-400'); ?>"><?php echo e($mqttEnabled ? 'ON' : 'OFF'); ?></span>
 </span>
 <span class="text-xs text-gray-400 hidden sm:inline" id="printCount"></span>
 <button onclick="printSelected()" id="printSelectedBtn"
@@ -195,6 +195,37 @@ const printStatus = '<?php echo e($status); ?>';
     }
     tick();
     setInterval(tick, 1000);
+})();
+
+// Live MQTT printer status — poll the badge endpoint every 5s so the
+// ON/OFF badge updates near-real-time without reloading the page.
+(function () {
+    const badge = document.getElementById('mqttBadge');
+    if (!badge) return;
+    const dot = document.getElementById('mqttDot');
+    const txt = document.getElementById('mqttStatusText');
+    async function refresh() {
+        try {
+            const res = await fetch('<?php echo e(route("admin.onsite.mqtt-status")); ?>', {
+                headers: { 'Accept': 'application/json' },
+                credentials: 'same-origin'
+            });
+            const data = await res.json();
+            if (!data || typeof data.enabled === 'undefined') return;
+            const on = !!data.enabled;
+            badge.classList.toggle('bg-emerald-50', on);
+            badge.classList.toggle('text-emerald-700', on);
+            badge.classList.toggle('border-emerald-200', on);
+            badge.classList.toggle('bg-gray-100', !on);
+            badge.classList.toggle('text-gray-500', !on);
+            badge.classList.toggle('border-gray-200', !on);
+            dot.className = 'w-2 h-2 rounded-full ' + (on ? 'bg-emerald-500 animate-pulse' : 'bg-gray-400');
+            txt.textContent = on ? 'ON' : 'OFF';
+            txt.className = 'ml-0.5 ' + (on ? 'text-emerald-600' : 'text-gray-400');
+        } catch (e) { /* ignore transient errors */ }
+    }
+    refresh();
+    setInterval(refresh, 5000);
 })();
 
 function selectedIds() {

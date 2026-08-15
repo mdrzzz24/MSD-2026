@@ -184,6 +184,7 @@ Route::middleware(['auth', 'admin', 'no_cache'])->prefix('admin')->name('admin.'
     // ── Onsite Event (participant list + name badge printing) — admin & super admin ──
     Route::get('/onsite', [App\Http\Controllers\AdminOnsiteController::class, 'index'])->name('onsite');
     Route::get('/onsite/search', [App\Http\Controllers\AdminOnsiteController::class, 'search'])->name('onsite.search');
+    Route::get('/onsite/mqtt-status', [App\Http\Controllers\AdminOnsiteController::class, 'mqttStatus'])->name('onsite.mqtt-status');
     Route::get('/onsite/badges/print', [App\Http\Controllers\AdminOnsiteController::class, 'printBadges'])->name('onsite.badges');
     Route::post('/onsite/badges/trigger', [App\Http\Controllers\AdminOnsiteController::class, 'triggerPrint'])->name('onsite.badges.trigger');
 
