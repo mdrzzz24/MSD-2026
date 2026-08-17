@@ -3,45 +3,55 @@
 namespace App\Http\Controllers;
 
 use App\Models\AgendaItem;
+use App\Models\Booth;
 use App\Models\Room;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 
 /**
- * Mobile-app "room account" management (super admin only).
+ * Mobile-app account management (super admin only): room accounts & booth
+ * accounts — login credentials for the mobile apps.
  *
- * Each room account is a user with role = 'room' bound to a room (room_id).
- * Super admins assign specific agenda sessions to each account via
- * `agenda_item_room_account`. An account with NO assignments manages ALL
- * sessions (default); once sessions are assigned, it can only track those.
+ * Room accounts (role = 'room') are bound to a room; super admins assign which
+ * agenda sessions each account can track via `agenda_item_room_account`.
+ * Booth accounts (role = 'booth') are bound to a booth; they can only scan
+ * their own booth in the mobile app.
  */
 class AdminRoomAccountController extends Controller
 {
     /**
-     * List all mobile-app room accounts.
+     * List all mobile-app room & booth accounts.
      */
     public function index()
     {
-        $accounts = User::where('role', 'room')
+        $roomAccounts = User::where('role', 'room')
             ->with('room')
             ->withCount('managedAgendaItems')
             ->orderBy('name')
             ->get();
 
-        $rooms = Room::ordered()->get();
+        $boothAccounts = User::where('role', 'booth')
+            ->with('booth')
+            ->orderBy('name')
+            ->get();
 
-        return view('admin.room-accounts.index', compact('accounts', 'rooms'));
+        $rooms  = Room::ordered()->get();
+        $booths = Booth::ordered()->get();
+
+        return view('admin.room-accounts.index', compact('roomAccounts', 'boothAccounts', 'rooms', 'booths'));
     }
 
     /**
-     * Create a new room account.
+     * Create a new room or booth account.
      */
     public function store(Request $request)
     {
         $request->validate([
             'name'     => ['required', 'string', 'max:255'],
-            'room_id'  => ['required', 'exists:rooms,id'],
+            'role'     => ['required', 'in:room,booth'],
+            'room_id'  => ['nullable', 'required_if:role,room', 'exists:rooms,id'],
+            'booth_id' => ['nullable', 'required_if:role,booth', 'exists:booths,id'],
             'email'    => ['required', 'email', 'max:255', 'unique:users'],
             'password' => ['required', 'string', 'min:6'],
         ]);
@@ -51,13 +61,16 @@ class AdminRoomAccountController extends Controller
             'email'       => $request->email,
             'password'    => Hash::make($request->password),
             'is_admin'    => false,
-            'role'        => 'room',
-            'room_id'     => $request->room_id,
-            'permissions' => User::defaultPermissions('room'),
+            'role'        => $request->role,
+            'room_id'     => $request->role === 'room' ? $request->room_id : null,
+            'booth_id'    => $request->role === 'booth' ? $request->booth_id : null,
+            'permissions' => User::defaultPermissions($request->role),
         ]);
 
+        $type = $request->role === 'room' ? 'Room account' : 'Booth account';
+
         return redirect()->route('admin.room-accounts.index')
-            ->with('success', "Room account <strong>{$request->name}</strong> created successfully.");
+            ->with('success', "<strong>{$type}</strong> <strong>{$request->name}</strong> created successfully.");
     }
 
     /**

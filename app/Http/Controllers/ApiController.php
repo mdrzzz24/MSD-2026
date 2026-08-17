@@ -49,6 +49,9 @@ class ApiController extends Controller
                     'room'     => $user->isRoomAccount()
                         ? ['id' => $user->room_id, 'name' => $user->room?->name]
                         : null,
+                    'booth'    => $user->isBoothAccount()
+                        ? ['id' => $user->booth_id, 'name' => $user->booth?->name]
+                        : null,
                 ],
             ],
         ]);
@@ -57,12 +60,18 @@ class ApiController extends Controller
     /**
      * Get all active booths.
      */
-    public function booths(): JsonResponse
+    public function booths(Request $request): JsonResponse
     {
-        $booths = Booth::active()
-            ->ordered()
-            ->withCount('visits')
-            ->get()
+        // Booth accounts only see their own booth; everyone else sees all.
+        $apiUser = $this->resolveApiUser($request->integer('admin_id') ?: null);
+        $ids     = $apiUser ? $apiUser->scopedBoothIds() : null;
+
+        $query = Booth::active()->ordered()->withCount('visits');
+        if ($ids !== null) {
+            $query->whereIn('id', $ids);
+        }
+
+        $booths = $query->get()
             ->map(fn($b) => [
                 'id'           => $b->id,
                 'name'         => $b->name,
@@ -75,6 +84,10 @@ class ApiController extends Controller
 
         return response()->json([
             'success' => true,
+            'booth'   => $apiUser && $apiUser->isBoothAccount()
+                ? ['id' => $apiUser->booth_id, 'name' => $apiUser->booth?->name]
+                : null,
+            'booth_scope' => $this->boothScopeMeta($apiUser),
             'data'    => $booths,
         ]);
     }
@@ -150,7 +163,18 @@ class ApiController extends Controller
     {
         $validated = $request->validate([
             'qr_token' => ['required', 'string', 'max:255'],
+            'admin_id' => ['nullable', 'integer'],
         ]);
+
+        // Booth accounts may only scan their own booth.
+        $user = $this->resolveApiUser($validated['admin_id'] ?? null);
+        if (!$this->boothAllowed($user, $booth)) {
+            return response()->json([
+                'success'     => false,
+                'message'     => 'This booth is not assigned to your account.',
+                'booth_scope' => 'forbidden',
+            ], 403);
+        }
 
         $token = trim($validated['qr_token']);
         $registrant = Registrant::where('qr_token', $token)
@@ -707,8 +731,18 @@ class ApiController extends Controller
      *
      * GET /api/booths/{booth}/attendees
      */
-    public function boothAttendees(Booth $booth): JsonResponse
+    public function boothAttendees(Request $request, Booth $booth): JsonResponse
     {
+        // Booth accounts may only view attendees of their own booth.
+        $user = $this->resolveApiUser($request->integer('admin_id') ?: null);
+        if (!$this->boothAllowed($user, $booth)) {
+            return response()->json([
+                'success'     => false,
+                'message'     => 'This booth is not assigned to your account.',
+                'booth_scope' => 'forbidden',
+            ], 403);
+        }
+
         $visits = BoothVisit::where('booth_id', $booth->id)
             ->with('registrant')
             ->orderByDesc('visited_at')
@@ -1359,6 +1393,39 @@ class ApiController extends Controller
         ];
     }
 
+    /**
+     * Whether the resolved API user may manage/track the given booth.
+     * - No user / non-booth account → allowed (open API, backward compatible).
+     * - Booth account → only its own booth.
+     */
+    private function boothAllowed(?User $user, Booth $booth): bool
+    {
+        if (!$user || !$user->isBoothAccount()) {
+            return true;
+        }
+
+        $ids = $user->scopedBoothIds();
+
+        return $ids === null || in_array($booth->id, $ids, true);
+    }
+
+    /**
+     * Machine-readable booth scope description for the mobile app.
+     */
+    private function boothScopeMeta(?User $user): array
+    {
+        if (!$user || !$user->isBoothAccount()) {
+            return ['type' => 'unrestricted', 'booth_ids' => []];
+        }
+
+        $ids = $user->scopedBoothIds();
+
+        return [
+            'type'      => $ids === null ? 'all' : 'assigned',
+            'booth_ids' => $ids ?? [],
+        ];
+    }
+
     private function resolvePrinterAdminId(?int $adminId): int
     {
         if ($adminId && User::where('id', $adminId)->where('is_admin', true)->exists()) {
@@ -1393,6 +1460,9 @@ class ApiController extends Controller
                     'version'        => '1.0.0',
                     'room'           => $apiUser && $apiUser->isRoomAccount()
                         ? ['id' => $apiUser->room_id, 'name' => $apiUser->room?->name]
+                        : null,
+                    'booth'          => $apiUser && $apiUser->isBoothAccount()
+                        ? ['id' => $apiUser->booth_id, 'name' => $apiUser->booth?->name]
                         : null,
                     'scope'          => $this->scopeMeta($apiUser),
                 ],
@@ -1538,9 +1608,18 @@ class ApiController extends Controller
 
         // Room accounts only see activity for the sessions assigned to them.
         $apiUser = $this->resolveApiUser($validated['admin_id'] ?? null);
-        $scope   = $apiUser ? $apiUser->scopedAgendaItemIds() : null;
-        if ($scope !== null) {
-            $query->where('item_type', 'agenda')->whereIn('item_id', $scope);
+        if ($apiUser) {
+            // Room account → only agenda activity for its assigned sessions.
+            $agendaIds = $apiUser->scopedAgendaItemIds();
+            if ($agendaIds !== null) {
+                $query->where('item_type', 'agenda')->whereIn('item_id', $agendaIds);
+            } else {
+                // Booth account → only booth activity for its own booth.
+                $boothIds = $apiUser->scopedBoothIds();
+                if ($boothIds !== null) {
+                    $query->where('item_type', 'booth')->whereIn('item_id', $boothIds);
+                }
+            }
         }
 
         $logs = $query->latest()->limit($validated['limit'] ?? 20)->get()->map(fn ($l) => [

@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
-#[Fillable(['name', 'email', 'password', 'is_admin', 'role', 'permissions', 'setup_token', 'setup_token_expires_at', 'group_id', 'room_id'])]
+#[Fillable(['name', 'email', 'password', 'is_admin', 'role', 'permissions', 'setup_token', 'setup_token_expires_at', 'group_id', 'room_id', 'booth_id'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {
@@ -33,6 +33,44 @@ class User extends Authenticatable
     public function room()
     {
         return $this->belongsTo(Room::class);
+    }
+
+    /**
+     * The booth this mobile-app account is bound to (organizational label).
+     */
+    public function booth()
+    {
+        return $this->belongsTo(Booth::class);
+    }
+
+    /**
+     * Whether this is a mobile-app booth account (role = 'booth').
+     */
+    public function isBoothAccount(): bool
+    {
+        return $this->role === 'booth';
+    }
+
+    /**
+     * The name of the booth this account is bound to.
+     */
+    public function boothName(): ?string
+    {
+        return $this->booth?->name;
+    }
+
+    /**
+     * The booth IDs this account is allowed to manage / track via the mobile
+     * API, or null when unrestricted. A booth account is scoped to its own
+     * booth; unbound accounts are unrestricted (backward compatible).
+     */
+    public function scopedBoothIds(): ?array
+    {
+        if (!$this->isBoothAccount()) {
+            return null;
+        }
+
+        return $this->booth_id ? [$this->booth_id] : null;
     }
 
     /**
@@ -159,6 +197,8 @@ class User extends Authenticatable
             ] + array_combine($all, array_fill(0, count($all), false)),
             // Mobile-app room accounts have no admin panel access at all.
             'room' => array_combine($all, array_fill(0, count($all), false)),
+            // Mobile-app booth accounts have no admin panel access at all.
+            'booth' => array_combine($all, array_fill(0, count($all), false)),
             default => [],
         };
     }

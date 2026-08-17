@@ -53,6 +53,21 @@ membatasi hasil sesuai tugas super admin.
 
 ---
 
+## 0b. Akun booth (Booth Account)
+
+Selain akun ruangan, ada **akun booth** (`role = "booth"`, contoh email
+`aws@booth.msd26.app`) — dibuat di halaman yang sama (**Mobile App Accounts**,
+`/admin/room-accounts`), diikat ke **satu booth**. Akun booth:
+
+- Login → `user.booth = { id, name }` (booth milik akun tsb).
+- `GET /api/booths?admin_id={userId}` → hanya **booth-nya sendiri** yang tampil
+  (`booth_scope.type = "assigned"`); tanpa `admin_id` / bukan akun booth → semua.
+- `POST /api/booths/{booth_id}/scan` + `GET /api/booths/{booth_id}/attendees` →
+  `403 {"booth_scope":"forbidden"}` bila booth bukan milik akun tsb.
+- `GET /api/config?admin_id=` → `app.booth` (dan `app.scope` tetap utk agenda).
+
+---
+
 ## 1. Login
 
 ```

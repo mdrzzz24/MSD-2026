@@ -21,11 +21,11 @@
 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
 </button>
 <div>
-<h1 class="text-lg font-bold text-gray-900">Room Accounts <span class="text-indigo-500">(Mobile App)</span></h1>
-<p class="text-xs text-gray-500">One account per room — each tracks only the sessions you assign to it</p>
+<h1 class="text-lg font-bold text-gray-900">Mobile App Accounts <span class="text-indigo-500">(Room & Booth)</span></h1>
+<p class="text-xs text-gray-500">Login accounts for the mobile apps — one per room (sessions) or booth (visits)</p>
 </div>
 </div>
-<button onclick="openCreateModal()" class="px-3 py-1.5 text-xs font-medium rounded-lg bg-indigo-500 text-white hover:bg-indigo-600 transition">+ New Room Account</button>
+<button onclick="openCreateModal()" class="px-3 py-1.5 text-xs font-medium rounded-lg bg-indigo-500 text-white hover:bg-indigo-600 transition">+ New Account</button>
 </div>
 </header>
 <div class="p-4 sm:p-6 lg:p-8 space-y-6">
@@ -33,16 +33,16 @@
 
 {{-- How it works --}}
 <div class="bg-indigo-50 border border-indigo-100 rounded-2xl p-4 text-xs text-indigo-900">
-<span class="font-semibold">How session assignment works:</span>
-An account with <strong>no sessions assigned</strong> can track <strong>all sessions</strong> (default).
-Once you assign sessions to an account, it can only display &amp; track <strong>those sessions</strong> in the mobile app.
-The room is just a label — access is controlled by the assignment below.
+<span class="font-semibold">How it works:</span>
+<strong>Room accounts</strong> (session tracking): no sessions assigned → can track <strong>all sessions</strong> (default); once you assign sessions, it can only track <strong>those sessions</strong> in the mobile app.
+<strong>Booth accounts</strong> (booth visits): each account is bound to <strong>one booth</strong> and can only scan that booth.
+All accounts are login credentials for the mobile app only (no admin panel access).
 </div>
 
 {{-- Accounts table --}}
 <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
 <div class="flex items-center justify-between px-5 py-4 border-b border-gray-100">
-<h2 class="text-base font-bold text-gray-900">Accounts</h2>
+<h2 class="text-base font-bold text-gray-900">Room Accounts</h2>
 <a href="{{ route('admin.management.users') }}" class="text-xs font-medium text-indigo-600 hover:text-indigo-800">Manage in Admin Users →</a>
 </div>
 <div class="overflow-x-auto">
@@ -55,7 +55,7 @@ The room is just a label — access is controlled by the assignment below.
 <th class="px-5 py-3.5 text-center text-xs font-semibold text-gray-500 uppercase tracking-wider">Actions</th>
 </tr></thead>
 <tbody class="divide-y divide-gray-50">
-@forelse ($accounts as $a)
+@forelse ($roomAccounts as $a)
 <tr class="hover:bg-gray-50/50">
 <td class="px-5 py-4">
 <span class="text-sm font-semibold text-gray-900">{{ $a->name }}</span>
@@ -96,6 +96,53 @@ The room is just a label — access is controlled by the assignment below.
 </table>
 </div>
 </div>
+
+{{-- Booth Accounts table --}}
+<div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+<div class="flex items-center justify-between px-5 py-4 border-b border-gray-100">
+<h2 class="text-base font-bold text-gray-900">Booth Accounts</h2>
+<a href="{{ route('admin.management.users') }}" class="text-xs font-medium text-indigo-600 hover:text-indigo-800">Manage in Admin Users →</a>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full">
+<thead><tr class="bg-gray-50/80">
+<th class="px-5 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Account</th>
+<th class="px-5 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Booth</th>
+<th class="px-5 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Email</th>
+<th class="px-5 py-3.5 text-center text-xs font-semibold text-gray-500 uppercase tracking-wider">Actions</th>
+</tr></thead>
+<tbody class="divide-y divide-gray-50">
+@forelse ($boothAccounts as $b)
+<tr class="hover:bg-gray-50/50">
+<td class="px-5 py-4">
+<span class="text-sm font-semibold text-gray-900">{{ $b->name }}</span>
+<span class="ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-violet-50 text-violet-700 border border-violet-200">Booth</span>
+</td>
+<td class="px-5 py-4">
+@if ($b->booth)
+<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-gray-50 text-gray-700 border border-gray-200">{{ $b->booth->name }}</span>
+@else
+<span class="text-xs text-gray-400">—</span>
+@endif
+</td>
+<td class="px-5 py-4"><span class="text-sm text-gray-600">{{ $b->email }}</span></td>
+<td class="px-5 py-4 text-center whitespace-nowrap">
+<a href="{{ route('admin.management.users') }}" class="text-xs text-amber-600 hover:text-amber-800 font-medium mr-2">Edit</a>
+@if ($b->id !== auth()->id())
+<form action="{{ route('admin.management.users.destroy', $b) }}" method="POST" class="inline" onsubmit="return confirm('Delete {{ $b->name }}? This removes the mobile app account.')">
+@csrf @method('DELETE')
+<button type="submit" class="text-xs text-red-600 hover:text-red-800 font-medium">Delete</button>
+</form>
+@endif
+</td>
+</tr>
+@empty
+<tr><td colspan="4" class="px-5 py-10 text-center text-sm text-gray-400">No booth accounts yet. Create one with the "+ New Account" button above.</td></tr>
+@endforelse
+</tbody>
+</table>
+</div>
+</div>
 </div>
 </main>
 </div>
@@ -103,18 +150,38 @@ The room is just a label — access is controlled by the assignment below.
 {{-- Create modal --}}
 <div id="createModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/40 backdrop-blur-sm p-4">
 <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
-<div class="px-6 py-4 border-b border-gray-100"><h3 class="text-lg font-bold text-gray-900">New Room Account</h3></div>
+<div class="px-6 py-4 border-b border-gray-100"><h3 class="text-lg font-bold text-gray-900">New Mobile App Account</h3></div>
 <form method="POST" action="{{ route('admin.room-accounts.store') }}">
 @csrf
 <div class="p-6 space-y-4">
-<div><label class="block text-sm font-semibold text-gray-700 mb-1.5">Room</label>
+<div>
+<label class="block text-sm font-semibold text-gray-700 mb-1.5">Type</label>
+<div class="grid grid-cols-2 gap-2">
+<label class="flex items-center justify-center gap-2 px-3 py-2 text-sm font-semibold rounded-xl border border-indigo-300 bg-indigo-50 text-indigo-700 cursor-pointer">
+<input type="radio" name="role" value="room" checked onchange="setAccountType('room')"> Room (sessions)
+</label>
+<label class="flex items-center justify-center gap-2 px-3 py-2 text-sm font-semibold rounded-xl border border-gray-200 text-gray-600 cursor-pointer">
+<input type="radio" name="role" value="booth" onchange="setAccountType('booth')"> Booth (visits)
+</label>
+</div>
+</div>
+<div id="acctRoomBox"><label class="block text-sm font-semibold text-gray-700 mb-1.5">Room</label>
 <select id="acctRoom" name="room_id" required class="w-full px-4 py-2.5 text-sm border border-gray-200 rounded-xl bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500" onchange="onRoomSelect()">
 <option value="">— Select room —</option>
 @foreach ($rooms as $r)
 <option value="{{ $r->id }}" data-name="{{ $r->name }}" data-slug="{{ \Illuminate\Support\Str::slug($r->name) }}">{{ $r->name }}</option>
 @endforeach
 </select>
-<p class="text-xs text-gray-400 mt-1">Name &amp; email auto-fill from the room (editable).</p>
+<p class="text-xs text-gray-400 mt-1">For session tracking. Name &amp; email auto-fill from the room.</p>
+</div>
+<div id="acctBoothBox" style="display:none;"><label class="block text-sm font-semibold text-gray-700 mb-1.5">Booth</label>
+<select id="acctBooth" name="booth_id" class="w-full px-4 py-2.5 text-sm border border-gray-200 rounded-xl bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500" onchange="onBoothSelect()">
+<option value="">— Select booth —</option>
+@foreach ($booths as $b)
+<option value="{{ $b->id }}" data-name="{{ $b->name }}" data-slug="{{ \Illuminate\Support\Str::slug($b->name) }}">{{ $b->name }}</option>
+@endforeach
+</select>
+<p class="text-xs text-gray-400 mt-1">For booth visits — this account can only scan its booth.</p>
 </div>
 <div><label class="block text-sm font-semibold text-gray-700 mb-1.5">Name</label><input type="text" id="acctName" name="name" required class="w-full px-4 py-2.5 text-sm border border-gray-200 rounded-xl bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"></div>
 <div><label class="block text-sm font-semibold text-gray-700 mb-1.5">Email</label><input type="email" id="acctEmail" name="email" required class="w-full px-4 py-2.5 text-sm border border-gray-200 rounded-xl bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"></div>
@@ -133,10 +200,30 @@ The room is just a label — access is controlled by the assignment below.
 function openCreateModal() {
 document.getElementById('createModal').classList.remove('hidden');
 document.getElementById('createModal').classList.add('flex');
+setAccountType('room');
 }
 function closeCreateModal() {
 document.getElementById('createModal').classList.add('hidden');
 document.getElementById('createModal').classList.remove('flex');
+}
+function setAccountType(type) {
+const roomBox = document.getElementById('acctRoomBox');
+const boothBox = document.getElementById('acctBoothBox');
+document.getElementById('acctRoom').required = type === 'room';
+document.getElementById('acctBooth').required = type === 'booth';
+roomBox.style.display = type === 'room' ? 'block' : 'none';
+boothBox.style.display = type === 'booth' ? 'block' : 'none';
+document.querySelectorAll('input[name=role]').forEach(r => {
+const on = r.value === type;
+r.checked = on;
+r.closest('label').className = on
+? 'flex items-center justify-center gap-2 px-3 py-2 text-sm font-semibold rounded-xl border border-indigo-300 bg-indigo-50 text-indigo-700 cursor-pointer'
+: 'flex items-center justify-center gap-2 px-3 py-2 text-sm font-semibold rounded-xl border border-gray-200 text-gray-600 cursor-pointer';
+});
+document.getElementById('acctName').value = '';
+document.getElementById('acctEmail').value = '';
+document.getElementById('acctRoom').value = '';
+document.getElementById('acctBooth').value = '';
 }
 function onRoomSelect() {
 const sel = document.getElementById('acctRoom');
@@ -146,6 +233,15 @@ const emailEl = document.getElementById('acctEmail');
 if (!opt.value) return;
 if (!nameEl.value.trim()) nameEl.value = opt.dataset.name || '';
 if (!emailEl.value.trim()) emailEl.value = (opt.dataset.slug || '') + '@msd26.app';
+}
+function onBoothSelect() {
+const sel = document.getElementById('acctBooth');
+const opt = sel.options[sel.selectedIndex];
+const nameEl = document.getElementById('acctName');
+const emailEl = document.getElementById('acctEmail');
+if (!opt.value) return;
+if (!nameEl.value.trim()) nameEl.value = opt.dataset.name || '';
+if (!emailEl.value.trim()) emailEl.value = (opt.dataset.slug || '') + '@booth.msd26.app';
 }
 document.getElementById('sidebarToggle')?.addEventListener('click', () => {
 document.getElementById('mobileSidebar')?.classList.toggle('-translate-x-full');
