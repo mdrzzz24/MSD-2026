@@ -80,14 +80,30 @@ class AdminRoomAccountController extends Controller
     {
         abort_unless($user->isRoomAccount(), 404);
 
+        // Time slots for rowspan-aware display end times (e.g. Confluent 13:00–14:30).
+        $timeSlots = \App\Models\TimeSlot::ordered()->get();
+
+        // Only grid-anchored workshop items (whose start–end exactly matches a
+        // real time slot) appear on the public agenda. Redundant duplicates — the
+        // same workshop again with an extended end_time (e.g. 13:00–14:30) that
+        // matches no slot — are dropped so each workshop is listed only once.
+        // Non-workshop sessions (general / track / break) are always kept.
+        $slotKeys = $timeSlots->map(fn ($s) => $s->start_time . '-' . $s->end_time);
+
+        // Workshops that already have registered attendees. Workshops with no
+        // registrations are not listed (non-workshop sessions are always shown).
+        $workshopsWithRegs = \App\Models\Workshop::whereHas('registrants')->pluck('id');
+
         $items = AgendaItem::ordered()
             ->with(['workshop', 'track'])
             ->get()
+            ->filter(fn ($i) => ! $i->workshop_id || $slotKeys->contains($i->start_time . '-' . $i->end_time))
+            ->filter(fn ($i) => ! $i->workshop_id || $workshopsWithRegs->contains($i->workshop_id))
             ->groupBy(fn ($i) => $i->room ?: '(No room)');
 
         $assigned = $user->managedAgendaItems()->pluck('agenda_items.id')->all();
 
-        return view('admin.room-accounts.sessions', compact('user', 'items', 'assigned'));
+        return view('admin.room-accounts.sessions', compact('user', 'items', 'assigned', 'timeSlots'));
     }
 
     /**

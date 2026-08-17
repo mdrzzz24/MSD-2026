@@ -207,8 +207,9 @@ class AdminWorkshopController extends Controller
 
         $profiles = Registrant::whereNotNull('job_title')->distinct()->orderBy('job_title')->pluck('job_title');
         $sources  = Registrant::whereNotNull('utm_source')->distinct()->orderBy('utm_source')->pluck('utm_source');
+        $timeSlots = \App\Models\TimeSlot::ordered()->get();
 
-        return view('admin.workshop-registrants.index', compact('workshops', 'profiles', 'sources'));
+        return view('admin.workshop-registrants.index', compact('workshops', 'profiles', 'sources', 'timeSlots'));
     }
 
     /**

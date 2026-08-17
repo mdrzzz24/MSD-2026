@@ -72,7 +72,7 @@ Select all in {{ $roomName }}
 <td class="px-5 py-2">
 <input type="checkbox" name="agenda_item_ids[]" value="{{ $item->id }}" class="session-check rounded border-gray-300 text-indigo-600 focus:ring-indigo-500" {{ in_array($item->id, $assigned, true) ? 'checked' : '' }}>
 </td>
-<td class="px-5 py-2 whitespace-nowrap text-xs font-medium text-gray-700">{{ $item->start_time ? \Illuminate\Support\Str::substr($item->start_time, 0, 5) : '--' }} – {{ $item->end_time ? \Illuminate\Support\Str::substr($item->end_time, 0, 5) : '--' }}</td>
+<td class="px-5 py-2 whitespace-nowrap text-xs font-medium text-gray-700">{{ $item->start_time ? \Illuminate\Support\Str::substr($item->start_time, 0, 5) : '--' }} – {{ $item->end_time ? \Illuminate\Support\Str::substr((string) $item->displayEndTime($timeSlots), 0, 5) : '--' }}</td>
 <td class="px-5 py-2">
 <span class="text-sm text-gray-900">{{ $item->title }}</span>
 @if ($company)

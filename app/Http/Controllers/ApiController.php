@@ -102,6 +102,11 @@ class ApiController extends Controller
         $apiUser = $this->resolveApiUser($request->integer('admin_id') ?: null);
         $scope   = $apiUser ? $apiUser->scopedAgendaItemIds() : null;
 
+        // Time slots are needed for rowspan-aware display end times — e.g. the
+        // Confluent workshop spans 3 slots (13:00–14:30) but its raw end_time is
+        // the first slot's end (13:30).
+        $timeSlots = \App\Models\TimeSlot::ordered()->get();
+
         $query = AgendaItem::ordered()->with(['speakers', 'workshop', 'track']);
         if ($scope !== null) {
             $query->whereIn('id', $scope);
@@ -126,7 +131,7 @@ class ApiController extends Controller
                 'room'           => $item->room,
                 'date'           => $item->date?->format('Y-m-d'),
                 'start_time'     => $item->start_time,
-                'end_time'       => $item->end_time,
+                'end_time'       => $item->displayEndTime($timeSlots),
                 'capacity'       => $item->capacity,
                 'is_registrable' => $item->is_registrable,
                 'feedback_enabled' => $item->feedback_enabled,
