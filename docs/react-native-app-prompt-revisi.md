@@ -50,6 +50,7 @@ ganti isinya):
         "id": "agenda",
         "label": "Agenda",
         "endpoint": "/agenda",
+        "query": { "admin_id": "{user.id}" },
         "list_field": "data",
         "group_by": "agenda_type",
         "groups": { "workshop": "Workshop", "track": "Track", "session": "Session" },
@@ -77,9 +78,11 @@ ganti isinya):
       "label": "Scan Kehadiran Sesi",
       "endpoint": "/agenda/{item_id}/scan",
       "method": "POST",
-      "body": { "qr_token": "" },
+      "body": { "qr_token": "", "admin_id": "{user.id}" },
       "success_statuses": ["approved", "not_applicable"],
       "warning_statuses": { "not_registered": "Belum terdaftar di sesi ini", "pending": "Pendaftaran belum disetujui" },
+      "register_action": "register_workshop",
+      "register_warning": ["not_registered"],
       "registrant_field": "data.registrant"
     },
     "scan_booth": {
@@ -124,9 +127,14 @@ ganti isinya):
 2. **Login** → pakai `login.endpoint`, `login.method`, `login.body`,
    `login.field` untuk membaca user dari response. Nama field dibaca dari
    konfigurasi (misal `data.user`, `name`), bukan hardcode.
+   **Simpan `user.id` dari response login** — ganti semua placeholder
+   `{user.id}` di `query`/`body` konfigurasi dengan id tsb pada setiap request
+   (misal `GET /agenda?admin_id={user.id}`). Untuk akun ruangan, server membatasi
+   daftar/scan ke sesi yang di-assign super admin (tidak di-assign → semua sesi).
 3. **Beranda / Tracking** → render menu dari `tracking.list`. Untuk tiap item:
    - Tampilkan label dari `label`.
-   - Fetch `endpoint`, ambil array dari `list_field`.
+   - Fetch `endpoint` (tambahkan `query` dari konfigurasi sebagai query string),
+     ambil array dari `list_field`.
    - Render kartu memakai mapping `item` (title/subtitle/meta/speakers).
    - `group_by` + `groups` hanya dipakai kalau ada di konfigurasi; kalau tidak
      ada, tampilkan daftar flat.
@@ -140,6 +148,11 @@ ganti isinya):
      `registrant_fields` (path + aliases).
    - `success_statuses` → tampilkan sukses; `warning_statuses` → tampilkan
      peringatan & TIDAK dihitung sukses; selain itu → error.
+   - **Register cepat (opsional):** jika aksi punya `register_action` dan hasil
+     scan adalah warning dengan key di `register_warning` (mis. `not_registered`),
+     tampilkan tombol "Register" yang memanggil aksi `register_action` dengan
+     `qr_token` yang sama + `{item_id}` dari item (field `item_id_field`, fallback
+     `workshop_id`), lalu tampilkan hasilnya.
 5. **Riwayat scan lokal** → log generik (timestamp, label aksi, nama dari
    `registrant_fields.name`, status sukses/peringatan/error).
 

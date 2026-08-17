@@ -134,6 +134,15 @@ class AgendaItem extends Model
         return $this->belongsTo(Track::class);
     }
 
+    /**
+     * Mobile-app room accounts (users, role = 'room') explicitly assigned to
+     * manage/track this session. An account with no assignments manages all.
+     */
+    public function roomAccounts()
+    {
+        return $this->belongsToMany(User::class, 'agenda_item_room_account')->withTimestamps();
+    }
+
     public function feedback()
     {
         return $this->hasMany(AgendaFeedback::class, 'agenda_item_id');

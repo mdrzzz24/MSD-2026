@@ -203,6 +203,12 @@ Route::middleware(['auth', 'admin', 'no_cache'])->prefix('admin')->name('admin.'
     // Event Checker app config + QR code
     Route::get('/app-config', [AdminConfigController::class, 'show'])->name('app-config');
 
+    // Mobile app room accounts + per-session assignment (super admin only)
+    Route::get('/room-accounts', [App\Http\Controllers\AdminRoomAccountController::class, 'index'])->name('room-accounts.index');
+    Route::post('/room-accounts', [App\Http\Controllers\AdminRoomAccountController::class, 'store'])->name('room-accounts.store');
+    Route::get('/room-accounts/{user}/sessions', [App\Http\Controllers\AdminRoomAccountController::class, 'sessions'])->name('room-accounts.sessions');
+    Route::post('/room-accounts/{user}/sessions', [App\Http\Controllers\AdminRoomAccountController::class, 'saveSessions'])->name('room-accounts.sessions.store');
+
     // Mail Settings
     Route::get('/mail-settings', [MailSettingsController::class, 'edit'])->name('mail-settings.edit');
     Route::post('/mail-settings', [MailSettingsController::class, 'update'])->name('mail-settings.update');

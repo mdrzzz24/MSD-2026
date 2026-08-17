@@ -504,16 +504,18 @@ class AdminManagementController extends Controller
             'name'     => ['required', 'string', 'max:255'],
             'email'    => ['required', 'email', 'max:255', 'unique:users'],
             'password' => ['required', 'string', 'min:6'],
-            'role'     => ['required', 'in:admin,super_admin,client'],
+            'role'     => ['required', 'in:admin,super_admin,client,room'],
+            'room_id'  => ['nullable', 'exists:rooms,id'],
         ]);
 
         $data = [
             'name'     => $request->name,
             'email'    => $request->email,
             'password' => Hash::make($request->password),
-            'is_admin' => $request->role !== 'client',
+            'is_admin' => !in_array($request->role, ['client', 'room'], true),
             'role'     => $request->role,
             'group_id' => $request->group_id ?: null,
+            'room_id'  => $request->role === 'room' ? ($request->room_id ?: null) : null,
         ];
 
         // Set permissions from request, or default for role
@@ -536,15 +538,17 @@ class AdminManagementController extends Controller
         $request->validate([
             'name'  => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'max:255', 'unique:users,email,' . $user->id],
-            'role'  => ['required', 'in:admin,super_admin,client'],
+            'role'  => ['required', 'in:admin,super_admin,client,room'],
+            'room_id' => ['nullable', 'exists:rooms,id'],
         ]);
 
         $data = [
             'name'     => $request->name,
             'email'    => $request->email,
             'role'     => $request->role,
-            'is_admin' => $request->role !== 'client',
+            'is_admin' => !in_array($request->role, ['client', 'room'], true),
             'group_id' => $request->group_id ?: null,
+            'room_id'  => $request->role === 'room' ? ($request->room_id ?: null) : null,
         ];
 
         if ($request->filled('password')) {

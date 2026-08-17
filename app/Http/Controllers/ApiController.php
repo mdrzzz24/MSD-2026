@@ -46,6 +46,9 @@ class ApiController extends Controller
                     'email'    => $user->email,
                     'is_admin' => $user->is_admin,
                     'role'     => $user->role,
+                    'room'     => $user->isRoomAccount()
+                        ? ['id' => $user->room_id, 'name' => $user->room?->name]
+                        : null,
                 ],
             ],
         ]);
@@ -79,11 +82,19 @@ class ApiController extends Controller
     /**
      * Get all agenda items.
      */
-    public function agenda(): JsonResponse
+    public function agenda(Request $request): JsonResponse
     {
-        $items = AgendaItem::ordered()
-            ->with(['speakers', 'workshop', 'track'])
-            ->get()
+        // Room accounts only see the sessions assigned to them; an account with
+        // no assignments sees the full agenda (default).
+        $apiUser = $this->resolveApiUser($request->integer('admin_id') ?: null);
+        $scope   = $apiUser ? $apiUser->scopedAgendaItemIds() : null;
+
+        $query = AgendaItem::ordered()->with(['speakers', 'workshop', 'track']);
+        if ($scope !== null) {
+            $query->whereIn('id', $scope);
+        }
+
+        $items = $query->get()
             ->map(fn($item) => [
                 'id'             => $item->id,
                 'title'          => $item->title,
@@ -114,8 +125,20 @@ class ApiController extends Controller
                 ]),
             ]);
 
+        // The room this account is bound to (null for non-room accounts).
+        $room = $apiUser && $apiUser->isRoomAccount()
+            ? ['id' => $apiUser->room_id, 'name' => $apiUser->room?->name]
+            : null;
+
+        // Distinct rooms among the sessions this account can manage/track —
+        // readable directly from /agenda without a separate /config call.
+        $rooms = $items->pluck('room')->filter()->unique()->values();
+
         return response()->json([
             'success' => true,
+            'room'    => $room,
+            'rooms'   => $rooms,
+            'scope'   => $this->scopeMeta($apiUser),
             'data'    => $items,
         ]);
     }
@@ -211,7 +234,18 @@ class ApiController extends Controller
     {
         $validated = $request->validate([
             'qr_token' => ['required', 'string', 'max:255'],
+            'admin_id' => ['nullable', 'integer'],
         ]);
+
+        // Room accounts may only check in to sessions assigned to them.
+        $user = $this->resolveApiUser($validated['admin_id'] ?? null);
+        if (!$this->agendaItemAllowed($user, $agendum)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'This session is not assigned to your account.',
+                'scope'   => 'forbidden',
+            ], 403);
+        }
 
         $token = trim($validated['qr_token']);
         $registrant = Registrant::where('qr_token', $token)
@@ -245,6 +279,15 @@ class ApiController extends Controller
                         ? 'Registrant is not registered for this workshop.'
                         : 'Registrant is not yet approved for this workshop.',
                     'registration' => $registration,
+                    'data'         => [
+                        'registrant' => [
+                            'id'        => $registrant->id,
+                            'name'      => $registrant->name,
+                            'email'     => $registrant->email,
+                            'company'   => $registrant->company,
+                            'job_title' => $registrant->job_title,
+                        ],
+                    ],
                 ], 403);
             }
         }
@@ -325,7 +368,18 @@ class ApiController extends Controller
     {
         $validated = $request->validate([
             'qr_token' => ['required', 'string', 'max:255'],
+            'admin_id' => ['nullable', 'integer'],
         ]);
+
+        // Room accounts may only track out of sessions assigned to them.
+        $user = $this->resolveApiUser($validated['admin_id'] ?? null);
+        if (!$this->agendaItemAllowed($user, $agendum)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'This session is not assigned to your account.',
+                'scope'   => 'forbidden',
+            ], 403);
+        }
 
         $token = trim($validated['qr_token']);
         $registrant = Registrant::where('qr_token', $token)
@@ -686,8 +740,18 @@ class ApiController extends Controller
      *
      * GET /api/agenda/{agendum}/attendees
      */
-    public function agendaAttendees(AgendaItem $agendum): JsonResponse
+    public function agendaAttendees(Request $request, AgendaItem $agendum): JsonResponse
     {
+        // Room accounts may only view attendees of sessions assigned to them.
+        $user = $this->resolveApiUser($request->integer('admin_id') ?: null);
+        if (!$this->agendaItemAllowed($user, $agendum)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'This session is not assigned to your account.',
+                'scope'   => 'forbidden',
+            ], 403);
+        }
+
         $visits = AgendaVisit::where('agenda_item_id', $agendum->id)
             ->with('registrant')
             ->orderByDesc('visited_at')
@@ -744,11 +808,13 @@ class ApiController extends Controller
             'scans.*.qr_token'  => ['required', 'string', 'max:255'],
             'scans.*.item_id'   => ['nullable', 'integer'],
             'scans.*.scanned_at'=> ['nullable', 'date'],
+            'admin_id'          => ['nullable', 'integer'],
         ]);
 
+        $user    = $this->resolveApiUser($validated['admin_id'] ?? null);
         $results = [];
         foreach ($validated['scans'] as $scan) {
-            $results[] = $this->processSyncScan($scan);
+            $results[] = $this->processSyncScan($scan, $user);
         }
 
         return response()->json([
@@ -760,14 +826,14 @@ class ApiController extends Controller
     /**
      * Dispatch a single queued scan to its handler.
      */
-    private function processSyncScan(array $scan): array
+    private function processSyncScan(array $scan, ?User $user): array
     {
         $action = $scan['action'];
 
         $result = match ($action) {
             'registration_scan' => $this->syncRegistration($scan),
-            'agenda_scan'       => $this->syncAgenda($scan),
-            'agenda_trackout'   => $this->syncAgendaTrackOut($scan),
+            'agenda_scan'       => $this->syncAgenda($scan, $user),
+            'agenda_trackout'   => $this->syncAgendaTrackOut($scan, $user),
             'booth_scan'        => $this->syncBooth($scan),
             'workshop_register' => $this->syncWorkshop($scan),
             default             => [
@@ -890,8 +956,20 @@ class ApiController extends Controller
     /**
      * Offline agenda/workshop scan → check-in, honoring the workshop gate.
      */
-    private function syncAgenda(array $scan): array
+    private function syncAgenda(array $scan, ?User $user): array
     {
+        // Room accounts may only check in to sessions assigned to them.
+        $scopeItem = isset($scan['item_id']) ? AgendaItem::find($scan['item_id']) : null;
+        if ($scopeItem && !$this->agendaItemAllowed($user, $scopeItem)) {
+            return [
+                'client_id' => $scan['client_id'],
+                'action'    => 'agenda_scan',
+                'success'   => false,
+                'message'   => 'This session is not assigned to your account.',
+                'scope'     => 'forbidden',
+            ];
+        }
+
         $resolved = $this->resolveSyncRegistrant($scan);
         if (isset($resolved['error'])) {
             return array_merge([
@@ -978,8 +1056,20 @@ class ApiController extends Controller
     /**
      * Offline agenda track-out → set left_at on the existing check-in.
      */
-    private function syncAgendaTrackOut(array $scan): array
+    private function syncAgendaTrackOut(array $scan, ?User $user): array
     {
+        // Room accounts may only track out of sessions assigned to them.
+        $scopeItem = isset($scan['item_id']) ? AgendaItem::find($scan['item_id']) : null;
+        if ($scopeItem && !$this->agendaItemAllowed($user, $scopeItem)) {
+            return [
+                'client_id' => $scan['client_id'],
+                'action'    => 'agenda_trackout',
+                'success'   => false,
+                'message'   => 'This session is not assigned to your account.',
+                'scope'     => 'forbidden',
+            ];
+        }
+
         $resolved = $this->resolveSyncRegistrant($scan);
         if (isset($resolved['error'])) {
             return array_merge([
@@ -1223,6 +1313,52 @@ class ApiController extends Controller
      * topic follows whoever is logged in (print/admin-{their id}) instead of
      * always print/admin-1.
      */
+    /**
+     * Resolve the user making an API call from an optional admin_id.
+     */
+    private function resolveApiUser(?int $adminId): ?User
+    {
+        if (!$adminId) {
+            return null;
+        }
+
+        return User::find($adminId);
+    }
+
+    /**
+     * Whether the resolved API user may manage/track the given agenda item.
+     * - No user / non-room account → allowed (open API, backward compatible).
+     * - Room account with NO assignments → allowed (manages ALL sessions).
+     * - Room account WITH assignments → only the assigned sessions.
+     */
+    private function agendaItemAllowed(?User $user, AgendaItem $item): bool
+    {
+        if (!$user || !$user->isRoomAccount()) {
+            return true;
+        }
+
+        $ids = $user->scopedAgendaItemIds();
+
+        return $ids === null || in_array($item->id, $ids, true);
+    }
+
+    /**
+     * Machine-readable scope description for the mobile app.
+     */
+    private function scopeMeta(?User $user): array
+    {
+        if (!$user || !$user->isRoomAccount()) {
+            return ['type' => 'unrestricted', 'agenda_item_ids' => []];
+        }
+
+        $ids = $user->scopedAgendaItemIds();
+
+        return [
+            'type'            => $ids === null ? 'all' : 'assigned',
+            'agenda_item_ids' => $ids ?? [],
+        ];
+    }
+
     private function resolvePrinterAdminId(?int $adminId): int
     {
         if ($adminId && User::where('id', $adminId)->where('is_admin', true)->exists()) {
@@ -1243,6 +1379,7 @@ class ApiController extends Controller
         $defaultAdminId = $this->resolvePrinterAdminId($request->integer('admin_id') ?: null);
         $prefix         = config('mqtt.topic_prefix', 'print');
         $base           = $request->getSchemeAndHttpHost();
+        $apiUser        = $this->resolveApiUser($request->integer('admin_id') ?: null);
 
         return response()->json([
             'success' => true,
@@ -1254,6 +1391,10 @@ class ApiController extends Controller
                     'api_base_url'   => $base . '/api',
                     'request_format' => 'json',
                     'version'        => '1.0.0',
+                    'room'           => $apiUser && $apiUser->isRoomAccount()
+                        ? ['id' => $apiUser->room_id, 'name' => $apiUser->room?->name]
+                        : null,
+                    'scope'          => $this->scopeMeta($apiUser),
                 ],
                 'mqtt' => [
                     'enabled'          => app(\App\Services\MqttService::class)->isActive(),
@@ -1385,13 +1526,21 @@ class ApiController extends Controller
     public function activity(Request $request): JsonResponse
     {
         $validated = $request->validate([
-            'action' => ['nullable', 'string', 'max:50'],
-            'limit'  => ['nullable', 'integer', 'min:1', 'max:100'],
+            'action'   => ['nullable', 'string', 'max:50'],
+            'limit'    => ['nullable', 'integer', 'min:1', 'max:100'],
+            'admin_id' => ['nullable', 'integer'],
         ]);
 
         $query = ScanLog::query();
         if (!empty($validated['action'])) {
             $query->where('action', $validated['action']);
+        }
+
+        // Room accounts only see activity for the sessions assigned to them.
+        $apiUser = $this->resolveApiUser($validated['admin_id'] ?? null);
+        $scope   = $apiUser ? $apiUser->scopedAgendaItemIds() : null;
+        if ($scope !== null) {
+            $query->where('item_type', 'agenda')->whereIn('item_id', $scope);
         }
 
         $logs = $query->latest()->limit($validated['limit'] ?? 20)->get()->map(fn ($l) => [

@@ -36,11 +36,18 @@ Body (JSON): { "email": "admin@example.com", "password": "..." }
 ```
 - Validasi hanya dari tabel `users` (bukan registrant). Tidak ada token — cukup
   simpan objek `user` lokal sebagai sesi.
+- **WAJIB simpan `user.id` dari response login** dan kirim sebagai `admin_id`
+  pada setiap request berikutnya (agenda, scan, trackout, attendee, activity,
+  config). Untuk **akun ruangan** (role `room`), server memakai `admin_id` untuk
+  membatasi: hanya sesi yang sudah di-assign super admin yang ditampilkan/di-track;
+  kalau akun tidak di-assign → semua sesi ditampilkan.
 
 **B. Daftar agenda (untuk tracking)**
 ```
-GET {base}/agenda
-200 → { "success": true, "data": [ {
+GET {base}/agenda?admin_id={userId}
+200 → { "success": true, "room": { "id": 4, "name": "Sumatra" } | null,
+        "rooms": ["Sumatra", ...],
+        "scope": { "type": "all"|"assigned"|"unrestricted", "agenda_item_ids": [...] }, "data": [ {
   "id": 94, "title": "...", "topic_headline": null, "description": "<p>...</p>",
   "agenda_type": "workshop" | "track" | "session",
   "workshop_id": 21 | null, "track_id": null | 54,
@@ -52,6 +59,14 @@ GET {base}/agenda
   "speakers": [ { "id": 8, "name": "Ihsan Fuadi", "title": "Solutions Engineer", "photo": "http://.../storage/...png" } ]
 } ] }
 ```
+- `{userId}` = id user dari response login (untuk akun ruangan, daftar hanya
+  berisi sesi yang ditugaskan super admin; akun tanpa penugasan → semua sesi).
+- `room` — ruangan yang diikat ke akun ruangan (`{id, name}`); `null` untuk
+  non-akun-ruangan. Bisa dibaca langsung dari `/agenda` (tanpa `/config`).
+- `rooms` — daftar nama ruangan unik dari sesi yang bisa di-manage akun tsb
+  (ruangan yang muncul di `data`).
+- `scope` menjelaskan pembatasan: `all` (akun ruangan tanpa penugasan),
+  `assigned` (hanya `agenda_item_ids`), `unrestricted` (bukan akun ruangan).
 
 **C. Daftar booth**
 ```
@@ -73,11 +88,13 @@ Body: { "qr_token": "8dba725e73fd0665" }
 **E. Scan kehadiran sesi/workshop (agenda)**
 ```
 POST {base}/agenda/{agenda_item_id}/scan
-Body: { "qr_token": "..." }
+Body: { "qr_token": "...", "admin_id": {userId} }
 200 (hadir) → { "success": true, "message": "Check-in recorded.", "already_visited": false,
                 "registration": "approved", "data": { "registrant": {...}, "visited_at": "..." } }
 403 (belum terdaftar workshop) → { "success": false,
                 "message": "Registrant is not registered for this workshop.", "registration": "not_registered" }
+403 (bukan sesi akun ruangan tsb) → { "success": false,
+                "message": "This session is not assigned to your account.", "scope": "forbidden" }
 403 (pending) → { "success": false,
                 "message": "Registrant is not yet approved for this workshop.", "registration": "pending" }
 ```

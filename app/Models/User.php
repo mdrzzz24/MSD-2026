@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
-#[Fillable(['name', 'email', 'password', 'is_admin', 'role', 'permissions', 'setup_token', 'setup_token_expires_at', 'group_id'])]
+#[Fillable(['name', 'email', 'password', 'is_admin', 'role', 'permissions', 'setup_token', 'setup_token_expires_at', 'group_id', 'room_id'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {
@@ -25,6 +25,57 @@ class User extends Authenticatable
     public function assignedRegistrants()
     {
         return $this->hasMany(Registrant::class, 'assigned_to');
+    }
+
+    /**
+     * The room this mobile-app account is bound to (organizational label).
+     */
+    public function room()
+    {
+        return $this->belongsTo(Room::class);
+    }
+
+    /**
+     * Agenda sessions explicitly assigned to this account by the super admin.
+     */
+    public function managedAgendaItems()
+    {
+        return $this->belongsToMany(AgendaItem::class, 'agenda_item_room_account')->withTimestamps();
+    }
+
+    /**
+     * Whether this is a mobile-app room account (role = 'room').
+     */
+    public function isRoomAccount(): bool
+    {
+        return $this->role === 'room';
+    }
+
+    /**
+     * The name of the room this account is bound to.
+     */
+    public function roomName(): ?string
+    {
+        return $this->room?->name;
+    }
+
+    /**
+     * The agenda item IDs this account is allowed to manage / track via the
+     * mobile API, or null when unrestricted.
+     *
+     * - Non-room accounts            → null (unrestricted).
+     * - Room account with NO session assignments → null (manages ALL sessions).
+     * - Room account WITH assignments → only the assigned session IDs.
+     */
+    public function scopedAgendaItemIds(): ?array
+    {
+        if (!$this->isRoomAccount()) {
+            return null;
+        }
+
+        $ids = $this->managedAgendaItems()->pluck('agenda_items.id')->all();
+
+        return $ids === [] ? null : array_map('intval', $ids);
     }
 
     public function hasPermission(string $key): bool
@@ -106,6 +157,8 @@ class User extends Authenticatable
             'client' => [
                 'registrants' => true, 'workshop_registrants' => true, 'utm_sources' => true, 'qr_codes' => true,
             ] + array_combine($all, array_fill(0, count($all), false)),
+            // Mobile-app room accounts have no admin panel access at all.
+            'room' => array_combine($all, array_fill(0, count($all), false)),
             default => [],
         };
     }

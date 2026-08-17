@@ -56,6 +56,10 @@
 <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-200">
 <span class="w-1.5 h-1.5 rounded-full bg-blue-500"></span> Client
 </span>
+<?php elseif($u->role === 'room'): ?>
+<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-teal-50 text-teal-700 border border-teal-200">
+<span class="w-1.5 h-1.5 rounded-full bg-teal-500"></span> Room
+</span>
 <?php else: ?>
 <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-gray-50 text-gray-600 border border-gray-200">
 <span class="w-1.5 h-1.5 rounded-full bg-gray-400"></span> Admin
@@ -64,7 +68,7 @@
 </td>
 <td class="px-5 py-4"><span class="text-sm text-gray-500"><?php echo e($u->created_at->format('d M Y')); ?></span></td>
 <td class="px-5 py-4 text-center">
-<button data-user-id="<?php echo e($u->id); ?>" data-user-name="<?php echo e($u->name); ?>" data-user-email="<?php echo e($u->email); ?>" data-user-role="<?php echo e($u->role); ?>" data-user-group="<?php echo e($u->group_id); ?>" data-user-perms='<?php echo json_encode($u->permissions ?? \App\Models\User::defaultPermissions($u->role), 15, 512) ?>' onclick="editUserFromData(this)" class="text-xs text-amber-600 hover:text-amber-800 font-medium mr-2">Edit</button>
+<button data-user-id="<?php echo e($u->id); ?>" data-user-name="<?php echo e($u->name); ?>" data-user-email="<?php echo e($u->email); ?>" data-user-role="<?php echo e($u->role); ?>" data-user-group="<?php echo e($u->group_id); ?>" data-user-room="<?php echo e($u->room_id); ?>" data-user-perms='<?php echo json_encode($u->permissions ?? \App\Models\User::defaultPermissions($u->role), 15, 512) ?>' onclick="editUserFromData(this)" class="text-xs text-amber-600 hover:text-amber-800 font-medium mr-2">Edit</button>
 <?php if($u->id !== auth()->id()): ?>
 <form action="<?php echo e(route('admin.management.users.destroy', $u)); ?>" method="POST" class="inline" onsubmit="return confirm('Delete <?php echo e($u->name); ?>?')">
 <?php echo csrf_field(); ?> <?php echo method_field('DELETE'); ?>
@@ -99,8 +103,18 @@
 <option value="admin">Admin</option>
 <option value="super_admin">Super Admin</option>
 <option value="client">Client</option>
+<option value="room">Room (Mobile App)</option>
 </select>
-<p class="text-xs text-gray-400 mt-1">Permissions auto-adjust when role changes. Super Admin always has full access.</p>
+<p class="text-xs text-gray-400 mt-1">Permissions auto-adjust when role changes. Super Admin always has full access. Room accounts manage mobile-app sessions only (no admin panel).</p>
+</div>
+<div id="roomSection" style="display:none;"><label class="block text-sm font-semibold text-gray-700 mb-1.5">Room</label>
+<select id="userRoom" name="room_id" class="w-full px-4 py-2.5 text-sm border border-gray-200 rounded-xl bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500">
+<option value="">— Select Room —</option>
+<?php $__currentLoopData = \App\Models\Room::ordered()->get(); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $r): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+<option value="<?php echo e($r->id); ?>"><?php echo e($r->name); ?></option>
+<?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+</select>
+<p class="text-xs text-gray-400 mt-1">The room this mobile-app account belongs to.</p>
 </div>
 <div><label class="block text-sm font-semibold text-gray-700 mb-1.5">Group <span class="text-gray-400 font-normal">(optional — for client users)</span></label>
 <select id="userGroup" name="group_id" class="w-full px-4 py-2.5 text-sm border border-gray-200 rounded-xl bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500">
@@ -160,7 +174,8 @@ registrants: true, workshops: false, workshop_registrants: true,
 tracks: false, agenda: false, speakers: false, time_slots: false,
 rooms: false, email_templates: false, utm_sources: true,
 qr_codes: true, checkin_log: false, admin_users: false
-}
+},
+room: Object.fromEntries(Object.keys(defaultPerms).map(k => [k, false]))
 };
 function setPermissions(perms) {
 document.querySelectorAll('#permissionsSection input[type=checkbox]').forEach(cb => {
@@ -172,7 +187,8 @@ function onRoleChange() {
 const role = document.getElementById('userRole').value;
 const perms = roleDefaults[role] || defaultPerms;
 setPermissions(perms);
-if (role === 'super_admin') {
+document.getElementById('roomSection').style.display = (role === 'room') ? 'block' : 'none';
+if (role === 'super_admin' || role === 'room') {
 document.getElementById('permissionsSection').style.display = 'none';
 } else {
 document.getElementById('permissionsSection').style.display = 'block';
@@ -190,6 +206,7 @@ document.getElementById('userPassword').required = true;
 document.getElementById('pwdLabel').textContent = '(required for new user)';
 document.getElementById('userRole').value = 'admin';
 document.getElementById('userGroup').value = '';
+document.getElementById('userRoom').value = '';
 onRoleChange();
 document.getElementById('userModal').classList.remove('hidden');
 document.getElementById('userModal').classList.add('flex');
@@ -223,7 +240,9 @@ document.getElementById('userGroup').value = groupId;
 } else {
 document.getElementById('userGroup').value = '';
 }
-if (role === 'super_admin') {
+document.getElementById('userRoom').value = btn.dataset.userRoom || '';
+document.getElementById('roomSection').style.display = (role === 'room') ? 'block' : 'none';
+if (role === 'super_admin' || role === 'room') {
 document.getElementById('permissionsSection').style.display = 'none';
 } else {
 document.getElementById('permissionsSection').style.display = 'block';

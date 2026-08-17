@@ -33,6 +33,26 @@ Envelope response selalu: `{ "success": bool, "message": string, "data": ... }`.
 
 ---
 
+## 0. Akun ruangan (Room Account) & pembatasan sesi
+
+Aplikasi mobile bisa dipakai oleh **akun ruangan** — satu akun per ruangan
+(`role = "room"`, contoh email `ballroom-a@msd26.app`, `java@msd26.app`).
+Super admin membatasi sesi mana yang boleh di-track tiap akun melalui halaman
+**Room Accounts** (`/admin/room-accounts`):
+
+- Akun ruangan **tanpa sesi yang ditugaskan** → boleh menampilkan & men-track
+  **SEMUA sesi** (perilaku default).
+- Akun ruangan **yang sudah ditugaskan sesi** → hanya sesi-sesi tsb yang tampil
+  dan bisa di-scan / di-track-out / dilihat attendee-nya.
+- Non-akun-ruangan (admin biasa) atau tanpa `admin_id` → tetap melihat semua
+  (perilaku lama, API tetap terbuka).
+
+Cara kerja: login → simpan `user.id` sebagai `admin_id`, lalu sertakan
+`admin_id` di setiap endpoint agenda di bawah. Server memakai `admin_id` untuk
+membatasi hasil sesuai tugas super admin.
+
+---
+
 ## 1. Login
 
 ```
@@ -40,11 +60,16 @@ POST /api/login
 Body: { "email": "admin@example.com", "password": "..." }
 ```
 
-`200` → `{ "success": true, "data": { "user": { "id": 1, "name": "...", "email": "...", "is_admin": true, "role": "super_admin" } } }`
+`200` → `{ "success": true, "data": { "user": { "id": 1, "name": "...", "email": "...", "is_admin": true, "role": "super_admin", "room": null } } }`
 `401` → `{ "success": false, "message": "Invalid credentials." }`
+
+Untuk akun ruangan (`role = "room"`) field `room` berisi `{ "id": 4, "name": "Sumatra" }`
+(room yang diikatkan); untuk role lain `room` = `null`.
 
 > **Penting:** `user.id` dipakai sebagai `admin_id` saat scan registrasi, supaya
 > badge di-print ke printer admin yang login (topic `print/admin-{id}`).
+> Untuk akun ruangan, `user.id` juga dipakai sebagai `admin_id` pada endpoint
+> agenda supaya daftar sesi & scan dibatasi sesuai penugasan super admin.
 >
 > Contoh alur login:
 > ```bash
@@ -70,6 +95,11 @@ GET /api/config?admin_id={userId}
 `200` → `{ "success": true, "data": { "app": {...}, "mqtt": {...}, "printers": [...], "server_time": "..." } }`
 
 - `app.base_url` / `api_base_url` — alamat server aktif.
+- `app.room` — untuk akun ruangan: `{ "id", "name" }`; selain itu `null`.
+- `app.scope` — ringkasan pembatasan sesi akun yang login:
+  `{ "type": "all"|"assigned"|"unrestricted", "agenda_item_ids": [...] }`
+  (`type="all"` = akun ruangan tanpa penugasan → semua sesi; `type="assigned"` =
+  hanya id sesi di `agenda_item_ids`; `unrestricted` = bukan akun ruangan).
 - `mqtt.enabled` — apakah MQTT aktif; `mqtt.default_admin_id` / `mqtt.default_topic` —
   printer **user yang login** (mis. `print/admin-12`).
 - `printers[]` — daftar admin & topic printer masing-masing (`{ id, name, email, role, topic }`),
@@ -127,9 +157,19 @@ Body: { "admin_id": 12, "name": "Test Print", "company": "MQTT Test" }
 ## 4. Daftar agenda & booth
 
 ```
-GET /api/agenda
+GET /api/agenda?admin_id={userId}
 GET /api/booths
 ```
+
+- `admin_id` **(opsional)** — untuk **akun ruangan**, daftar hanya berisi sesi
+  yang ditugaskan ke akun tsb (lihat §0). Tanpa `admin_id` / bukan akun ruangan →
+  semua sesi.
+- Response `/api/agenda` menyertakan (di luar `data`):
+  - `scope` — ringkasan pembatasan (lihat §2).
+  - `room` — `{ id, name }` ruangan yang diikat ke akun ruangan; `null` untuk
+    non-akun-ruangan. Bisa dibaca langsung dari `/agenda` (tanpa `/config`).
+  - `rooms` — daftar nama ruangan (string) yang unik dari sesi-sesi yang bisa
+    di-manage akun tsb (yaitu ruangan yang muncul di `data`).
 
 `/api/agenda` tiap item: `id`, `title`, `topic_headline`, `description`, `agenda_type`
 (`track`/`workshop`/`session`), `workshop_id`, `track_id`, `company`, `workshop_name`,
@@ -164,11 +204,13 @@ Perilaku persis **Onsite Event**: mem-publish badge via MQTT ke
 ```
 POST /api/agenda/{agenda_item_id}/scan
 Body: { "qr_token": "8dba725e73fd0665" }
+Body (akun ruangan): { "qr_token": "...", "admin_id": 27 }
 ```
 
 `200` (hadir) → `{ "success": true, "message": "Check-in recorded.", "already_visited": false, "registration": "approved"|"not_applicable", "data": { "registrant": {...}, "visited_at": "..." } }`
 `403` (belum terdaftar workshop) → `{ "success": false, "message": "Registrant is not registered for this workshop.", "registration": "not_registered" }`
 `403` (pending) → `{ "success": false, "message": "Registrant is not yet approved for this workshop.", "registration": "pending" }`
+`403` (bukan sesi akun tsb) → `{ "success": false, "message": "This session is not assigned to your account.", "scope": "forbidden" }`
 
 - Untuk sesi **workshop**: hanya dicatat jika `registration === "approved"`.
 - Sesi **track/general**: walk-in (`registration: "not_applicable"`).
@@ -179,10 +221,13 @@ Body: { "qr_token": "8dba725e73fd0665" }
 ```
 POST /api/agenda/{agenda_item_id}/trackout
 Body: { "qr_token": "8dba725e73fd0665" }
+Body (akun ruangan): { "qr_token": "...", "admin_id": 27 }
 ```
 
 `200` → `{ "success": true, "message": "Track-out recorded.", "already_tracked_out": false, "data": { "registrant": {...}, "visited_at": "...", "left_at": "..." } }`
 - Belum check-in → `409`; sudah track-out → `already_tracked_out: true`.
+- Akun ruangan di luar sesi → `403` `"This session is not assigned to your account."`
+  (`scope: "forbidden"`).
 
 ---
 
@@ -214,13 +259,15 @@ Body: { "qr_token": "..." }   ATAU   { "registrant_id": 445 }
 ## 9. Activity feed (monitoring real-time)
 
 ```
-GET /api/activity?limit=20&action=registration_scan
+GET /api/activity?limit=20&action=registration_scan&admin_id=27
 ```
 
 `200` → `{ "success": true, "data": [ { "id", "action", "registrant_id", "registrant_name", "item_id", "item_type", "item_label", "source", "client_id", "admin_id", "success", "printed", "message", "created_at" } ] }`
 
 - `limit` (1–100, default 20), `action` (opsional) untuk filter:
   `registration_scan` | `agenda_scan` | `agenda_trackout` | `booth_scan` | `workshop_register` | `mqtt_test`.
+- `admin_id` (opsional) — untuk **akun ruangan**, hanya aktivitas sesi yang
+  ditugaskan ke akun tsb yang dikembalikan.
 - `source`: `mobile` (scan langsung) / `sync` (upload offline) / `web`.
 - `printed`: apakah badge MQTT berhasil dikirim.
 
@@ -241,12 +288,16 @@ Contoh:
 ```
 POST /api/sync/scans
 Body: {
+  "admin_id": 27,
   "scans": [
     { "client_id": "a1b2c3-...", "action": "agenda_scan", "qr_token": "8dba725e73fd0665", "item_id": 94, "scanned_at": "2026-08-09T10:00:00+07:00" }
   ]
 }
 ```
 
+- `admin_id` (opsional) — untuk **akun ruangan**, tiap `agenda_scan`/`agenda_trackout`
+  divalidasi: sesi di luar penugasan akun → `success: false`, `message: "This session
+  is not assigned to your account."`, `scope: "forbidden"`.
 - `action`: `registration_scan` | `agenda_scan` | `agenda_trackout` | `booth_scan` | `workshop_register`
 - `item_id`: id agenda/booth/workshop sesuai action (kosong utk `registration_scan`)
 - `scanned_at` (opsional): waktu scan asli — dipakai sebagai waktu check-in/visit/track-out.
