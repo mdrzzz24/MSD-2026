@@ -18,7 +18,7 @@ class AuthController extends Controller
             $user = Auth::user();
 
             if ($user->is_admin || $user->role === 'client') {
-                return redirect()->route('admin.dashboard');
+                return redirect()->route($user->isViewer() ? 'admin.registrants.index' : 'admin.dashboard');
             }
 
             Auth::logout();
@@ -95,7 +95,9 @@ class AuthController extends Controller
                     }
                 }
 
-                return redirect()->intended(route('admin.dashboard'));
+                // Read-only viewers land directly on their single menu (Registrants).
+                $home = Auth::user()->isViewer() ? route('admin.registrants.index') : route('admin.dashboard');
+                return redirect()->intended($home);
             }
 
             // Logged in but not admin/client — log out and try registrant

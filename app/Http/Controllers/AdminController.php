@@ -151,6 +151,11 @@ class AdminController extends Controller
      */
     public function dashboard(Request $request)
     {
+        // Viewers only get the Registrants menu; redirect direct dashboard access.
+        if (auth()->user()?->isViewer()) {
+            return redirect()->route('admin.registrants.index');
+        }
+
         $data = $this->getDashboardStats();
 
         // Paginate the daily breakdown: show 7 most recent days per page
@@ -879,10 +884,11 @@ class AdminController extends Controller
             }
         }
 
-        $total    = (clone $statsQuery)->count();
-        $pending  = (clone $statsQuery)->pending()->count();
-        $approved = (clone $statsQuery)->approved()->count();
-        $rejected = (clone $statsQuery)->rejected()->count();
+        $total     = (clone $statsQuery)->count();
+        $pending   = (clone $statsQuery)->pending()->count();
+        $approved  = (clone $statsQuery)->approved()->count();
+        $rejected  = (clone $statsQuery)->rejected()->count();
+        $checkedIn = (clone $statsQuery)->whereNotNull('checked_in_at')->count();
 
         // Client-only: how many registrants THIS client has already marked.
         $myCounts = null;
@@ -902,7 +908,7 @@ class AdminController extends Controller
         $sources  = Registrant::whereNotNull('utm_source')->distinct()->orderBy('utm_source')->pluck('utm_source');
 
         return view('admin.registrants.index', compact(
-            'registrants', 'remindedIds', 'total', 'pending', 'approved', 'rejected',
+            'registrants', 'remindedIds', 'total', 'pending', 'approved', 'rejected', 'checkedIn',
             'status', 'utmFilter', 'search', 'profiles', 'sources', 'my', 'myCounts',
             'sort', 'direction'
         ));

@@ -199,6 +199,8 @@ class User extends Authenticatable
             'room' => array_combine($all, array_fill(0, count($all), false)),
             // Mobile-app booth accounts have no admin panel access at all.
             'booth' => array_combine($all, array_fill(0, count($all), false)),
+            // Read-only viewer — can only see the Registrants list.
+            'viewer' => ['registrants' => true] + array_combine($all, array_fill(0, count($all), false)),
             default => [],
         };
     }
@@ -241,10 +243,18 @@ class User extends Authenticatable
     }
 
     /**
+     * Check if the user is a read-only viewer (Registrants list only).
+     */
+    public function isViewer(): bool
+    {
+        return $this->role === 'viewer';
+    }
+
+    /**
      * Check if the user can perform write operations (approve/reject/delete).
      */
     public function canWrite(): bool
     {
-        return $this->is_admin && !$this->isClient();
+        return $this->is_admin && !$this->isClient() && !$this->isViewer();
     }
 }

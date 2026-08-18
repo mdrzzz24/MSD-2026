@@ -64,6 +64,10 @@
 <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-violet-50 text-violet-700 border border-violet-200">
 <span class="w-1.5 h-1.5 rounded-full bg-violet-500"></span> Booth
 </span>
+@elseif ($u->role === 'viewer')
+<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-sky-50 text-sky-700 border border-sky-200">
+<span class="w-1.5 h-1.5 rounded-full bg-sky-500"></span> Viewer
+</span>
 @else
 <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-gray-50 text-gray-600 border border-gray-200">
 <span class="w-1.5 h-1.5 rounded-full bg-gray-400"></span> Admin
@@ -109,6 +113,7 @@
 <option value="client">Client</option>
 <option value="room">Room (Mobile App)</option>
 <option value="booth">Booth (Mobile App)</option>
+<option value="viewer">Viewer (Registrants only)</option>
 </select>
 <p class="text-xs text-gray-400 mt-1">Permissions auto-adjust when role changes. Super Admin always has full access. Room/Booth accounts manage mobile-app sessions/booths only (no admin panel).</p>
 </div>
@@ -189,7 +194,8 @@ rooms: false, email_templates: false, utm_sources: true,
 qr_codes: true, checkin_log: false, admin_users: false
 },
 room: Object.fromEntries(Object.keys(defaultPerms).map(k => [k, false])),
-booth: Object.fromEntries(Object.keys(defaultPerms).map(k => [k, false]))
+booth: Object.fromEntries(Object.keys(defaultPerms).map(k => [k, false])),
+viewer: { registrants: true }
 };
 function setPermissions(perms) {
 document.querySelectorAll('#permissionsSection input[type=checkbox]').forEach(cb => {

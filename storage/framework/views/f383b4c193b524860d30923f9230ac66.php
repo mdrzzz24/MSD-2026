@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <link rel="icon" type="image/png" href="{{ asset('img/metrodata.png') }}">
+    <link rel="icon" type="image/png" href="<?php echo e(asset('img/metrodata.png')); ?>">
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Registrants — {{ config('app.name') }}</title>
+    <title>Registrants — <?php echo e(config('app.name')); ?></title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -25,10 +25,10 @@
 <body class="bg-gray-50 font-sans antialiased">
 
 <div class="flex min-h-screen">
-    @include('admin.partials.sidebar')
+    <?php echo $__env->make('admin.partials.sidebar', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
 
     <main class="flex-1 lg:ml-64">
-        {{-- Top bar --}}
+        
         <header class="sticky top-0 z-30 bg-white/80 backdrop-blur border-b border-gray-200">
             <div class="flex items-center justify-between h-16 px-4 sm:px-6 lg:px-8">
                 <div class="flex items-center gap-4">
@@ -43,14 +43,14 @@
                     </div>
                 </div>
                 <div class="flex items-center gap-2">
-                    <a href="{{ route('admin.registrants.export-csv', request()->only(['status', 'utm_source', 'utm_medium', 'utm_campaign', 'direct', 'search', 'profile', 'source', 'marking', 'my', 'date_from', 'date_to'])) }}"
+                    <a href="<?php echo e(route('admin.registrants.export-csv', request()->only(['status', 'utm_source', 'utm_medium', 'utm_campaign', 'direct', 'search', 'profile', 'source', 'marking', 'my', 'date_from', 'date_to']))); ?>"
                        class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-lg transition">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                         </svg>
                         Export CSV
                     </a>
-                    <a href="{{ route('admin.dashboard') }}"
+                    <a href="<?php echo e(route('admin.dashboard')); ?>"
                        class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-indigo-600 bg-indigo-50 hover:bg-indigo-100 rounded-lg transition">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-4 0a1 1 0 01-1-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 01-1 1"/>
@@ -63,94 +63,94 @@
 
         <div class="p-4 sm:p-6 lg:p-8 space-y-6">
 
-            @include('admin.partials.notification')
+            <?php echo $__env->make('admin.partials.notification', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
 
-            {{-- Status summary — registrant status counts --}}
+            
             <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 flex flex-wrap items-center gap-x-8 gap-y-3">
-                <a href="{{ route('admin.registrants.index', array_merge(request()->except(['status', 'my', 'page']), ['status' => 'all', 'my' => 'all'])) }}" class="flex items-center gap-2 group">
+                <a href="<?php echo e(route('admin.registrants.index', array_merge(request()->except(['status', 'my', 'page']), ['status' => 'all', 'my' => 'all']))); ?>" class="flex items-center gap-2 group">
                     <span class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Total</span>
-                    <span class="text-2xl font-bold text-gray-900 group-hover:text-indigo-600 transition">{{ $total }}</span>
+                    <span class="text-2xl font-bold text-gray-900 group-hover:text-indigo-600 transition"><?php echo e($total); ?></span>
                 </a>
-                <a href="{{ route('admin.registrants.index', array_merge(request()->except(['status', 'my', 'page']), ['status' => 'pending', 'my' => 'all'])) }}" class="flex items-center gap-2 group">
+                <a href="<?php echo e(route('admin.registrants.index', array_merge(request()->except(['status', 'my', 'page']), ['status' => 'pending', 'my' => 'all']))); ?>" class="flex items-center gap-2 group">
                     <span class="w-2 h-2 rounded-full bg-amber-500"></span>
                     <span class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Pending</span>
-                    <span class="text-2xl font-bold text-amber-600 group-hover:text-amber-700 transition">{{ $pending }}</span>
+                    <span class="text-2xl font-bold text-amber-600 group-hover:text-amber-700 transition"><?php echo e($pending); ?></span>
                 </a>
-                <a href="{{ route('admin.registrants.index', array_merge(request()->except(['status', 'my', 'page']), ['status' => 'approved', 'my' => 'all'])) }}" class="flex items-center gap-2 group">
+                <a href="<?php echo e(route('admin.registrants.index', array_merge(request()->except(['status', 'my', 'page']), ['status' => 'approved', 'my' => 'all']))); ?>" class="flex items-center gap-2 group">
                     <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
                     <span class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Approved</span>
-                    <span class="text-2xl font-bold text-emerald-600 group-hover:text-emerald-700 transition">{{ $approved }}</span>
+                    <span class="text-2xl font-bold text-emerald-600 group-hover:text-emerald-700 transition"><?php echo e($approved); ?></span>
                 </a>
-                <a href="{{ route('admin.registrants.index', array_merge(request()->except(['status', 'my', 'page']), ['status' => 'rejected', 'my' => 'all'])) }}" class="flex items-center gap-2 group">
+                <a href="<?php echo e(route('admin.registrants.index', array_merge(request()->except(['status', 'my', 'page']), ['status' => 'rejected', 'my' => 'all']))); ?>" class="flex items-center gap-2 group">
                     <span class="w-2 h-2 rounded-full bg-red-500"></span>
                     <span class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Rejected</span>
-                    <span class="text-2xl font-bold text-red-600 group-hover:text-red-700 transition">{{ $rejected }}</span>
+                    <span class="text-2xl font-bold text-red-600 group-hover:text-red-700 transition"><?php echo e($rejected); ?></span>
                 </a>
                 <div class="flex items-center gap-2">
                     <span class="w-2 h-2 rounded-full bg-teal-500"></span>
                     <span class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Checked-in</span>
-                    <span class="text-2xl font-bold text-teal-600 transition">{{ $checkedIn }}</span>
+                    <span class="text-2xl font-bold text-teal-600 transition"><?php echo e($checkedIn); ?></span>
                 </div>
             </div>
 
-            {{-- UTM Filter Badge --}}
-            @if (request('utm_source') || request('direct'))
+            
+            <?php if(request('utm_source') || request('direct')): ?>
             <div class="flex items-center gap-3 bg-indigo-50 border border-indigo-200 text-indigo-800 px-5 py-3 rounded-2xl">
                 <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>
                 <span class="text-sm">
                     Filtered by UTM:
-                    @if (request('direct'))
+                    <?php if(request('direct')): ?>
                         <strong>Direct</strong> (no UTM source)
-                    @else
-                        <strong>{{ request('utm_source') }}</strong>
-                        @if (request('utm_medium')) / <strong>{{ request('utm_medium') }}</strong> @endif
-                        @if (request('utm_campaign')) / <strong>{{ request('utm_campaign') }}</strong> @endif
-                    @endif
+                    <?php else: ?>
+                        <strong><?php echo e(request('utm_source')); ?></strong>
+                        <?php if(request('utm_medium')): ?> / <strong><?php echo e(request('utm_medium')); ?></strong> <?php endif; ?>
+                        <?php if(request('utm_campaign')): ?> / <strong><?php echo e(request('utm_campaign')); ?></strong> <?php endif; ?>
+                    <?php endif; ?>
                 </span>
-                <a href="{{ route('admin.registrants.index') }}" class="ml-auto text-xs font-medium text-indigo-600 hover:text-indigo-800 hover:underline">Clear filter</a>
+                <a href="<?php echo e(route('admin.registrants.index')); ?>" class="ml-auto text-xs font-medium text-indigo-600 hover:text-indigo-800 hover:underline">Clear filter</a>
             </div>
-            @endif
+            <?php endif; ?>
 
-            {{-- Filter bar: Profile / Source / Date --}}
-            <form method="GET" action="{{ route('admin.registrants.index') }}" class="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
-                @if (request('status') && request('status') !== 'all')
-                    <input type="hidden" name="status" value="{{ request('status') }}">
-                @endif
-                @if (request('search'))
-                    <input type="hidden" name="search" value="{{ request('search') }}">
-                @endif
-                @if (request('my'))
-                    <input type="hidden" name="my" value="{{ request('my') }}">
-                @endif
+            
+            <form method="GET" action="<?php echo e(route('admin.registrants.index')); ?>" class="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
+                <?php if(request('status') && request('status') !== 'all'): ?>
+                    <input type="hidden" name="status" value="<?php echo e(request('status')); ?>">
+                <?php endif; ?>
+                <?php if(request('search')): ?>
+                    <input type="hidden" name="search" value="<?php echo e(request('search')); ?>">
+                <?php endif; ?>
+                <?php if(request('my')): ?>
+                    <input type="hidden" name="my" value="<?php echo e(request('my')); ?>">
+                <?php endif; ?>
                 <div class="flex flex-wrap items-end gap-3">
                     <div>
-                        @include('admin.partials.profile-filter')
+                        <?php echo $__env->make('admin.partials.profile-filter', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
                     </div>
                     <div>
-                        @include('admin.partials.source-filter')
+                        <?php echo $__env->make('admin.partials.source-filter', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
                     </div>
                     <div>
-                        @include('admin.partials.marking-filter')
+                        <?php echo $__env->make('admin.partials.marking-filter', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
                     </div>
                     <div>
                         <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">From</label>
-                        <input type="date" name="date_from" value="{{ request('date_from') }}" class="px-3 py-2 text-sm border border-gray-200 rounded-xl bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500">
+                        <input type="date" name="date_from" value="<?php echo e(request('date_from')); ?>" class="px-3 py-2 text-sm border border-gray-200 rounded-xl bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500">
                     </div>
                     <div>
                         <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">To</label>
-                        <input type="date" name="date_to" value="{{ request('date_to') }}" class="px-3 py-2 text-sm border border-gray-200 rounded-xl bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500">
+                        <input type="date" name="date_to" value="<?php echo e(request('date_to')); ?>" class="px-3 py-2 text-sm border border-gray-200 rounded-xl bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500">
                     </div>
                     <div class="flex items-center gap-2">
                         <button type="submit" class="px-4 py-2 text-xs font-semibold rounded-xl bg-indigo-500 text-white hover:bg-indigo-600 transition">Apply</button>
-                        @if (request('profile') || request('source') || request('marking') || request('my') || request('date_from') || request('date_to'))
-                            <a href="{{ route('admin.registrants.index', request()->except(['profile', 'source', 'marking', 'my', 'date_from', 'date_to'])) }}" class="px-4 py-2 text-xs font-medium rounded-xl bg-gray-100 text-gray-600 hover:bg-gray-200 transition">Clear</a>
-                        @endif
+                        <?php if(request('profile') || request('source') || request('marking') || request('my') || request('date_from') || request('date_to')): ?>
+                            <a href="<?php echo e(route('admin.registrants.index', request()->except(['profile', 'source', 'marking', 'my', 'date_from', 'date_to']))); ?>" class="px-4 py-2 text-xs font-medium rounded-xl bg-gray-100 text-gray-600 hover:bg-gray-200 transition">Clear</a>
+                        <?php endif; ?>
                     </div>
                 </div>
             </form>
 
-            {{-- Client-only: My Markings — quick summary & filter of THIS client's own markings --}}
-            @if (Auth::user()->isClient())
+            
+            <?php if(Auth::user()->isClient()): ?>
             <div class="bg-white rounded-2xl border border-indigo-100 shadow-sm p-5">
                 <div class="flex flex-col lg:flex-row lg:items-center gap-4">
                     <div class="flex items-center gap-3">
@@ -163,83 +163,83 @@
                         </div>
                     </div>
                     <div class="flex flex-wrap items-center gap-2 lg:ml-auto">
-                        <a href="{{ route('admin.registrants.index', array_merge(request()->except(['my', 'page']), ['my' => 'all'])) }}"
+                        <a href="<?php echo e(route('admin.registrants.index', array_merge(request()->except(['my', 'page']), ['my' => 'all']))); ?>"
                            class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold border transition
-                           {{ $my === 'all' ? 'bg-gray-900 text-white border-gray-900' : 'bg-gray-50 text-gray-600 border-gray-200 hover:bg-gray-100' }}">
+                           <?php echo e($my === 'all' ? 'bg-gray-900 text-white border-gray-900' : 'bg-gray-50 text-gray-600 border-gray-200 hover:bg-gray-100'); ?>">
                             All
                         </a>
-                        <a href="{{ route('admin.registrants.index', array_merge(request()->except(['my', 'status', 'page']), ['my' => 'approve', 'status' => 'all'])) }}"
+                        <a href="<?php echo e(route('admin.registrants.index', array_merge(request()->except(['my', 'status', 'page']), ['my' => 'approve', 'status' => 'all']))); ?>"
                            class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold border transition
-                           {{ $my === 'approve' ? 'bg-emerald-500 text-white border-emerald-500' : 'bg-white text-emerald-700 border-emerald-200 hover:bg-emerald-50' }}">
+                           <?php echo e($my === 'approve' ? 'bg-emerald-500 text-white border-emerald-500' : 'bg-white text-emerald-700 border-emerald-200 hover:bg-emerald-50'); ?>">
                             Marked ✅ Approve
-                            <span id="myCountApprove" class="px-1.5 py-0.5 rounded-md text-[10px] {{ $my === 'approve' ? 'bg-white/25' : 'bg-emerald-100' }}">{{ $myCounts['approve'] ?? 0 }}</span>
+                            <span id="myCountApprove" class="px-1.5 py-0.5 rounded-md text-[10px] <?php echo e($my === 'approve' ? 'bg-white/25' : 'bg-emerald-100'); ?>"><?php echo e($myCounts['approve'] ?? 0); ?></span>
                         </a>
-                        <a href="{{ route('admin.registrants.index', array_merge(request()->except(['my', 'status', 'page']), ['my' => 'reject', 'status' => 'all'])) }}"
+                        <a href="<?php echo e(route('admin.registrants.index', array_merge(request()->except(['my', 'status', 'page']), ['my' => 'reject', 'status' => 'all']))); ?>"
                            class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold border transition
-                           {{ $my === 'reject' ? 'bg-red-500 text-white border-red-500' : 'bg-white text-red-700 border-red-200 hover:bg-red-50' }}">
+                           <?php echo e($my === 'reject' ? 'bg-red-500 text-white border-red-500' : 'bg-white text-red-700 border-red-200 hover:bg-red-50'); ?>">
                             Marked ❌ Reject
-                            <span id="myCountReject" class="px-1.5 py-0.5 rounded-md text-[10px] {{ $my === 'reject' ? 'bg-white/25' : 'bg-red-100' }}">{{ $myCounts['reject'] ?? 0 }}</span>
+                            <span id="myCountReject" class="px-1.5 py-0.5 rounded-md text-[10px] <?php echo e($my === 'reject' ? 'bg-white/25' : 'bg-red-100'); ?>"><?php echo e($myCounts['reject'] ?? 0); ?></span>
                         </a>
-                        <a href="{{ route('admin.registrants.index', array_merge(request()->except(['my', 'status', 'page']), ['my' => 'waitlist', 'status' => 'all'])) }}"
+                        <a href="<?php echo e(route('admin.registrants.index', array_merge(request()->except(['my', 'status', 'page']), ['my' => 'waitlist', 'status' => 'all']))); ?>"
                            class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold border transition
-                           {{ $my === 'waitlist' ? 'bg-orange-500 text-white border-orange-500' : 'bg-white text-orange-700 border-orange-200 hover:bg-orange-50' }}">
+                           <?php echo e($my === 'waitlist' ? 'bg-orange-500 text-white border-orange-500' : 'bg-white text-orange-700 border-orange-200 hover:bg-orange-50'); ?>">
                             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                             Marked 🕐 Waiting List
-                            <span id="myCountWaitlist" class="px-1.5 py-0.5 rounded-md text-[10px] {{ $my === 'waitlist' ? 'bg-white/25' : 'bg-orange-100' }}">{{ $myCounts['waitlist'] ?? 0 }}</span>
+                            <span id="myCountWaitlist" class="px-1.5 py-0.5 rounded-md text-[10px] <?php echo e($my === 'waitlist' ? 'bg-white/25' : 'bg-orange-100'); ?>"><?php echo e($myCounts['waitlist'] ?? 0); ?></span>
                         </a>
-                        <a href="{{ route('admin.registrants.index', array_merge(request()->except(['my', 'status', 'page']), ['my' => 'unmarked', 'status' => 'all'])) }}"
+                        <a href="<?php echo e(route('admin.registrants.index', array_merge(request()->except(['my', 'status', 'page']), ['my' => 'unmarked', 'status' => 'all']))); ?>"
                            class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold border transition
-                           {{ $my === 'unmarked' ? 'bg-gray-800 text-white border-gray-800' : 'bg-white text-gray-600 border-gray-300 hover:bg-gray-100' }}">
+                           <?php echo e($my === 'unmarked' ? 'bg-gray-800 text-white border-gray-800' : 'bg-white text-gray-600 border-gray-300 hover:bg-gray-100'); ?>">
                             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 9h.01M9 13h6"/></svg>
                             Unmarked
-                            <span id="myCountUnmarked" class="px-1.5 py-0.5 rounded-md text-[10px] {{ $my === 'unmarked' ? 'bg-white/25' : 'bg-gray-200' }}">{{ $myCounts['unmarked'] ?? 0 }}</span>
+                            <span id="myCountUnmarked" class="px-1.5 py-0.5 rounded-md text-[10px] <?php echo e($my === 'unmarked' ? 'bg-white/25' : 'bg-gray-200'); ?>"><?php echo e($myCounts['unmarked'] ?? 0); ?></span>
                         </a>
                     </div>
                 </div>
-                {{-- Registrant STATUS (separate from markings) --}}
+                
                 <div class="mt-4 pt-4 border-t border-gray-100 flex flex-wrap items-center gap-2">
                     <span class="text-[11px] font-bold text-gray-400 uppercase tracking-wider mr-1">Status</span>
-                    <a href="{{ route('admin.registrants.index', array_merge(request()->except(['status', 'my', 'page']), ['status' => 'all', 'my' => 'all'])) }}"
-                       class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold border transition {{ $status === 'all' ? 'bg-gray-900 text-white border-gray-900' : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-100' }}">
+                    <a href="<?php echo e(route('admin.registrants.index', array_merge(request()->except(['status', 'my', 'page']), ['status' => 'all', 'my' => 'all']))); ?>"
+                       class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold border transition <?php echo e($status === 'all' ? 'bg-gray-900 text-white border-gray-900' : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-100'); ?>">
                         All
                     </a>
-                    <a href="{{ route('admin.registrants.index', array_merge(request()->except(['status', 'my', 'page']), ['status' => 'pending', 'my' => 'all'])) }}"
-                       class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold border transition {{ $status === 'pending' ? 'bg-amber-500 text-white border-amber-500' : 'bg-white text-amber-700 border-amber-200 hover:bg-amber-50' }}">
+                    <a href="<?php echo e(route('admin.registrants.index', array_merge(request()->except(['status', 'my', 'page']), ['status' => 'pending', 'my' => 'all']))); ?>"
+                       class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold border transition <?php echo e($status === 'pending' ? 'bg-amber-500 text-white border-amber-500' : 'bg-white text-amber-700 border-amber-200 hover:bg-amber-50'); ?>">
                         Pending
                     </a>
-                    <a href="{{ route('admin.registrants.index', array_merge(request()->except(['status', 'my', 'page']), ['status' => 'approved', 'my' => 'all'])) }}"
-                       class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold border transition {{ $status === 'approved' ? 'bg-emerald-500 text-white border-emerald-500' : 'bg-white text-emerald-700 border-emerald-200 hover:bg-emerald-50' }}">
+                    <a href="<?php echo e(route('admin.registrants.index', array_merge(request()->except(['status', 'my', 'page']), ['status' => 'approved', 'my' => 'all']))); ?>"
+                       class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold border transition <?php echo e($status === 'approved' ? 'bg-emerald-500 text-white border-emerald-500' : 'bg-white text-emerald-700 border-emerald-200 hover:bg-emerald-50'); ?>">
                         Approved
                     </a>
-                    <a href="{{ route('admin.registrants.index', array_merge(request()->except(['status', 'my', 'page']), ['status' => 'rejected', 'my' => 'all'])) }}"
-                       class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold border transition {{ $status === 'rejected' ? 'bg-red-500 text-white border-red-500' : 'bg-white text-red-700 border-red-200 hover:bg-red-50' }}">
+                    <a href="<?php echo e(route('admin.registrants.index', array_merge(request()->except(['status', 'my', 'page']), ['status' => 'rejected', 'my' => 'all']))); ?>"
+                       class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold border transition <?php echo e($status === 'rejected' ? 'bg-red-500 text-white border-red-500' : 'bg-white text-red-700 border-red-200 hover:bg-red-50'); ?>">
                         Rejected
                     </a>
                 </div>
             </div>
-            @endif
+            <?php endif; ?>
 
-            {{-- Registrants table with bulk actions --}}
+            
             <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-                {{-- Header with search and bulk actions --}}
+                
                 <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 px-5 py-4 border-b border-gray-100">
                     <div class="flex items-center gap-3">
                         <h2 class="text-base font-bold text-gray-900">
-                            @if ($status === 'pending')
+                            <?php if($status === 'pending'): ?>
                                 Pending Registrants
-                            @elseif ($status === 'approved')
+                            <?php elseif($status === 'approved'): ?>
                                 Approved Registrants
-                            @elseif ($status === 'rejected')
+                            <?php elseif($status === 'rejected'): ?>
                                 Rejected Registrants
-                            @else
+                            <?php else: ?>
                                 All Registrants
-                            @endif
+                            <?php endif; ?>
                         </h2>
-                        <span class="text-xs text-gray-400" id="registrantCount">({{ $registrants->total() }})</span>
+                        <span class="text-xs text-gray-400" id="registrantCount">(<?php echo e($registrants->total()); ?>)</span>
                     </div>
                     <div class="flex items-center gap-2">
-                        {{-- Bulk action buttons --}}
-                        @if (Auth::user()->canWrite())
+                        
+                        <?php if(Auth::user()->canWrite()): ?>
                         <div id="bulkActions" class="hidden items-center gap-2">
                             <span class="text-xs text-gray-500" id="selectedCount">0 selected</span>
                             <button onclick="bulkApprove()"
@@ -251,28 +251,28 @@
                                 Reject Selected
                             </button>
                         </div>
-                        @endif
-                        <form method="GET" action="{{ route('admin.registrants.index') }}" class="relative" onsubmit="return false;">
-                            @if (request('status') && request('status') !== 'all')
-                                <input type="hidden" name="status" value="{{ request('status') }}">
-                            @endif
-                            @if (request('utm_source'))
-                                <input type="hidden" name="utm_source" value="{{ request('utm_source') }}">
-                            @endif
-                            @if (request('utm_medium'))
-                                <input type="hidden" name="utm_medium" value="{{ request('utm_medium') }}">
-                            @endif
-                            @if (request('utm_campaign'))
-                                <input type="hidden" name="utm_campaign" value="{{ request('utm_campaign') }}">
-                            @endif
-                            @if (request('direct'))
-                                <input type="hidden" name="direct" value="{{ request('direct') }}">
-                            @endif
+                        <?php endif; ?>
+                        <form method="GET" action="<?php echo e(route('admin.registrants.index')); ?>" class="relative" onsubmit="return false;">
+                            <?php if(request('status') && request('status') !== 'all'): ?>
+                                <input type="hidden" name="status" value="<?php echo e(request('status')); ?>">
+                            <?php endif; ?>
+                            <?php if(request('utm_source')): ?>
+                                <input type="hidden" name="utm_source" value="<?php echo e(request('utm_source')); ?>">
+                            <?php endif; ?>
+                            <?php if(request('utm_medium')): ?>
+                                <input type="hidden" name="utm_medium" value="<?php echo e(request('utm_medium')); ?>">
+                            <?php endif; ?>
+                            <?php if(request('utm_campaign')): ?>
+                                <input type="hidden" name="utm_campaign" value="<?php echo e(request('utm_campaign')); ?>">
+                            <?php endif; ?>
+                            <?php if(request('direct')): ?>
+                                <input type="hidden" name="direct" value="<?php echo e(request('direct')); ?>">
+                            <?php endif; ?>
                             <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
                             </svg>
                             <input type="text" name="search" id="tableSearch" placeholder="Search name, email, company..."
-                                   value="{{ request('search') }}"
+                                   value="<?php echo e(request('search')); ?>"
                                    class="pl-9 pr-4 py-2 text-sm border border-gray-200 rounded-xl bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 focus:bg-white w-full sm:w-64 transition">
                             <a href="javascript:void(0)" id="clearRegSearchBtn" onclick="clearRegSearch()" style="display:none;"
                                class="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-200 transition" title="Clear search">
@@ -284,11 +284,11 @@
                     </div>
                 </div>
 
-                {{-- Table --}}
+                
                 <div class="overflow-x-auto">
                     <table class="w-full table-fixed" id="registrantTable">
                         <thead id="registrantThead">
-                            @php
+                            <?php
                                 $sort = request('sort');
                                 $sortDir = (strtolower((string) request('direction', 'asc')) === 'desc') ? 'desc' : 'asc';
                                 $sortUrl = function ($key) use ($sort, $sortDir) {
@@ -301,181 +301,184 @@
                                     if ($sort !== $key) return '';
                                     return '<span class="text-[9px]">' . ($sortDir === 'asc' ? '▲' : '▼') . '</span>';
                                 };
-                            @endphp
+                            ?>
                             <tr class="bg-gray-50/80">
-                                @if (Auth::user()->canWrite())
+                                <?php if(Auth::user()->canWrite()): ?>
                                 <th class="px-5 py-3.5 text-left w-10">
                                     <input type="checkbox" id="selectAll" class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500">
                                 </th>
-                                @endif
+                                <?php endif; ?>
                                 <th class="px-3 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider w-44">
-                                    <a href="{{ $sortUrl('name') }}" class="inline-flex items-center gap-1 hover:text-indigo-600 {{ $sort === 'name' ? 'text-indigo-600' : '' }}">Name{!! $sortArrow('name') !!}</a>
+                                    <a href="<?php echo e($sortUrl('name')); ?>" class="inline-flex items-center gap-1 hover:text-indigo-600 <?php echo e($sort === 'name' ? 'text-indigo-600' : ''); ?>">Name<?php echo $sortArrow('name'); ?></a>
                                 </th>
                                 <th class="px-3 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider hidden xl:table-cell w-40">
-                                    <a href="{{ $sortUrl('company') }}" class="inline-flex items-center gap-1 hover:text-indigo-600 {{ $sort === 'company' ? 'text-indigo-600' : '' }}">Profile{!! $sortArrow('company') !!}</a>
+                                    <a href="<?php echo e($sortUrl('company')); ?>" class="inline-flex items-center gap-1 hover:text-indigo-600 <?php echo e($sort === 'company' ? 'text-indigo-600' : ''); ?>">Profile<?php echo $sortArrow('company'); ?></a>
                                 </th>
                                 <th class="px-3 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider hidden sm:table-cell w-20">
-                                    <a href="{{ $sortUrl('source') }}" class="inline-flex items-center gap-1 hover:text-indigo-600 {{ $sort === 'source' ? 'text-indigo-600' : '' }}">Source{!! $sortArrow('source') !!}</a>
+                                    <a href="<?php echo e($sortUrl('source')); ?>" class="inline-flex items-center gap-1 hover:text-indigo-600 <?php echo e($sort === 'source' ? 'text-indigo-600' : ''); ?>">Source<?php echo $sortArrow('source'); ?></a>
                                 </th>
                                 <th class="px-3 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider w-60">
-                                    <a href="{{ $sortUrl('status') }}" class="inline-flex items-center gap-1 hover:text-indigo-600 {{ $sort === 'status' ? 'text-indigo-600' : '' }}">Status{!! $sortArrow('status') !!}</a>
+                                    <a href="<?php echo e($sortUrl('status')); ?>" class="inline-flex items-center gap-1 hover:text-indigo-600 <?php echo e($sort === 'status' ? 'text-indigo-600' : ''); ?>">Status<?php echo $sortArrow('status'); ?></a>
                                 </th>
                                 <th class="px-3 py-3 text-center text-xs font-semibold text-gray-500 uppercase tracking-wider hidden sm:table-cell w-24">Check-in</th>
                                 <th class="px-3 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider hidden sm:table-cell w-20">
-                                    <a href="{{ $sortUrl('date') }}" class="inline-flex items-center gap-1 hover:text-indigo-600 {{ $sort === 'date' ? 'text-indigo-600' : '' }}">Date{!! $sortArrow('date') !!}</a>
+                                    <a href="<?php echo e($sortUrl('date')); ?>" class="inline-flex items-center gap-1 hover:text-indigo-600 <?php echo e($sort === 'date' ? 'text-indigo-600' : ''); ?>">Date<?php echo $sortArrow('date'); ?></a>
                                 </th>
                                 <th class="px-3 py-3 text-center text-xs font-semibold text-gray-500 uppercase tracking-wider hidden sm:table-cell w-14">
-                                    <a href="{{ $sortUrl('emails') }}" class="inline-flex items-center gap-1 hover:text-indigo-600 {{ $sort === 'emails' ? 'text-indigo-600' : '' }}" title="Sort by emails sent">Email{!! $sortArrow('emails') !!}</a>
+                                    <a href="<?php echo e($sortUrl('emails')); ?>" class="inline-flex items-center gap-1 hover:text-indigo-600 <?php echo e($sort === 'emails' ? 'text-indigo-600' : ''); ?>" title="Sort by emails sent">Email<?php echo $sortArrow('emails'); ?></a>
                                 </th>
                                 <th class="px-3 py-3 text-center text-xs font-semibold text-gray-500 uppercase tracking-wider w-20">Actions</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-gray-50" id="registrantTableBody">
-                            @forelse ($registrants as $r)
+                            <?php $__empty_1 = true; $__currentLoopData = $registrants; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $r): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
                                 <tr class="hover:bg-gray-50/50 transition search-row cursor-pointer"
                                     onclick="event.target.closest('a, button, input, select, form, label') || openRegistrantDetail(this)"
-                                    data-id="{{ $r->id }}"
-                                    data-name="{{ $r->name }}"
-                                    data-status="{{ $r->status }}"
-                                    data-email="{{ $r->email }}"
-                                    data-phone="{{ $r->phone ?? '' }}"
-                                    data-company="{{ $r->company ?? '' }}"
-                                    data-job-title="{{ $r->job_title ?? '' }}"
-                                    data-job-role="{{ $r->job_role ?? '' }}"
-                                    data-industry="{{ $r->industry ?? '' }}"
-                                    data-employees="{{ $r->employees ?? '' }}"
-                                    data-utm="{{ $r->utm_source ?? '' }}"
-                                    data-created="{{ $r->created_at?->copy()->addHours(7)->format('d M Y, H:i') }}"
-                                    data-checked-in="{{ $r->checked_in_at ? $r->checked_in_at->copy()->addHours(7)->format('d M Y, H:i') : '' }}"
-                                    data-qr="{{ str_replace('size=150x150', 'size=400x400', $r->qr_code_url) }}"
-                                    data-qr-share="{{ $r->qr_share_url }}"
-                                    data-checkin-url="{{ $r->qr_checkin_url }}"
-                                    data-full-url="{{ route('admin.registrants.show', $r) }}"
+                                    data-id="<?php echo e($r->id); ?>"
+                                    data-name="<?php echo e($r->name); ?>"
+                                    data-status="<?php echo e($r->status); ?>"
+                                    data-email="<?php echo e($r->email); ?>"
+                                    data-phone="<?php echo e($r->phone ?? ''); ?>"
+                                    data-company="<?php echo e($r->company ?? ''); ?>"
+                                    data-job-title="<?php echo e($r->job_title ?? ''); ?>"
+                                    data-job-role="<?php echo e($r->job_role ?? ''); ?>"
+                                    data-industry="<?php echo e($r->industry ?? ''); ?>"
+                                    data-employees="<?php echo e($r->employees ?? ''); ?>"
+                                    data-utm="<?php echo e($r->utm_source ?? ''); ?>"
+                                    data-created="<?php echo e($r->created_at?->copy()->addHours(7)->format('d M Y, H:i')); ?>"
+                                    data-checked-in="<?php echo e($r->checked_in_at ? $r->checked_in_at->copy()->addHours(7)->format('d M Y, H:i') : ''); ?>"
+                                    data-qr="<?php echo e(str_replace('size=150x150', 'size=400x400', $r->qr_code_url)); ?>"
+                                    data-qr-share="<?php echo e($r->qr_share_url); ?>"
+                                    data-checkin-url="<?php echo e($r->qr_checkin_url); ?>"
+                                    data-full-url="<?php echo e(route('admin.registrants.show', $r)); ?>"
                                     title="Click to view details">
-                                    @if (Auth::user()->canWrite())
+                                    <?php if(Auth::user()->canWrite()): ?>
                                     <td class="px-3 py-3">
-                                        <input type="checkbox" class="registrant-checkbox rounded border-gray-300 text-indigo-600 focus:ring-indigo-500" value="{{ $r->id }}">
+                                        <input type="checkbox" class="registrant-checkbox rounded border-gray-300 text-indigo-600 focus:ring-indigo-500" value="<?php echo e($r->id); ?>">
                                     </td>
-                                    @endif
+                                    <?php endif; ?>
                                     <td class="px-3 py-4 max-w-0">
                                         <div class="flex items-center gap-2">
                                             <div class="w-7 h-7 rounded-full bg-gradient-to-br from-indigo-400 to-purple-500 flex items-center justify-center text-white text-[10px] font-bold flex-shrink-0">
-                                                {{ strtoupper(substr($r->name, 0, 1)) }}
+                                                <?php echo e(strtoupper(substr($r->name, 0, 1))); ?>
+
                                             </div>
                                             <div class="min-w-0 truncate">
-                                                <a href="{{ route('admin.registrants.show', $r) }}" class="text-sm font-semibold text-gray-900 hover:text-indigo-600 transition search-name truncate block">
-                                                    {{ $r->name }}
+                                                <a href="<?php echo e(route('admin.registrants.show', $r)); ?>" class="text-sm font-semibold text-gray-900 hover:text-indigo-600 transition search-name truncate block">
+                                                    <?php echo e($r->name); ?>
+
                                                 </a>
-                                                <p class="text-[11px] text-gray-500 truncate search-email">{{ $r->email }}</p>
-                                                @if ($r->phone)
-                                                    <p class="text-[11px] text-gray-400 truncate">{{ $r->phone }}</p>
-                                                @endif
+                                                <p class="text-[11px] text-gray-500 truncate search-email"><?php echo e($r->email); ?></p>
+                                                <?php if($r->phone): ?>
+                                                    <p class="text-[11px] text-gray-400 truncate"><?php echo e($r->phone); ?></p>
+                                                <?php endif; ?>
                                             </div>
                                         </div>
                                     </td>
                                     <td class="px-3 py-3 hidden xl:table-cell max-w-0">
                                         <div class="min-w-0 truncate">
-                                            @if ($r->company || $r->job_title || $r->job_role)
-                                                @if ($r->company)
-                                                    <p class="text-sm font-medium text-gray-800 truncate" title="{{ $r->company }}">{{ $r->company }}</p>
-                                                @endif
-                                                @if ($r->job_title)
-                                                    <p class="text-[11px] text-gray-500 truncate" title="{{ $r->job_title }}">{{ $r->job_title }}</p>
-                                                @endif
-                                                @if ($r->job_role)
-                                                    <p class="text-[11px] text-gray-400 truncate" title="{{ $r->job_role }}">{{ $r->job_role }}</p>
-                                                @endif
-                                            @else
+                                            <?php if($r->company || $r->job_title || $r->job_role): ?>
+                                                <?php if($r->company): ?>
+                                                    <p class="text-sm font-medium text-gray-800 truncate" title="<?php echo e($r->company); ?>"><?php echo e($r->company); ?></p>
+                                                <?php endif; ?>
+                                                <?php if($r->job_title): ?>
+                                                    <p class="text-[11px] text-gray-500 truncate" title="<?php echo e($r->job_title); ?>"><?php echo e($r->job_title); ?></p>
+                                                <?php endif; ?>
+                                                <?php if($r->job_role): ?>
+                                                    <p class="text-[11px] text-gray-400 truncate" title="<?php echo e($r->job_role); ?>"><?php echo e($r->job_role); ?></p>
+                                                <?php endif; ?>
+                                            <?php else: ?>
                                                 <span class="text-sm text-gray-400">—</span>
-                                            @endif
+                                            <?php endif; ?>
                                         </div>
                                     </td>
                                     <td class="px-3 py-3 hidden sm:table-cell max-w-0">
-                                        @if ($r->utm_source)
-                                            <span class="inline-flex items-center gap-1 text-xs text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-full truncate max-w-full" title="{{ $r->utm_source }}">
+                                        <?php if($r->utm_source): ?>
+                                            <span class="inline-flex items-center gap-1 text-xs text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-full truncate max-w-full" title="<?php echo e($r->utm_source); ?>">
                                                 <svg class="w-3 h-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>
-                                                <span class="truncate">{{ $r->utm_source }}</span>
+                                                <span class="truncate"><?php echo e($r->utm_source); ?></span>
                                             </span>
-                                        @else
+                                        <?php else: ?>
                                             <span class="text-xs text-gray-400">Direct</span>
-                                        @endif
+                                        <?php endif; ?>
                                     </td>
                                     <td class="px-3 py-3">
-                                        @if ($r->status === 'approved')
+                                        <?php if($r->status === 'approved'): ?>
                                             <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
                                                 <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 flex-shrink-0"></span> <span class="truncate">Approved</span>
                                             </span>
-                                        @elseif ($r->status === 'rejected')
+                                        <?php elseif($r->status === 'rejected'): ?>
                                             <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-red-50 text-red-700 border border-red-200">
                                                 <span class="w-1.5 h-1.5 rounded-full bg-red-500 flex-shrink-0"></span> <span class="truncate">Rejected</span>
                                             </span>
-                                        @else
+                                        <?php else: ?>
                                             <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-200">
                                                 <span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse flex-shrink-0"></span> <span class="truncate">Pending</span>
                                             </span>
-                                        @endif
-                                        @if (in_array($r->id, $remindedIds ?? [], true))
+                                        <?php endif; ?>
+                                        <?php if(in_array($r->id, $remindedIds ?? [], true)): ?>
                                             <div class="mt-1.5">
                                                 <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-semibold bg-violet-50 text-violet-700 border border-violet-200" title="Gentle reminder has been sent to this registrant">
                                                     <svg class="w-3 h-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
                                                     Gentle Reminder
                                                 </span>
                                             </div>
-                                        @endif
-                                        @if ($r->hasClientRemark())
+                                        <?php endif; ?>
+                                        <?php if($r->hasClientRemark()): ?>
                                             <div class="mt-1.5 flex flex-col items-start gap-0.5">
-                                                <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-semibold border {{ $r->client_remark_action === 'approve' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : ($r->client_remark_action === 'reject' ? 'bg-red-50 text-red-700 border-red-200' : 'bg-orange-50 text-orange-700 border-orange-200') }}">
-                                                    @if ($r->client_remark_action === 'approve')
+                                                <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-semibold border <?php echo e($r->client_remark_action === 'approve' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : ($r->client_remark_action === 'reject' ? 'bg-red-50 text-red-700 border-red-200' : 'bg-orange-50 text-orange-700 border-orange-200')); ?>">
+                                                    <?php if($r->client_remark_action === 'approve'): ?>
                                                         ✅ Marked Approve
-                                                    @elseif ($r->client_remark_action === 'reject')
+                                                    <?php elseif($r->client_remark_action === 'reject'): ?>
                                                         ❌ Marked Reject
-                                                    @else
+                                                    <?php else: ?>
                                                         <span class="inline-flex items-center gap-1">
                                                             <svg class="w-3 h-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                                                             Marked Waiting List
                                                         </span>
-                                                    @endif
-                                                    @if ($r->clientRemarkedBy)
-                                                        <span class="font-normal text-gray-500">· {{ $r->clientRemarkedBy->name }}</span>
-                                                    @endif
+                                                    <?php endif; ?>
+                                                    <?php if($r->clientRemarkedBy): ?>
+                                                        <span class="font-normal text-gray-500">· <?php echo e($r->clientRemarkedBy->name); ?></span>
+                                                    <?php endif; ?>
                                                 </span>
-                                                @if ($r->client_remark)
-                                                    <span class="text-[10px] text-gray-500">{{ $r->client_remark }}</span>
-                                                @endif
-                                                @if ($r->client_remarked_at)
-                                                    <span class="text-[10px] text-gray-400">{{ $r->client_remarked_at->copy()->addHours(7)->format('d M Y, H:i') }}</span>
-                                                @endif
+                                                <?php if($r->client_remark): ?>
+                                                    <span class="text-[10px] text-gray-500"><?php echo e($r->client_remark); ?></span>
+                                                <?php endif; ?>
+                                                <?php if($r->client_remarked_at): ?>
+                                                    <span class="text-[10px] text-gray-400"><?php echo e($r->client_remarked_at->copy()->addHours(7)->format('d M Y, H:i')); ?></span>
+                                                <?php endif; ?>
                                             </div>
-                                        @endif
+                                        <?php endif; ?>
                                     </td>
                                     <td class="px-3 py-3 text-center hidden sm:table-cell">
-                                        @if ($r->checked_in_at)
-                                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-teal-50 text-teal-700 border border-teal-200" title="Checked in {{ $r->checked_in_at->copy()->addHours(7)->format('d M Y, H:i') }} WIB">
+                                        <?php if($r->checked_in_at): ?>
+                                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-teal-50 text-teal-700 border border-teal-200" title="Checked in <?php echo e($r->checked_in_at->copy()->addHours(7)->format('d M Y, H:i')); ?> WIB">
                                                 <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
                                                 Checked-in
                                             </span>
-                                        @else
+                                        <?php else: ?>
                                             <span class="text-xs text-gray-300">—</span>
-                                        @endif
+                                        <?php endif; ?>
                                     </td>
                                     <td class="px-3 py-3 hidden sm:table-cell">
-                                        <span class="text-sm text-gray-500 whitespace-nowrap">{{ $r->created_at->copy()->addHours(7)->format('d M Y') }}</span>
+                                        <span class="text-sm text-gray-500 whitespace-nowrap"><?php echo e($r->created_at->copy()->addHours(7)->format('d M Y')); ?></span>
                                     </td>
                                     <td class="px-3 py-3 text-center hidden sm:table-cell">
-                                        @if ($r->email_logs_count > 0)
-                                            <span class="inline-flex items-center gap-0.5 text-xs font-semibold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded-full" title="{{ $r->email_logs_count }} email(s) sent">
+                                        <?php if($r->email_logs_count > 0): ?>
+                                            <span class="inline-flex items-center gap-0.5 text-xs font-semibold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded-full" title="<?php echo e($r->email_logs_count); ?> email(s) sent">
                                                 <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
-                                                {{ $r->email_logs_count }}
+                                                <?php echo e($r->email_logs_count); ?>
+
                                             </span>
-                                        @else
+                                        <?php else: ?>
                                             <span class="inline-flex items-center gap-0.5 text-xs text-gray-400" title="No emails sent">
                                                 <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
                                                 <span>0</span>
                                             </span>
-                                        @endif
+                                        <?php endif; ?>
                                     </td>                                    <td class="px-3 py-3">
                                         <div class="flex items-center justify-center gap-1">
-                                            <a href="{{ route('admin.registrants.show', $r) }}"
+                                            <a href="<?php echo e(route('admin.registrants.show', $r)); ?>"
                                                title="View"
                                                class="p-1 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition">
                                                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -483,68 +486,68 @@
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
                                                 </svg>
                                             </a>
-                                            @if (!Auth::user()->canWrite() && !Auth::user()->isViewer() && $r->isPending())
-                                            @if (!$r->hasClientRemark())
+                                            <?php if(!Auth::user()->canWrite() && !Auth::user()->isViewer() && $r->isPending()): ?>
+                                            <?php if(!$r->hasClientRemark()): ?>
                                             <div class="flex flex-col items-center gap-1">
                                                 <div class="flex items-center gap-1">
-                                                    <button type="button" data-decision data-id="{{ $r->id }}" data-action="approve"
+                                                    <button type="button" data-decision data-id="<?php echo e($r->id); ?>" data-action="approve"
                                                             class="decision-toggle px-2 py-1 rounded-lg text-xs font-semibold transition whitespace-nowrap border border-gray-200 bg-gray-50 text-gray-500 hover:bg-emerald-50 hover:text-emerald-600 hover:border-emerald-200" title="Mark as Approved">
                                                         ✅
                                                     </button>
-                                                    <button type="button" data-decision data-id="{{ $r->id }}" data-action="reject"
+                                                    <button type="button" data-decision data-id="<?php echo e($r->id); ?>" data-action="reject"
                                                             class="decision-toggle px-2 py-1 rounded-lg text-xs font-semibold transition whitespace-nowrap border border-gray-200 bg-gray-50 text-gray-500 hover:bg-red-50 hover:text-red-600 hover:border-red-200" title="Mark as Rejected">
                                                         ❌
                                                     </button>
-                                                    <button type="button" data-decision data-id="{{ $r->id }}" data-action="waitlist"
+                                                    <button type="button" data-decision data-id="<?php echo e($r->id); ?>" data-action="waitlist"
                                                             class="decision-toggle px-2 py-1 rounded-lg text-xs font-semibold transition whitespace-nowrap border border-gray-200 bg-gray-50 text-gray-500 hover:bg-orange-50 hover:text-orange-600 hover:border-orange-200" title="Mark as Waiting List">
                                                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                                                     </button>
                                                 </div>
-                                                <select data-reason data-id="{{ $r->id }}" class="decision-reason hidden mt-1 w-36 text-[10px] border border-gray-300 rounded-lg px-2 py-1 bg-white">
+                                                <select data-reason data-id="<?php echo e($r->id); ?>" class="decision-reason hidden mt-1 w-36 text-[10px] border border-gray-300 rounded-lg px-2 py-1 bg-white">
                                                     <option value="">— Reason —</option>
-                                                    @foreach (config('client_reasons.reject') as $reason)
-                                                        <option value="{{ $reason }}">{{ $reason }}</option>
-                                                    @endforeach
+                                                    <?php $__currentLoopData = config('client_reasons.reject'); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $reason): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                                        <option value="<?php echo e($reason); ?>"><?php echo e($reason); ?></option>
+                                                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                                                 </select>
                                             </div>
-                                            @elseif ($r->client_remark_action === 'waitlist')
+                                            <?php elseif($r->client_remark_action === 'waitlist'): ?>
                                             <div class="flex flex-col items-center gap-1">
                                                 <div class="flex items-center gap-1">
-                                                    <button type="button" onclick="changeWaitlistMark({{ $r->id }}, 'approve')"
+                                                    <button type="button" onclick="changeWaitlistMark(<?php echo e($r->id); ?>, 'approve')"
                                                             class="px-2 py-1 rounded-lg text-xs font-semibold transition whitespace-nowrap border border-gray-200 bg-gray-50 text-gray-500 hover:bg-emerald-50 hover:text-emerald-600 hover:border-emerald-200" title="Change Waiting List to Approved">
                                                         ✅
                                                     </button>
-                                                    <button type="button" onclick="changeWaitlistMark({{ $r->id }}, 'reject')"
+                                                    <button type="button" onclick="changeWaitlistMark(<?php echo e($r->id); ?>, 'reject')"
                                                             class="px-2 py-1 rounded-lg text-xs font-semibold transition whitespace-nowrap border border-gray-200 bg-gray-50 text-gray-500 hover:bg-red-50 hover:text-red-600 hover:border-red-200" title="Change Waiting List to Rejected">
                                                         ❌
                                                     </button>
                                                 </div>
-                                                <select data-wl-reason data-id="{{ $r->id }}" class="wl-reason hidden mt-1 w-36 text-[10px] border border-gray-300 rounded-lg px-2 py-1 bg-white">
+                                                <select data-wl-reason data-id="<?php echo e($r->id); ?>" class="wl-reason hidden mt-1 w-36 text-[10px] border border-gray-300 rounded-lg px-2 py-1 bg-white">
                                                     <option value="">— Reason —</option>
-                                                    @foreach (config('client_reasons.reject') as $reason)
-                                                        <option value="{{ $reason }}">{{ $reason }}</option>
-                                                    @endforeach
+                                                    <?php $__currentLoopData = config('client_reasons.reject'); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $reason): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                                        <option value="<?php echo e($reason); ?>"><?php echo e($reason); ?></option>
+                                                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                                                 </select>
                                             </div>
-                                            @else
+                                            <?php else: ?>
                                             <span class="text-[10px] text-gray-400">Already marked</span>
-                                            @endif
-                                            @endif
-                                            @if (Auth::user()->canWrite())
-                                            <a href="{{ route('admin.registrants.edit', $r) }}"
+                                            <?php endif; ?>
+                                            <?php endif; ?>
+                                            <?php if(Auth::user()->canWrite()): ?>
+                                            <a href="<?php echo e(route('admin.registrants.edit', $r)); ?>"
                                                title="Edit"
                                                class="p-1 text-gray-400 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition">
                                                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
                                                 </svg>
                                             </a>
-                                            @endif
-                                            @if (Auth::user()->canWrite() || Auth::user()->isViewer())
-                                            {{-- Approve - sends approval email --}}
-                                            <form action="{{ route('admin.registrants.approve', $r) }}" method="POST" class="inline">
-                                                @csrf
+                                            <?php endif; ?>
+                                            <?php if(Auth::user()->canWrite() || Auth::user()->isViewer()): ?>
+                                            
+                                            <form action="<?php echo e(route('admin.registrants.approve', $r)); ?>" method="POST" class="inline">
+                                                <?php echo csrf_field(); ?>
                                                 <button type="submit"
-                                                        onclick="return confirm('Approve {{ addslashes($r->name) }}?')"
+                                                        onclick="return confirm('Approve <?php echo e(addslashes($r->name)); ?>?')"
                                                         title="Approve"
                                                         class="p-1 text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition">
                                                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -552,29 +555,29 @@
                                                     </svg>
                                                 </button>
                                             </form>
-                                            {{-- Reject - sends rejection email --}}
-                                            <button onclick="openRejectModal('{{ $r->id }}', '{{ addslashes($r->name) }}')"
+                                            
+                                            <button onclick="openRejectModal('<?php echo e($r->id); ?>', '<?php echo e(addslashes($r->name)); ?>')"
                                                     title="Reject"
                                                     class="p-1 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition">
                                                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
                                                 </svg>
                                             </button>
-                                            @endif
-                                            @if (Auth::user()->canWrite())
-                                            {{-- Resend credentials - only for approved --}}
-                                            @if ($r->status === 'approved')
-                                                <button onclick="resendCredentials('{{ $r->id }}', '{{ addslashes($r->name) }}')"
+                                            <?php endif; ?>
+                                            <?php if(Auth::user()->canWrite()): ?>
+                                            
+                                            <?php if($r->status === 'approved'): ?>
+                                                <button onclick="resendCredentials('<?php echo e($r->id); ?>', '<?php echo e(addslashes($r->name)); ?>')"
                                                         title="Resend"
                                                         class="p-1 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition">
                                                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
                                                     </svg>
                                                 </button>
-                                            @endif
-                                            <form action="{{ route('admin.registrants.destroy', $r) }}" method="POST" class="inline" onsubmit="return confirm('Delete {{ addslashes($r->name) }} permanently?')">
-                                                @csrf
-                                                @method('DELETE')
+                                            <?php endif; ?>
+                                            <form action="<?php echo e(route('admin.registrants.destroy', $r)); ?>" method="POST" class="inline" onsubmit="return confirm('Delete <?php echo e(addslashes($r->name)); ?> permanently?')">
+                                                <?php echo csrf_field(); ?>
+                                                <?php echo method_field('DELETE'); ?>
                                                 <button type="submit"
                                                         title="Delete"
                                                         class="p-1 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition">
@@ -583,11 +586,11 @@
                                                     </svg>
                                                 </button>
                                             </form>
-                                            @endif
+                                            <?php endif; ?>
                                         </div>
                                     </td>
                                 </tr>
-                            @empty
+                            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
                                 <tr>
                                     <td colspan="8" class="px-5 py-16 text-center">
                                         <div class="flex flex-col items-center gap-2">
@@ -599,26 +602,27 @@
                                         </div>
                                     </td>
                                 </tr>
-                            @endforelse
+                            <?php endif; ?>
                         </tbody>
                     </table>
                 </div>
 
-                {{-- Pagination --}}
+                
                 <div id="registrantPagination" class="px-5 py-4 border-t border-gray-100 bg-gray-50/50">
-                    @if ($registrants->hasPages())
-                        {{ $registrants->links() }}
-                    @endif
+                    <?php if($registrants->hasPages()): ?>
+                        <?php echo e($registrants->links()); ?>
+
+                    <?php endif; ?>
                 </div>
             </div>
         </div>
     </main>
 </div>
 
-{{-- ==================== REGISTRANT DETAIL MODAL (quick view + QR) ==================== --}}
+
 <div id="registrantDetailModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/40 backdrop-blur-sm p-4" role="dialog" aria-modal="true">
     <div class="bg-white w-full max-w-3xl rounded-2xl shadow-2xl overflow-hidden max-h-[92vh] flex flex-col">
-        {{-- Header --}}
+        
         <div class="px-6 py-4 border-b border-gray-100 flex items-center gap-3 bg-gray-50/70 flex-shrink-0">
             <div id="detAvatar" class="w-11 h-11 rounded-full bg-gradient-to-br from-indigo-400 to-purple-500 flex items-center justify-center text-white text-lg font-bold flex-shrink-0">?</div>
             <div class="min-w-0">
@@ -633,9 +637,9 @@
             </div>
         </div>
 
-        {{-- Body --}}
+        
         <div class="p-6 overflow-y-auto space-y-5">
-            {{-- Info --}}
+            
             <div class="space-y-3">
                 <span id="detCheckedIn" class="hidden inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-teal-50 text-teal-700 border border-teal-200">
                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
@@ -681,7 +685,7 @@
                 </div>
             </div>
 
-            {{-- QR below the data (large) --}}
+            
             <div class="bg-gray-50 rounded-2xl border border-gray-100 p-6 flex flex-col items-center text-center">
                 <h4 class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-4">QR Code</h4>
                 <img id="detQr" src="" alt="QR Code" class="w-72 h-72 rounded-lg border border-gray-200 bg-white p-2 mb-4">
@@ -696,7 +700,7 @@
             </div>
         </div>
 
-        {{-- Footer --}}
+        
         <div class="px-6 py-4 border-t border-gray-100 flex items-center justify-end gap-2 bg-gray-50/70 flex-shrink-0">
             <button type="button" onclick="closeRegistrantDetail()" class="px-4 py-2 text-xs font-semibold text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition">Close</button>
             <a id="detFullLink" href="#" class="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold text-white bg-indigo-500 hover:bg-indigo-600 rounded-lg transition">
@@ -707,7 +711,7 @@
     </div>
 </div>
 
-{{-- ==================== REJECT MODAL (Single) ==================== --}}
+
 <div id="rejectModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/40 backdrop-blur-sm p-4">
     <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden animate-fade-in">
         <div class="bg-red-50 px-6 py-4 border-b border-red-100">
@@ -728,13 +732,13 @@
                 You are about to reject <strong id="rejectName" class="text-red-600"></strong>'s registration.
                 A rejection email will be sent automatically.
             </p>
-            {{-- Client remark info (shown if available) --}}
+            
             <div id="rejectClientRemark" class="hidden mb-4 p-3 bg-indigo-50 border border-indigo-200 rounded-xl">
                 <p class="text-xs font-semibold text-indigo-600 uppercase tracking-wider mb-1">Client Recommendation</p>
                 <p class="text-sm text-gray-800" id="rejectClientRemarkText"></p>
             </div>
             <form id="rejectForm" method="POST">
-                @csrf
+                <?php echo csrf_field(); ?>
                 <div class="flex justify-end gap-2.5">
                     <button type="button" onclick="closeRejectModal()"
                             class="px-5 py-2.5 text-sm font-medium rounded-xl bg-gray-100 text-gray-700 hover:bg-gray-200 transition">Cancel</button>
@@ -746,7 +750,7 @@
     </div>
 </div>
 
-{{-- ==================== REJECT REASON MODAL (client recommendation) ==================== --}}
+
 <div id="rejectReasonModal" class="fixed inset-0 z-50 hidden" role="dialog" aria-modal="true">
     <div class="fixed inset-0 bg-black/40 backdrop-blur-sm" onclick="closeRejectReasonModal()"></div>
     <div class="fixed inset-0 flex items-center justify-center p-4">
@@ -768,9 +772,9 @@
             <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Reason</label>
             <select id="rrSelect" class="w-full border border-gray-300 rounded-xl px-3 py-2.5 text-sm focus:ring-2 focus:ring-red-100 focus:border-red-300 outline-none bg-white">
                 <option value="">— Select a reason —</option>
-                @foreach (config('client_reasons.reject') as $reason)
-                    <option value="{{ $reason }}">{{ $reason }}</option>
-                @endforeach
+                <?php $__currentLoopData = config('client_reasons.reject'); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $reason): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                    <option value="<?php echo e($reason); ?>"><?php echo e($reason); ?></option>
+                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
             </select>
             <div class="flex justify-end gap-2.5 mt-5">
                 <button type="button" onclick="closeRejectReasonModal()"
@@ -783,7 +787,7 @@
     </div>
 </div>
 
-{{-- ==================== BULK REJECT MODAL ==================== --}}
+
 <div id="bulkRejectModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/40 backdrop-blur-sm p-4">
     <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden animate-fade-in">
         <div class="bg-red-50 px-6 py-4 border-b border-red-100">
@@ -804,8 +808,8 @@
                 Reject <strong id="bulkRejectCount" class="font-bold text-red-600">0</strong> selected registrants?
                 A rejection email will be sent automatically to each.
             </p>
-            <form id="bulkRejectForm" method="POST" action="{{ route('admin.registrants.bulk-reject') }}">
-                @csrf
+            <form id="bulkRejectForm" method="POST" action="<?php echo e(route('admin.registrants.bulk-reject')); ?>">
+                <?php echo csrf_field(); ?>
                 <div id="bulkRejectIds"></div>
                 <div class="flex justify-end gap-2.5">
                     <button type="button" onclick="closeBulkRejectModal()"
@@ -818,11 +822,11 @@
     </div>
 </div>
 
-{{-- ==================== RECOMMEND MODAL ==================== --}}
-@include('admin.partials.mobile-sidebar')
 
-{{-- Client decision submit bar — select approve/reject/waitlist, submit at the end --}}
-@if (Auth::user()->isClient())
+<?php echo $__env->make('admin.partials.mobile-sidebar', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
+
+
+<?php if(Auth::user()->isClient()): ?>
 <div id="decisionBar" class="hidden fixed bottom-4 left-1/2 -translate-x-1/2 z-40 bg-gray-900 text-white rounded-2xl shadow-2xl px-5 py-3 items-center gap-4">
     <div class="text-xs flex items-center gap-4">
         <span class="inline-flex items-center gap-1.5">✅ Approved: <b id="dApprove">0</b></span>
@@ -833,7 +837,7 @@
     <button onclick="submitDecisions()" class="px-4 py-2 text-xs font-bold rounded-xl bg-emerald-500 hover:bg-emerald-600 transition">Submit Decisions</button>
 </div>
 
-{{-- Preview & cancel modal for the client's selected decisions --}}
+
 <div id="decisionPreviewModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/30">
     <div class="bg-white rounded-2xl shadow-xl max-w-lg w-full max-h-[80vh] flex flex-col overflow-hidden">
         <div class="flex items-center justify-between px-5 py-4 border-b border-gray-100">
@@ -847,7 +851,7 @@
     </div>
 </div>
 
-{{-- Live presence: which OTHER clients are collaborating right now (across devices) --}}
+
 <div id="collabPresence" class="hidden fixed bottom-4 left-4 z-40 items-center gap-2.5 bg-white/95 backdrop-blur border border-emerald-200 rounded-2xl shadow-lg px-4 py-2.5 text-xs">
     <span class="inline-flex items-center gap-1.5 font-bold text-emerald-700">
         <span class="relative flex h-2 w-2">
@@ -858,11 +862,11 @@
     </span>
     <span id="collabPresenceList" class="text-gray-700 font-medium"></span>
 </div>
-@endif
+<?php endif; ?>
 
 <script>
-    const rejectRoute = '{{ route("admin.registrants.reject", ["registrant" => "REG_ID"]) }}';
-    const resendRoute = '{{ route("admin.registrants.resend-credentials", ["registrant" => "REG_ID"]) }}';
+    const rejectRoute = '<?php echo e(route("admin.registrants.reject", ["registrant" => "REG_ID"])); ?>';
+    const resendRoute = '<?php echo e(route("admin.registrants.resend-credentials", ["registrant" => "REG_ID"])); ?>';
     // ---- Reject Modal (Single) ----
     function openRejectModal(id, name) {
         document.getElementById('rejectName').textContent = name;
@@ -876,7 +880,7 @@
         var remarkText = document.getElementById('rejectClientRemarkText');
         remarkContainer.classList.add('hidden');
 
-        fetch('{{ url('admin/dashboard/daily') }}/fetch?registrant_id=' + id)
+        fetch('<?php echo e(url('admin/dashboard/daily')); ?>/fetch?registrant_id=' + id)
             .then(function(r) { return r.json(); })
             .then(function(data) { /* not needed */ })
             .catch(function() { /* silently ignore */ });
@@ -1045,13 +1049,13 @@
 
         const form = document.createElement('form');
         form.method = 'POST';
-        form.action = '{{ route("admin.registrants.bulk-approve") }}';
+        form.action = '<?php echo e(route("admin.registrants.bulk-approve")); ?>';
         form.style.display = 'none';
 
         const csrf = document.createElement('input');
         csrf.type = 'hidden';
         csrf.name = '_token';
-        csrf.value = '{{ csrf_token() }}';
+        csrf.value = '<?php echo e(csrf_token()); ?>';
         form.appendChild(csrf);
 
         checked.forEach(cb => {
@@ -1078,7 +1082,7 @@
         const csrf = document.createElement('input');
         csrf.type = 'hidden';
         csrf.name = '_token';
-        csrf.value = '{{ csrf_token() }}';
+        csrf.value = '<?php echo e(csrf_token()); ?>';
         form.appendChild(csrf);
 
         document.body.appendChild(form);
@@ -1115,12 +1119,12 @@
     function submitChangeWaitlistForm(id, action, reason) {
         const form = document.createElement('form');
         form.method = 'POST';
-        form.action = '{{ route("admin.registrants.change-remark", ["registrant" => "REG_ID"]) }}'.replace('REG_ID', id);
+        form.action = '<?php echo e(route("admin.registrants.change-remark", ["registrant" => "REG_ID"])); ?>'.replace('REG_ID', id);
         form.style.display = 'none';
         const csrf = document.createElement('input');
         csrf.type = 'hidden';
         csrf.name = '_token';
-        csrf.value = '{{ csrf_token() }}';
+        csrf.value = '<?php echo e(csrf_token()); ?>';
         form.appendChild(csrf);
         const a = document.createElement('input');
         a.type = 'hidden';
@@ -1278,9 +1282,9 @@
         if (!confirm('Submit ' + ds.decisions.length + ' decision(s) for admin review?')) return;
         const form = document.createElement('form');
         form.method = 'POST';
-        form.action = '{{ route("admin.registrants.submit-decisions") }}';
+        form.action = '<?php echo e(route("admin.registrants.submit-decisions")); ?>';
         form.style.display = 'none';
-        const csrf = document.createElement('input'); csrf.type = 'hidden'; csrf.name = '_token'; csrf.value = '{{ csrf_token() }}'; form.appendChild(csrf);
+        const csrf = document.createElement('input'); csrf.type = 'hidden'; csrf.name = '_token'; csrf.value = '<?php echo e(csrf_token()); ?>'; form.appendChild(csrf);
         const data = document.createElement('input'); data.type = 'hidden'; data.name = 'decisions'; data.value = JSON.stringify(ds.decisions); form.appendChild(data);
         document.body.appendChild(form);
         form.submit();
@@ -1407,7 +1411,7 @@
             params.set('search', input.value);
             params.set('page', '1');
             try {
-                const res = await fetch('{{ route("admin.registrants.search") }}?' + params.toString(), {
+                const res = await fetch('<?php echo e(route("admin.registrants.search")); ?>?' + params.toString(), {
                     headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' }
                 });
                 const data = await res.json();
@@ -1473,7 +1477,7 @@
     // ═══════════════════════════════
     //  Must be : Approve / Reject (direct submit)
     // ═══════════════════════════════
-    var mustBeUrl = '{{ url('admin/registrants') }}/REG_ID/client-remark';
+    var mustBeUrl = '<?php echo e(url('admin/registrants')); ?>/REG_ID/client-remark';
 
     // Reject reason modal state
     var rrPending = { id: null, btn: null };
@@ -1521,7 +1525,7 @@
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                'X-CSRF-TOKEN': '<?php echo e(csrf_token()); ?>',
                 'Accept': 'application/json',
             },
             body: JSON.stringify({ client_remark: reason || '', client_remark_action: action }),
@@ -1530,7 +1534,7 @@
         .then(function(data) {
             if (data.success) {
                 var isApprove = action === 'approve';
-                var userName = '{{ Auth::user()->name }}';
+                var userName = '<?php echo e(Auth::user()->name); ?>';
                 // Update button styling — keep emoji, set active/disabled state
                 if (approveBtn) {
                     if (isApprove) {
@@ -1550,7 +1554,7 @@
                 }
                 // Update the status badge cell in the same row
                 var row = (approveBtn || rejectBtn).closest('tr');
-                var statusCell = row && row.querySelectorAll('td')[{{ Auth::user()->canWrite() ? 4 : 3 }}];
+                var statusCell = row && row.querySelectorAll('td')[<?php echo e(Auth::user()->canWrite() ? 4 : 3); ?>];
                 if (statusCell) {
                     var oldRemark = statusCell.querySelector('.client-remark-label');
                     if (oldRemark) oldRemark.remove();
@@ -1581,10 +1585,10 @@
     }
 </style>
 
-{{-- Real-time polling untuk stats cards (setiap 10 detik) --}}
+
 <script>
 (function(){
-    var pollUrl = '{{ route("admin.dashboard.data") }}';
+    var pollUrl = '<?php echo e(route("admin.dashboard.data")); ?>';
     setInterval(function() {
         fetch(pollUrl)
             .then(function(r) { return r.json(); })
@@ -1609,7 +1613,7 @@
 })();
 </script>
 
-{{-- Realtime collaboration: reflect other clients' markings (poll every 4s) --}}
+
 <div id="realtimeToast" class="hidden fixed bottom-4 right-4 z-50 bg-indigo-600 text-white text-sm font-medium px-4 py-2.5 rounded-xl shadow-lg"></div>
 <script>
 // ---- Pending-selection sync (share current toggles with other clients) ----
@@ -1621,7 +1625,7 @@ let realtimePending = [];
 // syncPending doesn't wipe selections on other pagination pages.
 let myPendingCache = [];
 // Reject reason options (from config) used to render the pending-reason dropdown
-const clientRejectReasons = @json(config('client_reasons.reject'));
+const clientRejectReasons = <?php echo json_encode(config('client_reasons.reject'), 15, 512) ?>;
 function syncPending() {
     const sel = [];
     document.querySelectorAll('.decision-toggle.decision-active').forEach(btn => {
@@ -1646,9 +1650,9 @@ function syncPending() {
     });
     clearTimeout(pendingSyncTimer);
     pendingSyncTimer = setTimeout(function() {
-        fetch('{{ route("admin.registrants.pending-sync") }}', {
+        fetch('<?php echo e(route("admin.registrants.pending-sync")); ?>', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json' },
+            headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '<?php echo e(csrf_token()); ?>', 'Accept': 'application/json' },
             body: JSON.stringify({ selections: sel }),
         }).catch(function() {});
     }, 400);
@@ -1771,12 +1775,12 @@ function restoreMyPending(myPending) {
 }
 
 (function() {
-    const rtUrl = '{{ route("admin.registrants.realtime") }}';
-    const rowsUrl = '{{ route("admin.registrants.rows") }}';
-    const currentMy = @json($my);
+    const rtUrl = '<?php echo e(route("admin.registrants.realtime")); ?>';
+    const rowsUrl = '<?php echo e(route("admin.registrants.rows")); ?>';
+    const currentMy = <?php echo json_encode($my, 15, 512) ?>;
     // Admin/super admin: rows that a client is currently marking (NOT yet submitted)
     // are hidden from the list — track the set so we re-render live when it changes.
-    const isClient = @json(Auth::user()->isClient());
+    const isClient = <?php echo json_encode(Auth::user()->isClient(), 15, 512) ?>;
     let prevPendingClaimKey = null;
     let since = new Date().toISOString();
     let toastTimer = null;
@@ -1826,7 +1830,7 @@ function restoreMyPending(myPending) {
     // the client submits (or new claims disappear) without a manual refresh.
     function refreshTableFromServer() {
         const params = new URLSearchParams(window.location.search);
-        fetch('{{ route("admin.registrants.search") }}?' + params.toString(), {
+        fetch('<?php echo e(route("admin.registrants.search")); ?>?' + params.toString(), {
             headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' }
         })
             .then(function(r) { return r.json(); })
@@ -1926,3 +1930,4 @@ function restoreMyPending(myPending) {
 
 </body>
 </html>
+<?php /**PATH /Users/mdrz/2026/MSD26/resources/views/admin/registrants/index.blade.php ENDPATH**/ ?>
