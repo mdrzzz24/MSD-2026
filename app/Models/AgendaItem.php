@@ -213,13 +213,22 @@ class AgendaItem extends Model
     }
 
     /**
-     * Effective end time for sessions rendered as multi-slot blocks (rowspan > 1).
-     * When a session's cell spans several time-slot rows, the visible end time is
-     * the last spanned slot's end (e.g. rowspan=3 from 13:00-13:30 ends at 14:30),
-     * not the raw end_time column. Mirrors the home page modal logic.
+     * Effective end time for sessions rendered as multi-slot blocks (rowspan > 1),
+     * plus display-only overrides so real-world end times that don't sit on a slot
+     * boundary match the public agenda (14:10 track sessions run until 14:40,
+     * 16:05 until 16:35). The underlying end_time (the grid anchor) is untouched.
      */
     public function displayEndTime(?\Illuminate\Support\Collection $timeSlots = null): ?string
     {
+        // Display-only overrides (same values the public agenda + its modal show).
+        $hm = date('H:i', strtotime($this->start_time));
+        if ($hm === '14:10') {
+            return '14:40:00';
+        }
+        if ($hm === '16:05') {
+            return '16:35:00';
+        }
+
         if ($this->rowspan > 1) {
             $timeSlots = $timeSlots ?? \App\Models\TimeSlot::ordered()->get();
             if ($timeSlots->isNotEmpty()) {
@@ -238,11 +247,24 @@ class AgendaItem extends Model
     }
 
     /**
-     * Time label using the rowspan-aware display end time.
+     * Display-only start time — 16:30 track sessions render as 16:35 to match the
+     * public agenda; otherwise the raw start time.
+     */
+    public function displayStartTime(): string
+    {
+        if (date('H:i', strtotime($this->start_time)) === '16:30') {
+            return '16:35:00';
+        }
+
+        return $this->start_time;
+    }
+
+    /**
+     * Time label using the display start time and the rowspan-aware display end time.
      */
     public function timeLabelWith(?\Illuminate\Support\Collection $timeSlots = null): string
     {
-        return date('H.i', strtotime($this->start_time)) . ' – ' . date('H.i', strtotime($this->displayEndTime($timeSlots)));
+        return date('H.i', strtotime($this->displayStartTime())) . ' – ' . date('H.i', strtotime($this->displayEndTime($timeSlots)));
     }
 
     /**
