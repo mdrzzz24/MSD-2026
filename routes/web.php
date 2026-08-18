@@ -85,6 +85,14 @@ Route::get('/home3', function () {
 Route::post('/register', [RegistrantAuthController::class, 'register'])->name('register.submit');
 Route::get('/register/success', [RegistrantAuthController::class, 'success'])->name('register.success');
 
+// ── Public walk-in registration (shareable link → status pending) ──
+Route::get('/walkin/register', [App\Http\Controllers\WalkinRegisterController::class, 'create'])
+    ->name('walkin.public.create')
+    ->middleware('throttle:60,1');
+Route::post('/walkin/register', [App\Http\Controllers\WalkinRegisterController::class, 'store'])
+    ->name('walkin.public.store')
+    ->middleware('throttle:10,1');
+
 // ── Feedback (public page; login required to submit) ──
 // Short link: /f/{code} redirects to the full feedback URL.
 Route::get('/f/{code}', [App\Http\Controllers\FeedbackController::class, 'shortlink'])->name('feedback.short');

@@ -1,11 +1,11 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <link rel="icon" type="image/png" href="{{ asset('img/metrodata.png') }}">
+    <link rel="icon" type="image/png" href="<?php echo e(asset('img/metrodata.png')); ?>">
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>Onsite Event — {{ config('app.name') }}</title>
+    <meta name="csrf-token" content="<?php echo e(csrf_token()); ?>">
+    <title>Onsite Event — <?php echo e(config('app.name')); ?></title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
@@ -13,7 +13,7 @@
 </head>
 <body class="bg-gray-50 font-sans antialiased">
 <div class="flex min-h-screen">
-@include('admin.partials.sidebar')
+<?php echo $__env->make('admin.partials.sidebar', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
 <main class="flex-1 lg:ml-64">
 <header class="sticky top-0 z-30 bg-white/80 backdrop-blur border-b border-gray-200">
 <div class="flex items-center justify-between h-16 px-4 sm:px-6 lg:px-8">
@@ -28,13 +28,13 @@
     <svg class="w-3.5 h-3.5 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
     <span id="realtimeClock" class="font-mono tabular-nums">--:--:--</span>
 </span>
-<span id="mqttBadge" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold border {{ $mqttEnabled ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-gray-100 text-gray-500 border-gray-200' }}" title="Topik MQTT badge printer">
-    <span id="mqttDot" class="w-2 h-2 rounded-full {{ $mqttEnabled ? 'bg-emerald-500 animate-pulse' : 'bg-gray-400' }}"></span>
-    <span class="font-mono">{{ $mqttTopic }}</span>
-    <span id="mqttStatusText" class="ml-0.5 {{ $mqttEnabled ? 'text-emerald-600' : 'text-gray-400' }}">{{ $mqttEnabled ? 'ON' : 'OFF' }}</span>
+<span id="mqttBadge" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold border <?php echo e($mqttEnabled ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-gray-100 text-gray-500 border-gray-200'); ?>" title="Topik MQTT badge printer">
+    <span id="mqttDot" class="w-2 h-2 rounded-full <?php echo e($mqttEnabled ? 'bg-emerald-500 animate-pulse' : 'bg-gray-400'); ?>"></span>
+    <span class="font-mono"><?php echo e($mqttTopic); ?></span>
+    <span id="mqttStatusText" class="ml-0.5 <?php echo e($mqttEnabled ? 'text-emerald-600' : 'text-gray-400'); ?>"><?php echo e($mqttEnabled ? 'ON' : 'OFF'); ?></span>
 </span>
 <span class="text-xs text-gray-400 hidden sm:inline" id="printCount"></span>
-@if (Auth::user()->hasPermission('registrants'))
+<?php if(Auth::user()->hasPermission('registrants')): ?>
 <button onclick="openWalkinModal()"
         class="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-semibold rounded-xl bg-emerald-600 text-white hover:bg-emerald-700 transition shadow-sm">
 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/></svg>
@@ -45,7 +45,7 @@ Walkin Registration
 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 015.656 0l2 2a4 4 0 01-5.656 5.656l-1.414-1.414M10.172 13.828a4 4 0 01-5.656 0l-2-2a4 4 0 015.656-5.656l1.414 1.414"/></svg>
 Share Link
 </button>
-@endif
+<?php endif; ?>
 <button onclick="printSelected()" id="printSelectedBtn"
         class="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-semibold rounded-xl bg-indigo-600 text-white hover:bg-indigo-700 transition shadow-sm">
 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
@@ -56,20 +56,20 @@ Print Badges
 </header>
 
 <div class="p-4 sm:p-6 lg:p-8 space-y-6">
-@include('admin.partials.notification')
+<?php echo $__env->make('admin.partials.notification', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
 
-{{-- Status tabs (default: approved) --}}
+
 <div class="flex flex-wrap gap-2">
-    @php
+    <?php
         $tabs = [
             'all'      => ['label' => 'All', 'color' => 'gray'],
             'approved' => ['label' => 'Approved', 'color' => 'emerald'],
             'pending'  => ['label' => 'Pending', 'color' => 'amber'],
             'rejected' => ['label' => 'Rejected', 'color' => 'red'],
         ];
-    @endphp
-    @foreach ($tabs as $key => $tab)
-        @php
+    ?>
+    <?php $__currentLoopData = $tabs; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $key => $tab): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+        <?php
             $isActive = $status === $key;
             $color = $tab['color'];
             $activeCls = match($color) {
@@ -78,94 +78,96 @@ Print Badges
                 'red'     => 'bg-red-500 text-white ring-red-500',
                 default   => 'bg-gray-900 text-white ring-gray-900',
             };
-        @endphp
-        <a href="{{ route('admin.onsite', array_merge(request()->except(['status', 'page']), ['status' => $key])) }}"
-           class="px-4 py-2 rounded-xl text-sm font-semibold transition ring-2 ring-offset-2 {{ $isActive ? $activeCls : 'bg-white text-gray-600 ring-gray-100 hover:bg-gray-50' }}">
-            {{ $tab['label'] }}
+        ?>
+        <a href="<?php echo e(route('admin.onsite', array_merge(request()->except(['status', 'page']), ['status' => $key]))); ?>"
+           class="px-4 py-2 rounded-xl text-sm font-semibold transition ring-2 ring-offset-2 <?php echo e($isActive ? $activeCls : 'bg-white text-gray-600 ring-gray-100 hover:bg-gray-50'); ?>">
+            <?php echo e($tab['label']); ?>
+
         </a>
-    @endforeach
+    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
 </div>
 
-{{-- Stats cards --}}
+
 <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
     <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
         <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Total</p>
-        <p class="text-2xl font-bold text-gray-900 mt-1">{{ number_format($total) }}</p>
+        <p class="text-2xl font-bold text-gray-900 mt-1"><?php echo e(number_format($total)); ?></p>
     </div>
     <div class="bg-white rounded-2xl border border-emerald-100 shadow-sm p-5">
         <p class="text-xs font-semibold text-emerald-600 uppercase tracking-wider">Approved</p>
-        <p class="text-2xl font-bold text-emerald-600 mt-1">{{ number_format($approved) }}</p>
+        <p class="text-2xl font-bold text-emerald-600 mt-1"><?php echo e(number_format($approved)); ?></p>
     </div>
     <div class="bg-white rounded-2xl border border-amber-100 shadow-sm p-5">
         <p class="text-xs font-semibold text-amber-600 uppercase tracking-wider">Pending</p>
-        <p class="text-2xl font-bold text-amber-600 mt-1">{{ number_format($pending) }}</p>
+        <p class="text-2xl font-bold text-amber-600 mt-1"><?php echo e(number_format($pending)); ?></p>
     </div>
     <div class="bg-white rounded-2xl border border-red-100 shadow-sm p-5">
         <p class="text-xs font-semibold text-red-500 uppercase tracking-wider">Rejected</p>
-        <p class="text-2xl font-bold text-red-500 mt-1">{{ number_format($rejected) }}</p>
+        <p class="text-2xl font-bold text-red-500 mt-1"><?php echo e(number_format($rejected)); ?></p>
     </div>
     <div class="bg-white rounded-2xl border border-indigo-100 shadow-sm p-5">
         <p class="text-xs font-semibold text-indigo-500 uppercase tracking-wider">Checked-in</p>
-        <p class="text-2xl font-bold text-indigo-600 mt-1">{{ number_format($checkedInCount) }}</p>
+        <p class="text-2xl font-bold text-indigo-600 mt-1"><?php echo e(number_format($checkedInCount)); ?></p>
     </div>
 </div>
 
-{{-- Filters --}}
+
 <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
-<form method="GET" action="{{ route('admin.onsite') }}" id="onsiteFilterForm" class="flex flex-wrap items-end gap-3">
-    <input type="hidden" name="status" value="{{ $status }}">
+<form method="GET" action="<?php echo e(route('admin.onsite')); ?>" id="onsiteFilterForm" class="flex flex-wrap items-end gap-3">
+    <input type="hidden" name="status" value="<?php echo e($status); ?>">
     <div>
         <label class="block text-xs font-semibold text-gray-500 mb-1">Search</label>
         <div class="relative">
-            <input type="text" name="search" value="{{ request('search') }}" placeholder="Ketik untuk mencari..."
+            <input type="text" name="search" value="<?php echo e(request('search')); ?>" placeholder="Ketik untuk mencari..."
                    oninput="liveSearch()" autocomplete="off"
                    class="px-3 py-2 pr-8 text-sm border border-gray-200 rounded-xl bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 w-64">
-            @if (request('search'))
-            <a href="{{ route('admin.onsite', array_merge(request()->except(['search','page']), ['status' => $status])) }}"
+            <?php if(request('search')): ?>
+            <a href="<?php echo e(route('admin.onsite', array_merge(request()->except(['search','page']), ['status' => $status]))); ?>"
                class="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-200 transition" title="Bersihkan pencarian">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
             </a>
-            @endif
+            <?php endif; ?>
         </div>
     </div>
     <div>
-        @include('admin.partials.profile-filter')
+        <?php echo $__env->make('admin.partials.profile-filter', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
     </div>
     <div>
         <label class="block text-xs font-semibold text-gray-500 mb-1">Company</label>
         <select name="company" class="px-3 py-2 text-sm border border-gray-200 rounded-xl bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500">
             <option value="">All companies</option>
-            @foreach ($companies as $c)
-                <option value="{{ $c }}" @selected(request('company') === $c)>{{ $c }}</option>
-            @endforeach
+            <?php $__currentLoopData = $companies; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $c): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                <option value="<?php echo e($c); ?>" <?php if(request('company') === $c): echo 'selected'; endif; ?>><?php echo e($c); ?></option>
+            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
         </select>
     </div>
     <div>
-        @include('admin.partials.source-filter')
+        <?php echo $__env->make('admin.partials.source-filter', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
     </div>
     <div>
         <label class="block text-xs font-semibold text-gray-500 mb-1">Checked-in</label>
         <select name="checked_in" class="px-3 py-2 text-sm border border-gray-200 rounded-xl bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500">
             <option value="">All</option>
-            <option value="yes" @selected(request('checked_in') === 'yes')>Checked-in</option>
-            <option value="no" @selected(request('checked_in') === 'no')>Not checked-in</option>
+            <option value="yes" <?php if(request('checked_in') === 'yes'): echo 'selected'; endif; ?>>Checked-in</option>
+            <option value="no" <?php if(request('checked_in') === 'no'): echo 'selected'; endif; ?>>Not checked-in</option>
         </select>
     </div>
     <div class="flex gap-2">
         <button type="submit" class="px-4 py-2 text-sm font-semibold rounded-xl bg-indigo-500 text-white hover:bg-indigo-600 transition">Filter</button>
-        <a href="{{ route('admin.onsite', ['status' => $status]) }}" class="px-4 py-2 text-sm font-medium rounded-xl bg-gray-100 text-gray-600 hover:bg-gray-200 transition">Reset</a>
+        <a href="<?php echo e(route('admin.onsite', ['status' => $status])); ?>" class="px-4 py-2 text-sm font-medium rounded-xl bg-gray-100 text-gray-600 hover:bg-gray-200 transition">Reset</a>
     </div>
 </form>
 </div>
 
-{{-- Participants table --}}
+
 <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
 <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 px-5 py-4 border-b border-gray-100">
     <div class="flex items-center gap-3">
         <h2 class="text-base font-bold text-gray-900">
-            {{ $status === 'approved' ? 'Approved Participants' : ($status === 'pending' ? 'Pending Participants' : ($status === 'rejected' ? 'Rejected Participants' : 'All Participants')) }}
+            <?php echo e($status === 'approved' ? 'Approved Participants' : ($status === 'pending' ? 'Pending Participants' : ($status === 'rejected' ? 'Rejected Participants' : 'All Participants'))); ?>
+
         </h2>
-        <span id="onsiteCount" class="text-xs text-gray-400">({{ $registrants->total() }})</span>
+        <span id="onsiteCount" class="text-xs text-gray-400">(<?php echo e($registrants->total()); ?>)</span>
     </div>
     <div class="flex items-center gap-3">
         <label class="inline-flex items-center gap-2 text-xs text-gray-500 cursor-pointer select-none">
@@ -180,16 +182,16 @@ Print Badges
 </div>
 
 <div id="onsiteTableContainer">
-@include('admin.onsite._table', ['registrants' => $registrants, 'status' => $status, 'sort' => $sort, 'direction' => $direction])
+<?php echo $__env->make('admin.onsite._table', ['registrants' => $registrants, 'status' => $status, 'sort' => $sort, 'direction' => $direction], array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
 </div>
 </div>
 
 </div>
 </main>
 </div>
-@include('admin.partials.mobile-sidebar')
+<?php echo $__env->make('admin.partials.mobile-sidebar', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
 
-{{-- Walkin Registration Modal --}}
+
 <div id="walkinModal" class="fixed inset-0 z-[80] hidden items-center justify-center p-4">
     <div class="absolute inset-0 bg-gray-900/50 backdrop-blur-sm" onclick="closeWalkinModal()"></div>
     <div class="relative bg-white rounded-2xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
@@ -197,7 +199,7 @@ Print Badges
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
         </button>
 
-        {{-- Form state --}}
+        
         <div id="walkinFormState">
             <div class="p-6 sm:p-8">
                 <div class="text-center mb-6">
@@ -214,7 +216,7 @@ Print Badges
                 </div>
 
                 <form id="walkinForm" onsubmit="walkinSubmit('approved'); return false;" class="space-y-4">
-                    @csrf
+                    <?php echo csrf_field(); ?>
                     <input type="hidden" id="walkinMode" name="mode" value="approved">
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
@@ -439,7 +441,7 @@ Print Badges
             </div>
         </div>
 
-        {{-- Success state --}}
+        
         <div id="walkinSuccessState" class="hidden">
             <div class="p-6 sm:p-8 text-center">
                 <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-emerald-100 mb-4">
@@ -478,7 +480,7 @@ Print Badges
 </div>
 
 <script>
-const printStatus = '{{ $status }}';
+const printStatus = '<?php echo e($status); ?>';
 
 // Realtime clock in the header
 (function () {
@@ -504,7 +506,7 @@ const printStatus = '{{ $status }}';
     const txt = document.getElementById('mqttStatusText');
     async function refresh() {
         try {
-            const res = await fetch('{{ route("admin.onsite.mqtt-status") }}', {
+            const res = await fetch('<?php echo e(route("admin.onsite.mqtt-status")); ?>', {
                 headers: { 'Accept': 'application/json' },
                 credentials: 'same-origin'
             });
@@ -556,7 +558,7 @@ function showToast(message, type) {
 async function triggerMqtt(params) {
     const token = document.querySelector('meta[name="csrf-token"]')?.content || '';
     try {
-        const res = await fetch('{{ route("admin.onsite.badges.trigger") }}', {
+        const res = await fetch('<?php echo e(route("admin.onsite.badges.trigger")); ?>', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/x-www-form-urlencoded',
@@ -610,7 +612,7 @@ async function liveSearch() {
         const params = new URLSearchParams(new FormData(form));
         params.set('page', '1');
         try {
-            const res = await fetch('{{ route("admin.onsite.search") }}?' + params.toString(), { headers: { 'Accept': 'application/json' } });
+            const res = await fetch('<?php echo e(route("admin.onsite.search")); ?>?' + params.toString(), { headers: { 'Accept': 'application/json' } });
             const data = await res.json();
             if (seq !== searchSeq) return; // stale response, ignore
             if (data && data.html) {
@@ -647,7 +649,7 @@ function updateCheckinCell(id, time) {
 async function printSelected() {
     const params = buildPrintParams();
     const ids = selectedIds();
-    const count = ids.length ? ids.length : {{ $bulkCount }};
+    const count = ids.length ? ids.length : <?php echo e($bulkCount); ?>;
 
     // Bulk print confirmation (sends to the physical printer)
     if (count > 1) {
@@ -788,7 +790,7 @@ async function submitWalkin() {
     const token = document.querySelector('meta[name="csrf-token"]')?.content || '';
     try {
         const body = new URLSearchParams(new FormData(form));
-        const res = await fetch('{{ route("admin.walkin.store") }}', {
+        const res = await fetch('<?php echo e(route("admin.walkin.store")); ?>', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
@@ -865,7 +867,7 @@ function fallbackCopyWalkin(text, done) {
 }
 
 function copyWalkinLink() {
-    const url = '{{ route("walkin.public.create") }}';
+    const url = '<?php echo e(route("walkin.public.create")); ?>';
     const done = () => showToast('✅ Public walk-in link copied', 'success');
     if (navigator.clipboard && navigator.clipboard.writeText) {
         navigator.clipboard.writeText(url).then(done).catch(() => fallbackCopyWalkin(url, done));
@@ -876,3 +878,4 @@ function copyWalkinLink() {
 </script>
 </body>
 </html>
+<?php /**PATH /Users/mdrz/2026/MSD26/resources/views/admin/onsite/index.blade.php ENDPATH**/ ?>

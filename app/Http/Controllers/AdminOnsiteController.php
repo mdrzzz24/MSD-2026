@@ -271,11 +271,21 @@ class AdminOnsiteController extends Controller
         $service = app(\App\Services\MqttService::class);
         $printedIds = $service->publishBadges($registrants, Auth::id());
 
+        // Pending participants whose badge was just printed are auto-approved
+        // (see MqttService::publishBadges) — report them so the UI can refresh.
+        $approvedIds = $registrants
+            ->where('status', 'pending')
+            ->pluck('id')
+            ->intersect($printedIds)
+            ->values()
+            ->all();
+
         return response()->json([
             'success'      => true,
             'total'        => $registrants->count(),
             'published'    => count($printedIds),
             'ids'          => $printedIds,
+            'approved_ids' => $approvedIds,
             'checked_in_at'=> now()->addHours(7)->format('H:i'),
             'enabled'      => $service->printerActive(Auth::id()),
         ]);

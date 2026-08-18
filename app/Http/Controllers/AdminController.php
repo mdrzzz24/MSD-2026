@@ -1940,36 +1940,103 @@ class AdminController extends Controller
     public function walkinStore(Request $request)
     {
         if (!Auth::user()->canWrite() || !Auth::user()->hasPermission('registrants')) {
+            if ($request->wantsJson() || $request->ajax()) {
+                return response()->json(['success' => false, 'message' => 'You do not have permission.'], 403);
+            }
+
             return redirect()->back()->with('error', 'You do not have permission.');
         }
 
+        // Same fields as the general registration form.
         $validated = $request->validate([
-            'name'       => ['required', 'string', 'max:255'],
-            'email'      => ['required', 'email', 'max:255', 'unique:registrants,email'],
-            'phone'      => ['nullable', 'string', 'max:50'],
-            'company'    => ['nullable', 'string', 'max:255'],
-            'job_title'  => ['nullable', 'string', 'max:255'],
-            'notes'      => ['nullable', 'string', 'max:500'],
+            'firstName'      => ['required', 'string', 'max:255'],
+            'lastName'       => ['required', 'string', 'max:255'],
+            'job_role'       => ['required', 'string', 'max:255'],
+            'job_title'      => ['required', 'string', 'max:255'],
+            'company'        => ['required', 'string', 'max:255'],
+            'email'          => ['required', 'email', 'max:255', 'unique:registrants,email'],
+            'phone'          => ['required', 'string', 'max:50'],
+            'industry'       => ['required', 'string', 'max:255'],
+            'employees'      => ['required', 'string', 'max:50'],
+            'gdpr'           => ['accepted'],
+            'referral_source'=> ['required', 'string', 'max:255'],
         ]);
+
+        // Normalize phone number: ensure +62 prefix, remove leading 0 (same as general registration).
+        $phone = preg_replace('/[^0-9]/', '', $validated['phone']);
+        if (substr($phone, 0, 2) === '62') {
+            $phone = '+62' . substr($phone, 2);
+        } elseif (substr($phone, 0, 1) === '0') {
+            $phone = '+62' . substr($phone, 1);
+        } elseif (substr($phone, 0, 1) !== '+') {
+            $phone = '+62' . $phone;
+        }
 
         $plainPassword = Str::random(8);
 
+        // "Register & Print" (approved + checked-in + badge print) vs
+        // "Register Only" (goes to pending). Defaults to approved for backward compat.
+        $mode = $request->input('mode') === 'pending' ? 'pending' : 'approved';
+
         $registrant = Registrant::create([
-            'name'          => $validated['name'],
-            'email'         => $validated['email'],
-            'phone'         => $validated['phone'] ?? null,
-            'company'       => $validated['company'] ?? null,
-            'job_title'     => $validated['job_title'] ?? null,
-            'notes'         => $validated['notes'] ?? null,
-            'status'        => 'approved',
-            'approved_by'   => Auth::id(),
-            'password'      => $plainPassword,
-            'plain_password'=> $plainPassword,
-            'qr_token'      => Registrant::generateQrToken(),
-            'processed_at'  => now(),
-            'checked_in_at' => now(),
-            'utm_source'    => 'walk-in',
+            'first_name'     => $validated['firstName'],
+            'last_name'      => $validated['lastName'],
+            'name'           => $validated['firstName'] . ' ' . $validated['lastName'],
+            'job_role'       => $validated['job_role'],
+            'job_title'      => $validated['job_title'],
+            'company'        => $validated['company'],
+            'email'          => $validated['email'],
+            'phone'          => $phone,
+            'industry'       => $validated['industry'],
+            'employees'      => $validated['employees'],
+            'gdpr'           => true,
+            'referral_source'=> $validated['referral_source'],
+            'status'         => $mode === 'pending' ? 'pending' : 'approved',
+            'approved_by'    => $mode === 'pending' ? null : Auth::id(),
+            'password'       => $plainPassword,
+            'plain_password' => $plainPassword,
+            'qr_token'       => Registrant::generateQrToken(),
+            'processed_at'   => $mode === 'pending' ? null : now(),
+            'checked_in_at'  => $mode === 'pending' ? null : now(),
+            'utm_source'     => 'walk-in',
         ]);
+
+        // Register & Print — send the badge to the MQTT printer right away.
+        $printed = false;
+        if ($mode === 'approved') {
+            try {
+                $service = app(\App\Services\MqttService::class);
+                $printedIds = $service->publishBadges(collect([$registrant]), Auth::id());
+                $printed = in_array($registrant->id, $printedIds, true);
+            } catch (\Throwable $e) {
+                $printed = false;
+            }
+        }
+
+        // AJAX/JSON request (onsite Walk-in popup) — return the created registrant
+        // so the popup can show the QR code without leaving the page.
+        if ($request->wantsJson() || $request->ajax()) {
+            return response()->json([
+                'success'    => true,
+                'mode'       => $mode,
+                'printed'    => $printed,
+                'message'    => $mode === 'pending'
+                    ? "Walk-in {$registrant->name} registered as pending."
+                    : "Walk-in {$registrant->name} registered and printed.",
+                'registrant' => [
+                    'id'             => $registrant->id,
+                    'name'           => $registrant->name,
+                    'email'          => $registrant->email,
+                    'phone'          => $registrant->phone,
+                    'company'        => $registrant->company,
+                    'job_title'      => $registrant->job_title,
+                    'status'         => $registrant->status,
+                    'unique_code'    => $registrant->unique_code,
+                    'qr_code_url'    => $registrant->qr_code_url,
+                    'qr_checkin_url' => $registrant->qr_checkin_url,
+                ],
+            ]);
+        }
 
         return redirect()->route('admin.walkin.show', $registrant)
             ->with('success', "Walk-in <strong>{$registrant->name}</strong> registered successfully!");

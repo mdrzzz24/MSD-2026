@@ -363,6 +363,16 @@ class MqttService
                 \App\Models\Registrant::whereIn('id', $printedIds)
                     ->whereNull('checked_in_at')
                     ->update(['checked_in_at' => now()]);
+
+                // Printing a pending participant's badge confirms they are on site:
+                // auto-approve them so they move out of Pending into Approved.
+                \App\Models\Registrant::whereIn('id', $printedIds)
+                    ->where('status', 'pending')
+                    ->update([
+                        'status'       => 'approved',
+                        'approved_by'  => $adminId,
+                        'processed_at' => now(),
+                    ]);
             }
         } catch (\Throwable $e) {
             Log::warning('MQTT badge publish failed on topic [' . $topic . ']: ' . $e->getMessage());
