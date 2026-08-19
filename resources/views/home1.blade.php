@@ -35,7 +35,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="preload" as="image" href="{{ asset('img/Website-BG.jpg?v2') }}" fetchpriority="high">
-<link rel="stylesheet" href="{{ asset('css/style.css') }}?v=15">
+<link rel="stylesheet" href="{{ asset('css/style.css') }}?v=16">
 </head>
 <body>@include('partials.impersonation-banner')<!-- Google Tag Manager (noscript) -->
 <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-T69856QT"

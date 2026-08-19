@@ -71,27 +71,44 @@
             {{-- Flash messages --}}
             @include('admin.partials.notification')
 
-            {{-- Registration Form Toggle (Super Admin only) --}}
+            {{-- Registration Form Control (Super Admin only) --}}
             @if (Auth::user()->isSuperAdmin())
-            @php $forcedOpen = \Illuminate\Support\Facades\Cache::get('registration_forced_open', false); @endphp
-            <div class="flex items-center gap-4 bg-white rounded-2xl border border-gray-200 px-5 py-4 shadow-sm">
-                <div>
-                    <p class="text-sm font-bold text-gray-900">Registration Form</p>
-                    <p class="text-xs text-gray-500">
-                        Status:
-                        @if ($forcedOpen)
-                            <span class="text-emerald-600 font-semibold">Forced OPEN</span> — form open regardless of countdown
-                        @else
-                            <span class="text-amber-600 font-semibold">Follows Countdown</span> — opens automatically on 13 July 2026
-                        @endif
-                    </p>
+            @php
+                $forcedOpen = \Illuminate\Support\Facades\Cache::get('registration_forced_open', false);
+                $closedFull = \Illuminate\Support\Facades\Cache::get('registration_closed_full', false);
+            @endphp
+            <div class="bg-white rounded-2xl border border-gray-200 px-5 py-4 shadow-sm">
+                <div class="flex items-center gap-4 flex-wrap">
+                    <div class="min-w-0">
+                        <p class="text-sm font-bold text-gray-900">Registration Form</p>
+                        <p class="text-xs text-gray-500">
+                            Status:
+                            @if ($closedFull)
+                                <span class="text-red-600 font-semibold">CLOSED</span> — registrations blocked (full capacity)
+                            @elseif ($forcedOpen)
+                                <span class="text-emerald-600 font-semibold">OPEN (forced)</span> — form open regardless of countdown
+                            @else
+                                <span class="text-emerald-600 font-semibold">OPEN</span> — follows schedule (opens automatically 13 July 2026)
+                            @endif
+                        </p>
+                    </div>
+                    <div class="ml-auto flex items-center gap-2 flex-wrap">
+                        <form action="{{ route('admin.toggle-registration-full') }}" method="POST">
+                            @csrf
+                            <button type="submit" class="px-4 py-2 text-sm font-semibold rounded-xl transition {{ $closedFull ? 'bg-emerald-500 text-white hover:bg-emerald-600' : 'bg-red-500 text-white hover:bg-red-600' }}">
+                                {{ $closedFull ? 'Open Registration Form' : 'Close Registration Form' }}
+                            </button>
+                        </form>
+                        <form action="{{ route('admin.toggle-registration') }}" method="POST">
+                            @csrf
+                            <button type="submit"
+                                    class="px-4 py-2 text-sm font-semibold rounded-xl transition {{ $forcedOpen ? 'bg-indigo-500 text-white hover:bg-indigo-600' : 'bg-gray-100 text-gray-600 hover:bg-gray-200' }}"
+                                    @if ($closedFull) disabled title="Open the form first" @endif>
+                                {{ $forcedOpen ? 'Stop Forcing Open' : 'Force Open Registration' }}
+                            </button>
+                        </form>
+                    </div>
                 </div>
-                <form action="{{ route('admin.toggle-registration') }}" method="POST" class="ml-auto">
-                    @csrf
-                    <button type="submit" class="px-4 py-2 text-sm font-semibold rounded-xl transition {{ $forcedOpen ? 'bg-red-500 text-white hover:bg-red-600' : 'bg-emerald-500 text-white hover:bg-emerald-600' }}">
-                        {{ $forcedOpen ? 'Close Registration' : 'Force Open Registration' }}
-                    </button>
-                </form>
             </div>
             @endif
 

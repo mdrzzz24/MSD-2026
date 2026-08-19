@@ -184,6 +184,12 @@ Route::middleware(['auth', 'admin', 'no_cache'])->prefix('admin')->name('admin.'
     Route::post('/registrants/{registrant}/client-remark', [AdminController::class, 'clientRemark'])->name('registrants.client-remark');
     Route::post('/registrants/{registrant}/send-email/{type}', [AdminController::class, 'sendEmailByType'])->name('registrants.send-email');
 
+    // ── Feedback (Registrants) — read-only viewer/admin page ──
+    Route::get('/feedback-registrants', [App\Http\Controllers\AdminFeedbackRegistrantsController::class, 'index'])->name('feedback-registrants.index');
+    Route::get('/feedback-registrants/search', [App\Http\Controllers\AdminFeedbackRegistrantsController::class, 'search'])->name('feedback-registrants.search');
+    Route::post('/feedback-registrants/qr-lookup', [App\Http\Controllers\AdminFeedbackRegistrantsController::class, 'qrLookup'])->name('feedback-registrants.qr-lookup');
+    Route::get('/feedback-registrants/{registrant}', [App\Http\Controllers\AdminFeedbackRegistrantsController::class, 'show'])->name('feedback-registrants.show');
+
     // ── Walk-in Registration ──
     Route::get('/walkin', [AdminController::class, 'walkinForm'])->name('walkin.form');
     Route::post('/walkin', [AdminController::class, 'walkinStore'])->name('walkin.store');

@@ -548,6 +548,22 @@ select option{background:#1a234e;color:#fff;padding:10px}
 .btn-arrow{font-size:18px;transition:transform .3s}
 .btn-submit:hover .btn-arrow{transform:translateX(4px)}
 
+/* Disabled state — registration form closed / before countdown */
+.btn:disabled,
+.btn[disabled],
+.btn-submit:disabled,
+.btn-submit[disabled]{
+  background:linear-gradient(135deg,#6b7280,#4b5563);
+  box-shadow:none;
+  cursor:not-allowed;
+  opacity:.65;
+  transform:none;
+}
+.btn:disabled:hover,
+.btn[disabled]:hover{transform:none;box-shadow:none}
+.btn-submit:disabled .btn-arrow,
+.btn-submit[disabled] .btn-arrow{transform:none}
+
 /* Footer */
 footer{color:rgba(255,255,255,.7);padding:40px 0;text-align:center;font-size:14px}
 footer strong{color:#fff}

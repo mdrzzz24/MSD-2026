@@ -73,26 +73,44 @@
 
             
             <?php if(Auth::user()->isSuperAdmin()): ?>
-            <?php $forcedOpen = \Illuminate\Support\Facades\Cache::get('registration_forced_open', false); ?>
-            <div class="flex items-center gap-4 bg-white rounded-2xl border border-gray-200 px-5 py-4 shadow-sm">
-                <div>
-                    <p class="text-sm font-bold text-gray-900">Registration Form</p>
-                    <p class="text-xs text-gray-500">
-                        Status:
-                        <?php if($forcedOpen): ?>
-                            <span class="text-emerald-600 font-semibold">Forced OPEN</span> — form open regardless of countdown
-                        <?php else: ?>
-                            <span class="text-amber-600 font-semibold">Follows Countdown</span> — opens automatically on 13 July 2026
-                        <?php endif; ?>
-                    </p>
-                </div>
-                <form action="<?php echo e(route('admin.toggle-registration')); ?>" method="POST" class="ml-auto">
-                    <?php echo csrf_field(); ?>
-                    <button type="submit" class="px-4 py-2 text-sm font-semibold rounded-xl transition <?php echo e($forcedOpen ? 'bg-red-500 text-white hover:bg-red-600' : 'bg-emerald-500 text-white hover:bg-emerald-600'); ?>">
-                        <?php echo e($forcedOpen ? 'Close Registration' : 'Force Open Registration'); ?>
+            <?php
+                $forcedOpen = \Illuminate\Support\Facades\Cache::get('registration_forced_open', false);
+                $closedFull = \Illuminate\Support\Facades\Cache::get('registration_closed_full', false);
+            ?>
+            <div class="bg-white rounded-2xl border border-gray-200 px-5 py-4 shadow-sm">
+                <div class="flex items-center gap-4 flex-wrap">
+                    <div class="min-w-0">
+                        <p class="text-sm font-bold text-gray-900">Registration Form</p>
+                        <p class="text-xs text-gray-500">
+                            Status:
+                            <?php if($closedFull): ?>
+                                <span class="text-red-600 font-semibold">CLOSED</span> — registrations blocked (full capacity)
+                            <?php elseif($forcedOpen): ?>
+                                <span class="text-emerald-600 font-semibold">OPEN (forced)</span> — form open regardless of countdown
+                            <?php else: ?>
+                                <span class="text-emerald-600 font-semibold">OPEN</span> — follows schedule (opens automatically 13 July 2026)
+                            <?php endif; ?>
+                        </p>
+                    </div>
+                    <div class="ml-auto flex items-center gap-2 flex-wrap">
+                        <form action="<?php echo e(route('admin.toggle-registration-full')); ?>" method="POST">
+                            <?php echo csrf_field(); ?>
+                            <button type="submit" class="px-4 py-2 text-sm font-semibold rounded-xl transition <?php echo e($closedFull ? 'bg-emerald-500 text-white hover:bg-emerald-600' : 'bg-red-500 text-white hover:bg-red-600'); ?>">
+                                <?php echo e($closedFull ? 'Open Registration Form' : 'Close Registration Form'); ?>
 
-                    </button>
-                </form>
+                            </button>
+                        </form>
+                        <form action="<?php echo e(route('admin.toggle-registration')); ?>" method="POST">
+                            <?php echo csrf_field(); ?>
+                            <button type="submit"
+                                    class="px-4 py-2 text-sm font-semibold rounded-xl transition <?php echo e($forcedOpen ? 'bg-indigo-500 text-white hover:bg-indigo-600' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'); ?>"
+                                    <?php if($closedFull): ?> disabled title="Open the form first" <?php endif; ?>>
+                                <?php echo e($forcedOpen ? 'Stop Forcing Open' : 'Force Open Registration'); ?>
+
+                            </button>
+                        </form>
+                    </div>
+                </div>
             </div>
             <?php endif; ?>
 

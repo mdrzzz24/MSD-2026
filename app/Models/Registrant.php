@@ -358,6 +358,14 @@ class Registrant extends Authenticatable
     }
 
     /**
+     * Session feedback the registrant has submitted.
+     */
+    public function feedbacks()
+    {
+        return $this->hasMany(AgendaFeedback::class, 'registrant_id');
+    }
+
+    /**
      * Check if this registrant has a client remark.
      */
     public function hasClientRemark(): bool

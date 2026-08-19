@@ -17,6 +17,19 @@ class RegistrantAuthController extends Controller
      */
     public function register(Request $request)
     {
+        // Super admin closed the registration form (event at full capacity) —
+        // block new submissions both via AJAX and regular form posts.
+        if (\Illuminate\Support\Facades\Cache::get('registration_closed_full', false)) {
+            $message = 'Registration is now closed as we have reached full capacity.';
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'errors'  => ['registration' => [$message]],
+                ], 422);
+            }
+            return back()->with('error', $message)->withInput();
+        }
+
         try {
             $validated = $request->validate([
                 'firstName'     => ['required', 'string', 'max:255'],
