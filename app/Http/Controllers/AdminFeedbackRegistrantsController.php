@@ -9,13 +9,12 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 /**
- * Feedback (Registrants) — read-only viewer/admin page that shows which
- * sessions/tracks have received feedback and which registrants filled it.
- * Two display modes:
- *   - view=session   (default): grouped by session / track
- *   - view=registrant: grouped by registrant
- * Supports search and a QR-code scan that resolves a registrant and shows
- * their feedback detail.
+ * Feedback (Sessions) — read-only viewer/admin page that shows the sessions /
+ * tracks which have received feedback. Each row can be expanded to show which
+ * registrants filled that session's feedback form (with their answers).
+ * Search is by registrant name: typing a person's name filters the list to ONLY
+ * the tracks/sessions that person filled feedback for. Also supports a QR-code
+ * scan that resolves a registrant and shows their feedback detail.
  */
 class AdminFeedbackRegistrantsController extends Controller
 {
@@ -30,59 +29,42 @@ class AdminFeedbackRegistrantsController extends Controller
     }
 
     /**
-     * List sessions/tracks that have received feedback (or registrants who
-     * submitted feedback, when ?view=registrant).
+     * Build the session query shared by index & search.
+     * Optionally scoped to sessions a registrant (by name) filled feedback for.
      */
-    public function index(Request $request)
+    private function sessionQuery(Request $request)
     {
-        $this->authorizeView();
-
-        $view = $request->get('view', 'session'); // session | registrant
         $search = trim((string) $request->get('search'));
 
-        $totalWithFeedback = AgendaFeedback::distinct('registrant_id')->count('registrant_id');
-        $totalSessions     = AgendaItem::whereHas('feedback')->count();
-
-        if ($view === 'registrant') {
-            $query = Registrant::query()
-                ->whereHas('feedbacks')
-                ->with('feedbacks.agendaItem')
-                ->withCount('feedbacks');
-
-            if ($search !== '') {
-                $term = '%' . $search . '%';
-                $query->where(function ($q) use ($term) {
-                    $q->where('name', 'like', $term)
-                      ->orWhere('company', 'like', $term)
-                      ->orWhere('email', 'like', $term)
-                      ->orWhere('phone', 'like', $term);
-                });
-            }
-
-            $registrants = $query->orderBy('name')->paginate(20)->withQueryString();
-
-            return view('admin.feedback-registrants.index', compact('registrants', 'view', 'search', 'totalWithFeedback', 'totalSessions'));
-        }
-
-        // Default: group by session / track.
         $query = AgendaItem::query()
             ->whereHas('feedback')
             ->with(['feedback.registrant', 'feedback.answers.question'])
             ->withCount('feedback');
 
         if ($search !== '') {
-            $term = '%' . $search . '%';
-            $query->where(function ($q) use ($term) {
-                $q->where('title', 'like', $term)
-                  ->orWhere('room', 'like', $term)
-                  ->orWhereHas('workshop', fn ($w) => $w->where('name', 'like', $term))
-                  ->orWhereHas('track', fn ($t) => $t->where('name', 'like', $term)->orWhere('title', 'like', $term));
+            // Only sessions this registrant filled feedback for.
+            $query->whereHas('feedback.registrant', function ($q) use ($search) {
+                $q->where('name', 'like', '%' . $search . '%');
             });
         }
 
-        $sessions = $query->orderBy('start_time')->orderBy('order')->paginate(20)->withQueryString();
+        return $query;
+    }
 
-        return view('admin.feedback-registrants.index', compact('sessions', 'view', 'search', 'totalWithFeedback', 'totalSessions'));
+    /**
+     * List sessions/tracks that have received feedback, expandable per row.
+     */
+    public function index(Request $request)
+    {
+        $this->authorizeView();
+
+        $search = trim((string) $request->get('search'));
+        $totalSessions     = AgendaItem::whereHas('feedback')->count();
+        $totalWithFeedback = AgendaFeedback::distinct('registrant_id')->count('registrant_id');
+
+        $sessions = $this->sessionQuery($request)->orderBy('start_time')->orderBy('order')->paginate(20)->withQueryString();
+
+        return view('admin.feedback-registrants.index', compact('sessions', 'search', 'totalSessions', 'totalWithFeedback'));
     }
 
     /**
@@ -92,52 +74,7 @@ class AdminFeedbackRegistrantsController extends Controller
     {
         $this->authorizeView();
 
-        $view = $request->get('view', 'session'); // session | registrant
-        $search = trim((string) $request->get('search'));
-
-        if ($view === 'registrant') {
-            $query = Registrant::query()
-                ->whereHas('feedbacks')
-                ->with('feedbacks.agendaItem')
-                ->withCount('feedbacks');
-
-            if ($search !== '') {
-                $term = '%' . $search . '%';
-                $query->where(function ($q) use ($term) {
-                    $q->where('name', 'like', $term)
-                      ->orWhere('company', 'like', $term)
-                      ->orWhere('email', 'like', $term)
-                      ->orWhere('phone', 'like', $term);
-                });
-            }
-
-            $registrants = $query->orderBy('name')->paginate(20)->withQueryString();
-
-            return response()->json([
-                'success'    => true,
-                'rows'       => view('admin.feedback-registrants._rows', ['registrants' => $registrants])->render(),
-                'pagination' => $registrants->links()->render(),
-                'total'      => $registrants->total(),
-            ]);
-        }
-
-        // Group by session / track.
-        $query = AgendaItem::query()
-            ->whereHas('feedback')
-            ->with(['feedback.registrant', 'feedback.answers.question'])
-            ->withCount('feedback');
-
-        if ($search !== '') {
-            $term = '%' . $search . '%';
-            $query->where(function ($q) use ($term) {
-                $q->where('title', 'like', $term)
-                  ->orWhere('room', 'like', $term)
-                  ->orWhereHas('workshop', fn ($w) => $w->where('name', 'like', $term))
-                  ->orWhereHas('track', fn ($t) => $t->where('name', 'like', $term)->orWhere('title', 'like', $term));
-            });
-        }
-
-        $sessions = $query->orderBy('start_time')->orderBy('order')->paginate(20)->withQueryString();
+        $sessions = $this->sessionQuery($request)->orderBy('start_time')->orderBy('order')->paginate(20)->withQueryString();
 
         return response()->json([
             'success'    => true,

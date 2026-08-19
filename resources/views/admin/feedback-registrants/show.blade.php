@@ -26,6 +26,11 @@
     <main class="flex-1 lg:ml-64">
         <header class="sticky top-0 z-30 bg-white/80 backdrop-blur border-b border-gray-200">
             <div class="flex items-center h-16 px-4 sm:px-6 lg:px-8 gap-3">
+                <button id="sidebarToggle" class="lg:hidden p-2 -ml-2 text-gray-500 hover:text-gray-700 rounded-lg hover:bg-gray-100">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+                    </svg>
+                </button>
                 <a href="{{ route('admin.feedback-registrants.index') }}" class="inline-flex items-center gap-1.5 text-sm text-indigo-600 hover:text-indigo-800 font-medium transition">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
                     Feedback
@@ -137,7 +142,9 @@
                             @endif
                         </div>
                         <div class="p-6">
-                            @if ($fb->answers->count() > 0)
+                            @if (!Auth::user()->canWrite())
+                                <p class="text-xs text-gray-400">Feedback answers are hidden for this role.</p>
+                            @elseif ($fb->answers->count() > 0)
                                 <div class="space-y-2.5">
                                     @foreach ($fb->answers as $answer)
                                         @php $q = $answer->question; @endphp
@@ -183,13 +190,25 @@
     </main>
 </div>
 
+@include('admin.partials.mobile-sidebar')
+
 <script>
-    document.getElementById('sidebarToggle')?.addEventListener('click', function() {
-        const overlay = document.getElementById('sidebarOverlay');
+    // Sidebar toggle (mobile / tablet)
+    function toggleSidebar() {
         const sidebar = document.getElementById('mobileSidebar');
-        if (sidebar) sidebar.classList.toggle('-translate-x-full');
-        if (overlay) overlay.classList.toggle('hidden');
-    });
+        const overlay = document.getElementById('sidebarOverlay');
+        if (!sidebar || !overlay) return;
+        const isOpen = sidebar.classList.contains('-translate-x-full');
+        if (isOpen) {
+            sidebar.classList.remove('-translate-x-full');
+            overlay.classList.remove('hidden');
+        } else {
+            sidebar.classList.add('-translate-x-full');
+            overlay.classList.add('hidden');
+        }
+    }
+    document.getElementById('sidebarToggle')?.addEventListener('click', toggleSidebar);
+    document.getElementById('sidebarOverlay')?.addEventListener('click', toggleSidebar);
 </script>
 </body>
 </html>

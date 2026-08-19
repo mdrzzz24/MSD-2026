@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <link rel="icon" type="image/png" href="{{ asset('img/metrodata.png') }}">
+    <link rel="icon" type="image/png" href="<?php echo e(asset('img/metrodata.png')); ?>">
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Feedback — {{ config('app.name') }}</title>
+    <title>Feedback — <?php echo e(config('app.name')); ?></title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
@@ -24,7 +24,7 @@
 <body class="bg-gray-50 font-sans antialiased">
 
 <div class="flex min-h-screen">
-    @include('admin.partials.sidebar')
+    <?php echo $__env->make('admin.partials.sidebar', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
 
     <main class="flex-1 lg:ml-64">
         <header class="sticky top-0 z-30 bg-white/80 backdrop-blur border-b border-gray-200">
@@ -48,7 +48,7 @@
                         </svg>
                         Scan QR
                     </button>
-                    <a href="{{ route('admin.dashboard') }}"
+                    <a href="<?php echo e(route('admin.dashboard')); ?>"
                        class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-indigo-600 bg-indigo-50 hover:bg-indigo-100 rounded-lg transition">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-4 0a1 1 0 01-1-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 01-1 1"/>
@@ -60,33 +60,33 @@
         </header>
 
         <div class="p-4 sm:p-6 lg:p-8 space-y-6">
-            @include('admin.partials.notification')
+            <?php echo $__env->make('admin.partials.notification', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
 
-            {{-- Summary --}}
+            
             <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 flex flex-wrap items-center gap-x-8 gap-y-3">
                 <div class="flex items-center gap-2">
                     <span class="w-2 h-2 rounded-full bg-indigo-500"></span>
                     <span class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Sessions / Tracks with Feedback</span>
-                    <span class="text-2xl font-bold text-gray-900">{{ $totalSessions }}</span>
+                    <span class="text-2xl font-bold text-gray-900"><?php echo e($totalSessions); ?></span>
                 </div>
                 <div class="flex items-center gap-2">
                     <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
                     <span class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Shown</span>
-                    <span class="text-2xl font-bold text-emerald-600">{{ $sessions->total() }}</span>
+                    <span class="text-2xl font-bold text-emerald-600"><?php echo e($sessions->total()); ?></span>
                 </div>
                 <p class="text-xs text-gray-400 ml-auto">
                     Search by registrant name — only the sessions/tracks that person filled feedback for are shown. Click a row to expand.
                 </p>
             </div>
 
-            {{-- Search --}}
+            
             <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
                 <div class="relative max-w-md">
                     <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
                     </svg>
                     <input type="text" name="search" id="tableSearch" placeholder="Search registrant name..."
-                           value="{{ request('search') }}"
+                           value="<?php echo e(request('search')); ?>"
                            class="pl-9 pr-10 py-2 text-sm border border-gray-200 rounded-xl bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 focus:bg-white w-full transition">
                     <a href="javascript:void(0)" id="clearSearchBtn" onclick="clearSearch()" style="display:none;"
                        class="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-200 transition" title="Clear search">
@@ -97,7 +97,7 @@
                 </div>
             </div>
 
-            {{-- Table --}}
+            
             <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
                 <div class="overflow-x-auto">
                     <table class="w-full table-fixed" id="feedbackTable">
@@ -110,22 +110,22 @@
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-gray-50" id="feedbackTableBody">
-                            @include('admin.feedback-registrants._session_rows', ['sessions' => $sessions])
+                            <?php echo $__env->make('admin.feedback-registrants._session_rows', ['sessions' => $sessions], array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
                         </tbody>
                     </table>
                 </div>
                 <div class="px-5 py-4 border-t border-gray-100 flex flex-wrap items-center justify-between gap-3" id="feedbackPagination">
-                    <p class="text-xs text-gray-500">Showing <span id="feedbackCount">({{ $sessions->total() }})</span> sessions</p>
-                    <div>{{ $sessions->links() }}</div>
+                    <p class="text-xs text-gray-500">Showing <span id="feedbackCount">(<?php echo e($sessions->total()); ?>)</span> sessions</p>
+                    <div><?php echo e($sessions->links()); ?></div>
                 </div>
             </div>
         </div>
     </main>
 </div>
 
-@include('admin.partials.mobile-sidebar')
+<?php echo $__env->make('admin.partials.mobile-sidebar', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
 
-{{-- QR Scan Modal --}}
+
 <div id="qrScanModal" class="fixed inset-0 z-50 hidden">
     <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" onclick="closeQrScan()"></div>
     <div class="relative flex items-center justify-center min-h-full p-4">
@@ -153,7 +153,7 @@
     </div>
 </div>
 
-{{-- QR Result Modal --}}
+
 <div id="qrResultModal" class="fixed inset-0 z-50 hidden">
     <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" onclick="closeQrResult()"></div>
     <div class="relative flex items-center justify-center min-h-full p-4">
@@ -175,7 +175,7 @@
 <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 <script>
     // Whether the current user may view the actual feedback answers (admins only).
-    const qrCanWrite = @json(Auth::user()->canWrite());
+    const qrCanWrite = <?php echo json_encode(Auth::user()->canWrite(), 15, 512) ?>;
 
     // ---- Live search (AJAX, no reload) ----
     let searchTimer = null;
@@ -188,7 +188,7 @@
             params.set('search', input.value);
             params.set('page', '1');
             try {
-                const res = await fetch('{{ route("admin.feedback-registrants.search") }}?' + params.toString(), {
+                const res = await fetch('<?php echo e(route("admin.feedback-registrants.search")); ?>?' + params.toString(), {
                     headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' }
                 });
                 const data = await res.json();
@@ -296,9 +296,9 @@
     async function lookupCode(code) {
         document.getElementById('qrScanStatus').textContent = 'Looking up…';
         try {
-            const res = await fetch('{{ route("admin.feedback-registrants.qr-lookup") }}', {
+            const res = await fetch('<?php echo e(route("admin.feedback-registrants.qr-lookup")); ?>', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json' },
+                headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '<?php echo e(csrf_token()); ?>', 'Accept': 'application/json' },
                 body: JSON.stringify({ code })
             });
             const data = await res.json();
@@ -336,7 +336,7 @@
 
         html += '<div class="mt-5 flex items-center justify-between">';
         html += '<h4 class="text-sm font-bold text-gray-800">Sessions with Feedback (' + data.total + ')</h4>';
-        html += '<a href="{{ route("admin.feedback-registrants.show", 0) }}'.replace('/0', '/' + r.id) + '" class="inline-flex items-center gap-1 text-xs font-medium text-indigo-600 hover:text-indigo-800">View full page <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg></a>';
+        html += '<a href="<?php echo e(route("admin.feedback-registrants.show", 0)); ?>'.replace('/0', '/' + r.id) + '" class="inline-flex items-center gap-1 text-xs font-medium text-indigo-600 hover:text-indigo-800">View full page <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg></a>';
         html += '</div>';
 
         if (data.sessions.length === 0) {
@@ -430,3 +430,4 @@
 </script>
 </body>
 </html>
+<?php /**PATH /Users/mdrz/2026/MSD26/resources/views/admin/feedback-registrants/index.blade.php ENDPATH**/ ?>
