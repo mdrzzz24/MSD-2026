@@ -215,7 +215,7 @@ class ApiController extends Controller
                         'name'  => $registrant->name,
                         'email' => $registrant->email,
                     ],
-                    'visited_at' => $existing->visited_at,
+                    'visited_at' => $this->wib($existing->visited_at),
                 ],
             ]);
         }
@@ -251,7 +251,7 @@ class ApiController extends Controller
                     'company' => $registrant->company,
                     'job_title' => $registrant->job_title,
                 ],
-                'visited_at' => now(),
+                'visited_at' => $this->wib(now()),
             ],
         ]);
     }
@@ -337,7 +337,7 @@ class ApiController extends Controller
                         'name'  => $registrant->name,
                         'email' => $registrant->email,
                     ],
-                    'visited_at' => $existing->visited_at,
+                    'visited_at' => $this->wib($existing->visited_at),
                 ],
             ]);
         }
@@ -378,7 +378,7 @@ class ApiController extends Controller
                     'company' => $registrant->company,
                     'job_title' => $registrant->job_title,
                 ],
-                'visited_at' => $visitedAt,
+                'visited_at' => $this->wib($visitedAt),
             ],
         ]);
     }
@@ -451,8 +451,8 @@ class ApiController extends Controller
                         'name'  => $registrant->name,
                         'email' => $registrant->email,
                     ],
-                    'visited_at' => $visit->visited_at,
-                    'left_at'    => $visit->left_at,
+                    'visited_at' => $this->wib($visit->visited_at),
+                    'left_at'    => $this->wib($visit->left_at),
                 ],
             ]);
         }
@@ -486,8 +486,8 @@ class ApiController extends Controller
                     'company' => $registrant->company,
                     'job_title' => $registrant->job_title,
                 ],
-                'visited_at' => $visit->visited_at,
-                'left_at'    => $visit->fresh()->left_at,
+                'visited_at' => $this->wib($visit->visited_at),
+                'left_at'    => $this->wib($visit->fresh()->left_at),
             ],
         ]);
     }
@@ -595,7 +595,7 @@ class ApiController extends Controller
                     'company'  => $registrant->company,
                     'job_title'=> $registrant->job_title,
                 ],
-                'checked_in_at' => $registrant->fresh()->checked_in_at,
+                'checked_in_at' => $this->wib($registrant->fresh()->checked_in_at),
             ],
         ]);
     }
@@ -768,7 +768,7 @@ class ApiController extends Controller
                     'company'    => $v->registrant?->company,
                     'job_title'  => $v->registrant?->job_title,
                     'phone'      => $v->registrant?->phone,
-                    'visited_at' => $v->visited_at,
+                    'visited_at' => $this->wib($v->visited_at),
                 ]),
             ],
         ]);
@@ -813,8 +813,8 @@ class ApiController extends Controller
                     'company'    => $v->registrant?->company,
                     'job_title'  => $v->registrant?->job_title,
                     'phone'      => $v->registrant?->phone,
-                    'visited_at' => $v->visited_at,
-                    'left_at'    => $v->left_at,
+                    'visited_at' => $this->wib($v->visited_at),
+                    'left_at'    => $this->wib($v->left_at),
                 ]),
             ],
         ]);
@@ -887,6 +887,25 @@ class ApiController extends Controller
         $this->logSyncScan($scan, $result);
 
         return $result;
+    }
+
+    /**
+     * Convert a stored UTC timestamp to WIB (GMT+7) for the mobile app.
+     * Returns an ISO 8601 string with the +07:00 offset (e.g.
+     * "2026-08-09T17:00:00+07:00"), or null when the value is empty.
+     *
+     * The database stores UTC wall-times (config timezone = UTC), so the
+     * conversion to Asia/Jakarta (UTC+7) adds the 7 hours automatically.
+     */
+    private function wib($value): ?string
+    {
+        if ($value === null || $value === '') {
+            return null;
+        }
+
+        return \Illuminate\Support\Carbon::parse($value)
+            ->setTimezone('Asia/Jakarta')
+            ->format('Y-m-d\TH:i:sP');
     }
 
     /**
@@ -988,7 +1007,7 @@ class ApiController extends Controller
                 'company'  => $registrant->company,
                 'job_title'=> $registrant->job_title,
             ],
-            'checked_in_at' => $registrant->fresh()->checked_in_at,
+            'checked_in_at' => $this->wib($registrant->fresh()->checked_in_at),
         ];
     }
 
@@ -1063,7 +1082,7 @@ class ApiController extends Controller
                     'name'  => $registrant->name,
                     'email' => $registrant->email,
                 ],
-                'visited_at' => $existing->visited_at,
+                'visited_at' => $this->wib($existing->visited_at),
             ];
         }
 
@@ -1088,7 +1107,7 @@ class ApiController extends Controller
                 'company'  => $registrant->company,
                 'job_title'=> $registrant->job_title,
             ],
-            'visited_at' => $visitedAt,
+            'visited_at' => $this->wib($visitedAt),
         ];
     }
 
@@ -1156,8 +1175,8 @@ class ApiController extends Controller
                     'name'  => $registrant->name,
                     'email' => $registrant->email,
                 ],
-                'visited_at' => $visit->visited_at,
-                'left_at'    => $visit->left_at,
+                'visited_at' => $this->wib($visit->visited_at),
+                'left_at'    => $this->wib($visit->left_at),
             ];
         }
 
@@ -1177,8 +1196,8 @@ class ApiController extends Controller
                 'company'  => $registrant->company,
                 'job_title'=> $registrant->job_title,
             ],
-            'visited_at' => $visit->visited_at,
-            'left_at'    => $visit->fresh()->left_at,
+            'visited_at' => $this->wib($visit->visited_at),
+            'left_at'    => $this->wib($visit->fresh()->left_at),
         ];
     }
 
@@ -1224,7 +1243,7 @@ class ApiController extends Controller
                     'name'  => $registrant->name,
                     'email' => $registrant->email,
                 ],
-                'visited_at' => $existing->visited_at,
+                'visited_at' => $this->wib($existing->visited_at),
             ];
         }
 
@@ -1248,7 +1267,7 @@ class ApiController extends Controller
                 'company'  => $registrant->company,
                 'job_title'=> $registrant->job_title,
             ],
-            'visited_at' => $visitedAt,
+            'visited_at' => $this->wib($visitedAt),
         ];
     }
 
