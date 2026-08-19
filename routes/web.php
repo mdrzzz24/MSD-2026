@@ -180,6 +180,7 @@ Route::middleware(['auth', 'admin', 'no_cache'])->prefix('admin')->name('admin.'
     Route::post('/registrants/bulk-reject', [AdminController::class, 'bulkReject'])->name('registrants.bulk-reject');
     Route::post('/registrants/submit-decisions', [AdminController::class, 'submitClientDecisions'])->name('registrants.submit-decisions');
     Route::get('/registrants/export/csv', [AdminController::class, 'exportCsv'])->name('registrants.export-csv');
+    Route::get('/registrants/export/crawling', [AdminController::class, 'exportCrawlingTxt'])->name('registrants.export-crawling');
     Route::post('/registrants/{registrant}/notes', [AdminController::class, 'updateNotes'])->name('registrants.notes');
     Route::post('/registrants/{registrant}/client-remark', [AdminController::class, 'clientRemark'])->name('registrants.client-remark');
     Route::post('/registrants/{registrant}/send-email/{type}', [AdminController::class, 'sendEmailByType'])->name('registrants.send-email');

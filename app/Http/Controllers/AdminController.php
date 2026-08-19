@@ -1881,6 +1881,41 @@ class AdminController extends Controller
     }
 
     /**
+     * Export checked-in registrants as a plain-text crawling list.
+     * One line per registrant in the format: "{name};{company};IDC"
+     */
+    public function exportCrawlingTxt(Request $request)
+    {
+        if (!Auth::user()->hasPermission('registrants')) {
+            return redirect()->route('admin.dashboard')->with('error', 'You do not have permission to export registrants.');
+        }
+
+        // Only checked-in registrants (the page this button lives on).
+        $registrants = Registrant::query()
+            ->whereNotNull('checked_in_at')
+            ->orderBy('name')
+            ->get();
+
+        $headers = [
+            'Content-Type'        => 'text/plain; charset=UTF-8',
+            'Content-Disposition' => 'attachment; filename="crawling-' . now()->format('Y-m-d') . '.txt"',
+        ];
+
+        $callback = function () use ($registrants) {
+            $handle = fopen('php://output', 'w');
+
+            foreach ($registrants as $r) {
+                $line = ($r->name ?? '') . ';' . ($r->company ?? '') . ';IDC';
+                fwrite($handle, $line . "\r\n");
+            }
+
+            fclose($handle);
+        };
+
+        return Response::stream($callback, 200, $headers);
+    }
+
+    /**
      * Toggle registration form open/close (super admin only).
      */
     public function toggleRegistration()
