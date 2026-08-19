@@ -62,7 +62,16 @@ class RegistrantDashboardController extends Controller
             ->get()
             ->filter(fn ($w) => !in_array($w->id, $registeredIds));
 
-        return view('registrant.dashboard', compact('registrant', 'myWorkshops', 'myAgendaItems', 'availableWorkshops'));
+        // Feedback the registrant has submitted — which sessions/tracks they filled it for.
+        // Each row shows the session (title + company for tracks/workshops), type, room, time
+        // and when the feedback was submitted.
+        $myFeedbacks = $registrant->feedbacks()
+            ->with(['agendaItem.workshop', 'agendaItem.track'])
+            ->orderByDesc('created_at')
+            ->get()
+            ->filter(fn ($fb) => $fb->agendaItem !== null);
+
+        return view('registrant.dashboard', compact('registrant', 'myWorkshops', 'myAgendaItems', 'availableWorkshops', 'myFeedbacks'));
     }
 
     /**

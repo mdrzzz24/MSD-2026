@@ -1001,6 +1001,8 @@ class AdminController extends Controller
             $query->approved();
         } elseif ($status === 'rejected') {
             $query->rejected();
+        } elseif ($status === 'checkedin') {
+            $query->whereNotNull('checked_in_at');
         }
 
         // Search by name, email, phone, company, job title, or job role
@@ -1771,6 +1773,8 @@ class AdminController extends Controller
             $query->approved();
         } elseif ($status === 'rejected') {
             $query->rejected();
+        } elseif ($status === 'checkedin') {
+            $query->whereNotNull('checked_in_at');
         }
 
         if ($profile) {

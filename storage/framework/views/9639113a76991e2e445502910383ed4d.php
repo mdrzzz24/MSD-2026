@@ -1,13 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <link rel="icon" type="image/png" href="{{ asset('img/metrodata.png') }}">
+    <link rel="icon" type="image/png" href="<?php echo e(asset('img/metrodata.png')); ?>">
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Dashboard — {{ config('app.name') }}</title>
+    <title>Dashboard — <?php echo e(config('app.name')); ?></title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="{{ asset('css/style.css') }}">
+    <link rel="stylesheet" href="<?php echo e(asset('css/style.css')); ?>">
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -47,12 +47,12 @@
     </style>
 </head>
 <body class="font-sans antialiased text-white">
-@include('partials.impersonation-banner')
+<?php echo $__env->make('partials.impersonation-banner', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
 
 
 <div class="flex min-h-screen">
 
-    {{-- ═══════════ SIDEBAR ═══════════ --}}
+    
     <aside class="hidden lg:flex lg:flex-col w-64 fixed inset-y-0 z-40" style="background:rgba(10,26,74,.85); border-right:1px solid rgba(255,255,255,.08); backdrop-filter:blur(12px);">
         <div class="flex items-center gap-3 h-16 px-6" style="border-bottom:1px solid rgba(255,255,255,.08);">
             <div class="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0" style="background:linear-gradient(135deg,#ff3d6e,#e91e63);">
@@ -61,13 +61,13 @@
             <span class="text-lg font-bold text-white tracking-tight">MSD26</span>
         </div>
         <nav class="flex-1 px-3 py-6 space-y-1">
-            <a href="{{ route('registrant.dashboard') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium" style="background:rgba(255,61,110,.15); color:#ff3d6e;">
+            <a href="<?php echo e(route('registrant.dashboard')); ?>" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium" style="background:rgba(255,61,110,.15); color:#ff3d6e;">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-4 0a1 1 0 01-1-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 01-1 1"/></svg>
                 Dashboard
             </a>
             <div class="pt-6">
-                <form action="{{ route('registrant.logout') }}" method="POST">
-                    @csrf
+                <form action="<?php echo e(route('registrant.logout')); ?>" method="POST">
+                    <?php echo csrf_field(); ?>
                     <button class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium w-full transition" style="color:rgba(255,255,255,.5);" onmouseover="this.style.background='rgba(239,68,68,.1)';this.style.color='#ef4444'" onmouseout="this.style.background='';this.style.color='rgba(255,255,255,.5)'">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a2 2 0 01-2 2H6a2 2 0 01-2-2V7a2 2 0 012-2h5a2 2 0 012 2v1"/></svg>
                         Logout
@@ -77,16 +77,16 @@
         </nav>
         <div class="p-4" style="border-top:1px solid rgba(255,255,255,.08);">
             <div class="flex items-center gap-3">
-                <div class="w-9 h-9 rounded-full flex items-center justify-center text-white text-sm font-bold flex-shrink-0" style="background:linear-gradient(135deg,#ff3d6e,#e91e63);">{{ strtoupper(substr($registrant->display_name, 0, 1)) }}</div>
+                <div class="w-9 h-9 rounded-full flex items-center justify-center text-white text-sm font-bold flex-shrink-0" style="background:linear-gradient(135deg,#ff3d6e,#e91e63);"><?php echo e(strtoupper(substr($registrant->display_name, 0, 1))); ?></div>
                 <div class="flex-1 min-w-0">
-                    <p class="text-sm font-semibold text-white truncate">{{ $registrant->display_name }}</p>
-                    <p class="text-xs truncate" style="color:rgba(255,255,255,.4);">{{ $registrant->email }}</p>
+                    <p class="text-sm font-semibold text-white truncate"><?php echo e($registrant->display_name); ?></p>
+                    <p class="text-xs truncate" style="color:rgba(255,255,255,.4);"><?php echo e($registrant->email); ?></p>
                 </div>
             </div>
         </div>
     </aside>
 
-    {{-- ═══════════ MAIN CONTENT ═══════════ --}}
+    
     <main class="flex-1 lg:ml-64">
 
         <header class="sticky top-0 z-30" style="background:rgba(5,13,42,.85); backdrop-filter:blur(12px); border-bottom:1px solid rgba(255,255,255,.08);">
@@ -95,15 +95,15 @@
                     <h1 class="text-lg font-bold text-white">Dashboard</h1>
                     <p class="text-xs" style="color:rgba(255,255,255,.4);">Workshop & Sesi Anda</p>
                 </div>
-                <span class="text-xs" style="color:rgba(255,255,255,.3);">{{ $registrant->email }}</span>
+                <span class="text-xs" style="color:rgba(255,255,255,.3);"><?php echo e($registrant->email); ?></span>
             </div>
         </header>
 
         <div class="p-4 sm:p-6 lg:p-8 space-y-6" style="max-width:1280px;">
 
-            @include('admin.partials.notification')
+            <?php echo $__env->make('admin.partials.notification', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
 
-            {{-- ═══ QR CODE CARD ═══ --}}
+            
             <div class="card-msd rounded-2xl overflow-hidden glow-pink">
                 <div class="px-5 py-4 flex items-center justify-between" style="border-bottom:1px solid rgba(255,255,255,.08);">
                     <div>
@@ -112,12 +112,12 @@
                 </div>
                 <div class="p-6 flex flex-col sm:flex-row items-center gap-6">
                     <div class="flex-shrink-0 bg-white rounded-2xl p-3 shadow-lg">
-                        <img src="{{ $registrant->qr_code_url }}" alt="QR Code" class="w-32 h-32">
+                        <img src="<?php echo e($registrant->qr_code_url); ?>" alt="QR Code" class="w-32 h-32">
                     </div>
                     <div class="flex-1 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 w-full">
                         <div class="text-center sm:text-left">
-                            <p class="text-sm font-semibold text-white">{{ $registrant->display_name }}</p>
-                            <p class="text-xs" style="color:rgba(255,255,255,.4);">{{ $registrant->email }}</p>
+                            <p class="text-sm font-semibold text-white"><?php echo e($registrant->display_name); ?></p>
+                            <p class="text-xs" style="color:rgba(255,255,255,.4);"><?php echo e($registrant->email); ?></p>
                         </div>
                         <button onclick="openQrModal()"
                                 class="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold btn-pink">
@@ -131,7 +131,7 @@
                 </div>
             </div>
 
-            {{-- ═══ QR CODE MODAL ═══ --}}
+            
             <div id="qrModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/60 backdrop-blur-sm" style="display:none;">
                 <div class="relative bg-white rounded-3xl p-8 shadow-2xl max-w-sm w-full mx-4">
                     <button onclick="closeQrModal()" class="absolute top-3 right-3 p-1.5 rounded-full text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition">
@@ -140,10 +140,10 @@
                         </svg>
                     </button>
                     <div class="text-center">
-                        <p class="text-sm font-semibold text-gray-900 mb-1">{{ $registrant->display_name }}</p>
-                        <p class="text-xs text-gray-500 mb-5">{{ $registrant->email }}</p>
+                        <p class="text-sm font-semibold text-gray-900 mb-1"><?php echo e($registrant->display_name); ?></p>
+                        <p class="text-xs text-gray-500 mb-5"><?php echo e($registrant->email); ?></p>
                         <div class="inline-block bg-gray-100 rounded-2xl p-4 mb-4">
-                            <img src="{{ $registrant->qr_code_url }}" alt="QR Code" class="w-48 h-48 mx-auto">
+                            <img src="<?php echo e($registrant->qr_code_url); ?>" alt="QR Code" class="w-48 h-48 mx-auto">
                         </div>
                     </div>
                 </div>
@@ -169,24 +169,24 @@
                 });
             </script>
 
-            {{-- ═══ MY SESSIONS ═══ --}}
+            
             <div class="card-msd rounded-2xl overflow-hidden glow-pink">
                 <div class="px-5 py-4 flex items-center justify-between" style="border-bottom:1px solid rgba(255,255,255,.08);">
                     <div>
                         <h2 class="text-base font-bold text-white">My Sessions</h2>
                         <p class="text-xs" style="color:rgba(255,255,255,.4);">All your registered sessions & workshops</p>
                     </div>
-                    <a href="{{ route('home1') }}" class="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold btn-pink">
+                    <a href="<?php echo e(route('home1')); ?>" class="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold btn-pink">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 01-1 1"/></svg>
                         Back to Home
                     </a>
                 </div>
-                @if ($myAgendaItems->isEmpty() && $myWorkshops->isEmpty())
+                <?php if($myAgendaItems->isEmpty() && $myWorkshops->isEmpty()): ?>
                     <div class="px-5 py-16 text-center" style="color:rgba(255,255,255,.3);">
                         <svg class="w-12 h-12 mx-auto mb-3 opacity-30" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
                         <p class="text-sm">No sessions registered yet.</p>
                     </div>
-                @else
+                <?php else: ?>
                     <div class="overflow-x-auto">
                         <table class="w-full table-msd">
                             <thead>
@@ -200,123 +200,123 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                @foreach ($myAgendaItems as $item)
-                                    @php $agStatus = $item->pivot->status ?? 'pending'; @endphp
+                                <?php $__currentLoopData = $myAgendaItems; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $item): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                    <?php $agStatus = $item->pivot->status ?? 'pending'; ?>
                                     <tr>
                                         <td>
-                                            @php $wsName = $item->workshop ? ($item->workshop->name ?: $item->workshop->title) : null; @endphp
-                                            @if ($wsName)
-                                                <p class="font-semibold text-white">{{ $wsName }}</p>
-                                                <p class="text-xs" style="color:rgba(255,255,255,.4);">{{ $item->title }}</p>
-                                            @else
-                                                <p class="font-semibold text-white">{{ $item->title }}</p>
-                                            @endif
+                                            <?php $wsName = $item->workshop ? ($item->workshop->name ?: $item->workshop->title) : null; ?>
+                                            <?php if($wsName): ?>
+                                                <p class="font-semibold text-white"><?php echo e($wsName); ?></p>
+                                                <p class="text-xs" style="color:rgba(255,255,255,.4);"><?php echo e($item->title); ?></p>
+                                            <?php else: ?>
+                                                <p class="font-semibold text-white"><?php echo e($item->title); ?></p>
+                                            <?php endif; ?>
                                         </td>
                                         <td>
-                                            @php
+                                            <?php
                                                 $type = $item->agenda_type
                                                     ?: ($item->category === 'workshop' ? 'workshop' : null)
                                                     ?: ($item->track_id ? 'track' : null)
                                                     ?: ($item->workshop_id ? 'workshop' : null)
                                                     ?: 'session';
-                                            @endphp
-                                            <span class="inline-flex px-2.5 py-0.5 rounded-full text-xs font-semibold {{ $type==='workshop'?'badge-workshop':($type==='track'?'badge-track':'badge-session') }}">{{ ucfirst($type) }}</span>
+                                            ?>
+                                            <span class="inline-flex px-2.5 py-0.5 rounded-full text-xs font-semibold <?php echo e($type==='workshop'?'badge-workshop':($type==='track'?'badge-track':'badge-session')); ?>"><?php echo e(ucfirst($type)); ?></span>
                                         </td>
-                                        <td><span>{{ $item->timeLabel() }}</span></td>
-                                        <td class="hidden sm:table-cell"><span>{{ $item->room ?? '—' }}</span></td>
+                                        <td><span><?php echo e($item->timeLabel()); ?></span></td>
+                                        <td class="hidden sm:table-cell"><span><?php echo e($item->room ?? '—'); ?></span></td>
                                         <td class="text-center">
-                                            @if ($agStatus === 'approved')
+                                            <?php if($agStatus === 'approved'): ?>
                                                 <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold badge-approved"><span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>Approved</span>
-                                            @elseif ($agStatus === 'rejected')
+                                            <?php elseif($agStatus === 'rejected'): ?>
                                                 <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold badge-rejected"><span class="w-1.5 h-1.5 rounded-full bg-red-500"></span>Rejected</span>
-                                            @elseif ($agStatus === 'cancelled')
+                                            <?php elseif($agStatus === 'cancelled'): ?>
                                                 <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold badge-cancelled"><span class="w-1.5 h-1.5 rounded-full bg-gray-400"></span>Cancelled</span>
-                                            @else
+                                            <?php else: ?>
                                                 <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold badge-pending"><span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>Pending</span>
-                                            @endif
+                                            <?php endif; ?>
                                         </td>
                                         <td class="text-center">
                                             <div class="flex items-center justify-center gap-1.5">
-                                                @if ($agStatus === 'approved' && $item->feedback_enabled)
-                                                    <a href="{{ route('feedback.form', $item) }}"
+                                                <?php if($agStatus === 'approved' && $item->feedback_enabled): ?>
+                                                    <a href="<?php echo e(route('feedback.form', $item)); ?>"
                                                        class="px-3 py-1.5 text-xs font-medium rounded-lg transition"
                                                        style="background:rgba(16,185,129,.15); color:#10b981; border:1px solid rgba(16,185,129,.25);"
                                                        onmouseover="this.style.background='rgba(16,185,129,.25)'"
                                                        onmouseout="this.style.background='rgba(16,185,129,.15)'">
                                                         Feedback
                                                     </a>
-                                                @endif
-                                                @if ($agStatus !== 'approved' && $agStatus !== 'cancelled')
-                                                <form action="{{ route('registrant.agenda.unregister', $item) }}" method="POST" onsubmit="return confirm('Cancel registration for {{ $item->title }}?')">
-                                                    @csrf
+                                                <?php endif; ?>
+                                                <?php if($agStatus !== 'approved' && $agStatus !== 'cancelled'): ?>
+                                                <form action="<?php echo e(route('registrant.agenda.unregister', $item)); ?>" method="POST" onsubmit="return confirm('Cancel registration for <?php echo e($item->title); ?>?')">
+                                                    <?php echo csrf_field(); ?>
                                                     <button class="px-3 py-1.5 text-xs font-medium rounded-lg transition" style="background:rgba(239,68,68,.15); color:#ef4444; border:1px solid rgba(239,68,68,.25);" onmouseover="this.style.background='rgba(239,68,68,.25)'" onmouseout="this.style.background='rgba(239,68,68,.15)'">Cancel</button>
                                                 </form>
-                                                @endif
+                                                <?php endif; ?>
                                             </div>
                                         </td>
                                     </tr>
-                                @endforeach
-                                {{-- Workshop registrations (direct or via invitation) --}}
-                                @foreach ($myWorkshops as $w)
-                                    @php
+                                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                                
+                                <?php $__currentLoopData = $myWorkshops; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $w): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                    <?php
                                         $wsStatus = $w->pivot->status ?? 'pending';
                                         $_ai = $w->agendaItems->first();
                                         $wsRoom = $w->room ?? $_ai?->room ?? '—';
                                         $_s = $w->start_time ?? $_ai?->start_time;
                                         $_e = $w->end_time ?? $_ai?->end_time;
                                         $wsTime = ($_s && $_e) ? date('H:i', strtotime($_s)) . ' – ' . date('H:i', strtotime($_e)) : '—';
-                                    @endphp
+                                    ?>
                                     <tr>
                                         <td>
-                                            <p class="font-semibold text-white">{{ $w->name ?: $w->title }}</p>
-                                            @if ($w->name)
-                                                <p class="text-xs" style="color:rgba(255,255,255,.4);">{{ $w->title }}</p>
-                                            @endif
+                                            <p class="font-semibold text-white"><?php echo e($w->name ?: $w->title); ?></p>
+                                            <?php if($w->name): ?>
+                                                <p class="text-xs" style="color:rgba(255,255,255,.4);"><?php echo e($w->title); ?></p>
+                                            <?php endif; ?>
                                         </td>
                                         <td>
                                             <span class="inline-flex px-2.5 py-0.5 rounded-full text-xs font-semibold badge-workshop">Workshop</span>
                                         </td>
-                                        <td><span>{{ $wsTime }}</span></td>
-                                        <td class="hidden sm:table-cell"><span>{{ $wsRoom }}</span></td>
+                                        <td><span><?php echo e($wsTime); ?></span></td>
+                                        <td class="hidden sm:table-cell"><span><?php echo e($wsRoom); ?></span></td>
                                         <td class="text-center">
-                                            @if ($wsStatus === 'approved')
+                                            <?php if($wsStatus === 'approved'): ?>
                                                 <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold badge-approved"><span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>Approved</span>
-                                            @elseif ($wsStatus === 'rejected')
+                                            <?php elseif($wsStatus === 'rejected'): ?>
                                                 <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold badge-rejected"><span class="w-1.5 h-1.5 rounded-full bg-red-500"></span>Rejected</span>
-                                            @elseif ($wsStatus === 'cancelled')
+                                            <?php elseif($wsStatus === 'cancelled'): ?>
                                                 <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold badge-cancelled"><span class="w-1.5 h-1.5 rounded-full bg-gray-400"></span>Cancelled</span>
-                                            @else
+                                            <?php else: ?>
                                                 <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold badge-pending"><span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>Pending</span>
-                                            @endif
+                                            <?php endif; ?>
                                         </td>
                                         <td class="text-center">
-                                            @if ($wsStatus !== 'approved' && $wsStatus !== 'cancelled')
-                                            <form action="{{ route('registrant.workshop.unregister', $w) }}" method="POST" onsubmit="return confirm('Cancel registration for {{ $w->name ?: $w->title }}?')">
-                                                @csrf
+                                            <?php if($wsStatus !== 'approved' && $wsStatus !== 'cancelled'): ?>
+                                            <form action="<?php echo e(route('registrant.workshop.unregister', $w)); ?>" method="POST" onsubmit="return confirm('Cancel registration for <?php echo e($w->name ?: $w->title); ?>?')">
+                                                <?php echo csrf_field(); ?>
                                                 <button class="px-3 py-1.5 text-xs font-medium rounded-lg transition" style="background:rgba(239,68,68,.15); color:#ef4444; border:1px solid rgba(239,68,68,.25);" onmouseover="this.style.background='rgba(239,68,68,.25)'" onmouseout="this.style.background='rgba(239,68,68,.15)'">Cancel</button>
                                             </form>
-                                            @endif
+                                            <?php endif; ?>
                                         </td>
                                     </tr>
-                                @endforeach
+                                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                             </tbody>
                         </table>
                     </div>
-                @endif
+                <?php endif; ?>
             </div>
 
-            {{-- ═══ MY FEEDBACK ═══ --}}
+            
             <div class="card-msd rounded-2xl overflow-hidden glow-pink">
                 <div class="px-5 py-4" style="border-bottom:1px solid rgba(255,255,255,.08);">
                     <h2 class="text-base font-bold text-white">My Feedback</h2>
                     <p class="text-xs" style="color:rgba(255,255,255,.4);">Sessions & tracks you have filled the feedback form for</p>
                 </div>
-                @if ($myFeedbacks->isEmpty())
+                <?php if($myFeedbacks->isEmpty()): ?>
                     <div class="px-5 py-16 text-center" style="color:rgba(255,255,255,.3);">
                         <svg class="w-12 h-12 mx-auto mb-3 opacity-30" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
                         <p class="text-sm">You have not filled any session feedback yet.</p>
                     </div>
-                @else
+                <?php else: ?>
                     <div class="overflow-x-auto">
                         <table class="w-full table-msd">
                             <thead>
@@ -330,8 +330,8 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                @foreach ($myFeedbacks as $fb)
-                                    @php
+                                <?php $__currentLoopData = $myFeedbacks; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $fb): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                    <?php
                                         $_ag = $fb->agendaItem;
                                         // Company prefix for tracks/workshops (mirrors the feedback form).
                                         $_company = null;
@@ -344,20 +344,20 @@
                                         }
                                         $_fbTitle = $_company ? $_company . ' - ' . $_ag->title : $_ag->title;
                                         $_fbType = $_ag->agenda_type === 'workshop' || !empty($_ag->workshop_id) ? 'Workshop' : ($_ag->agenda_type === 'track' || !empty($_ag->track_id) ? 'Track' : 'General');
-                                    @endphp
+                                    ?>
                                     <tr>
                                         <td>
-                                            <p class="font-semibold text-white">{{ $_fbTitle }}</p>
-                                            <p class="text-xs" style="color:rgba(255,255,255,.4);">Submitted {{ $fb->created_at ? $fb->created_at->format('d M Y, H:i') : '—' }}</p>
+                                            <p class="font-semibold text-white"><?php echo e($_fbTitle); ?></p>
+                                            <p class="text-xs" style="color:rgba(255,255,255,.4);">Submitted <?php echo e($fb->created_at ? $fb->created_at->format('d M Y, H:i') : '—'); ?></p>
                                         </td>
                                         <td class="hidden sm:table-cell">
-                                            <span class="inline-flex px-2.5 py-0.5 rounded-full text-xs font-semibold {{ $_fbType==='Workshop'?'badge-workshop':($_fbType==='Track'?'badge-track':'badge-session') }}">{{ $_fbType }}</span>
+                                            <span class="inline-flex px-2.5 py-0.5 rounded-full text-xs font-semibold <?php echo e($_fbType==='Workshop'?'badge-workshop':($_fbType==='Track'?'badge-track':'badge-session')); ?>"><?php echo e($_fbType); ?></span>
                                         </td>
-                                        <td class="hidden sm:table-cell"><span>{{ $_ag->room ?? '—' }}</span></td>
-                                        <td><span>{{ $_ag->timeLabel() }}</span></td>
-                                        <td class="hidden lg:table-cell"><span>{{ $fb->created_at ? $fb->created_at->format('d M Y') : '—' }}</span></td>
+                                        <td class="hidden sm:table-cell"><span><?php echo e($_ag->room ?? '—'); ?></span></td>
+                                        <td><span><?php echo e($_ag->timeLabel()); ?></span></td>
+                                        <td class="hidden lg:table-cell"><span><?php echo e($fb->created_at ? $fb->created_at->format('d M Y') : '—'); ?></span></td>
                                         <td class="text-center">
-                                            <a href="{{ route('feedback.form', $_ag) }}"
+                                            <a href="<?php echo e(route('feedback.form', $_ag)); ?>"
                                                class="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium rounded-lg transition"
                                                style="background:rgba(16,185,129,.15); color:#10b981; border:1px solid rgba(16,185,129,.25);"
                                                onmouseover="this.style.background='rgba(16,185,129,.25)'"
@@ -367,11 +367,11 @@
                                             </a>
                                         </td>
                                     </tr>
-                                @endforeach
+                                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                             </tbody>
                         </table>
                     </div>
-                @endif
+                <?php endif; ?>
             </div>
 
         </div>
@@ -380,3 +380,4 @@
 
 </body>
 </html>
+<?php /**PATH /Users/mdrz/2026/MSD26/resources/views/registrant/dashboard.blade.php ENDPATH**/ ?>
