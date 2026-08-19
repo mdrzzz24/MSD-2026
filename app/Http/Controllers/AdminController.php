@@ -152,7 +152,7 @@ class AdminController extends Controller
     public function dashboard(Request $request)
     {
         // Viewers only get the Registrants menu; redirect direct dashboard access.
-        if (auth()->user()?->isViewer()) {
+        if (Auth::user()?->isViewer()) {
             return redirect()->route('admin.registrants.index');
         }
 
