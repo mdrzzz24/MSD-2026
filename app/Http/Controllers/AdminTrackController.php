@@ -9,6 +9,7 @@ use App\Models\Registrant;
 use App\Models\Track;
 use App\Models\AgendaItem;
 use App\Models\AgendaVisit;
+use App\Models\Workshop;
 use App\Services\EmailService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -41,8 +42,25 @@ class AdminTrackController extends Controller
     }
 
     /**
+     * Agenda-item eager load shared by tracks & workshops: attach per-session
+     * scanned (visits) and approved registrant counts, ordered by time.
+     */
+    private function agendaItemWithCounts()
+    {
+        return function ($q) {
+            $q->withCount([
+                'visits as scanned_count',
+                'registrants as registrants_count' => fn($q2) => $q2->where('agenda_item_registrant.status', 'approved'),
+            ])
+            ->orderBy('start_time')
+            ->orderBy('order');
+        };
+    }
+
+    /**
      * Track monitoring dashboard — scan/attendance overview per track & session,
-     * with auto-refresh so staff can watch live progress.
+     * with auto-refresh so staff can watch live progress. Also covers workshops
+     * (own agenda items + agenda items of the workshop's tracks).
      */
     public function monitoring()
     {
@@ -50,26 +68,50 @@ class AdminTrackController extends Controller
             return redirect()->route('admin.tracks.index')->with('error', 'You do not have permission to view track monitoring.');
         }
 
-        $tracks = Track::with(['agendaItems' => function ($q) {
-            $q->withCount([
-                'visits as scanned_count',
-                'registrants as registrants_count' => fn($q2) => $q2->where('agenda_item_registrant.status', 'approved'),
-            ])
-            ->orderBy('start_time')
-            ->orderBy('order');
-        }])
+        $tracks = Track::with(['agendaItems' => $this->agendaItemWithCounts()])
         ->orderBy('title')
         ->get();
 
+        // Workshops: their own agenda items plus the agenda items of their tracks,
+        // deduplicated by id so a session linked to both is counted only once.
+        $workshops = Workshop::withCount(['registrants as registered_count' => fn($q) => $q->where('registrant_workshop.status', 'approved')])
+        ->with([
+            'agendaItems'        => $this->agendaItemWithCounts(),
+            'tracks.agendaItems' => $this->agendaItemWithCounts(),
+        ])
+        ->orderBy('date')
+        ->orderBy('start_time')
+        ->orderBy('title')
+        ->get();
+
+        foreach ($workshops as $ws) {
+            $sessions = $ws->agendaItems
+                ->concat($ws->tracks->flatMap->agendaItems)
+                ->keyBy('id')
+                ->sortBy(fn($i) => [$i->start_time, $i->order])
+                ->values();
+            $ws->setRelation('sessions', $sessions);
+            $ws->unsetRelation('agendaItems');
+            $ws->unsetRelation('tracks');
+        }
+
         // Grand totals across all tracks
         $totals = (object) [
-            'tracks'       => $tracks->count(),
-            'sessions'     => $tracks->sum(fn($t) => $t->agendaItems->count()),
-            'scanned'      => $tracks->sum(fn($t) => $t->agendaItems->sum('scanned_count')),
-            'registrants'  => $tracks->sum(fn($t) => $t->agendaItems->sum('registrants_count')),
+            'tracks'      => $tracks->count(),
+            'sessions'    => $tracks->sum(fn($t) => $t->agendaItems->count()),
+            'scanned'     => $tracks->sum(fn($t) => $t->agendaItems->sum('scanned_count')),
+            'registrants' => $tracks->sum(fn($t) => $t->agendaItems->sum('registrants_count')),
         ];
 
-        return view('admin.tracks.monitoring', compact('tracks', 'totals'));
+        // Grand totals across all workshops
+        $workshopTotals = (object) [
+            'workshops'  => $workshops->count(),
+            'sessions'   => $workshops->sum(fn($w) => $w->sessions->count()),
+            'scanned'    => $workshops->sum(fn($w) => $w->sessions->sum('scanned_count')),
+            'registered' => $workshops->sum('registered_count'),
+        ];
+
+        return view('admin.tracks.monitoring', compact('tracks', 'totals', 'workshops', 'workshopTotals'));
     }
 
     /**

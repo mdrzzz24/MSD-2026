@@ -20,7 +20,7 @@ $sortArrow = function (string $key) use ($sort, $direction) {
 <th class="px-3 py-3 text-center text-xs font-semibold text-gray-500 uppercase tracking-wider w-24">Badge</th>
 </tr></thead>
 <tbody class="divide-y divide-gray-50">
-<?php $__empty_1 = true; $__currentLoopData = $registrants; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $r): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
+<?php $__empty_2 = true; $__currentLoopData = $registrants; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $r): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_2 = false; ?>
 <tr class="hover:bg-gray-50/50 transition">
     <td class="px-5 py-3">
         <input type="checkbox" class="onsite-checkbox rounded border-gray-300 text-indigo-600 focus:ring-indigo-500" value="<?php echo e($r->id); ?>" data-name="<?php echo e($r->name); ?>">
@@ -92,7 +92,7 @@ $sortArrow = function (string $key) use ($sort, $direction) {
         </div>
     </td>
 </tr>
-<?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
+<?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_2): ?>
 <tr><td colspan="7" class="text-center py-16 text-gray-400">No participants found for this filter.</td></tr>
 <?php endif; ?>
 </tbody>

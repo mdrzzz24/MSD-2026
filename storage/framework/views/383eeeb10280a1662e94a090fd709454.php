@@ -1,11 +1,11 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <link rel="icon" type="image/png" href="{{ asset('img/metrodata.png') }}">
+    <link rel="icon" type="image/png" href="<?php echo e(asset('img/metrodata.png')); ?>">
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta http-equiv="refresh" content="15">
-    <title>Track Monitoring — {{ config('app.name') }}</title>
+    <title>Track Monitoring — <?php echo e(config('app.name')); ?></title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
@@ -13,12 +13,12 @@
 </head>
 <body class="bg-gray-50 font-sans antialiased">
 <div class="flex min-h-screen">
-@include('admin.partials.sidebar')
+<?php echo $__env->make('admin.partials.sidebar', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
 <main class="flex-1 lg:ml-64">
 <header class="sticky top-0 z-30 bg-white/80 backdrop-blur border-b border-gray-200">
     <div class="flex items-center justify-between h-16 px-4 sm:px-6 lg:px-8">
         <div class="flex items-center gap-4">
-            <a href="{{ route('admin.tracks.index') }}" class="inline-flex items-center gap-1.5 text-sm text-indigo-600 hover:text-indigo-800 font-medium transition">
+            <a href="<?php echo e(route('admin.tracks.index')); ?>" class="inline-flex items-center gap-1.5 text-sm text-indigo-600 hover:text-indigo-800 font-medium transition">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
                 Tracks
             </a>
@@ -26,7 +26,7 @@
             <h1 class="text-lg font-bold text-gray-900">Track Monitoring</h1>
         </div>
         <div class="flex items-center gap-2">
-            <a href="{{ route('admin.tracks.monitoring.export') }}" class="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-medium rounded-lg border border-gray-200 text-gray-600 bg-white hover:bg-gray-50 transition">
+            <a href="<?php echo e(route('admin.tracks.monitoring.export')); ?>" class="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-medium rounded-lg border border-gray-200 text-gray-600 bg-white hover:bg-gray-50 transition">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
                 Export CSV
             </a>
@@ -42,59 +42,60 @@
 </header>
 
 <div class="p-4 sm:p-6 lg:p-8">
-    @include('admin.partials.notification')
+    <?php echo $__env->make('admin.partials.notification', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
 
-    {{-- Summary cards --}}
+    
     <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
             <p class="text-xs text-gray-400 uppercase tracking-wider font-semibold">Tracks</p>
-            <p class="text-3xl font-bold text-gray-900 mt-1">{{ $totals->tracks }}</p>
+            <p class="text-3xl font-bold text-gray-900 mt-1"><?php echo e($totals->tracks); ?></p>
         </div>
         <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
             <p class="text-xs text-gray-400 uppercase tracking-wider font-semibold">Sessions</p>
-            <p class="text-3xl font-bold text-gray-900 mt-1">{{ $totals->sessions }}</p>
+            <p class="text-3xl font-bold text-gray-900 mt-1"><?php echo e($totals->sessions); ?></p>
         </div>
         <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
             <p class="text-xs text-gray-400 uppercase tracking-wider font-semibold">Scanned</p>
-            <p class="text-3xl font-bold text-emerald-600 mt-1">{{ $totals->scanned }}</p>
+            <p class="text-3xl font-bold text-emerald-600 mt-1"><?php echo e($totals->scanned); ?></p>
         </div>
         <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
             <p class="text-xs text-gray-400 uppercase tracking-wider font-semibold">Registrants (approved)</p>
-            <p class="text-3xl font-bold text-indigo-600 mt-1">{{ $totals->registrants }}</p>
+            <p class="text-3xl font-bold text-indigo-600 mt-1"><?php echo e($totals->registrants); ?></p>
         </div>
     </div>
 
-    {{-- Per-track cards --}}
-    @forelse ($tracks as $track)
-        @php
+    
+    <?php $__empty_1 = true; $__currentLoopData = $tracks; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $track): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
+        <?php
             $trackScanned = $track->agendaItems->sum('scanned_count');
             $trackRegistrants = $track->agendaItems->sum('registrants_count');
             $pct = $trackRegistrants > 0 ? round($trackScanned / $trackRegistrants * 100) : 0;
-        @endphp
+        ?>
         <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden mb-5">
             <div class="px-5 py-4 border-b border-gray-100 flex items-center justify-between gap-4 flex-wrap">
                 <div class="flex items-center gap-3">
                     <div class="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-lg font-bold">
-                        {{ strtoupper(substr($track->name ?: $track->title, 0, 1)) }}
+                        <?php echo e(strtoupper(substr($track->name ?: $track->title, 0, 1))); ?>
+
                     </div>
                     <div>
-                        <h2 class="text-base font-bold text-gray-900">{{ $track->name ?: $track->title }}</h2>
-                        <p class="text-xs text-gray-500">{{ $track->agendaItems->count() }} session(s) · {{ $trackScanned }} scanned · {{ $trackRegistrants }} registrants</p>
+                        <h2 class="text-base font-bold text-gray-900"><?php echo e($track->name ?: $track->title); ?></h2>
+                        <p class="text-xs text-gray-500"><?php echo e($track->agendaItems->count()); ?> session(s) · <?php echo e($trackScanned); ?> scanned · <?php echo e($trackRegistrants); ?> registrants</p>
                     </div>
                 </div>
                 <div class="flex items-center gap-2">
-                    @if ($trackRegistrants > 0)
+                    <?php if($trackRegistrants > 0): ?>
                         <div class="w-40 h-2 bg-gray-100 rounded-full overflow-hidden">
-                            <div class="h-full bg-emerald-500 rounded-full transition-all" style="width: {{ $pct }}%"></div>
+                            <div class="h-full bg-emerald-500 rounded-full transition-all" style="width: <?php echo e($pct); ?>%"></div>
                         </div>
-                        <span class="text-xs font-bold text-emerald-600">{{ $pct }}%</span>
-                    @endif
-                    <a href="{{ route('admin.tracks.visitors', $track) }}" class="px-2.5 py-1.5 text-xs font-medium rounded-lg bg-indigo-50 text-indigo-700 hover:bg-indigo-100 transition">Visitors</a>
-                    <a href="{{ route('admin.tracks.registrants', $track) }}" class="px-2.5 py-1.5 text-xs font-medium rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 transition">Registrants</a>
+                        <span class="text-xs font-bold text-emerald-600"><?php echo e($pct); ?>%</span>
+                    <?php endif; ?>
+                    <a href="<?php echo e(route('admin.tracks.visitors', $track)); ?>" class="px-2.5 py-1.5 text-xs font-medium rounded-lg bg-indigo-50 text-indigo-700 hover:bg-indigo-100 transition">Visitors</a>
+                    <a href="<?php echo e(route('admin.tracks.registrants', $track)); ?>" class="px-2.5 py-1.5 text-xs font-medium rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 transition">Registrants</a>
                 </div>
             </div>
 
-            @if ($track->agendaItems->isNotEmpty())
+            <?php if($track->agendaItems->isNotEmpty()): ?>
             <div class="overflow-x-auto">
                 <table class="w-full">
                     <thead><tr class="bg-gray-50/60">
@@ -105,89 +106,90 @@
                         <th class="px-5 py-2.5 text-center text-[11px] font-semibold text-gray-500 uppercase w-24 hidden sm:table-cell">Registrants</th>
                     </tr></thead>
                     <tbody class="divide-y divide-gray-50">
-                        @foreach ($track->agendaItems as $ai)
+                        <?php $__currentLoopData = $track->agendaItems; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $ai): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                         <tr class="hover:bg-gray-50/50 transition">
                             <td class="px-5 py-3 max-w-0">
-                                <a href="{{ route('admin.agenda.visitors', $ai) }}" class="text-sm font-medium text-gray-800 hover:text-indigo-600 truncate block" title="{{ $ai->title }}">{{ $ai->title }}</a>
+                                <a href="<?php echo e(route('admin.agenda.visitors', $ai)); ?>" class="text-sm font-medium text-gray-800 hover:text-indigo-600 truncate block" title="<?php echo e($ai->title); ?>"><?php echo e($ai->title); ?></a>
                             </td>
-                            <td class="px-5 py-3 hidden md:table-cell"><span class="text-sm text-gray-500">{{ $ai->room ?? '—' }}</span></td>
-                            <td class="px-5 py-3"><span class="text-xs text-gray-500 whitespace-nowrap">{{ $ai->start_time ? substr($ai->start_time, 0, 5) : '—' }}{{ $ai->end_time ? '–' . substr($ai->end_time, 0, 5) : '' }}</span></td>
+                            <td class="px-5 py-3 hidden md:table-cell"><span class="text-sm text-gray-500"><?php echo e($ai->room ?? '—'); ?></span></td>
+                            <td class="px-5 py-3"><span class="text-xs text-gray-500 whitespace-nowrap"><?php echo e($ai->start_time ? substr($ai->start_time, 0, 5) : '—'); ?><?php echo e($ai->end_time ? '–' . substr($ai->end_time, 0, 5) : ''); ?></span></td>
                             <td class="px-5 py-3 text-center">
-                                <span class="inline-flex items-center justify-center min-w-[2rem] px-2 py-0.5 rounded-full text-sm font-bold {{ $ai->scanned_count > 0 ? 'bg-emerald-50 text-emerald-700' : 'bg-gray-50 text-gray-400' }}">{{ $ai->scanned_count }}</span>
+                                <span class="inline-flex items-center justify-center min-w-[2rem] px-2 py-0.5 rounded-full text-sm font-bold <?php echo e($ai->scanned_count > 0 ? 'bg-emerald-50 text-emerald-700' : 'bg-gray-50 text-gray-400'); ?>"><?php echo e($ai->scanned_count); ?></span>
                             </td>
-                            <td class="px-5 py-3 text-center hidden sm:table-cell"><span class="text-sm text-gray-500">{{ $ai->registrants_count }}</span></td>
+                            <td class="px-5 py-3 text-center hidden sm:table-cell"><span class="text-sm text-gray-500"><?php echo e($ai->registrants_count); ?></span></td>
                         </tr>
-                        @endforeach
+                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                     </tbody>
                 </table>
             </div>
-            @else
+            <?php else: ?>
             <div class="px-5 py-8 text-center text-gray-400 text-sm"><p>No sessions linked to this track.</p></div>
-            @endif
+            <?php endif; ?>
         </div>
-    @empty
+    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
         <div class="bg-white rounded-2xl border border-gray-100 shadow-sm px-5 py-16 text-center">
             <p class="text-gray-400 font-medium">No tracks yet</p>
             <p class="text-xs text-gray-400">Create tracks and link them to agenda sessions to start monitoring.</p>
         </div>
-    @endforelse
+    <?php endif; ?>
 
-    {{-- Workshop section --}}
+    
     <div class="mt-10 mb-4 flex items-center justify-between">
         <h2 class="text-base font-bold text-gray-900 uppercase tracking-wider">Workshops</h2>
         <span class="text-xs text-gray-400">Scan/attendance per workshop session</span>
     </div>
 
-    {{-- Workshop summary cards --}}
+    
     <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
             <p class="text-xs text-gray-400 uppercase tracking-wider font-semibold">Workshops</p>
-            <p class="text-3xl font-bold text-gray-900 mt-1">{{ $workshopTotals->workshops }}</p>
+            <p class="text-3xl font-bold text-gray-900 mt-1"><?php echo e($workshopTotals->workshops); ?></p>
         </div>
         <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
             <p class="text-xs text-gray-400 uppercase tracking-wider font-semibold">Workshop Sessions</p>
-            <p class="text-3xl font-bold text-gray-900 mt-1">{{ $workshopTotals->sessions }}</p>
+            <p class="text-3xl font-bold text-gray-900 mt-1"><?php echo e($workshopTotals->sessions); ?></p>
         </div>
         <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
             <p class="text-xs text-gray-400 uppercase tracking-wider font-semibold">Workshop Scanned</p>
-            <p class="text-3xl font-bold text-emerald-600 mt-1">{{ $workshopTotals->scanned }}</p>
+            <p class="text-3xl font-bold text-emerald-600 mt-1"><?php echo e($workshopTotals->scanned); ?></p>
         </div>
         <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
             <p class="text-xs text-gray-400 uppercase tracking-wider font-semibold">Workshop Registered (approved)</p>
-            <p class="text-3xl font-bold text-indigo-600 mt-1">{{ $workshopTotals->registered }}</p>
+            <p class="text-3xl font-bold text-indigo-600 mt-1"><?php echo e($workshopTotals->registered); ?></p>
         </div>
     </div>
 
-    {{-- Per-workshop cards --}}
-    @forelse ($workshops as $workshop)
-        @php
+    
+    <?php $__empty_1 = true; $__currentLoopData = $workshops; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $workshop): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
+        <?php
             $wsScanned = $workshop->sessions->sum('scanned_count');
             $wsRegistered = (int) $workshop->registered_count;
             $wsPct = $wsRegistered > 0 ? round($wsScanned / $wsRegistered * 100) : 0;
-        @endphp
+        ?>
         <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden mb-5">
             <div class="px-5 py-4 border-b border-gray-100 flex items-center justify-between gap-4 flex-wrap">
                 <div class="flex items-center gap-3">
                     <div class="w-10 h-10 rounded-xl bg-violet-50 text-violet-600 flex items-center justify-center text-lg font-bold">
-                        {{ strtoupper(substr($workshop->name ?: $workshop->title, 0, 1)) }}
+                        <?php echo e(strtoupper(substr($workshop->name ?: $workshop->title, 0, 1))); ?>
+
                     </div>
                     <div>
-                        <h2 class="text-base font-bold text-gray-900">{{ $workshop->name ?: $workshop->title }}</h2>
-                        <p class="text-xs text-gray-500">{{ $workshop->sessions->count() }} session(s) · {{ $wsScanned }} scanned · {{ $wsRegistered }} registered</p>
+                        <h2 class="text-base font-bold text-gray-900"><?php echo e($workshop->name ?: $workshop->title); ?></h2>
+                        <p class="text-xs text-gray-500"><?php echo e($workshop->sessions->count()); ?> session(s) · <?php echo e($wsScanned); ?> scanned · <?php echo e($wsRegistered); ?> registered</p>
                     </div>
                 </div>
                 <div class="flex items-center gap-2">
-                    @if ($wsRegistered > 0)
+                    <?php if($wsRegistered > 0): ?>
                         <div class="w-40 h-2 bg-gray-100 rounded-full overflow-hidden">
-                            <div class="h-full bg-violet-500 rounded-full transition-all" style="width: {{ $wsPct }}%"></div>
+                            <div class="h-full bg-violet-500 rounded-full transition-all" style="width: <?php echo e($wsPct); ?>%"></div>
                         </div>
-                        <span class="text-xs font-bold text-violet-600">{{ $wsPct }}%</span>
-                    @endif
-                    <a href="{{ route('admin.workshops.registrants', $workshop) }}" class="px-2.5 py-1.5 text-xs font-medium rounded-lg bg-violet-50 text-violet-700 hover:bg-violet-100 transition">Registrants</a>
+                        <span class="text-xs font-bold text-violet-600"><?php echo e($wsPct); ?>%</span>
+                    <?php endif; ?>
+                    <a href="<?php echo e(route('admin.workshops.registrants', $workshop)); ?>" class="px-2.5 py-1.5 text-xs font-medium rounded-lg bg-violet-50 text-violet-700 hover:bg-violet-100 transition">Registrants</a>
                 </div>
             </div>
 
-            @if ($workshop->sessions->isNotEmpty())
+            <?php if($workshop->sessions->isNotEmpty()): ?>
             <div class="overflow-x-auto">
                 <table class="w-full">
                     <thead><tr class="bg-gray-50/60">
@@ -198,34 +200,35 @@
                         <th class="px-5 py-2.5 text-center text-[11px] font-semibold text-gray-500 uppercase w-24 hidden sm:table-cell">Registrants</th>
                     </tr></thead>
                     <tbody class="divide-y divide-gray-50">
-                        @foreach ($workshop->sessions as $ai)
+                        <?php $__currentLoopData = $workshop->sessions; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $ai): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                         <tr class="hover:bg-gray-50/50 transition">
                             <td class="px-5 py-3 max-w-0">
-                                <a href="{{ route('admin.agenda.visitors', $ai) }}" class="text-sm font-medium text-gray-800 hover:text-indigo-600 truncate block" title="{{ $ai->title }}">{{ $ai->title }}</a>
+                                <a href="<?php echo e(route('admin.agenda.visitors', $ai)); ?>" class="text-sm font-medium text-gray-800 hover:text-indigo-600 truncate block" title="<?php echo e($ai->title); ?>"><?php echo e($ai->title); ?></a>
                             </td>
-                            <td class="px-5 py-3 hidden md:table-cell"><span class="text-sm text-gray-500">{{ $ai->room ?? '—' }}</span></td>
-                            <td class="px-5 py-3"><span class="text-xs text-gray-500 whitespace-nowrap">{{ $ai->start_time ? substr($ai->start_time, 0, 5) : '—' }}{{ $ai->end_time ? '–' . substr($ai->end_time, 0, 5) : '' }}</span></td>
+                            <td class="px-5 py-3 hidden md:table-cell"><span class="text-sm text-gray-500"><?php echo e($ai->room ?? '—'); ?></span></td>
+                            <td class="px-5 py-3"><span class="text-xs text-gray-500 whitespace-nowrap"><?php echo e($ai->start_time ? substr($ai->start_time, 0, 5) : '—'); ?><?php echo e($ai->end_time ? '–' . substr($ai->end_time, 0, 5) : ''); ?></span></td>
                             <td class="px-5 py-3 text-center">
-                                <span class="inline-flex items-center justify-center min-w-[2rem] px-2 py-0.5 rounded-full text-sm font-bold {{ $ai->scanned_count > 0 ? 'bg-violet-50 text-violet-700' : 'bg-gray-50 text-gray-400' }}">{{ $ai->scanned_count }}</span>
+                                <span class="inline-flex items-center justify-center min-w-[2rem] px-2 py-0.5 rounded-full text-sm font-bold <?php echo e($ai->scanned_count > 0 ? 'bg-violet-50 text-violet-700' : 'bg-gray-50 text-gray-400'); ?>"><?php echo e($ai->scanned_count); ?></span>
                             </td>
-                            <td class="px-5 py-3 text-center hidden sm:table-cell"><span class="text-sm text-gray-500">{{ $ai->registrants_count }}</span></td>
+                            <td class="px-5 py-3 text-center hidden sm:table-cell"><span class="text-sm text-gray-500"><?php echo e($ai->registrants_count); ?></span></td>
                         </tr>
-                        @endforeach
+                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                     </tbody>
                 </table>
             </div>
-            @else
+            <?php else: ?>
             <div class="px-5 py-8 text-center text-gray-400 text-sm"><p>No sessions linked to this workshop.</p></div>
-            @endif
+            <?php endif; ?>
         </div>
-    @empty
+    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
         <div class="bg-white rounded-2xl border border-gray-100 shadow-sm px-5 py-16 text-center">
             <p class="text-gray-400 font-medium">No workshops yet</p>
             <p class="text-xs text-gray-400">Create workshops and link them to agenda sessions to start monitoring.</p>
         </div>
-    @endforelse
+    <?php endif; ?>
 </div>
 </main>
 </div>
 </body>
 </html>
+<?php /**PATH /Users/mdrz/2026/MSD26/resources/views/admin/tracks/monitoring.blade.php ENDPATH**/ ?>
