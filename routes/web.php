@@ -382,6 +382,7 @@ Route::middleware(['auth', 'admin', 'no_cache'])->prefix('admin')->name('admin.'
     Route::get('/tracks', [AdminTrackController::class, 'index'])->name('tracks.index');
     Route::get('/tracks/monitoring', [AdminTrackController::class, 'monitoring'])->name('tracks.monitoring');
     Route::get('/tracks/monitoring/export', [AdminTrackController::class, 'monitoringExport'])->name('tracks.monitoring.export');
+    Route::get('/tracks/monitoring/export-attendees', [AdminTrackController::class, 'exportAttendeesCsv'])->name('tracks.monitoring.export-attendees');
     Route::get('/tracks/{track}/registrants', [AdminTrackController::class, 'registrants'])->name('tracks.registrants');
     Route::get('/tracks/{track}/visitors', [AdminTrackController::class, 'visitors'])->name('tracks.visitors');
     Route::get('/tracks/{track}/export', [AdminTrackController::class, 'exportTrackCsv'])->name('tracks.export');

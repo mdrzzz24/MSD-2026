@@ -159,6 +159,81 @@ class AdminTrackController extends Controller
         );
     }
 
+    /**
+     * Export attendees (scan/check-in records) for all workshops & tracks to CSV.
+     *
+     * Each attendance row is attributed once: to its workshop when the session is
+     * linked to a workshop directly or via a workshop-owned track, otherwise to
+     * its standalone track. Sessions outside workshops/tracks are skipped, so no
+     * attendee is double-counted.
+     */
+    public function exportAttendeesCsv()
+    {
+        if (!Auth::user()->hasPermission('tracks')) {
+            return redirect()->route('admin.tracks.index')->with('error', 'You do not have permission to export workshop/track attendees.');
+        }
+
+        $visits = AgendaVisit::with(['registrant', 'agendaItem.workshop', 'agendaItem.track.workshop'])
+            ->get();
+
+        $rows = [];
+        foreach ($visits as $v) {
+            $item = $v->agendaItem;
+            if (!$item) {
+                continue;
+            }
+
+            // A session belongs to a workshop when linked directly (workshop_id)
+            // or through a workshop-owned track. Otherwise it belongs to its
+            // standalone track; general/standalone sessions are skipped.
+            $workshop = $item->workshop ?? $item->track?->workshop;
+            if ($workshop) {
+                $type  = 'Workshop';
+                $group = $workshop->name ?: $workshop->title;
+            } elseif ($item->track) {
+                $type  = 'Track';
+                $group = $item->track->name ?: $item->track->title;
+            } else {
+                continue;
+            }
+
+            $rows[] = [
+                'type'  => $type,
+                'group' => $group,
+                'row'   => [
+                    $item->title,
+                    $item->room ?? '',
+                    $v->registrant?->name ?? '',
+                    $v->registrant?->email ?? '',
+                    $v->registrant?->company ?? '',
+                    $v->registrant?->job_title ?? '',
+                    $v->registrant?->phone ?? '',
+                    $v->visited_at ? $v->visited_at->copy()->addHours(7)->format('Y-m-d H:i') : '',
+                    $v->left_at ? $v->left_at->copy()->addHours(7)->format('Y-m-d H:i') : '',
+                ],
+            ];
+        }
+
+        // Workshop rows first, then tracks; each group sorted by name & check-in time.
+        $rows = collect($rows)->sort(function ($a, $b) {
+            $cmp = ($a['type'] === 'Workshop' ? 0 : 1) <=> ($b['type'] === 'Workshop' ? 0 : 1);
+            if ($cmp !== 0) {
+                return $cmp;
+            }
+            $cmp = mb_strtolower($a['group']) <=> mb_strtolower($b['group']);
+            if ($cmp !== 0) {
+                return $cmp;
+            }
+            return $a['row'][7] <=> $b['row'][7];
+        })->values();
+
+        return $this->csvDownload(
+            ['Type', 'Workshop / Track', 'Session', 'Room', 'Name', 'Email', 'Company', 'Job Title', 'Phone', 'Scanned At (WIB)', 'Tracked Out At (WIB)'],
+            $rows->map(fn($r) => array_merge([$r['type'], $r['group']], $r['row']))->all(),
+            'workshops-tracks-attendees-' . now()->format('Y-m-d-His') . '.csv'
+        );
+    }
+
     public function store(Request $request)
     {
         $validated = $request->validate([
