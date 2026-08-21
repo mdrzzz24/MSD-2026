@@ -205,9 +205,13 @@ class AdminTrackController extends Controller
                     $item->room ?? '',
                     $v->registrant?->name ?? '',
                     $v->registrant?->email ?? '',
+                    $v->registrant?->phone ?? '',
                     $v->registrant?->company ?? '',
                     $v->registrant?->job_title ?? '',
-                    $v->registrant?->phone ?? '',
+                    $v->registrant?->job_role ?? '',
+                    $v->registrant?->industry ?? '',
+                    $v->registrant?->employees ?? '',
+                    $v->registrant?->unique_code ?? '',
                     // Stored as-is (matches the track visitors page / per-track CSV export).
                     $v->visited_at ? $v->visited_at->format('Y-m-d H:i') : '',
                     $v->left_at ? $v->left_at->format('Y-m-d H:i') : '',
@@ -225,11 +229,11 @@ class AdminTrackController extends Controller
             if ($cmp !== 0) {
                 return $cmp;
             }
-            return $a['row'][7] <=> $b['row'][7];
+            return $a['row'][11] <=> $b['row'][11];
         })->values();
 
         return $this->csvDownload(
-            ['Type', 'Workshop / Track', 'Session', 'Room', 'Name', 'Email', 'Company', 'Job Title', 'Phone', 'Scanned At', 'Tracked Out At'],
+            ['Type', 'Workshop / Track', 'Session', 'Room', 'Name', 'Email', 'Phone', 'Company', 'Job Title', 'Job Role', 'Industry', 'Employees', 'Unique Code', 'Scanned At', 'Tracked Out At'],
             $rows->map(fn($r) => array_merge([$r['type'], $r['group']], $r['row']))->all(),
             'workshops-tracks-attendees-' . now()->format('Y-m-d-His') . '.csv'
         );
