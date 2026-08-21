@@ -2,12 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Concerns\Exportable;
 use App\Models\Registrant;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class AdminOnsiteController extends Controller
 {
+    use Exportable;
     /**
      * Onsite Event — participant list for name badge printing (admin & super admin).
      * Default filter: approved participants.
@@ -185,6 +187,45 @@ class AdminOnsiteController extends Controller
             'html'    => $html,
             'total'   => $registrants->total(),
         ]);
+    }
+
+    /**
+     * Export checked-in registrants to CSV (WIB times).
+     * Honors the active onsite filters (search/profile/company/source) but always
+     * exports only participants who have checked in, regardless of the status tab.
+     */
+    public function exportCheckedInCsv(Request $request)
+    {
+        if (Auth::user()->isClient()) {
+            return redirect()->route('admin.dashboard')->with('error', 'You do not have access to the Onsite Event page.');
+        }
+
+        // Ignore the status/checked_in tabs so the export is always about checked-in data
+        // while still respecting the other active filters.
+        $request->merge(['status' => 'all']);
+        $query = $this->buildQuery($request);
+        $registrants = $query->whereNotNull('checked_in_at')->orderBy('checked_in_at')->get();
+
+        $rows = [];
+        foreach ($registrants as $r) {
+            $rows[] = [
+                $r->name,
+                $r->email,
+                $r->phone,
+                $r->company,
+                $r->job_title,
+                $r->job_role,
+                $r->unique_code,
+                $r->checked_in_at ? $r->checked_in_at->copy()->addHours(7)->format('Y-m-d H:i') : '',
+                $r->utm_source,
+            ];
+        }
+
+        return $this->csvDownload(
+            ['Name', 'Email', 'Phone', 'Company', 'Job Title', 'Job Role', 'Unique Code', 'Checked In At (WIB)', 'UTM Source'],
+            $rows,
+            'onsite-checked-in-' . now()->format('Y-m-d-His') . '.csv'
+        );
     }
 
     /**

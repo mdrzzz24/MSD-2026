@@ -45,6 +45,12 @@ Walkin Registration
 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 015.656 0l2 2a4 4 0 01-5.656 5.656l-1.414-1.414M10.172 13.828a4 4 0 01-5.656 0l-2-2a4 4 0 015.656-5.656l1.414 1.414"/></svg>
 Share Link
 </button>
+<a href="<?php echo e(route('admin.onsite.export-checkedin', request()->except(['status', 'checked_in', 'page']))); ?>"
+   class="inline-flex items-center gap-1.5 px-3 py-2 text-sm font-semibold rounded-xl bg-white text-gray-700 hover:bg-gray-50 transition border border-gray-200 shadow-sm"
+   title="Export participants who have already checked in as CSV">
+<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+Export Checked-in CSV
+</a>
 <?php endif; ?>
 <button onclick="printSelected()" id="printSelectedBtn"
         class="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-semibold rounded-xl bg-indigo-600 text-white hover:bg-indigo-700 transition shadow-sm">
