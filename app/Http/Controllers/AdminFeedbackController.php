@@ -238,8 +238,13 @@ class AdminFeedbackController extends Controller
                     $type,
                     $fb->name ?: ($fb->registrant?->name ?? ''),
                     $fb->email ?: ($fb->registrant?->email ?? ''),
+                    $fb->registrant?->phone ?? '',
                     $fb->registrant?->company ?? '',
                     $fb->registrant?->job_title ?? '',
+                    $fb->registrant?->job_role ?? '',
+                    $fb->registrant?->industry ?? '',
+                    $fb->registrant?->employees ?? '',
+                    $fb->registrant?->unique_code ?? '',
                     $a ? ($a->question?->question_text ?? 'Question') : '',
                     $a ? $this->formatAnswerValue($a) : '',
                     $fb->created_at ? $fb->created_at->copy()->addHours(7)->format('Y-m-d H:i:s') : '',
@@ -248,7 +253,7 @@ class AdminFeedbackController extends Controller
         }
 
         return $this->csvDownload(
-            ['Session', 'Type', 'Name', 'Email', 'Company', 'Job Title', 'Question', 'Answer', 'Submitted At (WIB)'],
+            ['Session', 'Type', 'Name', 'Email', 'Phone', 'Company', 'Job Title', 'Job Role', 'Industry', 'Employees', 'Unique Code', 'Question', 'Answer', 'Submitted At (WIB)'],
             $rows,
             'all-feedback-' . now()->format('YmdHis') . '.csv'
         );

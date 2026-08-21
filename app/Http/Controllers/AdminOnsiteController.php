@@ -204,25 +204,50 @@ class AdminOnsiteController extends Controller
         // while still respecting the other active filters.
         $request->merge(['status' => 'all']);
         $query = $this->buildQuery($request);
-        $registrants = $query->whereNotNull('checked_in_at')->orderBy('checked_in_at')->get();
+        $registrants = $query->whereNotNull('checked_in_at')->orderBy('checked_in_at')->with('clientRemarkedBy')->get();
 
         $rows = [];
         foreach ($registrants as $r) {
             $rows[] = [
+                $r->id,
                 $r->name,
+                $r->first_name,
+                $r->last_name,
                 $r->email,
                 $r->phone,
-                $r->company,
                 $r->job_title,
                 $r->job_role,
+                $r->company,
+                $r->industry,
+                $r->employees,
+                $r->status,
                 $r->unique_code,
                 $r->checked_in_at ? $r->checked_in_at->copy()->addHours(7)->format('Y-m-d H:i') : '',
-                $r->utm_source,
+                $r->notes,
+                $r->admin_notes,
+                $r->created_at ? $r->created_at->copy()->addHours(7)->format('Y-m-d H:i:s') : '',
+                $r->processed_at ? $r->processed_at->copy()->addHours(7)->format('Y-m-d H:i:s') : '',
+                $r->utm_source ?? '',
+                $r->utm_medium ?? '',
+                $r->utm_campaign ?? '',
+                $r->client_remark_action ?? '',
+                $r->client_remark ?? '',
+                $r->clientRemarkedBy?->name ?? '',
+                $r->client_remarked_at ? $r->client_remarked_at->copy()->addHours(7)->format('Y-m-d H:i:s') : '',
+                $r->qr_share_url,
             ];
         }
 
         return $this->csvDownload(
-            ['Name', 'Email', 'Phone', 'Company', 'Job Title', 'Job Role', 'Unique Code', 'Checked In At (WIB)', 'UTM Source'],
+            [
+                'ID', 'Name', 'First Name', 'Last Name', 'Email', 'Phone',
+                'Job Title', 'Job Role', 'Company', 'Industry', 'Employees', 'Status',
+                'Unique Code', 'Checked In At (WIB)', 'Notes', 'Admin Notes',
+                'Registered At (WIB)', 'Processed At (WIB)',
+                'UTM Source', 'UTM Medium', 'UTM Campaign',
+                'Client Recommendation', 'Client Remark', 'Remarked By', 'Remarked At (WIB)',
+                'QR Link',
+            ],
             $rows,
             'onsite-checked-in-' . now()->format('Y-m-d-His') . '.csv'
         );
