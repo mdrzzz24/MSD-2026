@@ -186,7 +186,7 @@ class AdminBoothController extends Controller
                     'name'  => $registrant->name,
                     'email' => $registrant->email,
                     'company' => $registrant->company,
-                    'visited_at' => $existingVisit->visited_at->format('d M Y, H:i'),
+                    'visited_at' => $existingVisit->visited_at->copy()->addHours(7)->format('d M Y, H:i'),
                 ],
                 'already_visited' => true,
             ]);
@@ -243,7 +243,7 @@ class AdminBoothController extends Controller
             ->orderByDesc('visited_at')
             ->get();
 
-        $headers = ['Booth Name', 'Registrant Name', 'Email', 'Phone', 'Company', 'Job Title', 'Visited At'];
+        $headers = ['Booth Name', 'Registrant Name', 'Email', 'Phone', 'Company', 'Job Title', 'Visited At (WIB)'];
         $rows = $visits->map(fn($v) => [
             $booth->name,
             $v->registrant->display_name ?: $v->registrant->name,
@@ -251,7 +251,7 @@ class AdminBoothController extends Controller
             $v->registrant->phone ?? '-',
             $v->registrant->company ?? '-',
             $v->registrant->job_title ?? '-',
-            $v->visited_at ? $v->visited_at->format('Y-m-d H:i:s') : '-',
+            $v->visited_at ? $v->visited_at->copy()->addHours(7)->format('Y-m-d H:i:s') : '-',
         ])->toArray();
 
         return $this->csvDownload($headers, $rows, 'booth-' . $booth->id . '-visitors-' . now()->format('YmdHis') . '.csv');
@@ -279,13 +279,13 @@ class AdminBoothController extends Controller
                     $v->registrant?->phone ?? '-',
                     $v->registrant?->company ?? '-',
                     $v->registrant?->job_title ?? '-',
-                    $v->visited_at ? $v->visited_at->format('Y-m-d H:i:s') : '-',
+                    $v->visited_at ? $v->visited_at->copy()->addHours(7)->format('Y-m-d H:i:s') : '-',
                 ];
             }
         }
 
         return $this->csvDownload(
-            ['Booth Name', 'Registrant Name', 'Email', 'Phone', 'Company', 'Job Title', 'Visited At'],
+            ['Booth Name', 'Registrant Name', 'Email', 'Phone', 'Company', 'Job Title', 'Visited At (WIB)'],
             $rows,
             'all-booths-visitors-' . now()->format('YmdHis') . '.csv'
         );

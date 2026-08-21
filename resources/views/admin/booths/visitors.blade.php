@@ -77,7 +77,7 @@
                             <td class="px-4 py-3.5 hidden md:table-cell max-w-0"><span class="text-sm text-gray-600 truncate block" title="{{ $visit->registrant->phone ?? '' }}">{{ $visit->registrant->phone ?? '—' }}</span></td>
                             <td class="px-4 py-3.5 hidden lg:table-cell max-w-0"><span class="text-sm text-gray-600 truncate block" title="{{ $visit->registrant->company ?? '' }}">{{ $visit->registrant->company ?? '—' }}</span></td>
                             <td class="px-4 py-3.5 hidden xl:table-cell max-w-0"><span class="text-sm text-gray-600 truncate block" title="{{ $visit->registrant->job_title ?? '' }}">{{ $visit->registrant->job_title ?? '—' }}</span></td>
-                            <td class="px-4 py-3.5"><span class="text-sm text-gray-600 whitespace-nowrap">{{ $visit->visited_at ? $visit->visited_at->format('d M Y, H:i') : '—' }}</span></td>
+                            <td class="px-4 py-3.5"><span class="text-sm text-gray-600 whitespace-nowrap">{{ $visit->visited_at ? $visit->visited_at->copy()->addHours(7)->format('d M Y, H:i') : '—' }}</span></td>
                         </tr>
                         @endforeach
                     </tbody>
