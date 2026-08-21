@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Controllers\Concerns\Exportable;
 use App\Models\AgendaItem;
 use App\Models\AgendaFeedback;
+use App\Models\AgendaFeedbackAnswer;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 
@@ -203,5 +204,89 @@ class AdminFeedbackController extends Controller
         $filename = 'feedback-' . \Illuminate\Support\Str::slug($agendum->title) . '-' . now()->format('YmdHis') . '.csv';
 
         return $this->csvDownload($headers, $rows, $filename);
+    }
+
+    /**
+     * Export ALL feedback submissions (every respondent & their answers) to CSV.
+     *
+     * Long format — one row per answer — so it works across sessions that have
+     * different question sets. Includes the session, respondent, question, answer
+     * and submission time (WIB). A submission with no answers still gets a row.
+     */
+    public function exportAllFeedbackCsv()
+    {
+        $feedbacks = AgendaFeedback::with([
+            'agendaItem.workshop',
+            'agendaItem.track',
+            'registrant',
+            'answers.question',
+        ])
+        ->orderByDesc('created_at')
+        ->get();
+
+        $rows = [];
+        foreach ($feedbacks as $fb) {
+            $item    = $fb->agendaItem;
+            $type    = $item ? $this->feedbackType($item) : 'General';
+            $session = $item ? $this->feedbackSessionLabel($item) : '—';
+
+            $answerItems = $fb->answers->isNotEmpty() ? $fb->answers : collect([null]);
+
+            foreach ($answerItems as $a) {
+                $rows[] = [
+                    $session,
+                    $type,
+                    $fb->name ?: ($fb->registrant?->name ?? ''),
+                    $fb->email ?: ($fb->registrant?->email ?? ''),
+                    $fb->registrant?->company ?? '',
+                    $fb->registrant?->job_title ?? '',
+                    $a ? ($a->question?->question_text ?? 'Question') : '',
+                    $a ? $this->formatAnswerValue($a) : '',
+                    $fb->created_at ? $fb->created_at->copy()->addHours(7)->format('Y-m-d H:i:s') : '',
+                ];
+            }
+        }
+
+        return $this->csvDownload(
+            ['Session', 'Type', 'Name', 'Email', 'Company', 'Job Title', 'Question', 'Answer', 'Submitted At (WIB)'],
+            $rows,
+            'all-feedback-' . now()->format('YmdHis') . '.csv'
+        );
+    }
+
+    /**
+     * Workshop / Track / General label for a session (mirrors the feedback page).
+     */
+    private function feedbackType(AgendaItem $item): string
+    {
+        if ($item->agenda_type === 'workshop' || !empty($item->workshop_id)) {
+            return 'Workshop';
+        }
+        if ($item->agenda_type === 'track' || !empty($item->track_id)) {
+            return 'Track';
+        }
+        return 'General';
+    }
+
+    /**
+     * "{company} - {title}" for track/workshop sessions, else the plain title.
+     */
+    private function feedbackSessionLabel(AgendaItem $item): string
+    {
+        $company = $this->companyName($item);
+        return $company ? $company . ' - ' . $item->title : $item->title;
+    }
+
+    /**
+     * Decode multi-choice answers (stored as JSON) into a readable string.
+     */
+    private function formatAnswerValue(AgendaFeedbackAnswer $a): string
+    {
+        $value = $a->answer_value ?? '';
+        if ($a->question?->question_type === 'multi_choice' && $value) {
+            $decoded = json_decode($value, true);
+            $value = is_array($decoded) ? implode(' | ', $decoded) : $value;
+        }
+        return (string) $value;
     }
 }
