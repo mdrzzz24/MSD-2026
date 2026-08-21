@@ -403,6 +403,7 @@ Route::middleware(['auth', 'admin', 'no_cache'])->prefix('admin')->name('admin.'
 
     // ── Booths & QR Scan — accessible by users with booths permission ──
     Route::get('/booths', [App\Http\Controllers\AdminBoothController::class, 'index'])->name('booths.index');
+    Route::get('/booths/export', [App\Http\Controllers\AdminBoothController::class, 'exportAllVisitorsCsv'])->name('booths.export');
     Route::get('/booths/create', [App\Http\Controllers\AdminBoothController::class, 'create'])->name('booths.create');
     Route::post('/booths', [App\Http\Controllers\AdminBoothController::class, 'store'])->name('booths.store');
     Route::get('/booths/{booth}/edit', [App\Http\Controllers\AdminBoothController::class, 'edit'])->name('booths.edit');

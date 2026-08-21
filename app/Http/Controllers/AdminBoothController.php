@@ -258,6 +258,40 @@ class AdminBoothController extends Controller
     }
 
     /**
+     * Export ALL booth visits (every booth and its attendees) to CSV, grouped
+     * by booth in display order, attendees sorted by visit time (newest first).
+     */
+    public function exportAllVisitorsCsv()
+    {
+        if (!Auth::user()->hasPermission('booths')) {
+            return redirect()->route('admin.booths.index')->with('error', 'You do not have permission to export booth visits.');
+        }
+
+        $booths = Booth::ordered()->with(['visits.registrant'])->get();
+
+        $rows = [];
+        foreach ($booths as $booth) {
+            foreach ($booth->visits->sortByDesc('visited_at') as $v) {
+                $rows[] = [
+                    $booth->name,
+                    $v->registrant?->display_name ?: $v->registrant?->name ?? '-',
+                    $v->registrant?->email ?? '-',
+                    $v->registrant?->phone ?? '-',
+                    $v->registrant?->company ?? '-',
+                    $v->registrant?->job_title ?? '-',
+                    $v->visited_at ? $v->visited_at->format('Y-m-d H:i:s') : '-',
+                ];
+            }
+        }
+
+        return $this->csvDownload(
+            ['Booth Name', 'Registrant Name', 'Email', 'Phone', 'Company', 'Job Title', 'Visited At'],
+            $rows,
+            'all-booths-visitors-' . now()->format('YmdHis') . '.csv'
+        );
+    }
+
+    /**
      * Helper: download CSV.
      */
     private function csvDownload(array $headers, array $rows, string $filename)
