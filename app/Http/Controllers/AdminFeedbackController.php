@@ -208,7 +208,25 @@ class AdminFeedbackController extends Controller
     }
 
     /**
-     * Export ALL feedback submissions (every respondent & their answers) to CSV.
+     * Export feedback for GENERAL sessions to CSV (wide, two-row header).
+     */
+    public function exportGeneralFeedbackCsv()
+    {
+        return $this->exportFeedbackByType('general');
+    }
+
+    /**
+     * Export feedback for TRACK + WORKSHOP sessions to CSV (wide, two-row header).
+     */
+    public function exportTrackWorkshopFeedbackCsv()
+    {
+        return $this->exportFeedbackByType('track_workshop');
+    }
+
+    /**
+     * Export feedback submissions (every respondent & their answers) to CSV,
+     * filtered by session type so the General and Track/Workshop question sets
+     * stay in separate files with clean columns.
      *
      * Wide format — one row per submission. Two-row header: row 1 = questions,
      * row 2 = answer options beneath each question (a choice question spans its
@@ -216,7 +234,7 @@ class AdminFeedbackController extends Controller
      * text across sessions (template copies) are merged into a single column
      * group. A submission with no answers still gets a row.
      */
-    public function exportAllFeedbackCsv()
+    private function exportFeedbackByType(string $kind)
     {
         $feedbacks = AgendaFeedback::with([
             'agendaItem.workshop',
@@ -226,6 +244,19 @@ class AdminFeedbackController extends Controller
         ])
         ->orderByDesc('created_at')
         ->get();
+
+        // Separate by session type: General vs Track + Workshop (they use
+        // different question sets, so keeping them apart gives clean columns).
+        if ($kind === 'general') {
+            $feedbacks = $feedbacks->filter(function ($fb) {
+                return !$fb->agendaItem || $this->feedbackType($fb->agendaItem) === 'General';
+            });
+        } else {
+            $feedbacks = $feedbacks->filter(function ($fb) {
+                return $fb->agendaItem && in_array($this->feedbackType($fb->agendaItem), ['Track', 'Workshop'], true);
+            });
+        }
+        $feedbacks = $feedbacks->values();
 
         // Only sessions that actually received feedback contribute columns.
         $sessionIds = $feedbacks->pluck('agenda_item_id')->filter()->unique()->values();
@@ -304,7 +335,7 @@ class AdminFeedbackController extends Controller
             $rows[] = $row;
         }
 
-        return $this->csvDownload([$headerRow1, $headerRow2], $rows, 'all-feedback-' . now()->format('YmdHis') . '.csv');
+        return $this->csvDownload([$headerRow1, $headerRow2], $rows, $kind . '-feedback-' . now()->format('YmdHis') . '.csv');
     }
 
     /**

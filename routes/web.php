@@ -302,7 +302,8 @@ Route::middleware(['auth', 'admin', 'no_cache'])->prefix('admin')->name('admin.'
     Route::post('/agenda/{agendum}/feedback/toggle', [App\Http\Controllers\AdminFeedbackController::class, 'toggle'])->name('agenda.feedback.toggle');
     Route::get('/feedback', [App\Http\Controllers\AdminFeedbackController::class, 'index'])->name('feedback.index');
     Route::get('/feedback/export/excel', [App\Http\Controllers\AdminFeedbackController::class, 'exportExcel'])->name('feedback.export-excel');
-    Route::get('/feedback/export/csv', [App\Http\Controllers\AdminFeedbackController::class, 'exportAllFeedbackCsv'])->name('feedback.export-csv');
+    Route::get('/feedback/export/csv/general', [App\Http\Controllers\AdminFeedbackController::class, 'exportGeneralFeedbackCsv'])->name('feedback.export-general');
+    Route::get('/feedback/export/csv/track-workshop', [App\Http\Controllers\AdminFeedbackController::class, 'exportTrackWorkshopFeedbackCsv'])->name('feedback.export-track-workshop');
     Route::get('/agenda/{agendum}/feedback', [App\Http\Controllers\AdminFeedbackController::class, 'show'])->name('agenda.feedback.show');
     Route::get('/agenda/{agendum}/feedback/export/csv', [App\Http\Controllers\AdminFeedbackController::class, 'exportCsv'])->name('agenda.feedback.export-csv');
     // Feedback Templates
