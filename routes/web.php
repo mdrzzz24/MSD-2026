@@ -19,6 +19,7 @@ use App\Http\Controllers\AdminEmailController;
 use App\Http\Controllers\EmailLogController;
 use App\Http\Controllers\BounceCheckController;
 use App\Http\Controllers\AdminConfigController;
+use App\Http\Controllers\AdminDataCleaningController;
 use App\Models\AgendaItem;
 
 // Public routes
@@ -206,6 +207,11 @@ Route::middleware(['auth', 'admin', 'no_cache'])->prefix('admin')->name('admin.'
 
     // ── Super Admin only sections ──
     Route::middleware('super_admin')->group(function () {
+
+    // Data Cleaning — standardize company names, grouped by email domain (super admin only)
+    Route::get('/data-cleaning', [AdminDataCleaningController::class, 'index'])->name('data-cleaning.index');
+    Route::post('/data-cleaning/apply', [AdminDataCleaningController::class, 'apply'])->name('data-cleaning.apply');
+    Route::post('/data-cleaning/members', [AdminDataCleaningController::class, 'members'])->name('data-cleaning.members');
 
     // Registration Form Toggle
     Route::post('/toggle-registration', [AdminController::class, 'toggleRegistration'])->name('toggle-registration');

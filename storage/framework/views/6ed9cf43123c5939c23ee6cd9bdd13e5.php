@@ -88,6 +88,11 @@ header.sticky { top: 44px !important; }
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
             Import Client Confirmations
         </a>
+        <a href="<?php echo e(route('admin.data-cleaning.index')); ?>"
+           class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium ml-6 <?php echo e(request()->routeIs('admin.data-cleaning.*') ? 'bg-indigo-50 text-indigo-700' : 'text-gray-600 hover:bg-gray-100'); ?> transition">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/></svg>
+            Data Cleaning
+        </a>
         <?php endif; ?>
         <a href="<?php echo e(route('admin.onsite')); ?>"
            class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium ml-6 <?php echo e(request()->routeIs('admin.onsite*') ? 'bg-indigo-50 text-indigo-700' : 'text-gray-600 hover:bg-gray-100'); ?> transition">

@@ -14,7 +14,14 @@ trait Exportable
         $callback = function () use ($headers, $rows) {
             $handle = fopen('php://output', 'w');
             fprintf($handle, chr(0xEF) . chr(0xBB) . chr(0xBF));
-            fputcsv($handle, $headers);
+
+            // Multi-row headers: pass [[row1], [row2], ...]; a flat array is
+            // still treated as a single header row (backward compatible).
+            $headerRows = (!empty($headers) && is_array($headers[0])) ? $headers : [$headers];
+            foreach ($headerRows as $headerRow) {
+                fputcsv($handle, $headerRow);
+            }
+
             foreach ($rows as $row) {
                 fputcsv($handle, $row);
             }

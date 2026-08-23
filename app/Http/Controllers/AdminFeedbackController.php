@@ -6,6 +6,7 @@ use App\Http\Controllers\Concerns\Exportable;
 use App\Models\AgendaItem;
 use App\Models\AgendaFeedback;
 use App\Models\AgendaFeedbackAnswer;
+use App\Models\AgendaItemQuestion;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 
@@ -209,9 +210,11 @@ class AdminFeedbackController extends Controller
     /**
      * Export ALL feedback submissions (every respondent & their answers) to CSV.
      *
-     * Long format — one row per answer — so it works across sessions that have
-     * different question sets. Includes the session, respondent, question, answer
-     * and submission time (WIB). A submission with no answers still gets a row.
+     * Wide format — one row per submission. Two-row header: row 1 = questions,
+     * row 2 = answer options beneath each question (a choice question spans its
+     * option cells). ✓ marks the selected option(s). Questions sharing the same
+     * text across sessions (template copies) are merged into a single column
+     * group. A submission with no answers still gets a row.
      */
     public function exportAllFeedbackCsv()
     {
@@ -224,39 +227,84 @@ class AdminFeedbackController extends Controller
         ->orderByDesc('created_at')
         ->get();
 
+        // Only sessions that actually received feedback contribute columns.
+        $sessionIds = $feedbacks->pluck('agenda_item_id')->filter()->unique()->values();
+
+        // All questions of those sessions, so unanswered questions still appear.
+        $questions = AgendaItemQuestion::whereIn('agenda_item_id', $sessionIds)
+            ->orderBy('agenda_item_id')
+            ->orderBy('order')
+            ->get();
+
+        $columnGroups = $this->buildFeedbackColumns($questions);
+
+        // Two-row header: row 1 carries the questions, row 2 the answer options
+        // beneath each question. For a choice question the question text sits on
+        // the first option column (row 1) and each option fills its own cell
+        // (row 2), so the question visually spans its options in Excel.
+        $headerRow1 = ['Session', 'Type', 'Name', 'Email', 'Phone', 'Company', 'Job Title', 'Job Role', 'Industry', 'Employees', 'Unique Code', 'Submitted At (WIB)'];
+        $headerRow2 = array_fill(0, count($headerRow1), '');
+
+        // Flatten question groups into actual CSV columns.
+        $columns = [];
+        foreach ($columnGroups as $key => $group) {
+            if (in_array($group['type'], ['choice', 'multi_choice'], true)) {
+                $options = $group['options'];
+                $hasOther = false;
+                foreach ($options as $i => $opt) {
+                    if (mb_strtolower(trim($opt)) === 'other') {
+                        $hasOther = true;
+                        $options[$i] = '__OTHER__';
+                    }
+                }
+                if ($group['other'] && !$hasOther) {
+                    $options[] = '__OTHER__';
+                }
+
+                foreach ($options as $i => $opt) {
+                    $display = $opt === '__OTHER__' ? 'Other' : $opt;
+                    $headerRow1[] = $i === 0 ? $key : '';
+                    $headerRow2[] = $display;
+                    $columns[] = ['key' => $key, 'option' => $opt];
+                }
+            } else {
+                $headerRow1[] = $key;
+                $headerRow2[] = '';
+                $columns[] = ['key' => $key, 'option' => null];
+            }
+        }
+
         $rows = [];
         foreach ($feedbacks as $fb) {
             $item    = $fb->agendaItem;
             $type    = $item ? $this->feedbackType($item) : 'General';
             $session = $item ? $this->feedbackSessionLabel($item) : '—';
 
-            $answerItems = $fb->answers->isNotEmpty() ? $fb->answers : collect([null]);
+            $selected = $this->feedbackSelectedMap($fb);
 
-            foreach ($answerItems as $a) {
-                $rows[] = [
-                    $session,
-                    $type,
-                    $fb->name ?: ($fb->registrant?->name ?? ''),
-                    $fb->email ?: ($fb->registrant?->email ?? ''),
-                    $fb->registrant?->phone ?? '',
-                    $fb->registrant?->company ?? '',
-                    $fb->registrant?->job_title ?? '',
-                    $fb->registrant?->job_role ?? '',
-                    $fb->registrant?->industry ?? '',
-                    $fb->registrant?->employees ?? '',
-                    $fb->registrant?->unique_code ?? '',
-                    $a ? ($a->question?->question_text ?? 'Question') : '',
-                    $a ? $this->formatAnswerValue($a) : '',
-                    $fb->created_at ? $fb->created_at->copy()->addHours(7)->format('Y-m-d H:i:s') : '',
-                ];
+            $row = [
+                $session,
+                $type,
+                $fb->name ?: ($fb->registrant?->name ?? ''),
+                $fb->email ?: ($fb->registrant?->email ?? ''),
+                $fb->registrant?->phone ?? '',
+                $fb->registrant?->company ?? '',
+                $fb->registrant?->job_title ?? '',
+                $fb->registrant?->job_role ?? '',
+                $fb->registrant?->industry ?? '',
+                $fb->registrant?->employees ?? '',
+                $fb->registrant?->unique_code ?? '',
+                $fb->created_at ? $fb->created_at->copy()->addHours(7)->format('Y-m-d H:i:s') : '',
+            ];
+
+            foreach ($columns as $col) {
+                $row[] = $this->feedbackCellValue($col, $selected[$col['key']] ?? []);
             }
+
+            $rows[] = $row;
         }
 
-        return $this->csvDownload(
-            ['Session', 'Type', 'Name', 'Email', 'Phone', 'Company', 'Job Title', 'Job Role', 'Industry', 'Employees', 'Unique Code', 'Question', 'Answer', 'Submitted At (WIB)'],
-            $rows,
-            'all-feedback-' . now()->format('YmdHis') . '.csv'
-        );
+        return $this->csvDownload([$headerRow1, $headerRow2], $rows, 'all-feedback-' . now()->format('YmdHis') . '.csv');
     }
 
     /**
@@ -283,15 +331,104 @@ class AdminFeedbackController extends Controller
     }
 
     /**
-     * Decode multi-choice answers (stored as JSON) into a readable string.
+     * Merge questions into column groups keyed by their (normalized) text.
+     * Template copies that share text across sessions are combined, with their
+     * options unioned and the "Other" flag OR-ed.
+     *
+     * @param  \Illuminate\Support\Collection<int, \App\Models\AgendaItemQuestion>  $questions
      */
-    private function formatAnswerValue(AgendaFeedbackAnswer $a): string
+    private function buildFeedbackColumns($questions): array
     {
-        $value = $a->answer_value ?? '';
-        if ($a->question?->question_type === 'multi_choice' && $value) {
-            $decoded = json_decode($value, true);
-            $value = is_array($decoded) ? implode(' | ', $decoded) : $value;
+        $groups = [];
+        foreach ($questions as $q) {
+            $key = trim((string) $q->question_text);
+            if ($key === '') {
+                $key = '(untitled question)';
+            }
+
+            if (!isset($groups[$key])) {
+                $groups[$key] = [
+                    'type'    => $q->question_type,
+                    'options' => [],
+                    'other'   => false,
+                ];
+            }
+
+            foreach ((array) $q->options as $opt) {
+                $opt = trim((string) $opt);
+                if ($opt !== '' && !in_array($opt, $groups[$key]['options'], true)) {
+                    $groups[$key]['options'][] = $opt;
+                }
+            }
+
+            if ($q->allow_other) {
+                $groups[$key]['other'] = true;
+            }
         }
-        return (string) $value;
+
+        return $groups;
+    }
+
+    /**
+     * Collect the selected answer values per question for one submission.
+     * Multi-choice answers (stored as JSON arrays) are flattened.
+     */
+    private function feedbackSelectedMap(AgendaFeedback $fb): array
+    {
+        $map = [];
+        foreach ($fb->answers as $a) {
+            if (!$a->question) {
+                continue;
+            }
+
+            $key = trim((string) $a->question->question_text);
+            if ($key === '') {
+                $key = '(untitled question)';
+            }
+
+            $value = (string) $a->answer_value;
+            if ($a->question->question_type === 'multi_choice' && $value !== '') {
+                $decoded = json_decode($value, true);
+                $values = is_array($decoded) ? array_map('strval', $decoded) : [trim($value)];
+            } else {
+                $values = [trim($value)];
+            }
+
+            foreach ($values as $v) {
+                if ($v !== '' && !in_array($v, $map[$key] ?? [], true)) {
+                    $map[$key][] = $v;
+                }
+            }
+        }
+
+        return $map;
+    }
+
+    /**
+     * Resolve the cell value for one export column.
+     *
+     * - Scalar questions (text / rating / yes_no) return the answer itself.
+     * - Regular choice options return ✓ when selected, empty otherwise.
+     * - The "Other" sub-column returns the typed free text (or ✓ when empty).
+     */
+    private function feedbackCellValue(array $col, array $selected): string
+    {
+        $option = $col['option'];
+
+        if ($option === null) {
+            return implode(' | ', $selected);
+        }
+
+        if ($option === '__OTHER__') {
+            foreach ($selected as $v) {
+                if (mb_stripos($v, 'Other') === 0) {
+                    $text = ltrim(trim(mb_substr($v, 5)), ': ');
+                    return $text === '' ? '✓' : $text;
+                }
+            }
+            return '';
+        }
+
+        return in_array($option, $selected, true) ? '✓' : '';
     }
 }
